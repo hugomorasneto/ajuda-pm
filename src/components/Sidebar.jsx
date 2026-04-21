@@ -32,7 +32,13 @@ function Sidebar() {
   return (
     <>
       <header className="mobile-topbar">
-        <p className="brand-name">{APP_NAME}</p>
+        <div className="mobile-topbar-brand">
+          <span className="brand-mark" />
+          <div>
+            <p className="brand-name">{APP_NAME}</p>
+            <p className="brand-caption">Workspace para PMs e POs</p>
+          </div>
+        </div>
         <button
           className="menu-button"
           type="button"
@@ -49,8 +55,14 @@ function Sidebar() {
           <span className="brand-mark" />
           <div>
             <p className="brand-name">{APP_NAME}</p>
-            <p className="brand-caption">Conteudo + Ferramentas</p>
+            <p className="brand-caption">Conteudo e IA para backlog de produto</p>
           </div>
+        </div>
+
+        <div className="sidebar-intro-card">
+          <p className="sidebar-intro-label">Workspace</p>
+          <h2>Estruture backlog com mais clareza operacional.</h2>
+          <p>Conteudo, geracao assistida e historico no mesmo ambiente.</p>
         </div>
 
         <nav className="sidebar-nav" aria-label="Navegacao principal">
@@ -64,14 +76,16 @@ function Sidebar() {
                 `sidebar-link ${isActive ? 'sidebar-link-active' : ''}`
               }
             >
-              {item.label}
+              <span className="sidebar-link-dot" />
+              <span>{item.label}</span>
             </NavLink>
           ))}
         </nav>
 
         <div className="sidebar-footer">
           {user ? (
-            <>
+            <div className="sidebar-user-card">
+              <p className="sidebar-user-label">Conta ativa</p>
               <p className="sidebar-user">{user.email}</p>
               <button
                 type="button"
@@ -80,15 +94,18 @@ function Sidebar() {
               >
                 Sair
               </button>
-            </>
+            </div>
           ) : (
-            <div className="sidebar-auth-links">
-              <Link className="sidebar-inline-link" to="/login" onClick={closeDrawer}>
-                Entrar
-              </Link>
-              <Link className="sidebar-inline-link" to="/signup" onClick={closeDrawer}>
-                Criar conta
-              </Link>
+            <div className="sidebar-user-card">
+              <p className="sidebar-user-label">Acesso</p>
+              <div className="sidebar-auth-links">
+                <Link className="sidebar-inline-link" to="/login" onClick={closeDrawer}>
+                  Entrar
+                </Link>
+                <Link className="sidebar-inline-link" to="/signup" onClick={closeDrawer}>
+                  Criar conta
+                </Link>
+              </div>
             </div>
           )}
         </div>
@@ -107,4 +124,3 @@ function Sidebar() {
 }
 
 export default Sidebar
-
