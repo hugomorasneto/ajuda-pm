@@ -16,11 +16,24 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
-      - name: Install dependencies
+      - name: Show runtime versions
+        run: |
+          node -v
+          npm -v
+
+      - name: Install dependencies (strict)
+        id: install_strict
+        continue-on-error: true
         run: npm ci
+
+      - name: Install dependencies (fallback)
+        if: steps.install_strict.outcome == 'failure'
+        run: |
+          echo "npm ci falhou; executando fallback controlado com npm install"
+          npm install --no-audit --no-fund
 
       - name: Build production bundle
         env:
