@@ -1,0 +1,5 @@
+project_id = "bkuizdxdmnneyjsjydtm"
+
+[functions.generate-user-story]
+verify_jwt = false
+
