@@ -14,7 +14,7 @@ function formatDateTime(value) {
     minute: '2-digit',
   }).format(date)
 
-  return `${dateLabel} às ${timeLabel}`
+  return `${dateLabel} as ${timeLabel}`
 }
 
 function UserStoriesHistory({
@@ -30,16 +30,16 @@ function UserStoriesHistory({
   return (
     <section className="panel history-panel">
       <div className="panel-header panel-header-row">
-        <h2>Histórico recente</h2>
+        <h2>Historico recente</h2>
         <div className="history-controls">
           <select
             className="history-filter"
             value={filterValue}
             onChange={(event) => onFilterChange(event.target.value)}
-            aria-label="Filtrar histórico"
+            aria-label="Filtrar historico"
           >
             <option value="today">Hoje</option>
-            <option value="7d">Últimos 7 dias</option>
+            <option value="7d">Ultimos 7 dias</option>
             <option value="all">Tudo</option>
           </select>
           <button type="button" className="btn btn-ghost btn-small" onClick={reloadRecent}>
@@ -48,7 +48,7 @@ function UserStoriesHistory({
         </div>
       </div>
 
-      {isLoading ? <p className="history-status">Carregando histórias...</p> : null}
+      {isLoading ? <p className="history-status">Carregando historias...</p> : null}
       {loadErrorMessage ? <p className="history-status history-status-error">{loadErrorMessage}</p> : null}
 
       {!isLoading && items.length === 0 ? (
@@ -64,7 +64,9 @@ function UserStoriesHistory({
             onClick={() => onSelect(item.id)}
           >
             <p className="history-title">{item.title}</p>
-            <p className="history-meta">{formatDateTime(item.created_at)}</p>
+            <p className="history-meta">
+              V{item.version_number ?? 1} - {formatDateTime(item.created_at)}
+            </p>
           </button>
         ))}
       </div>
@@ -73,3 +75,4 @@ function UserStoriesHistory({
 }
 
 export default UserStoriesHistory
+

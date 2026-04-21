@@ -1,12 +1,26 @@
-function UserStoryResult({ result, saveMessage, onCopy, copyMessage, isCopying, isLoadingSelectedStory }) {
+function UserStoryResult({
+  result,
+  saveMessage,
+  onCopy,
+  copyMessage,
+  isCopying,
+  isLoadingSelectedStory,
+  editDraft,
+  onEditDraftChange,
+  onSaveEdits,
+  isSavingEdits,
+  canEdit,
+}) {
   if (!result) {
     return (
       <section className="panel panel-muted">
         <h2>Resultado</h2>
-        <p>A user story gerada aparecerá aqui com estrutura pronta para revisão.</p>
+        <p>A user story gerada aparecera aqui com estrutura pronta para revisao.</p>
       </section>
     )
   }
+
+  const acceptanceText = (editDraft.acceptance_criteria || []).join('\n')
 
   return (
     <section className="panel result-panel">
@@ -27,11 +41,19 @@ function UserStoryResult({ result, saveMessage, onCopy, copyMessage, isCopying, 
         </button>
       </div>
 
-      {isLoadingSelectedStory ? <p className="result-inline-status">Carregando dados da história...</p> : null}
+      {isLoadingSelectedStory ? <p className="result-inline-status">Carregando dados da historia...</p> : null}
 
       <div className="result-section">
-        <h3>Título</h3>
-        <p>{result.title}</p>
+        <h3>Titulo</h3>
+        {canEdit ? (
+          <textarea
+            rows={2}
+            value={editDraft.title}
+            onChange={(event) => onEditDraftChange('title', event.target.value)}
+          />
+        ) : (
+          <p>{result.title}</p>
+        )}
       </div>
 
       <div className="result-section">
@@ -41,21 +63,38 @@ function UserStoryResult({ result, saveMessage, onCopy, copyMessage, isCopying, 
 
       <div className="result-section">
         <h3>User Story</h3>
-        <p className="user-story-highlight">{result.user_story}</p>
+        {canEdit ? (
+          <textarea
+            rows={4}
+            className="user-story-highlight"
+            value={editDraft.user_story}
+            onChange={(event) => onEditDraftChange('user_story', event.target.value)}
+          />
+        ) : (
+          <p className="user-story-highlight">{result.user_story}</p>
+        )}
       </div>
 
-      <div className="result-section">
-        <h3>Critérios de aceitação</h3>
-        <ul className="criteria-list">
-          {result.acceptance_criteria.map((criterion) => (
-            <li key={criterion}>{criterion}</li>
-          ))}
-        </ul>
+      <div className="result-section result-section-focus">
+        <h3>Criterios de aceitacao</h3>
+        {canEdit ? (
+          <textarea
+            rows={6}
+            value={acceptanceText}
+            onChange={(event) => onEditDraftChange('acceptance_criteria', event.target.value)}
+          />
+        ) : (
+          <ul className="criteria-list">
+            {result.acceptance_criteria.map((criterion) => (
+              <li key={criterion}>{criterion}</li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {result.business_rules.length > 0 ? (
-        <div className="result-section">
-          <h3>Regras de negócio</h3>
+        <div className="result-section result-section-focus">
+          <h3>Regras de negocio</h3>
           <ul className="criteria-list">
             {result.business_rules.map((rule) => (
               <li key={rule}>{rule}</li>
@@ -65,7 +104,7 @@ function UserStoryResult({ result, saveMessage, onCopy, copyMessage, isCopying, 
       ) : null}
 
       {result.gaps.length > 0 ? (
-        <div className="result-section">
+        <div className="result-section result-section-focus">
           <h3>Gaps identificados</h3>
           <ul className="criteria-list">
             {result.gaps.map((gap) => (
@@ -92,6 +131,11 @@ function UserStoryResult({ result, saveMessage, onCopy, copyMessage, isCopying, 
       </div>
 
       <div className="result-actions">
+        {canEdit ? (
+          <button type="button" className="btn btn-ghost btn-small" onClick={onSaveEdits} disabled={isSavingEdits}>
+            {isSavingEdits ? 'Salvando edicoes...' : 'Salvar edicoes manuais'}
+          </button>
+        ) : null}
         {saveMessage ? (
           <p
             className={`save-message ${saveMessage.toLowerCase().includes('erro') ? 'save-message-error' : 'save-message-success'}`}
@@ -106,3 +150,4 @@ function UserStoryResult({ result, saveMessage, onCopy, copyMessage, isCopying, 
 }
 
 export default UserStoryResult
+

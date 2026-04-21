@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { APP_NAME } from '../constants/app'
+import { trackEvent } from '../services/analyticsService'
 
 function LoginPage() {
   const navigate = useNavigate()
@@ -29,6 +30,12 @@ function LoginPage() {
       setIsSubmitting(false)
       return
     }
+
+    trackEvent({
+      event_name: 'login_completed',
+      event_category: 'auth',
+      page_path: '/login',
+    })
 
     navigate(redirectTo, { replace: true })
   }
@@ -76,4 +83,3 @@ function LoginPage() {
 }
 
 export default LoginPage
-

@@ -68,7 +68,7 @@ export function normalizeUserStoryGeneration(rawResult) {
   }
 }
 
-export async function generateUserStory({ input_context, input_requirements }) {
+export async function generateUserStory({ input_context, input_requirements, input_adjustment = '' }) {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
@@ -83,7 +83,7 @@ export async function generateUserStory({ input_context, input_requirements }) {
       apikey: supabaseAnonKey,
       Authorization: `Bearer ${supabaseAnonKey}`,
     },
-    body: JSON.stringify({ input_context, input_requirements }),
+    body: JSON.stringify({ input_context, input_requirements, input_adjustment }),
   })
 
   const payload = await response.json().catch(() => null)
@@ -103,4 +103,3 @@ export async function generateUserStory({ input_context, input_requirements }) {
 
   return normalizeUserStoryGeneration(payload)
 }
-

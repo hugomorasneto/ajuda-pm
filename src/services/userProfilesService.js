@@ -8,7 +8,7 @@ export async function getUserProfile(userId) {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, email, plan, created_at')
+      .select('id, email, plan, role, created_at')
       .eq('id', userId)
       .maybeSingle()
 
@@ -19,11 +19,10 @@ export async function getUserProfile(userId) {
 
     return {
       success: true,
-      data: data ?? { id: userId, plan: 'free', email: null, created_at: null },
+      data: data ?? { id: userId, plan: 'free', role: 'user', email: null, created_at: null },
     }
   } catch (error) {
     console.error('Unexpected getUserProfile error:', error)
     return { success: false, error, data: null }
   }
 }
-

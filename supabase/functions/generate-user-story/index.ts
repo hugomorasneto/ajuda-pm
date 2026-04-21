@@ -55,6 +55,9 @@ Contexto:
 
 Requisitos:
 {{input_requirements}}
+
+Ajuste adicional (opcional):
+{{input_adjustment}}
 `
 
 const GENERIC_TITLE_PATTERNS = [
@@ -134,11 +137,11 @@ function truncate(text: string, limit: number): string {
   return `${text.slice(0, limit - 3).trim()}...`
 }
 
-function buildPrompt(inputContext: string, inputRequirements: string): string {
+function buildPrompt(inputContext: string, inputRequirements: string, inputAdjustment: string): string {
   return PROMPT_TEMPLATE.replace('{{input_context}}', inputContext).replace(
     '{{input_requirements}}',
     inputRequirements,
-  )
+  ).replace('{{input_adjustment}}', inputAdjustment || 'Sem ajuste adicional.')
 }
 
 function buildFallbackTitle(inputContext: string): string {
@@ -334,6 +337,7 @@ Deno.serve(async (req) => {
     const payload = await req.json().catch(() => ({}))
     const inputContext = asString(payload?.input_context)
     const inputRequirements = asString(payload?.input_requirements)
+    const inputAdjustment = asString(payload?.input_adjustment)
 
     if (!inputContext || !inputRequirements) {
       return responseJson(
@@ -349,7 +353,7 @@ Deno.serve(async (req) => {
       'gemini-2.0-flash',
     ].filter((item, index, arr) => item && arr.indexOf(item) === index)
 
-    const prompt = buildPrompt(inputContext, inputRequirements)
+    const prompt = buildPrompt(inputContext, inputRequirements, inputAdjustment)
     let rawText = ''
     let usedModel = ''
     let success = false
@@ -421,4 +425,3 @@ Deno.serve(async (req) => {
     return responseJson({ error: message }, 500)
   }
 })
-

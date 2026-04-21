@@ -7,6 +7,7 @@ function FormUserStory({
   isSubmitting,
   isEditing,
   activeStoryTitle,
+  hasAdjustment,
 }) {
   async function handleSubmit(event) {
     event.preventDefault()
@@ -17,16 +18,16 @@ function FormUserStory({
     <section className="panel">
       <div className="panel-header panel-header-row">
         <div>
-          <h2>{isEditing ? 'Editar User Story' : 'Gerador de User Story'}</h2>
+          <h2>{isEditing ? 'Gerar nova versao' : 'Gerador de User Story'}</h2>
           <p>
             {isEditing
-              ? `Você está editando: ${activeStoryTitle || 'história selecionada'}`
-              : 'Descreva o cenário e gere uma versão mais contextual para priorização do backlog.'}
+              ? `Base selecionada: ${activeStoryTitle || 'historia selecionada'}. Gere uma nova versao sem sobrescrever as anteriores.`
+              : 'Descreva o cenario e gere uma versao mais contextual para priorizacao do backlog.'}
           </p>
         </div>
         {isEditing ? (
           <button type="button" className="btn btn-ghost btn-small" onClick={onReset}>
-            Nova história
+            Nova historia
           </button>
         ) : null}
       </div>
@@ -37,8 +38,8 @@ function FormUserStory({
           id="contexto"
           value={formValues.problemContext}
           onChange={(event) => onChange('problemContext', event.target.value)}
-          placeholder="Exemplo: usuários B2B abandonam onboarding por falta de validação de domínio."
-          rows={5}
+          placeholder="Exemplo: usuarios B2B abandonam onboarding por falta de validacao de dominio."
+          rows={4}
         />
         {validationErrors.problemContext ? (
           <p className="field-error">{validationErrors.problemContext}</p>
@@ -49,15 +50,28 @@ function FormUserStory({
           id="requisitos"
           value={formValues.requirements}
           onChange={(event) => onChange('requirements', event.target.value)}
-          placeholder="Descreva regras, resultados esperados e limitações técnicas/negociais."
-          rows={5}
+          placeholder="Descreva regras, resultados esperados e limitacoes tecnicas/negociais."
+          rows={4}
         />
-        {validationErrors.requirements ? (
-          <p className="field-error">{validationErrors.requirements}</p>
-        ) : null}
+        {validationErrors.requirements ? <p className="field-error">{validationErrors.requirements}</p> : null}
+
+        <label htmlFor="ajuste">Regenerar com ajuste (opcional)</label>
+        <textarea
+          id="ajuste"
+          value={formValues.adjustment}
+          onChange={(event) => onChange('adjustment', event.target.value)}
+          placeholder="Exemplo: deixar mais tecnico, foco backend e observabilidade."
+          rows={3}
+        />
 
         <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-          {isSubmitting ? 'Salvando...' : isEditing ? 'Atualizar User Story' : 'Gerar User Story'}
+          {isSubmitting
+            ? 'Gerando...'
+            : isEditing
+              ? hasAdjustment
+                ? 'Regenerar com ajuste'
+                : 'Gerar nova versao'
+              : 'Gerar User Story'}
         </button>
       </form>
     </section>
@@ -65,3 +79,4 @@ function FormUserStory({
 }
 
 export default FormUserStory
+

@@ -6,6 +6,8 @@ import PlaceholderPage from './pages/PlaceholderPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminRoute from './components/AdminRoute'
+import AdminPage from './pages/AdminPage'
 import './App.css'
 
 function App() {
@@ -22,6 +24,14 @@ function App() {
             <ProtectedRoute>
               <ToolPage />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminPage />
+            </AdminRoute>
           }
         />
         <Route

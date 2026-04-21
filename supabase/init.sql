@@ -16,6 +16,10 @@ $$;
 create table if not exists public.user_stories (
   id uuid primary key default gen_random_uuid(),
   user_id uuid null,
+  story_group_id uuid not null default gen_random_uuid(),
+  version_number integer not null default 1,
+  previous_version_id uuid null references public.user_stories(id) on delete set null,
+  regeneration_instruction text null,
   input_context text not null,
   input_requirements text not null,
   title text not null,
@@ -36,6 +40,12 @@ create index if not exists idx_user_stories_created_at
 
 create index if not exists idx_user_stories_user_id
   on public.user_stories (user_id);
+
+create index if not exists idx_user_stories_story_group_id
+  on public.user_stories (story_group_id);
+
+create index if not exists idx_user_stories_group_version
+  on public.user_stories (story_group_id, version_number desc);
 
 drop trigger if exists trg_user_stories_set_updated_at on public.user_stories;
 create trigger trg_user_stories_set_updated_at

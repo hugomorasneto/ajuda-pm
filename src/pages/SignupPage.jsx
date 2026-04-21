@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { APP_NAME } from '../constants/app'
+import { trackEvent } from '../services/analyticsService'
 
 function SignupPage() {
   const navigate = useNavigate()
@@ -17,6 +18,12 @@ function SignupPage() {
     setErrorMessage('')
     setInfoMessage('')
 
+    trackEvent({
+      event_name: 'signup_started',
+      event_category: 'auth',
+      page_path: '/signup',
+    })
+
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
@@ -29,10 +36,21 @@ function SignupPage() {
     }
 
     if (data.session) {
+      trackEvent({
+        event_name: 'signup_completed',
+        event_category: 'auth',
+        page_path: '/signup',
+      })
       navigate('/tool', { replace: true })
       return
     }
 
+    trackEvent({
+      event_name: 'signup_completed',
+      event_category: 'auth',
+      page_path: '/signup',
+      metadata: { confirmation_pending: true },
+    })
     setInfoMessage('Cadastro realizado. Verifique seu email para confirmar a conta.')
     setIsSubmitting(false)
   }
@@ -81,4 +99,3 @@ function SignupPage() {
 }
 
 export default SignupPage
-

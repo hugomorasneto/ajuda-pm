@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { APP_NAME } from '../constants/app'
+import { useEffect } from 'react'
+import { trackEvent } from '../services/analyticsService'
 
 const steps = [
   {
@@ -50,6 +52,13 @@ const aiOutputs = [
 
 function HomePage() {
   const { user } = useAuth()
+
+  useEffect(() => {
+    trackEvent({
+      event_name: 'landing_view',
+      event_category: 'public',
+    })
+  }, [])
 
   return (
     <div className="page home-page">
@@ -177,4 +186,3 @@ function HomePage() {
 }
 
 export default HomePage
-
