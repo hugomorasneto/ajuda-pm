@@ -60,10 +60,12 @@ function SignupPage() {
       <section className="panel auth-panel">
         <p className="eyebrow">Cadastro</p>
         <h1>Criar conta no {APP_NAME}</h1>
-        <p className="auth-description">Tenha historico proprio e uso individual da ferramenta.</p>
+        <p className="auth-description">
+          Salve versões, mantenha seu histórico e continue a revisão depois.
+        </p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">E-mail</label>
           <input
             id="email"
             type="email"
@@ -91,7 +93,7 @@ function SignupPage() {
         {infoMessage ? <p className="auth-info">{infoMessage}</p> : null}
 
         <p className="auth-switch">
-          Ja tem conta? <Link to="/login">Entrar</Link>
+          Já tem conta? <Link to="/login">Entrar</Link>
         </p>
       </section>
     </div>

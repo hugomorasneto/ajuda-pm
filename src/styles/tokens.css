@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap');
+
+:root {
+  color-scheme: light;
+
+  --font-base: 'Manrope', 'Segoe UI', sans-serif;
+  --font-display: 'Sora', 'Segoe UI', sans-serif;
+
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-40: 40px;
+  --space-48: 48px;
+  --space-64: 64px;
+
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+
+  --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.06);
+  --shadow-panel: 0 18px 48px rgba(15, 23, 42, 0.08);
+  --shadow-floating: 0 24px 60px rgba(15, 23, 42, 0.14);
+
+  --color-canvas: #f5f7fb;
+  --color-canvas-muted: #eef3f9;
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f7f9fc;
+  --color-surface-strong: #ffffff;
+  --color-border: #d9e1eb;
+  --color-border-strong: #c2cfdd;
+  --color-text-primary: #172033;
+  --color-text-secondary: #5f6c80;
+  --color-text-muted: #738196;
+  --color-accent: #0f9b8e;
+  --color-accent-strong: #0b7d73;
+  --color-focus: #2563eb;
+  --color-info: #315cf1;
+
+  --container-public: 1200px;
+  --container-workspace: 1440px;
+
+  --z-header: 30;
+  --z-drawer: 50;
+  --z-backdrop: 40;
+
+  --bg: var(--color-canvas);
+  --surface: var(--color-surface);
+  --surface-strong: var(--color-surface-strong);
+  --surface-muted: var(--color-surface-secondary);
+  --line: var(--color-border);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --accent: var(--color-accent);
+  --shadow-card: var(--shadow-panel);
+}

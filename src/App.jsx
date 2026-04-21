@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
-import MainLayout from './layout/MainLayout'
+import PublicLayout from './layout/PublicLayout'
+import WorkspaceLayout from './layout/WorkspaceLayout'
 import HomePage from './pages/HomePage'
 import ToolPage from './pages/ToolPage'
 import PlaceholderPage from './pages/PlaceholderPage'
@@ -8,7 +9,6 @@ import SignupPage from './pages/SignupPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import AdminPage from './pages/AdminPage'
-import './App.css'
 
 function App() {
   return (
@@ -16,24 +16,8 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
 
-      <Route element={<MainLayout />}>
+      <Route element={<PublicLayout />}>
         <Route path="/" element={<HomePage />} />
-        <Route
-          path="/tool"
-          element={
-            <ProtectedRoute>
-              <ToolPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <AdminRoute>
-              <AdminPage />
-            </AdminRoute>
-          }
-        />
         <Route
           path="/fundamentos"
           element={
@@ -88,8 +72,29 @@ function App() {
             />
           }
         />
-        <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
+
+      <Route
+        element={
+          <ProtectedRoute>
+            <WorkspaceLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/tool" element={<ToolPage />} />
+      </Route>
+
+      <Route
+        element={
+          <AdminRoute>
+            <WorkspaceLayout />
+          </AdminRoute>
+        }
+      >
+        <Route path="/admin" element={<AdminPage />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }

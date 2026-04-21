@@ -30,16 +30,16 @@ function UserStoriesHistory({
   return (
     <section className="panel history-panel">
       <div className="panel-header panel-header-row">
-        <h2>Historico recente</h2>
+        <h2>Histórico recente</h2>
         <div className="history-controls">
           <select
             className="history-filter"
             value={filterValue}
             onChange={(event) => onFilterChange(event.target.value)}
-            aria-label="Filtrar historico"
+            aria-label="Filtrar histórico"
           >
             <option value="today">Hoje</option>
-            <option value="7d">Ultimos 7 dias</option>
+            <option value="7d">Últimos 7 dias</option>
             <option value="all">Tudo</option>
           </select>
           <button type="button" className="btn btn-ghost btn-small" onClick={reloadRecent}>
@@ -48,7 +48,7 @@ function UserStoriesHistory({
         </div>
       </div>
 
-      {isLoading ? <p className="history-status">Carregando historias...</p> : null}
+      {isLoading ? <p className="history-status">Carregando user stories...</p> : null}
       {loadErrorMessage ? <p className="history-status history-status-error">{loadErrorMessage}</p> : null}
 
       {!isLoading && items.length === 0 ? (
@@ -75,4 +75,3 @@ function UserStoriesHistory({
 }
 
 export default UserStoriesHistory
-

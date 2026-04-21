@@ -1,0 +1,63 @@
+import { Link } from 'react-router-dom'
+
+function PricingCard({ plan, cta }) {
+  return (
+    <article className="landing-pricing__card">
+      <div className="landing-pricing__card-header">
+        <div>
+          <p className="landing-pricing__name">{plan.name}</p>
+          <p className="landing-pricing__description">{plan.description}</p>
+        </div>
+        <span className="landing-pricing__badge">{plan.badge}</span>
+      </div>
+
+      <ul className="landing-pricing__list">
+        {plan.items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+
+      {cta}
+    </article>
+  )
+}
+
+function PricingTeaser({ content, isAuthenticated }) {
+  return (
+    <section className="landing-section landing-pricing">
+      <div className="landing-section__intro">
+        <p className="landing-section__eyebrow">{content.eyebrow}</p>
+        <h2>{content.title}</h2>
+        <p>{content.description}</p>
+      </div>
+
+      <div className="landing-pricing__grid">
+        <PricingCard
+          plan={content.free}
+          cta={
+            isAuthenticated ? (
+              <Link className="landing-button landing-button--secondary" to="/tool">
+                Abrir área de trabalho
+              </Link>
+            ) : (
+              <Link className="landing-button landing-button--primary" to="/signup">
+                Começar no Free
+              </Link>
+            )
+          }
+        />
+
+        <PricingCard
+          plan={content.pro}
+          cta={
+            <button type="button" className="landing-button landing-button--secondary" disabled>
+              Em evolução
+            </button>
+          }
+        />
+      </div>
+    </section>
+  )
+}
+
+export default PricingTeaser

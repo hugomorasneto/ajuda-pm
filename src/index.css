@@ -1,43 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap');
-
-:root {
-  --bg: #060b16;
-  --surface: rgba(16, 24, 39, 0.86);
-  --surface-strong: #0d1321;
-  --surface-muted: rgba(15, 21, 34, 0.96);
-  --line: rgba(83, 99, 128, 0.42);
-  --text-primary: #e5edf7;
-  --text-secondary: #95a8c6;
-  --accent: #54e7b8;
-  --shadow-card: 0 22px 50px rgba(0, 0, 0, 0.32);
-
-  --font-base: 'Manrope', 'Segoe UI', sans-serif;
-  --font-display: 'Sora', 'Segoe UI', sans-serif;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-  min-height: 100%;
-}
-
-body {
-  margin: 0;
-  font-family: var(--font-base);
-  color: var(--text-secondary);
-  background:
-    radial-gradient(circle at 7% 14%, rgba(70, 130, 220, 0.22), transparent 28%),
-    radial-gradient(circle at 86% 1%, rgba(48, 182, 152, 0.17), transparent 30%),
-    var(--bg);
-}
-
-a,
-button {
-  font-family: inherit;
-}
+@import './styles/tokens.css';
+@import './styles/base.css';
+@import './styles/layouts.css';
+@import './styles/public.css';
+@import './styles/workspace.css';
+@import './App.css';

@@ -4,8 +4,8 @@ import { fetchAdminAnalytics } from '../services/adminAnalyticsService'
 
 const periodOptions = [
   { value: 'today', label: 'Hoje' },
-  { value: '7d', label: 'Ultimos 7 dias' },
-  { value: '30d', label: 'Ultimos 30 dias' },
+  { value: '7d', label: 'Últimos 7 dias' },
+  { value: '30d', label: 'Últimos 30 dias' },
 ]
 
 function formatDateTime(value) {
@@ -43,7 +43,7 @@ function FunnelTable({ funnel }) {
     <section className="panel admin-table-panel">
       <div className="panel-header">
         <h2>Funil principal</h2>
-        <p>Conversao entre etapas de aquisicao e uso da ferramenta.</p>
+        <p>Conversão entre etapas de aquisição e uso do produto.</p>
       </div>
       <div className="admin-table-wrap">
         <table className="admin-table">
@@ -51,7 +51,7 @@ function FunnelTable({ funnel }) {
             <tr>
               <th>Etapa</th>
               <th>Volume</th>
-              <th>Conversao etapa anterior</th>
+              <th>Conversão etapa anterior</th>
             </tr>
           </thead>
           <tbody>
@@ -70,7 +70,7 @@ function FunnelTable({ funnel }) {
         </table>
       </div>
       <p className="admin-inline-note">
-        Conclusao final landing para geracao com sucesso:{' '}
+        Conversão final da landing para geração com sucesso:{' '}
         <strong>{formatPercent(funnel.final_completion_rate)}</strong>
       </p>
     </section>
@@ -96,7 +96,7 @@ function AdminPage() {
         setAnalytics(data)
       } catch {
         if (!active) return
-        setError('Nao foi possivel carregar analytics agora. Tente novamente.')
+        setError('Não foi possível carregar os dados agora. Tente novamente.')
       } finally {
         if (active) setIsLoading(false)
       }
@@ -121,17 +121,17 @@ function AdminPage() {
     if (!overview || !operational) return []
 
     return [
-      { label: 'Total de geracoes com sucesso', value: operational.total_generate_success },
-      { label: 'Total de falhas de geracao', value: operational.total_generate_failed },
-      { label: 'Taxa de falha da geracao', value: formatPercent(operational.generation_failure_rate) },
-      { label: 'Usuarios unicos ativos', value: operational.total_active_unique_users },
-      { label: 'Usuarios que atingiram limite free', value: operational.users_reached_free_limit },
+      { label: 'Total de gerações com sucesso', value: operational.total_generate_success },
+      { label: 'Total de falhas de geração', value: operational.total_generate_failed },
+      { label: 'Taxa de falha da geração', value: formatPercent(operational.generation_failure_rate) },
+      { label: 'Usuários únicos ativos', value: operational.total_active_unique_users },
+      { label: 'Usuários que atingiram o limite Free', value: operational.users_reached_free_limit },
       {
-        label: 'Taxa tool sem geracao',
+        label: 'Taxa da área de trabalho sem geração',
         value: `${formatPercent(operational.tool_without_generation_rate)} (${operational.tool_users_without_generation}/${operational.tool_users_total || 0})`,
       },
-      { label: 'Signups concluidos', value: overview.signup_completed },
-      { label: 'Logins concluidos', value: overview.login_completed },
+      { label: 'Cadastros concluídos', value: overview.signup_completed },
+      { label: 'Logins concluídos', value: overview.login_completed },
     ]
   }, [overview, operational])
 
@@ -140,12 +140,12 @@ function AdminPage() {
       <section className="tool-header">
         <p className="eyebrow">Admin</p>
         <h1>Painel de produto do {APP_NAME}</h1>
-        <p>Visao operacional para aquisicao, conversao e uso do workspace.</p>
+        <p>Visão operacional para aquisição, conversão e uso do produto.</p>
       </section>
 
       <section className="panel admin-filter-panel">
         <div className="panel-header panel-header-row">
-          <h2>Periodo</h2>
+          <h2>Período</h2>
           <select
             className="history-filter"
             value={period}
@@ -162,7 +162,7 @@ function AdminPage() {
 
       {isLoading ? (
         <section className="panel panel-muted">
-          <p className="history-status">Carregando metricas...</p>
+          <p className="history-status">Carregando métricas...</p>
         </section>
       ) : null}
 
@@ -174,7 +174,7 @@ function AdminPage() {
 
       {hasNoData ? (
         <section className="panel panel-muted">
-          <p className="history-status">Nenhum evento encontrado para o periodo selecionado.</p>
+          <p className="history-status">Nenhum evento encontrado para o período selecionado.</p>
         </section>
       ) : null}
 
@@ -194,7 +194,7 @@ function AdminPage() {
           <section className="panel admin-table-panel">
             <div className="panel-header">
               <h2>Atividade por dia</h2>
-              <p>Resumo diario de eventos e conversoes principais.</p>
+              <p>Resumo diário de eventos e conversões principais.</p>
             </div>
             <div className="admin-table-wrap">
               <table className="admin-table">
@@ -202,8 +202,8 @@ function AdminPage() {
                   <tr>
                     <th>Data</th>
                     <th>Total de eventos</th>
-                    <th>Geracoes com sucesso</th>
-                    <th>Signups concluidos</th>
+                    <th>Gerações com sucesso</th>
+                    <th>Cadastros concluídos</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -229,8 +229,8 @@ function AdminPage() {
                 <thead>
                   <tr>
                     <th>Evento</th>
-                    <th>Usuario</th>
-                    <th>Pagina</th>
+                    <th>Usuário</th>
+                    <th>Página</th>
                     <th>Data/Hora</th>
                   </tr>
                 </thead>
@@ -238,7 +238,7 @@ function AdminPage() {
                   {recentEvents.map((event) => (
                     <tr key={event.id}>
                       <td>{event.event_name}</td>
-                      <td>{event.user_email ?? event.user_id ?? 'anonimo'}</td>
+                      <td>{event.user_email ?? event.user_id ?? 'anônimo'}</td>
                       <td>{event.page_path ?? '-'}</td>
                       <td>{formatDateTime(event.created_at)}</td>
                     </tr>
@@ -251,7 +251,7 @@ function AdminPage() {
           <section className="panel admin-table-panel">
             <div className="panel-header">
               <h2>Resumo por evento</h2>
-              <p>Ordenado por maior volume no periodo selecionado.</p>
+              <p>Ordenado por maior volume no período selecionado.</p>
             </div>
             <div className="admin-table-wrap">
               <table className="admin-table">
@@ -281,4 +281,3 @@ function AdminPage() {
 }
 
 export default AdminPage
-

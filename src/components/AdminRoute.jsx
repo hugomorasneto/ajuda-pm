@@ -46,7 +46,7 @@ function AdminRoute({ children }) {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace state={{ message: 'Entre para acessar a area admin.' }} />
+    return <Navigate to="/login" replace state={{ message: 'Entre para acessar a área administrativa.' }} />
   }
 
   if (!isAdmin) {
@@ -57,4 +57,3 @@ function AdminRoute({ children }) {
 }
 
 export default AdminRoute
-

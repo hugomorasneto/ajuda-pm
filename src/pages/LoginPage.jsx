@@ -45,11 +45,11 @@ function LoginPage() {
       <section className="panel auth-panel">
         <p className="eyebrow">Acesso</p>
         <h1>Entrar no {APP_NAME}</h1>
-        <p className="auth-description">Acesse seu workspace e historico de user stories.</p>
+        <p className="auth-description">Acesse sua área de trabalho e o histórico de user stories.</p>
         {stateMessage ? <p className="auth-info">{stateMessage}</p> : null}
 
         <form className="auth-form" onSubmit={handleSubmit}>
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">E-mail</label>
           <input
             id="email"
             type="email"
@@ -75,7 +75,7 @@ function LoginPage() {
         {errorMessage ? <p className="auth-error">{errorMessage}</p> : null}
 
         <p className="auth-switch">
-          Nao tem conta? <Link to="/signup">Criar conta</Link>
+          Não tem conta? <Link to="/signup">Criar conta</Link>
         </p>
       </section>
     </div>

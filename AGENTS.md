@@ -1,0 +1,357 @@
+# AGENTS.md — ProdForge
+
+## 1. Product context
+
+This product helps Product Managers and Product Owners turn messy product context into clear, complete, review-ready user stories.
+
+Primary value:
+- Reduce time writing user stories.
+- Improve clarity for engineering, QA, design and stakeholders.
+- Generate structured outputs: title, goal, user story, acceptance criteria, business rules, edge cases, risks, QA checklist, and technical notes.
+- Help users refine, compare versions, save history, and export to tools such as Jira later.
+
+Current stack expectation:
+- Frontend: React, mobile-first.
+- Backend/DB/Auth: Supabase.
+- AI: Gemini Flash initially.
+- Deploy: GitHub Actions.
+
+Do not treat this as a generic AI prompt app. Treat it as a professional PM workspace.
+
+## 2. Brand and design direction
+
+Design target: premium, calm, fast, trustworthy SaaS for product teams.
+
+The UI should feel like:
+- Linear-level clarity.
+- Notion-level readability.
+- Raycast-level speed.
+- Stripe-level polish.
+- A serious product workflow, not a collection of text boxes.
+
+Brand feeling:
+- Senior PM operating system.
+- Less noise, more decision quality.
+- Clean, sharp, modern, slightly futuristic, but not gamer/cyberpunk.
+
+Avoid:
+- Walls of bordered boxes.
+- Generic dark dashboard layout.
+- Random gradients everywhere.
+- Giant empty cards with weak labels.
+- Flat textarea-first experiences.
+- Fake glassmorphism.
+- Inconsistent border radius, shadows, spacing or font sizes.
+- UI that looks like an internal admin panel.
+
+## 2.1. Language, copy and Portuguese quality
+
+The public product name is **ProdForge**.
+
+Never show “Ajuda PM” in the user interface unless the task explicitly asks to reference legacy/internal naming. Do not mix product names in visible UI.
+
+All user-facing UI copy must be written in Brazilian Portuguese (pt-BR), with correct spelling, accents, grammar, punctuation and agreement.
+
+This product promises clarity, standardization and better communication between PM, PO, dev and QA. Therefore, sloppy Portuguese damages product trust. Do not finish a UI task with visible spelling errors.
+
+Copy tone:
+- Clear.
+- Professional.
+- Direct.
+- Calm.
+- Premium without hype.
+- Practical and outcome-driven.
+
+Avoid:
+- Generic AI marketing phrases.
+- Overpromising.
+- Artificial or translated-sounding copy.
+- Mixing English and Portuguese without purpose.
+- Inconsistent terminology for the same concept.
+
+Preferred terms:
+- ProdForge.
+- PMs and POs.
+- user story or história de usuário.
+- critérios de aceite.
+- backlog.
+- contexto.
+- objetivo.
+- regra de negócio.
+- gap.
+- risco.
+- checklist de QA.
+- dev and QA.
+- copiar em Markdown.
+- formato Jira.
+
+Choose terminology consistently per screen. For example, do not mix “user story”, “história”, “story”, “estória” and “história do usuário” in the same area without a strong reason.
+
+Avoid weak or generic copy such as:
+- “Potencialize sua produtividade com IA.”
+- “Eleve seu fluxo de trabalho.”
+- “Desbloqueie o poder da inteligência artificial.”
+- “Solução definitiva.”
+- “Mágica com IA.”
+
+CTA rules:
+- CTAs must describe the action clearly.
+- Prefer: “Criar user story”, “Gerar história”, “Revisar critérios”, “Copiar em Markdown”, “Copiar para Jira”, “Salvar versão”, “Comparar versões”, “Testar grátis”.
+- Avoid vague CTAs such as “Enviar”, “Submeter”, “Clique aqui” or “Avançar” without context.
+
+Error and empty states:
+- Preserve user input.
+- Explain what happened in plain pt-BR.
+- Tell the next action.
+- Keep the message calm and useful.
+
+Before finishing any UI task, run this copy checklist:
+1. Is the visible product name always ProdForge?
+2. Is every visible string in correct Brazilian Portuguese?
+3. Are accents, agreement and punctuation correct?
+4. Are CTAs clear and specific?
+5. Is terminology consistent on the screen?
+6. Does the copy avoid generic AI hype?
+7. Does the screen reinforce clarity, standardization and reduction of rework?
+
+If `COPY_GUIDE_PT_BR.md` exists in the repository, read it before editing visible UI copy and follow it.
+
+## 3. Core UX model
+
+The product must not look like a simple form generator.
+
+Use this mental model:
+
+1. User brings messy context.
+2. Product helps structure the thinking.
+3. AI generates a strong draft.
+4. User reviews quality, gaps and risks.
+5. User refines versions.
+6. User exports or saves the best story.
+
+Preferred app layout:
+- Left: compact navigation and workspace/project switcher.
+- Center: main working canvas with the story/editor/result.
+- Right: contextual AI assistant, quality score, gaps, suggestions, acceptance checklist and export actions.
+- Bottom or side: version history, recent stories and regeneration controls.
+
+Do not place everything inside equally weighted cards. Create hierarchy.
+
+## 4. Landing page direction
+
+The landing page must sell the outcome, not the feature.
+
+Recommended structure:
+- Hero with strong promise and one primary CTA.
+- Interactive product preview showing messy input becoming a clean user story.
+- Clear positioning for PMs, POs and product teams.
+- “How it works” in 3 steps.
+- Before/after example of a weak story vs a strong story.
+- Benefits for PM, engineering and QA.
+- Pricing teaser: Free to start, Premium for advanced workflows.
+- Lead capture for future monetization.
+
+Hero copy direction:
+- “Transforme contexto solto em user stories prontas para desenvolvimento.”
+- “Menos retrabalho. Mais clareza para dev, QA e negócio.”
+- “Crie, refine, compare versões e exporte histórias com padrão profissional.”
+
+Avoid vague copy like:
+- “IA para produtividade.”
+- “Crie histórias com mais clareza operacional.”
+- “Workspace de user stories” without showing the outcome.
+
+## 5. Workspace direction
+
+The workspace should feel like a focused product cockpit.
+
+Replace “big textareas + result box” with:
+- Smart brief composer: a guided input area with chips, examples and progressive sections.
+- Story document editor: output rendered as a structured, editable document, not a raw card.
+- Quality panel: score, missing info, ambiguity warnings, QA coverage and technical notes.
+- Version compare: show what changed between generations.
+- Export bar: copy Markdown, copy Jira format, save, duplicate, regenerate.
+
+Important states:
+- Empty state: explains what to paste and gives examples.
+- Loading state: shows thinking steps, not a spinner only.
+- Generated state: highlights title, user story, criteria, rules, risks and QA checklist.
+- Revision state: shows diff or version chips.
+- Error state: calm message with retry and preserved input.
+
+## 6. Visual system
+
+Use a coherent design system before building screens.
+
+Typography:
+- Use one modern sans-serif family already available in the project, or add a safe web font only if the project already supports it.
+- Strong hierarchy: display, heading, subheading, body, caption, label.
+- Avoid tiny gray text. Minimum body size should be readable.
+
+Spacing:
+- Use an 8px-based spacing rhythm.
+- Common spacing values: 4, 8, 12, 16, 20, 24, 32, 40, 48, 64.
+- Do not hand-place random margins.
+
+Radius:
+- Use 3 radius levels only: small, medium, large.
+- Avoid every element having the same rounded rectangle look.
+
+Color:
+- Prefer a light-first product experience unless the task explicitly asks to keep dark mode.
+- Dark mode is allowed, but must have depth, contrast and hierarchy.
+- Use accent color intentionally for CTA, active navigation, quality status and focus state.
+- Avoid low-contrast blue/gray text on dark backgrounds.
+
+Components:
+- Button
+- Input
+- Textarea / composer
+- Card
+- Panel
+- Badge
+- Tabs
+- Tooltip
+- EmptyState
+- LoadingSkeleton
+- QualityScore
+- StorySection
+- VersionHistory
+- ExportActions
+
+All repeated UI should become reusable components.
+
+## 7. Interaction and polish
+
+Every important control must have:
+- Hover state.
+- Focus-visible state.
+- Disabled state.
+- Loading state where relevant.
+- Accessible labels where needed.
+
+Use subtle motion only where it helps:
+- Panel transitions.
+- Loading steps.
+- Generated sections appearing.
+- Button feedback.
+
+Do not add heavy animation that slows the app.
+
+## 8. Mobile-first rules
+
+The app must work well on mobile.
+
+Mobile layout:
+- Navigation becomes bottom bar or drawer.
+- Main canvas comes first.
+- Quality panel becomes collapsible drawer or tabs.
+- Text inputs should be comfortable to type into.
+- CTAs should stay visible but not block content.
+
+Test breakpoints:
+- 390px mobile.
+- 768px tablet.
+- 1024px small desktop.
+- 1440px desktop.
+
+## 9. Accessibility and trust
+
+Minimum standards:
+- Good contrast for text and controls.
+- Keyboard-accessible forms and buttons.
+- Visible focus rings.
+- Labels linked to inputs.
+- Error messages near the affected input.
+- Do not rely only on color to communicate status.
+
+Trust details:
+- Show usage limit clearly.
+- Show save/export actions clearly.
+- Preserve user input on errors.
+- Do not expose internal AI/provider details in user-facing copy unless useful.
+
+## 10. Engineering rules
+
+Before editing:
+- Inspect the project structure.
+- Identify routing, styling system, components and existing tokens.
+- Reuse existing conventions where possible.
+- Do not create a parallel design system if one already exists.
+
+Implementation:
+- Keep components small and reusable.
+- Do not hard-code repeated styles everywhere.
+- Prefer tokens, CSS variables, Tailwind config, or existing theme utilities.
+- Avoid adding new dependencies unless they materially improve quality.
+- If adding a dependency, explain why it is needed.
+- Keep Supabase/auth/data boundaries clean.
+- Centralize important UI copy when practical, for example in `src/content/landingCopy.js`, `src/content/workspaceCopy.js` or similar files.
+- Avoid scattering long marketing or workspace strings across many components.
+
+After editing:
+- Run lint/build/typecheck if available.
+- Fix obvious console errors.
+- Keep the diff focused.
+
+## 11. Visual QA protocol
+
+Do not finish a frontend task without visual validation.
+
+Required flow:
+1. Run the app locally.
+2. Open the changed screens in a browser.
+3. Capture screenshots for desktop and mobile.
+4. Compare against the intended design direction or Figma frame.
+5. Iterate at least once on spacing, hierarchy, alignment, contrast and responsive behavior.
+6. Report what was changed and what still needs product/design decision.
+
+If Playwright is available, use it to inspect pages and capture screenshots.
+
+## 12. Figma/MCP protocol
+
+When a Figma link is provided:
+- Treat the exact selected frame/node as source of truth.
+- Start by fetching design context for the exact node or frame.
+- Fetch a screenshot of the exact variant before coding.
+- Use Figma variables, components, assets and layout data when available.
+- Translate Figma output into the project’s real components and styling system.
+- Do not paste raw generated Figma code if it conflicts with the app architecture.
+- After implementation, compare the live app against the Figma reference using browser screenshots.
+
+When no Figma file is provided:
+- First create a mini design direction in text.
+- Then create or refactor the component system.
+- Then implement the screen.
+- Then visually validate in browser.
+
+## 13. Monetization-aware product rules
+
+Build features that support future freemium monetization:
+- Usage limits visible in UI.
+- Auth-ready flows.
+- Saved stories/history.
+- Workspace/project structure.
+- Upgrade CTA only where it naturally fits.
+- Premium feature placeholders should feel helpful, not annoying.
+
+Free plan should be enough to prove value.
+Premium should unlock speed, scale and collaboration:
+- More generations.
+- Saved workspaces.
+- Version compare.
+- Export templates.
+- Jira integration.
+- Team standards/checklists.
+- Custom story templates.
+
+## 14. Definition of done for a redesigned screen
+
+A screen is done only when:
+- It no longer looks like a generic AI form.
+- The primary user action is obvious in under 3 seconds.
+- The visual hierarchy clearly separates input, output, quality review and export.
+- The page works on mobile and desktop.
+- Loading, empty and error states exist.
+- The UI feels cohesive, premium and production-ready.
+- The implementation passes available lint/build checks.

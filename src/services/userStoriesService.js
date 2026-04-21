@@ -14,7 +14,7 @@ function getClientUuid() {
 export async function saveUserStory(data, userId) {
   try {
     if (!userId) {
-      return { success: false, error: new Error('Usuario nao autenticado.') }
+      return { success: false, error: new Error('Usuário não autenticado.') }
     }
 
     const { data: insertedRows, error } = await supabase
@@ -38,12 +38,12 @@ export async function saveUserStory(data, userId) {
 export async function createUserStoryVersion({ data, userId, storyGroupId, previousVersionId = null }) {
   try {
     if (!userId) {
-      return { success: false, error: new Error('Usuario nao autenticado.') }
+      return { success: false, error: new Error('Usuário não autenticado.') }
     }
 
     const resolvedGroupId = storyGroupId ?? getClientUuid()
     if (!resolvedGroupId) {
-      return { success: false, error: new Error('Nao foi possivel gerar identificador de grupo.') }
+      return { success: false, error: new Error('Não foi possível gerar o identificador do grupo.') }
     }
 
     const { data: latestVersionRows, error: latestError } = await supabase
@@ -80,7 +80,7 @@ export async function createUserStoryVersion({ data, userId, storyGroupId, previ
 export async function updateUserStory(id, data, userId) {
   try {
     if (!userId) {
-      return { success: false, error: new Error('Usuario nao autenticado.') }
+      return { success: false, error: new Error('Usuário não autenticado.') }
     }
 
     const { data: updatedRows, error } = await supabase
@@ -111,7 +111,7 @@ export async function listRecentUserStories({
 } = {}) {
   try {
     if (!userId) {
-      return { success: false, error: new Error('Usuario nao autenticado.'), data: [] }
+      return { success: false, error: new Error('Usuário não autenticado.'), data: [] }
     }
 
     let query = supabase
@@ -163,7 +163,7 @@ export async function listRecentStoryGroups({ limit = 10, sinceIso = null, userI
 export async function listStoryVersions({ storyGroupId, userId, limit = 20 } = {}) {
   try {
     if (!userId) {
-      return { success: false, error: new Error('Usuario nao autenticado.'), data: [] }
+      return { success: false, error: new Error('Usuário não autenticado.'), data: [] }
     }
     if (!storyGroupId) {
       return { success: true, data: [] }
@@ -192,7 +192,7 @@ export async function listStoryVersions({ storyGroupId, userId, limit = 20 } = {
 export async function getUserStoryById(id, userId) {
   try {
     if (!userId) {
-      return { success: false, error: new Error('Usuario nao autenticado.'), data: null }
+      return { success: false, error: new Error('Usuário não autenticado.'), data: null }
     }
 
     const { data, error } = await supabase
@@ -217,7 +217,7 @@ export async function getUserStoryById(id, userId) {
 export async function countUserStoriesByUser(userId) {
   try {
     if (!userId) {
-      return { success: false, error: new Error('Usuario nao autenticado.'), count: 0 }
+      return { success: false, error: new Error('Usuário não autenticado.'), count: 0 }
     }
 
     const { count, error } = await supabase
@@ -236,4 +236,3 @@ export async function countUserStoriesByUser(userId) {
     return { success: false, error, count: 0 }
   }
 }
-
