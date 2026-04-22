@@ -1,8 +1,9 @@
-﻿/* ============================================================
+/* ============================================================
    WORKSPACE — FASE 1 LIMPEZA VISUAL
    ============================================================ */
 
 /* --- Sidebar --- */
+/* Mobile: sidebar is a fixed drawer */
 .workspace-sidebar {
   position: fixed;
   top: 0; left: 0;
@@ -15,10 +16,26 @@
   padding: var(--space-5);
   background: var(--color-surface);
   border-right: 1px solid var(--color-border);
+  overflow-y: auto;
   transform: translateX(-100%);
   transition: transform 0.22s ease;
 }
 .workspace-sidebar--open { transform: translateX(0); }
+
+/* Desktop: sidebar becomes sticky col-1 of the CSS Grid */
+@media (min-width: 1100px) {
+  .workspace-sidebar {
+    position: sticky;
+    top: 0;
+    transform: none !important;
+    height: 100vh;
+    z-index: 1;
+    flex-shrink: 0;
+  }
+  .workspace-sidebar__close {
+    display: none;
+  }
+}
 
 .workspace-sidebar__header,
 .workspace-sidebar__brand { display: flex; align-items: center; }
@@ -153,12 +170,11 @@
 .workspace-topbar__link:hover { background: var(--color-canvas-muted); }
 
 @media (min-width: 1100px) {
-  .workspace-sidebar { transform: translateX(0); }
-  .workspace-sidebar__close, .workspace-topbar__menu { display: none; }
-  .workspace-topbar__inner { padding: var(--space-4) var(--space-8); }
+  .workspace-topbar__menu { display: none; }
+  .workspace-topbar__inner { padding: var(--space-4) var(--space-6); }
 }
 /* --- Workspace page shell --- */
-.story-workspace { display: grid; gap: var(--space-6); }
+.tool-page.story-workspace { display: grid; gap: 0; overflow-x: clip; }
 
 /* Header: removido bloco descritivo, mantido apenas info de status */
 .story-workspace__header {
