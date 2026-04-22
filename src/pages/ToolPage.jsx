@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import BriefComposer from '../components/workspace/BriefComposer'
 import QualityPanel from '../components/workspace/QualityPanel'
 import RecentStoriesPanel from '../components/workspace/RecentStoriesPanel'
@@ -10,7 +10,16 @@ import WorkspaceErrorState from '../components/workspace/WorkspaceErrorState'
 import WorkspaceLoadingState from '../components/workspace/WorkspaceLoadingState'
 import { useUserStoryWorkspace } from '../hooks/useUserStoryWorkspace'
 
+// Mobile tabs
+const TABS = [
+  { id: 'entrada', label: 'Entrada' },
+  { id: 'resultado', label: 'Resultado' },
+  { id: 'revisao', label: 'Revisão' },
+]
+
 function ToolPage() {
+  const [mobileTab, setMobileTab] = useState('entrada')
+
   const {
     activeStoryTitle,
     copyMessage,
@@ -54,18 +63,11 @@ function ToolPage() {
 
   const reviewStory = useMemo(() => {
     if (!result) return null
-
     const safeTitle = editDraft.title?.trim() || result.title
     const safeUserStory = editDraft.user_story?.trim() || result.user_story
     const safeCriteria =
       editDraft.acceptance_criteria?.length > 0 ? editDraft.acceptance_criteria : result.acceptance_criteria
-
-    return {
-      ...result,
-      title: safeTitle,
-      user_story: safeUserStory,
-      acceptance_criteria: safeCriteria,
-    }
+    return { ...result, title: safeTitle, user_story: safeUserStory, acceptance_criteria: safeCriteria }
   }, [editDraft, result])
 
   const hasDraft = Boolean(
@@ -99,72 +101,22 @@ function ToolPage() {
     />
   )
 
-  return (
-    <div className="page tool-page story-workspace">
-      <section className="tool-header story-workspace__header">
-        <div className="story-workspace__header-copy">
-          <p className="story-workspace__eyebrow">Fluxo guiado</p>
-          <h2 className="story-workspace__header-title">
-            Do brief ao documento de revisão no mesmo fluxo.
-          </h2>
-          <p>
-            Estruture o contexto, gere a base e use o painel lateral para revisar qualidade, gaps,
-            checklist de QA e exportação.
-          </p>
-        </div>
+  /* ── Painel direito: QualityPanel + histórico/versões ── */
+  const rightPanel = (
+    <aside className="workspace-right-panel">
+      <QualityPanel
+        story={reviewStory}
+        isPremium={isPremium}
+        usageCount={usageCount}
+        remainingGenerations={remainingGenerations}
+        freeGenerationLimit={freeGenerationLimit}
+        hasReachedLimit={hasReachedLimit}
+        onCopyPlain={() => handleCopy(reviewStory)}
+        plainCopyMessage={copyMessage}
+        isCopyingPlain={isCopying}
+      />
 
-        <div className="story-workspace__summary">
-          <div className="story-workspace__summary-pills" aria-label="Resumo da área de trabalho">
-            <span className="story-workspace__mini-pill">
-              Plano {isPremium ? 'Pro' : 'Free'}
-            </span>
-            <span
-              className={`story-workspace__mini-pill ${hasReachedLimit ? 'story-workspace__mini-pill--warning' : ''}`}
-            >
-              {isPremium
-                ? 'Gerações liberadas'
-                : `${remainingGenerations} ${remainingGenerations === 1 ? 'geração restante' : 'gerações restantes'}`}
-            </span>
-          </div>
-
-          <div className="tool-mode-banner">
-            <span className={`mode-pill ${isEditing ? 'mode-pill-editing' : 'mode-pill-new'}`}>
-              {isEditing ? 'Base em revisão' : 'Nova user story'}
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <div className="tool-grid story-workspace__grid">
-        <BriefComposer
-          formValues={formValues}
-          validationErrors={validationErrors}
-          onChange={handleFieldChange}
-          onApplyPrompt={handlePromptChipApply}
-          onSubmit={handleSubmitStory}
-          onReset={handleResetToCreate}
-          isSubmitting={isSubmitting}
-          isEditing={isEditing}
-          activeStoryTitle={activeStoryTitle}
-          hasAdjustment={Boolean(formValues.adjustment.trim())}
-        />
-
-        {documentCanvas}
-
-        <QualityPanel
-          story={reviewStory}
-          isPremium={isPremium}
-          usageCount={usageCount}
-          remainingGenerations={remainingGenerations}
-          freeGenerationLimit={freeGenerationLimit}
-          hasReachedLimit={hasReachedLimit}
-          onCopyPlain={() => handleCopy(reviewStory)}
-          plainCopyMessage={copyMessage}
-          isCopyingPlain={isCopying}
-        />
-      </div>
-
-      <div className="story-workspace__navigation-grid">
+      <div className="workspace-right-panel__history">
         <RecentStoriesPanel
           items={recentStories}
           selectedId={selectedStoryId}
@@ -184,21 +136,78 @@ function ToolPage() {
               isLoading={isLoadingVersions}
               onSelect={handleSelectVersion}
             />
-
             <VersionDiffSummary currentVersion={selectedVersion} previousVersion={previousVersion} />
           </div>
-        ) : (
-          <section className="panel story-workspace__versions-placeholder">
-            <div className="panel-header">
-              <p className="version-timeline__eyebrow">Versões</p>
-              <h2>A linha do tempo aparece depois da primeira geração.</h2>
-              <p>
-                Gere uma user story para começar a comparar versões, revisar mudanças e navegar
-                pela evolução da mesma base.
-              </p>
-            </div>
-          </section>
-        )}
+        ) : null}
+      </div>
+    </aside>
+  )
+
+  return (
+    <div className="tool-page story-workspace">
+      {/* ── Status bar (1 linha, compacta) ── */}
+      <header className="workspace-status-bar">
+        <div className="workspace-status-bar__left">
+          <span className="workspace-status-bar__eyebrow">Área de trabalho</span>
+          <span className="workspace-status-bar__title">
+            {isEditing && activeStoryTitle ? activeStoryTitle : 'Nova user story'}
+          </span>
+        </div>
+        <div className="workspace-status-bar__right">
+          <span className={`mode-pill ${isEditing ? 'mode-pill-editing' : 'mode-pill-new'}`}>
+            {isEditing ? 'Em revisão' : 'Nova'}
+          </span>
+          <span
+            className={`story-workspace__mini-pill ${hasReachedLimit ? 'story-workspace__mini-pill--warning' : ''}`}
+          >
+            {isPremium
+              ? 'Pro'
+              : `${remainingGenerations} ${remainingGenerations === 1 ? 'geração' : 'gerações'}`}
+          </span>
+        </div>
+      </header>
+
+      {/* ── Mobile tabs ── */}
+      <nav className="workspace-tabs" aria-label="Áreas do workspace">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            className={`workspace-tabs__tab ${mobileTab === tab.id ? 'workspace-tabs__tab--active' : ''}`}
+            onClick={() => setMobileTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
+
+      {/* ── 3-column grid (desktop) / tabs (mobile) ── */}
+      <div className="workspace-canvas">
+        {/* Col 1: BriefComposer */}
+        <div className={`workspace-canvas__col workspace-canvas__col--left ${mobileTab === 'entrada' ? 'workspace-canvas__col--active' : ''}`}>
+          <BriefComposer
+            formValues={formValues}
+            validationErrors={validationErrors}
+            onChange={handleFieldChange}
+            onApplyPrompt={handlePromptChipApply}
+            onSubmit={handleSubmitStory}
+            onReset={handleResetToCreate}
+            isSubmitting={isSubmitting}
+            isEditing={isEditing}
+            activeStoryTitle={activeStoryTitle}
+            hasAdjustment={Boolean(formValues.adjustment.trim())}
+          />
+        </div>
+
+        {/* Col 2: StoryDocument (canvas principal) */}
+        <div className={`workspace-canvas__col workspace-canvas__col--center ${mobileTab === 'resultado' ? 'workspace-canvas__col--active' : ''}`}>
+          {documentCanvas}
+        </div>
+
+        {/* Col 3: QualityPanel + histórico */}
+        <div className={`workspace-canvas__col workspace-canvas__col--right ${mobileTab === 'revisao' ? 'workspace-canvas__col--active' : ''}`}>
+          {rightPanel}
+        </div>
       </div>
     </div>
   )

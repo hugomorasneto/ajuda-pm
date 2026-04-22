@@ -18,7 +18,10 @@ function WorkspaceLayout() {
 
   return (
     <div className="workspace-shell">
+      {/* Sidebar: col 1 no desktop, drawer no mobile */}
       <WorkspaceSidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
+
+      {/* Backdrop mobile */}
       {isSidebarOpen ? (
         <button
           type="button"
@@ -28,9 +31,10 @@ function WorkspaceLayout() {
         />
       ) : null}
 
+      {/* Col 2 no desktop: topbar + conteúdo */}
       <div className="workspace-shell__main">
         <WorkspaceTopbar onOpenSidebar={openSidebar} />
-        <main className="workspace-shell__content">
+        <main className="workspace-shell__content" id="main-content">
           <Outlet />
         </main>
       </div>
