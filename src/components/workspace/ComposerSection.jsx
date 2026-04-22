@@ -1,13 +1,12 @@
-function ComposerSection({ eyebrow, title, description, error, children, footer }) {
+function ComposerSection({ icon, label, error, children, footer }) {
   return (
     <section className={`composer-section ${error ? 'composer-section--error' : ''}`}>
-      <div className="composer-section__header">
-        <div>
-          {eyebrow ? <p className="composer-section__eyebrow">{eyebrow}</p> : null}
-          <h3>{title}</h3>
-          {description ? <p>{description}</p> : null}
+      {(icon || label) && (
+        <div className="composer-section__header">
+          {icon && <span className="composer-section__icon">{icon}</span>}
+          {label && <h3 className="composer-section__label">{label}</h3>}
         </div>
-      </div>
+      )}
 
       <div className="composer-section__body">{children}</div>
 

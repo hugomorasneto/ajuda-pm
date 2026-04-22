@@ -3,6 +3,73 @@ import GapList from './GapList'
 import QaChecklist from './QaChecklist'
 import QualityScore from './QualityScore'
 
+// ── Shared icon set ───────────────────────────────────────────────
+function IconBarChart() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="18" y1="20" x2="18" y2="10"/>
+      <line x1="12" y1="20" x2="12" y2="4"/>
+      <line x1="6" y1="20" x2="6" y2="14"/>
+    </svg>
+  )
+}
+
+function IconAlertTriangle() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+  )
+}
+
+function IconClipboard() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+      <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+    </svg>
+  )
+}
+
+function IconDownload() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+  )
+}
+
+// ── Panel section wrapper ─────────────────────────────────────────
+function PanelSection({ icon, label, children }) {
+  return (
+    <div className="quality-panel__section">
+      <div className="quality-panel__section-header">
+        {icon && <span className="quality-panel__section-icon">{icon}</span>}
+        {label && <h3 className="quality-panel__section-label">{label}</h3>}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+// ── Empty state placeholder blocks ───────────────────────────────
+function PlaceholderBlock({ icon, label, hint }) {
+  return (
+    <div className="quality-panel__placeholder-block">
+      <div className="quality-panel__section-header">
+        {icon && <span className="quality-panel__section-icon">{icon}</span>}
+        <h3 className="quality-panel__section-label">{label}</h3>
+      </div>
+      <p className="quality-panel__empty-note">{hint}</p>
+    </div>
+  )
+}
+
+// ── Main component ───────────────────────────────────────────────
 function QualityPanel({
   story,
   isPremium,
@@ -17,114 +84,62 @@ function QualityPanel({
   if (!story) {
     return (
       <aside className="panel quality-panel quality-panel--empty">
-        <div className="quality-panel__header quality-panel__header--empty">
-          <div>
-            <p className="quality-panel__eyebrow">Painel de revisão</p>
-            <h2>Revise qualidade, gaps e exportações no mesmo fluxo.</h2>
-          </div>
-          <p className="quality-panel__intro">
-            Quando a primeira versão ficar pronta, este painel mostra o que falta decidir antes de
-            enviar a user story para backlog, dev e QA.
-          </p>
-        </div>
-
+        {/* Score placeholder */}
         <section className="quality-score quality-score--placeholder">
           <div className="quality-score__header">
             <div>
-              <p className="quality-panel__eyebrow">Qualidade</p>
-              <h3>Pontuação de revisão</h3>
+              <p className="quality-score__eyebrow">Qualidade</p>
+              <h3 className="quality-score__tone">—</h3>
             </div>
-            <strong className="quality-score__value">--</strong>
+            <strong className="quality-score__value">
+              --<span className="quality-score__denominator">/100</span>
+            </strong>
           </div>
           <div className="quality-score__bar" aria-hidden="true">
-            <span className="quality-score__bar-fill" style={{ width: '36%' }} />
+            <span className="quality-score__bar-fill" style={{ width: '0%' }} />
           </div>
-          <p className="quality-score__note">
-            O score aparece depois da geração para indicar se a base já está pronta para revisão.
-          </p>
+          <p className="quality-score__note">Disponível após a geração.</p>
         </section>
 
-        <div className="quality-panel__empty-grid">
-          <section className="quality-panel__block">
-            <div className="quality-panel__block-header">
-              <div>
-                <p className="quality-panel__eyebrow">Gaps</p>
-                <h3>O que ainda pede decisão</h3>
-              </div>
-            </div>
-            <p className="quality-panel__empty-note">
-              Ambiguidades, exceções e dependências críticas aparecem aqui.
-            </p>
-          </section>
-
-          <section className="quality-panel__block">
-            <div className="quality-panel__block-header">
-              <div>
-                <p className="quality-panel__eyebrow">QA</p>
-                <h3>Checklist de validação</h3>
-              </div>
-            </div>
-            <p className="quality-panel__empty-note">
-              O painel destaca cenários importantes para validar antes da entrega.
-            </p>
-          </section>
-
-          <section className="quality-panel__block">
-            <div className="quality-panel__block-header">
-              <div>
-                <p className="quality-panel__eyebrow">Exportar</p>
-                <h3>Pronto para compartilhar</h3>
-              </div>
-            </div>
-            <p className="quality-panel__empty-note">
-              Copie em Markdown, formato Jira ou texto simples quando a revisão estiver concluída.
-            </p>
-          </section>
-        </div>
+        <PlaceholderBlock icon={<IconAlertTriangle />} label="Gaps" hint="Ambiguidades e exceções aparecem aqui." />
+        <PlaceholderBlock icon={<IconClipboard />} label="QA" hint="Checklist de validação da story." />
+        <PlaceholderBlock icon={<IconDownload />} label="Exportar" hint="Copie em Markdown, Jira ou texto." />
       </aside>
     )
   }
 
   return (
     <aside className="panel quality-panel">
-      <header className="quality-panel__header">
-        <div>
-          <p className="quality-panel__eyebrow">Painel de revisão</p>
-          <h2>Revise antes de exportar</h2>
-        </div>
-        <p className="quality-panel__intro">
-          Use este painel para validar clareza, pendências e ações antes de compartilhar a user story.
-        </p>
-      </header>
-
       <QualityScore story={story} />
 
-      <GapList items={story.gaps} />
-      <QaChecklist items={story.qa_checklist} />
+      <PanelSection icon={<IconAlertTriangle />} label="Gaps">
+        <GapList items={story.gaps} />
+      </PanelSection>
 
-      <ExportActionsBar
-        story={story}
-        onCopyPlain={onCopyPlain}
-        plainCopyMessage={plainCopyMessage}
-        isCopyingPlain={isCopyingPlain}
-      />
+      <PanelSection icon={<IconClipboard />} label="QA">
+        <QaChecklist items={story.qa_checklist} />
+      </PanelSection>
 
-      <section
-        className={`quality-panel__block quality-panel__usage ${hasReachedLimit ? 'quality-panel__usage--warning' : ''}`}
-      >
-        <div className="quality-panel__block-header">
-          <div>
-            <p className="quality-panel__eyebrow">Plano</p>
-            <h3>{isPremium ? 'Pro' : 'Free'}</h3>
-          </div>
-        </div>
+      <PanelSection icon={<IconDownload />} label="Exportar">
+        <ExportActionsBar
+          story={story}
+          onCopyPlain={onCopyPlain}
+          plainCopyMessage={plainCopyMessage}
+          isCopyingPlain={isCopyingPlain}
+        />
+      </PanelSection>
 
-        <p className="quality-panel__usage-copy">
+      {/* Usage pill */}
+      <div className={`quality-panel__usage-pill ${hasReachedLimit ? 'quality-panel__usage-pill--warning' : ''}`}>
+        <span className="quality-panel__plan-label">{isPremium ? 'Pro' : 'Free'}</span>
+        <span className="quality-panel__plan-count">
           {isPremium
-            ? 'Seu plano está com gerações liberadas.'
-            : `Você usou ${usageCount}/${freeGenerationLimit} gerações. Restam ${remainingGenerations} nesta conta.`}
-        </p>
-      </section>
+            ? 'Gerações ilimitadas'
+            : hasReachedLimit
+              ? 'Limite atingido · Faça upgrade'
+              : `${remainingGenerations} ${remainingGenerations === 1 ? 'geração restante' : 'gerações restantes'}`}
+        </span>
+      </div>
     </aside>
   )
 }

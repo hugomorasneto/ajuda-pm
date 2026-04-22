@@ -1,17 +1,17 @@
 const loadingPresets = {
   generate: {
-    eyebrow: 'Gerando',
-    title: 'Estruturando a user story',
-    description:
-      'O contexto está sendo organizado em um documento de revisão. O conteúdo preenchido continua preservado.',
-    steps: ['Analisando o contexto', 'Estruturando a user story', 'Revisando critérios de aceite'],
+    steps: [
+      { label: 'Analisando contexto…', pct: 30 },
+      { label: 'Identificando persona…', pct: 65 },
+      { label: 'Montando critérios…', pct: 90 },
+    ],
   },
   selection: {
-    eyebrow: 'Carregando',
-    title: 'Abrindo a user story selecionada',
-    description:
-      'O ProdForge está trazendo o documento salvo, as versões relacionadas e o estado atual da área de trabalho.',
-    steps: ['Buscando a user story', 'Atualizando o documento', 'Sincronizando versões e histórico'],
+    steps: [
+      { label: 'Buscando a story…', pct: 40 },
+      { label: 'Abrindo documento…', pct: 75 },
+      { label: 'Sincronizando versões…', pct: 95 },
+    ],
   },
 }
 
@@ -19,26 +19,36 @@ function WorkspaceLoadingState({ mode = 'generate' }) {
   const preset = loadingPresets[mode] ?? loadingPresets.generate
 
   return (
-    <section className="panel workspace-state workspace-state--loading" aria-live="polite">
+    <section className="panel workspace-state workspace-state--loading" aria-live="polite" aria-label="Carregando">
       <div className="workspace-state__content">
-        <p className="workspace-state__eyebrow">{preset.eyebrow}</p>
-        <h2>{preset.title}</h2>
-        <p>{preset.description}</p>
-
-        <ol className="workspace-state__steps">
-          {preset.steps.map((step, index) => (
-            <li key={step}>
-              <span className="workspace-state__step-index">{`0${index + 1}`}</span>
-              <span>{step}</span>
-            </li>
-          ))}
-        </ol>
-
+        {/* Skeleton that mimics the real document structure */}
         <div className="workspace-state__skeleton" aria-hidden="true">
+          {/* title skeleton */}
+          <span className="workspace-state__skeleton-line workspace-state__skeleton-line--title" />
+          {/* user story sentence */}
           <span className="workspace-state__skeleton-line workspace-state__skeleton-line--lg" />
           <span className="workspace-state__skeleton-line" />
-          <span className="workspace-state__skeleton-line" />
+          <span className="workspace-state__skeleton-line workspace-state__skeleton-line--md" />
+          {/* criteria block */}
           <span className="workspace-state__skeleton-card" />
+          <span className="workspace-state__skeleton-line workspace-state__skeleton-line--sm" />
+          <span className="workspace-state__skeleton-line workspace-state__skeleton-line--md" />
+          <span className="workspace-state__skeleton-line workspace-state__skeleton-line--sm" />
+        </div>
+
+        {/* Animated progress steps */}
+        <div className="workspace-state__progress-steps">
+          {preset.steps.map((step) => (
+            <div key={step.label} className="workspace-state__progress-row">
+              <span className="workspace-state__progress-label">{step.label}</span>
+              <div className="workspace-state__progress-track">
+                <span
+                  className="workspace-state__progress-fill"
+                  style={{ '--target-pct': `${step.pct}%` }}
+                />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>

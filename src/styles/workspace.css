@@ -911,3 +911,473 @@
     grid-column: 1 / -1;
   }
 }
+
+/* ============================================================
+   REDESIGN — UX PREMIUM
+   ============================================================ */
+
+/* ── btn-full ───────────────────────────────────────────────── */
+.story-workspace .btn-full { width: 100%; justify-content: center; }
+
+/* ── BriefComposer: Stepper ─────────────────────────────────── */
+.brief-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-2);
+}
+
+.brief-stepper__step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  position: relative;
+  flex: 1;
+}
+
+.brief-stepper__dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 2px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.brief-stepper__step--active .brief-stepper__dot {
+  border-color: var(--color-accent);
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+
+.brief-stepper__step--done .brief-stepper__dot {
+  border-color: var(--color-success);
+  background: var(--color-success-subtle);
+  color: var(--color-success);
+  font-size: 9px;
+}
+
+.brief-stepper__label {
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+
+.brief-stepper__step--active .brief-stepper__label { color: var(--color-text-primary); }
+.brief-stepper__step--done .brief-stepper__label { color: var(--color-success); }
+
+.brief-stepper__line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+  margin: 0 var(--space-2);
+}
+
+/* ── BriefComposer: active story banner ─────────────────────── */
+.brief-composer__active-story {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-success-subtle);
+  border: 1px solid rgba(22,163,74,0.2);
+}
+
+.brief-composer__active-label {
+  color: var(--color-success);
+  font-size: var(--text-label);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.brief-composer__active-story strong {
+  flex: 1;
+  color: var(--color-text-primary);
+  font-size: var(--text-small);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.brief-composer__reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ── ComposerSection: icon + label pattern ──────────────────── */
+.composer-section__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.composer-section__icon {
+  display: inline-flex;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.composer-section__label {
+  margin: 0;
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  letter-spacing: 0;
+}
+
+/* textarea error state */
+.story-workspace textarea.textarea--error {
+  border-color: var(--color-error);
+}
+
+/* ── Accordion ──────────────────────────────────────────────── */
+.brief-accordion {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-canvas-muted);
+  overflow: hidden;
+}
+
+.brief-accordion__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  gap: var(--space-3);
+  color: var(--color-text-primary);
+  transition: background 0.15s;
+}
+
+.brief-accordion__trigger:hover { background: var(--color-border); }
+.brief-accordion__trigger--muted { color: var(--color-text-secondary); }
+
+.brief-accordion__trigger-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.brief-accordion__label {
+  font-size: var(--text-body);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.brief-accordion__optional {
+  font-size: var(--text-small);
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+.brief-accordion__error-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-error);
+  flex-shrink: 0;
+}
+
+.brief-accordion__preview {
+  font-size: var(--text-small);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.brief-accordion__chevron {
+  display: inline-flex;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.brief-accordion__chevron--open { transform: rotate(180deg); }
+
+/* Accordion body — animated open/close */
+.brief-accordion__body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
+  overflow: hidden;
+}
+
+.brief-accordion--open .brief-accordion__body {
+  grid-template-rows: 1fr;
+}
+
+.brief-accordion__body > .composer-section {
+  min-height: 0;
+  margin: var(--space-1) var(--space-3) var(--space-3);
+  border: none;
+  background: transparent;
+  padding: var(--space-2) 0;
+}
+
+/* ── BriefComposer: CTA button ──────────────────────────────── */
+.brief-composer__submit {
+  gap: var(--space-2);
+  min-height: 44px;
+  font-size: var(--text-body);
+}
+
+/* ── BriefComposer: Loading progress ───────────────────────── */
+.brief-loading {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+}
+
+.brief-loading__step {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.brief-loading__label {
+  font-size: var(--text-small);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.brief-loading__bar {
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-border);
+  overflow: hidden;
+}
+
+.brief-loading__bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-accent);
+  width: 0;
+  animation: brief-loading-expand 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes brief-loading-expand {
+  from { width: 0; }
+  to { width: var(--target-width, 80%); }
+}
+
+/* ── Empty State: redesign ──────────────────────────────────── */
+.workspace-state__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  margin-bottom: var(--space-2);
+  animation: ws-icon-pulse 3s ease-in-out infinite;
+}
+
+@keyframes ws-icon-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(0.96); }
+}
+
+.workspace-state__copy { display: grid; gap: var(--space-2); max-width: 36rem; }
+.workspace-state__copy h2 { margin: 0; font-size: var(--text-h2); line-height: 1.3; }
+.workspace-state__copy p { margin: 0; color: var(--color-text-secondary); font-size: var(--text-body); }
+
+.workspace-state__hints {
+  display: flex;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+
+.workspace-state__hint-mark {
+  color: var(--color-accent);
+  margin-right: var(--space-1);
+}
+
+/* ── Loading State: redesign ────────────────────────────────── */
+.workspace-state__skeleton {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.workspace-state__skeleton-line--title {
+  height: 14px;
+  width: 55%;
+}
+
+.workspace-state__skeleton-line--lg { width: 88%; }
+.workspace-state__skeleton-line--md { width: 72%; }
+.workspace-state__skeleton-line--sm { width: 60%; }
+
+.workspace-state__progress-steps {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.workspace-state__progress-row {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.workspace-state__progress-label {
+  font-size: var(--text-small);
+  color: var(--color-text-secondary);
+}
+
+.workspace-state__progress-track {
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-border);
+  overflow: hidden;
+}
+
+.workspace-state__progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-accent);
+  width: 0;
+  animation: ws-progress-fill 1.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes ws-progress-fill {
+  from { width: 0; }
+  to { width: var(--target-pct, 80%); }
+}
+
+/* ── QualityPanel: section pattern ─────────────────────────── */
+.quality-panel__section {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.quality-panel__section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.quality-panel__section-icon {
+  display: inline-flex;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.quality-panel__section-label {
+  margin: 0;
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+/* placeholder blocks (empty state) */
+.quality-panel__placeholder-block {
+  display: grid;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.quality-panel__empty-note {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+  line-height: 1.55;
+}
+
+/* usage pill at bottom */
+.quality-panel__usage-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-canvas-muted);
+  margin-top: var(--space-2);
+}
+
+.quality-panel__usage-pill--warning {
+  border-color: rgba(217,119,6,0.25);
+  background: var(--color-warning-subtle);
+}
+
+.quality-panel__plan-label {
+  font-size: var(--text-small);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.quality-panel__plan-count {
+  font-size: var(--text-small);
+  color: var(--color-text-muted);
+}
+
+.quality-panel__usage-pill--warning .quality-panel__plan-count {
+  color: var(--color-warning);
+}
+
+/* ── QualityScore: denominator + eyebrow ───────────────────── */
+.quality-score__eyebrow {
+  margin: 0;
+  color: var(--color-accent);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.quality-score__tone {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.quality-score__denominator {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin-left: 2px;
+}
+

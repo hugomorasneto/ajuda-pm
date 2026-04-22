@@ -1,3 +1,30 @@
+import { useEffect, useRef, useState } from 'react'
+
+// ── Animated score (counts up from 0 on mount) ───────────────────
+function useCountUp(target, duration = 800) {
+  const [value, setValue] = useState(0)
+  const rafRef = useRef(null)
+
+  useEffect(() => {
+    if (!target) return
+    let start = null
+
+    function step(timestamp) {
+      if (!start) start = timestamp
+      const progress = Math.min((timestamp - start) / duration, 1)
+      // easeOutCubic
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setValue(Math.round(eased * target))
+      if (progress < 1) rafRef.current = requestAnimationFrame(step)
+    }
+
+    rafRef.current = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [target, duration])
+
+  return value
+}
+
 function getFallbackScore(story) {
   if (!story) return 0
 
@@ -16,45 +43,38 @@ function getFallbackScore(story) {
 
 function getScoreMeta(score) {
   if (score >= 85) {
-    return {
-      label: 'Alta clareza',
-      note: 'A base já está bem estruturada para revisão e encaminhamento.',
-      toneClass: 'quality-score--good',
-    }
+    return { label: 'Alta clareza', note: 'Pronta para revisão e encaminhamento.', toneClass: 'quality-score--good' }
   }
-
   if (score >= 70) {
-    return {
-      label: 'Boa base',
-      note: 'A user story está utilizável, mas ainda vale revisar gaps e checklist.',
-      toneClass: 'quality-score--mid',
-    }
+    return { label: 'Boa base', note: 'Utilizável. Revise gaps e checklist.', toneClass: 'quality-score--mid' }
   }
-
-  return {
-    label: 'Revisar antes de compartilhar',
-    note: 'Ainda há pontos importantes para consolidar antes de enviar ao backlog.',
-    toneClass: 'quality-score--low',
-  }
+  return { label: 'Revisar', note: 'Consolide os pontos antes de compartilhar.', toneClass: 'quality-score--low' }
 }
 
 function QualityScore({ story }) {
   const providedScore = Number(story?.generation_meta?.quality_score)
-  const score = Number.isFinite(providedScore) && providedScore > 0 ? providedScore : getFallbackScore(story)
-  const scoreMeta = getScoreMeta(score)
+  const target = Number.isFinite(providedScore) && providedScore > 0 ? providedScore : getFallbackScore(story)
+  const score = useCountUp(target)
+  const scoreMeta = getScoreMeta(target)
 
   return (
     <section className={`quality-score ${scoreMeta.toneClass}`}>
       <div className="quality-score__header">
         <div>
-          <p className="quality-panel__eyebrow">Qualidade</p>
-          <h3>{scoreMeta.label}</h3>
+          <p className="quality-score__eyebrow">Qualidade</p>
+          <h3 className="quality-score__tone">{scoreMeta.label}</h3>
         </div>
-        <strong className="quality-score__value">{score}</strong>
+        <strong className="quality-score__value" aria-label={`Score: ${score} de 100`}>
+          {score}
+          <span className="quality-score__denominator">/100</span>
+        </strong>
       </div>
 
-      <div className="quality-score__bar" aria-hidden="true">
-        <span className="quality-score__bar-fill" style={{ width: `${Math.min(score, 100)}%` }} />
+      <div className="quality-score__bar" role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100}>
+        <span
+          className="quality-score__bar-fill"
+          style={{ width: `${Math.min(score, 100)}%`, transition: 'width 0.05s linear' }}
+        />
       </div>
 
       <p className="quality-score__note">{scoreMeta.note}</p>
