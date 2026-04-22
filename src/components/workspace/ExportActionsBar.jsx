@@ -48,9 +48,6 @@ function ExportActionsBar({ story, onCopyPlain, plainCopyMessage, isCopyingPlain
       </div>
 
       <div className="export-actions__buttons">
-        <button type="button" className="btn btn-secondary btn-small" onClick={onCopyPlain} disabled={!story || isCopyingPlain}>
-          {isCopyingPlain ? 'Copiando...' : 'Copiar user story'}
-        </button>
         <button
           type="button"
           className="btn btn-secondary btn-small"
@@ -65,7 +62,15 @@ function ExportActionsBar({ story, onCopyPlain, plainCopyMessage, isCopyingPlain
           onClick={handleCopyJira}
           disabled={!story || isCopyingJira}
         >
-          {isCopyingJira ? 'Copiando...' : 'Copiar em formato Jira'}
+          {isCopyingJira ? 'Copiando...' : 'Copiar no formato Jira'}
+        </button>
+        <button
+          type="button"
+          className="btn btn-secondary btn-small"
+          onClick={onCopyPlain}
+          disabled={!story || isCopyingPlain}
+        >
+          {isCopyingPlain ? 'Copiando...' : 'Copiar texto simples'}
         </button>
       </div>
 

@@ -3,7 +3,7 @@ function WorkspaceEmptyState({ hasDraft }) {
     <section className="panel workspace-state workspace-state--empty">
       <div className="workspace-state__content">
         <p className="workspace-state__eyebrow">Pronto para começar</p>
-        <h2>Traga um contexto real para gerar a primeira user story.</h2>
+        <h2>Cole um contexto real para abrir a primeira revisão.</h2>
         <p>
           Cole uma dor do usuário, um problema de fluxo, uma regra de negócio ou uma demanda do
           backlog. O ProdForge transforma isso em uma user story com critérios de aceite, gaps e
@@ -21,13 +21,17 @@ function WorkspaceEmptyState({ hasDraft }) {
           </div>
           <div className="workspace-state__tip">
             <strong>Próximo passo</strong>
-            <span>{hasDraft ? 'Complete o brief e gere a primeira versão.' : 'Preencha o composer à esquerda para começar.'}</span>
+            <span>
+              {hasDraft
+                ? 'Complete o brief e gere a primeira versão.'
+                : 'Preencha o brief guiado à esquerda para começar.'}
+            </span>
           </div>
         </div>
 
         <div className="workspace-state__actions">
           <a className="btn btn-secondary" href="#workspace-composer">
-            Ir para o brief
+            Preencher o brief
           </a>
         </div>
       </div>

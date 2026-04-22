@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
 
-function PricingCard({ plan, cta }) {
+function PricingCard({ plan, cta, variant }) {
   return (
-    <article className="landing-pricing__card">
+    <article className={`landing-pricing__card landing-pricing__card--${variant}`}>
       <div className="landing-pricing__card-header">
         <div>
           <p className="landing-pricing__name">{plan.name}</p>
@@ -34,6 +34,7 @@ function PricingTeaser({ content, isAuthenticated }) {
       <div className="landing-pricing__grid">
         <PricingCard
           plan={content.free}
+          variant="free"
           cta={
             isAuthenticated ? (
               <Link className="landing-button landing-button--secondary" to="/tool">
@@ -49,6 +50,7 @@ function PricingTeaser({ content, isAuthenticated }) {
 
         <PricingCard
           plan={content.pro}
+          variant="pro"
           cta={
             <button type="button" className="landing-button landing-button--secondary" disabled>
               Em evolução

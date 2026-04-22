@@ -1,18 +1,18 @@
 export const landingCopy = {
   hero: {
-    eyebrow: 'Do contexto ao backlog pronto para revisão',
-    title: 'Transforme contexto solto em user stories prontas para revisão por produto, dev e QA.',
+    eyebrow: 'Do contexto disperso ao backlog pronto para revisão',
+    title: 'Transforme contexto solto em user stories prontas para desenvolvimento.',
     description:
-      'O ProdForge organiza briefings confusos, regras espalhadas e requisitos incompletos em uma user story clara, completa e pronta para refinamento.',
+      'O ProdForge organiza briefings confusos, regras espalhadas e requisitos incompletos em um documento claro para revisão por produto, dev e QA.',
     highlights: [
       'Objetivo, critérios de aceite, gaps e checklist no mesmo fluxo.',
       'Mais clareza para produto. Menos retrabalho para dev e QA.',
-      'Estrutura profissional para sair do texto solto e chegar ao backlog.',
+      'Estrutura profissional para sair do texto solto e chegar ao backlog com mais consistência.',
     ],
     stats: [
       { value: '1 fluxo', label: 'do contexto inicial até a versão pronta para revisão' },
-      { value: '3 públicos', label: 'PM, dev e QA alinhados na mesma base de trabalho' },
-      { value: 'Free e Pro', label: 'entrada simples agora, camadas avançadas na evolução do produto' },
+      { value: 'PM, dev e QA', label: 'alinhados na mesma base de trabalho' },
+      { value: 'Free e Pro', label: 'comece simples e evolua para mais escala quando fizer sentido' },
     ],
     preview: {
       problemLabel: 'Contexto bruto',
@@ -22,7 +22,7 @@ export const landingCopy = {
         'Dev precisa entender regra, exceções e impacto no cadastro.',
         'QA ainda não tem critérios claros para testar o fluxo.',
       ],
-      transitionLabel: 'ProdForge estrutura',
+      transitionLabel: 'ProdForge organiza',
       storyTitle: 'Validar domínio corporativo no onboarding B2B',
       objective:
         'Garantir que apenas empresas com domínio elegível concluam o cadastro inicial, reduzindo retrabalho operacional.',
@@ -40,9 +40,9 @@ export const landingCopy = {
   },
   workflow: {
     eyebrow: 'Como funciona',
-    title: 'Uma jornada curta para sair do briefing confuso e chegar a uma user story utilizável.',
+    title: 'Uma sequência curta para sair do briefing confuso e chegar a uma user story utilizável.',
     description:
-      'A landing vende a transformação; o produto entrega um fluxo de trabalho para estruturar, revisar e comparar versões.',
+      'O ProdForge organiza o raciocínio, entrega a primeira versão e apoia a revisão antes de a história entrar no backlog.',
     steps: [
       {
         step: '01',
@@ -54,13 +54,13 @@ export const landingCopy = {
         step: '02',
         title: 'Receba uma primeira versão estruturada',
         description:
-          'O ProdForge organiza o objetivo, a user story, os critérios de aceite, os gaps e o checklist de QA.',
+          'O ProdForge organiza objetivo, user story, critérios de aceite, gaps e checklist de QA.',
       },
       {
         step: '03',
         title: 'Revise antes de enviar ao backlog',
         description:
-          'Ajuste a versão final com mais clareza para o squad, evitando ruído entre produto, dev e qualidade.',
+          'Revise a versão final com mais clareza para o squad, evitando ruído entre produto, dev e qualidade.',
       },
     ],
   },
@@ -105,7 +105,7 @@ export const landingCopy = {
         title: 'Mais contexto para decidir',
         bullets: [
           'Organiza o problema antes de virar tarefa.',
-          'Ajuda a identificar gaps e riscos cedo.',
+          'Ajuda a identificar gaps, riscos e dependências cedo.',
         ],
       },
       {
@@ -128,13 +128,13 @@ export const landingCopy = {
   },
   pricing: {
     eyebrow: 'Planos',
-    title: 'Comece no Free e evolua para mais escala quando o fluxo já estiver validado.',
+    title: 'Comece no Free e evolua para mais escala quando o processo já estiver validado.',
     description:
-      'O plano gratuito prova valor no uso real. O plano Pro entra quando o time precisa ganhar velocidade, padrão e profundidade de revisão.',
+      'O plano gratuito prova valor no uso real. O Pro entra quando o time precisa ganhar velocidade, padrão e profundidade de revisão.',
     free: {
       name: 'Free',
       badge: 'Disponível agora',
-      description: 'Para validar o fluxo com contexto real e sair do texto solto.',
+      description: 'Para validar o fluxo com contexto real e sair do texto solto com mais clareza.',
       items: [
         'Gerações iniciais para testar o produto.',
         'Histórico por usuário.',
@@ -144,7 +144,7 @@ export const landingCopy = {
     pro: {
       name: 'Pro',
       badge: 'Evolução planejada',
-      description: 'Para times que precisam de mais escala, padrão e colaboração.',
+      description: 'Para times que precisam de mais escala, padrão, versões e colaboração.',
       items: [
         'Mais gerações e mais versões por fluxo.',
         'Comparação de versões e exportações avançadas.',
@@ -156,8 +156,8 @@ export const landingCopy = {
     eyebrow: 'Interesse no plano Pro',
     title: 'Cadastre seu interesse para acompanhar a evolução do produto.',
     description:
-      'Estamos finalizando a captura pública com segurança. Por enquanto, este bloco mostra como o cadastro de interesse vai funcionar.',
-    note: 'Cadastro de interesse em breve.',
+      'Estamos finalizando a captura pública com segurança. Por enquanto, este bloco mostra como a lista de interesse vai funcionar.',
+    note: 'Lista de interesse em breve.',
   },
   finalCta: {
     eyebrow: 'Pronto para começar',

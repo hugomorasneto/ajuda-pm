@@ -16,7 +16,7 @@ function LandingHero({ hero, isAuthenticated }) {
                 Abrir área de trabalho
               </Link>
               <a className="landing-button landing-button--secondary" href="#como-funciona">
-                Ver como funciona
+                Ver o fluxo
               </a>
             </>
           ) : (
@@ -25,7 +25,7 @@ function LandingHero({ hero, isAuthenticated }) {
                 Testar grátis
               </Link>
               <a className="landing-button landing-button--secondary" href="#antes-depois">
-                Ver exemplo
+                Ver user story pronta
               </a>
             </>
           )}
@@ -36,18 +36,18 @@ function LandingHero({ hero, isAuthenticated }) {
             <li key={item}>{item}</li>
           ))}
         </ul>
-
-        <div className="landing-hero__stats" aria-label="Métricas da proposta de valor">
-          {hero.stats.map((item) => (
-            <article key={item.label} className="landing-stat">
-              <strong>{item.value}</strong>
-              <span>{item.label}</span>
-            </article>
-          ))}
-        </div>
       </div>
 
       <HeroTransformationPreview preview={hero.preview} />
+
+      <div className="landing-hero__stats" aria-label="Métricas da proposta de valor">
+        {hero.stats.map((item) => (
+          <article key={item.label} className="landing-stat">
+            <strong>{item.value}</strong>
+            <span>{item.label}</span>
+          </article>
+        ))}
+      </div>
     </section>
   )
 }

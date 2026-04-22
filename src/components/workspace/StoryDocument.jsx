@@ -23,6 +23,11 @@ function StoryDocument({
             Gere a primeira versão para visualizar objetivo, critérios de aceite, gaps, regras de
             negócio e checklist de QA no mesmo documento.
           </p>
+          <ul className="story-document__empty-list">
+            <li>Objetivo e user story em formato legível para refinamento.</li>
+            <li>Critérios de aceite organizados para revisão com dev e QA.</li>
+            <li>Gaps, regras de negócio e notas no mesmo fluxo de trabalho.</li>
+          </ul>
         </div>
       </section>
     )

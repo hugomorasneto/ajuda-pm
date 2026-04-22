@@ -6,11 +6,21 @@ function VersionTimeline({ versions, selectedId, isLoading, onSelect }) {
       <div className="panel-header panel-header-row">
         <div>
           <p className="version-timeline__eyebrow">Versões</p>
-          <h2>Linha do tempo da mesma base</h2>
+          <h2>Linha do tempo da base ativa</h2>
           <p>Selecione uma versão salva para comparar evolução, ajustes e critérios.</p>
         </div>
-        {isLoading ? <p className="result-inline-status">Carregando versões...</p> : null}
+
+        <div className="version-timeline__meta-group">
+          <span className="version-timeline__count">
+            {versions.length} {versions.length === 1 ? 'versão' : 'versões'}
+          </span>
+          {isLoading ? <p className="result-inline-status">Carregando versões...</p> : null}
+        </div>
       </div>
+
+      {!isLoading && versions.length === 0 ? (
+        <p className="history-status">A primeira versão aparece aqui depois da geração inicial.</p>
+      ) : null}
 
       <div className="version-timeline__list">
         {versions.map((version, index) => {
@@ -40,7 +50,7 @@ function VersionTimeline({ versions, selectedId, isLoading, onSelect }) {
 
                 {version.regeneration_instruction ? (
                   <p className="version-timeline__instruction">
-                    Ajuste: {version.regeneration_instruction}
+                    Ajuste aplicado: {version.regeneration_instruction}
                   </p>
                 ) : null}
               </div>

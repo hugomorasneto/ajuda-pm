@@ -2,8 +2,8 @@ import { Link, useLocation } from 'react-router-dom'
 
 const pageMeta = {
   '/tool': {
-    title: 'Criação, revisão e comparação de user stories',
-    description: 'Estruture o contexto, revise o documento e compare versões no mesmo fluxo.',
+    title: 'Área de trabalho',
+    description: 'Brief, documento e revisão no mesmo fluxo.',
   },
   '/admin': {
     title: 'Painel administrativo',

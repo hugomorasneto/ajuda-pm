@@ -15,11 +15,14 @@ function RecentStoriesPanel({
       <div className="panel-header panel-header-row">
         <div>
           <p className="recent-stories-panel__eyebrow">Histórico</p>
-          <h2>User stories recentes</h2>
-          <p>Navegue pelas últimas bases salvas sem perder o documento atual.</p>
+          <h2>Bases recentes</h2>
+          <p>Navegue pelas últimas bases salvas sem perder a user story que está em revisão.</p>
         </div>
 
         <div className="history-controls">
+          <span className="recent-stories-panel__count">
+            {items.length} {items.length === 1 ? 'base' : 'bases'}
+          </span>
           <select
             className="history-filter"
             value={filterValue}
@@ -40,7 +43,9 @@ function RecentStoriesPanel({
       {loadErrorMessage ? <p className="history-status history-status-error">{loadErrorMessage}</p> : null}
 
       {!isLoading && items.length === 0 ? (
-        <p className="history-status">Nenhuma user story salva ainda.</p>
+        <p className="history-status">
+          Nenhuma base salva ainda. Gere a primeira user story para começar o histórico.
+        </p>
       ) : null}
 
       <div className="recent-stories-panel__list">
@@ -58,7 +63,7 @@ function RecentStoriesPanel({
               <div className="recent-story-card__top">
                 <p className="recent-story-card__title">{item.title}</p>
                 <span className={`recent-story-card__badge ${isActive ? 'recent-story-card__badge--active' : ''}`}>
-                  {isActive ? 'Ativa' : `V${item.version_number ?? 1}`}
+                  {isActive ? 'Em revisão' : `V${item.version_number ?? 1}`}
                 </span>
               </div>
 
@@ -68,7 +73,7 @@ function RecentStoriesPanel({
 
               <div className="recent-story-card__meta">
                 <span>{formatDateTime(item.created_at)}</span>
-                <span>Abrir base</span>
+                <span>Selecionar base</span>
               </div>
             </button>
           )

@@ -23,6 +23,8 @@ function buildDiffSummary(previousVersion, currentVersion) {
 
 function VersionDiffSummary({ currentVersion, previousVersion }) {
   const diff = buildDiffSummary(previousVersion, currentVersion)
+  const totalCriteriaChanges =
+    (diff?.addedCriteria?.length ?? 0) + (diff?.removedCriteria?.length ?? 0)
 
   return (
     <section className="panel version-diff-summary">
@@ -37,9 +39,17 @@ function VersionDiffSummary({ currentVersion, previousVersion }) {
       </div>
 
       {!previousVersion || !diff ? (
-        <p className="history-status">Gere uma nova versão para visualizar o resumo de diferenças.</p>
+        <p className="history-status">
+          Gere uma nova versão para comparar o que mudou em relação à base anterior.
+        </p>
       ) : (
         <div className="version-diff-summary__content">
+          <p className="version-diff-summary__lead">
+            {totalCriteriaChanges > 0
+              ? `Esta versão trouxe ${totalCriteriaChanges} mudança${totalCriteriaChanges === 1 ? '' : 's'} nos critérios de aceite.`
+              : 'Esta versão manteve a estrutura principal dos critérios de aceite.'}
+          </p>
+
           <div className="version-diff-summary__chips">
             <span className={`version-diff-summary__chip ${diff.titleChanged ? 'version-diff-summary__chip--changed' : ''}`}>
               {diff.titleChanged ? 'Título alterado' : 'Título mantido'}
@@ -53,7 +63,7 @@ function VersionDiffSummary({ currentVersion, previousVersion }) {
           </div>
 
           <div className="version-diff-summary__grid">
-            <article className="version-diff-summary__block">
+            <article className="version-diff-summary__block version-diff-summary__block--positive">
               <h3>Critérios adicionados</h3>
               {diff.addedCriteria.length > 0 ? (
                 <ul className="version-diff-summary__list version-diff-summary__list--positive">
@@ -66,7 +76,7 @@ function VersionDiffSummary({ currentVersion, previousVersion }) {
               )}
             </article>
 
-            <article className="version-diff-summary__block">
+            <article className="version-diff-summary__block version-diff-summary__block--muted">
               <h3>Critérios removidos</h3>
               {diff.removedCriteria.length > 0 ? (
                 <ul className="version-diff-summary__list version-diff-summary__list--muted">

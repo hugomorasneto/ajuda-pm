@@ -23,6 +23,7 @@ body {
     radial-gradient(circle at top right, rgba(49, 92, 241, 0.08), transparent 18%),
     var(--color-canvas);
   line-height: 1.5;
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
