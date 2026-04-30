@@ -1,5 +1,6 @@
+# Keep this file aligned with SUPABASE_PROJECT_REF in .env.local
+# or in the current shell before running the Supabase scripts.
 project_id = "bkuizdxdmnneyjsjydtm"
 
 [functions.generate-user-story]
 verify_jwt = false
-

@@ -8,6 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "supabase:doctor": "powershell -ExecutionPolicy Bypass -File scripts/supabase-doctor.ps1",
+    "supabase:link": "powershell -ExecutionPolicy Bypass -File scripts/supabase-link.ps1",
     "supabase:functions:serve": "powershell -ExecutionPolicy Bypass -File scripts/supabase-serve.ps1",
     "supabase:functions:deploy": "powershell -ExecutionPolicy Bypass -File scripts/supabase-deploy.ps1",
     "supabase:secrets:set": "powershell -ExecutionPolicy Bypass -File scripts/supabase-secrets-set.ps1"

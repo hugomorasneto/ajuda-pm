@@ -8,7 +8,7 @@ try {
   $context = Assert-SupabaseProjectContext -EnvFile $EnvFile -RequireToken
   Use-SupabaseAccessToken -Context $context
 
-  & supabase functions deploy generate-user-story --project-ref $context.ProjectRef --no-verify-jwt
+  & supabase link --project-ref $context.ProjectRef
   if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
   }

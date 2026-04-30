@@ -1,16 +1,45 @@
-# React + Vite
+# ProdForge
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ProdForge is a React + Vite web app for PMs and POs to turn loose product
+context into structured user stories with acceptance criteria, gaps, and QA
+checklists.
 
-Currently, two official plugins are available:
+## Local app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+## Environment contract
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Copy [`.env.local.example`](C:/Projetos/ajuda-pm/.env.local.example:1) to
+`.env.local` and define:
 
-## Expanding the ESLint configuration
+```dotenv
+SUPABASE_PROJECT_REF=your_project_ref
+VITE_SUPABASE_URL=https://your_project_ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_ACCESS_TOKEN_ENV=SUPABASE_ACCESS_TOKEN_PRODFORGE
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The real access token must stay outside the repo in the env var named by
+`SUPABASE_ACCESS_TOKEN_ENV`.
+
+## Supabase workflow
+
+This repo intentionally ignores the Supabase MCP as the source of truth.
+All Supabase operations are bound to the explicit project context declared in
+the repo and local envs.
+
+Useful commands:
+
+```bash
+npm run supabase:doctor
+npm run supabase:link
+npm run supabase:functions:serve
+npm run supabase:secrets:set -- GEMINI_API_KEY=YOUR_KEY
+npm run supabase:functions:deploy
+```
+
+More details live in [supabase/README.md](C:/Projetos/ajuda-pm/supabase/README.md:1).
