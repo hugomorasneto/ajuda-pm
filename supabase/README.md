@@ -57,6 +57,14 @@ This checks:
 npm run supabase:link
 ```
 
+## Apply SQL files to the remote project
+
+Use the Management API through the repo's explicit project context:
+
+```bash
+npm run supabase:sql:apply -- supabase/leads-rls.sql
+```
+
 ## Serve the function locally
 
 ```bash

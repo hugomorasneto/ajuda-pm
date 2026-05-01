@@ -21,8 +21,8 @@ function ProtectedRoute({ children }) {
         to="/login"
         replace
         state={{
-          from: location.pathname,
-          message: 'Sua sessão expirou ou você precisa entrar para acessar a área de trabalho.',
+          from: `${location.pathname}${location.search}${location.hash}`,
+          message: 'Entre para acessar sua área de trabalho.',
         }}
       />
     )

@@ -1,38 +1,85 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
 import { APP_NAME } from '../constants/app'
+import { useAuth } from '../hooks/useAuth'
+import {
+  getAuthErrorMessage,
+  isEmailConfirmationError,
+  resendSignupConfirmation,
+  signInWithEmail,
+} from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
 
 function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const [email, setEmail] = useState('')
+  const { user, isAuthLoading } = useAuth()
+  const [email, setEmail] = useState(location.state?.email ?? '')
   const [password, setPassword] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const [infoMessage, setInfoMessage] = useState(location.state?.message ?? '')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isResending, setIsResending] = useState(false)
+  const [canResendConfirmation, setCanResendConfirmation] = useState(false)
 
-  const stateMessage = location.state?.message ?? ''
   const redirectTo = location.state?.from ?? '/tool'
+
+  useEffect(() => {
+    if (!isAuthLoading && user) {
+      navigate('/tool', { replace: true })
+    }
+  }, [isAuthLoading, navigate, user])
 
   async function handleSubmit(event) {
     event.preventDefault()
     setIsSubmitting(true)
     setErrorMessage('')
+    setInfoMessage('')
+    setCanResendConfirmation(false)
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error } = await signInWithEmail({
       email: email.trim(),
       password,
     })
 
     if (error) {
-      setErrorMessage(error.message)
+      const needsConfirmation = isEmailConfirmationError(error)
+      setErrorMessage(getAuthErrorMessage(error))
+      setInfoMessage(
+        needsConfirmation
+          ? 'Confirme seu e-mail para entrar. Se necessário, reenvie a mensagem de confirmação.'
+          : '',
+      )
+      setCanResendConfirmation(needsConfirmation && Boolean(email.trim()))
       setIsSubmitting(false)
       return
     }
 
     trackEvent({ event_name: 'login_completed', event_category: 'auth', page_path: '/login' })
     navigate(redirectTo, { replace: true })
+  }
+
+  async function handleResendConfirmation() {
+    const normalizedEmail = email.trim()
+    if (!normalizedEmail) return
+
+    setIsResending(true)
+    setErrorMessage('')
+
+    const { error } = await resendSignupConfirmation(normalizedEmail)
+    setIsResending(false)
+
+    if (error) {
+      setErrorMessage(getAuthErrorMessage(error))
+      return
+    }
+
+    setInfoMessage('Enviamos um novo link de confirmação para o seu e-mail.')
+    trackEvent({
+      event_name: 'signup_confirmation_resent',
+      event_category: 'auth',
+      page_path: '/login',
+    })
   }
 
   return (
@@ -54,8 +101,8 @@ function LoginPage() {
         </div>
 
         {/* Info (redirect message) */}
-        {stateMessage ? (
-          <p className="auth-card__info">{stateMessage}</p>
+        {infoMessage ? (
+          <p className="auth-card__info" role="status">{infoMessage}</p>
         ) : null}
 
         {/* Form */}
@@ -99,6 +146,17 @@ function LoginPage() {
           >
             {isSubmitting ? 'Entrando…' : 'Entrar'}
           </button>
+
+          {canResendConfirmation ? (
+            <button
+              type="button"
+              className="auth-card__submit auth-card__submit--secondary"
+              onClick={handleResendConfirmation}
+              disabled={isResending}
+            >
+              {isResending ? 'Reenviando…' : 'Reenviar confirmação'}
+            </button>
+          ) : null}
         </form>
 
         {/* Footer */}

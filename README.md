@@ -37,6 +37,7 @@ Useful commands:
 ```bash
 npm run supabase:doctor
 npm run supabase:link
+npm run supabase:sql:apply -- supabase/leads-rls.sql
 npm run supabase:functions:serve
 npm run supabase:secrets:set -- GEMINI_API_KEY=YOUR_KEY
 npm run supabase:functions:deploy

@@ -24,7 +24,7 @@ function PricingCard({ plan, cta, variant }) {
 
 function PricingTeaser({ content, isAuthenticated }) {
   return (
-    <section className="landing-section landing-pricing">
+    <section className="landing-section landing-pricing" id="planos">
       <div className="landing-section__intro">
         <p className="landing-section__eyebrow">{content.eyebrow}</p>
         <h2>{content.title}</h2>

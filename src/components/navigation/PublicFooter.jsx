@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom'
 import { APP_NAME } from '../../constants/app'
+import { useAuth } from '../../hooks/useAuth'
 
 function PublicFooter() {
+  const { user } = useAuth()
+
   return (
     <footer className="public-footer">
       <div className="public-footer__inner">
@@ -12,10 +15,10 @@ function PublicFooter() {
         </div>
 
         <nav className="public-footer__nav" aria-label="Links do rodapé">
-          <Link to="/">Início</Link>
-          <Link to="/user-stories">User stories</Link>
-          <Link to="/templates">Templates</Link>
-          <Link to="/login">Entrar</Link>
+          <a href="/#como-funciona">Como funciona</a>
+          <a href="/#antes-depois">Ver exemplo</a>
+          <a href="/#planos">Planos</a>
+          {user ? <Link to="/tool">Abrir área de trabalho</Link> : <Link to="/signup">Criar conta</Link>}
         </nav>
       </div>
     </footer>

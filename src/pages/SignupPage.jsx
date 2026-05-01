@@ -1,29 +1,47 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
-import { APP_NAME } from '../constants/app'
+import { APP_NAME, FREE_GENERATION_LIMIT } from '../constants/app'
+import { useAuth } from '../hooks/useAuth'
+import { getAuthErrorMessage, signUpWithEmail } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
 
 function SignupPage() {
   const navigate = useNavigate()
+  const { user, isAuthLoading } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
-  const [infoMessage, setInfoMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!isAuthLoading && user) {
+      navigate('/tool', { replace: true })
+    }
+  }, [isAuthLoading, navigate, user])
 
   async function handleSubmit(event) {
     event.preventDefault()
     setIsSubmitting(true)
     setErrorMessage('')
-    setInfoMessage('')
 
     trackEvent({ event_name: 'signup_started', event_category: 'auth', page_path: '/signup' })
 
-    const { data, error } = await supabase.auth.signUp({ email: email.trim(), password })
+    const normalizedEmail = email.trim()
+    const { data, error } = await signUpWithEmail({ email: normalizedEmail, password })
 
     if (error) {
-      setErrorMessage(error.message)
+      setErrorMessage(getAuthErrorMessage(error))
+      setIsSubmitting(false)
+      return
+    }
+
+    const isExistingUser =
+      data.user &&
+      Array.isArray(data.user.identities) &&
+      data.user.identities.length === 0
+
+    if (isExistingUser) {
+      setErrorMessage('Este e-mail já está cadastrado. Entre para continuar.')
       setIsSubmitting(false)
       return
     }
@@ -40,8 +58,10 @@ function SignupPage() {
       page_path: '/signup',
       metadata: { confirmation_pending: true },
     })
-    setInfoMessage('Cadastro realizado. Verifique seu e-mail para confirmar a conta.')
-    setIsSubmitting(false)
+    navigate('/check-email', {
+      replace: true,
+      state: { email: normalizedEmail, pendingConfirmation: true },
+    })
   }
 
   return (
@@ -100,10 +120,6 @@ function SignupPage() {
             <p className="auth-card__error" role="alert">{errorMessage}</p>
           ) : null}
 
-          {infoMessage ? (
-            <p className="auth-card__info" role="status">{infoMessage}</p>
-          ) : null}
-
           <button
             type="submit"
             className="auth-card__submit"
@@ -132,7 +148,7 @@ function SignupPage() {
             Tudo que você precisa para começar.
           </h2>
           <ul className="auth-side__list">
-            <li>8 gerações de user story por conta</li>
+            <li>{FREE_GENERATION_LIMIT} gerações de user story por conta</li>
             <li>Critérios de aceite e checklist de QA</li>
             <li>Histórico de versões salvo</li>
             <li>Exportação em Markdown e texto simples</li>

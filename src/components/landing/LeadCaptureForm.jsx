@@ -7,7 +7,7 @@ function LeadCaptureForm({ content }) {
         <p>{content.description}</p>
       </div>
 
-      {/* TODO: conectar este bloco apenas quando a captura pública de leads estiver protegida por RLS/policies adequadas. */}
+      {/* TODO: conectar este bloco ao Supabase. O backend já está protegido com RLS e insert-only para captura pública. */}
       <div className="landing-lead-capture__form" aria-disabled="true">
         <label htmlFor="lead-name">Nome</label>
         <input id="lead-name" type="text" placeholder="Seu nome" disabled />

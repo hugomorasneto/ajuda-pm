@@ -14,8 +14,7 @@ import {
 import { getUserProfile } from '../services/userProfilesService'
 import { useAuth } from './useAuth'
 import { trackEvent } from '../services/analyticsService'
-
-const FREE_GENERATION_LIMIT = 10
+import { FREE_GENERATION_LIMIT } from '../constants/app'
 
 export function parseTextList(value) {
   if (!value) return []

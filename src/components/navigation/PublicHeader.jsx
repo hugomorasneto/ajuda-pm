@@ -1,13 +1,12 @@
 import { useState } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { APP_NAME } from '../../constants/app'
 import { useAuth } from '../../hooks/useAuth'
 
 const publicNavItems = [
-  { label: 'Início', path: '/' },
-  { label: 'Fundamentos', path: '/fundamentos' },
-  { label: 'User stories', path: '/user-stories' },
-  { label: 'Templates', path: '/templates' },
+  { label: 'Como funciona', href: '/#como-funciona' },
+  { label: 'Exemplo', href: '/#antes-depois' },
+  { label: 'Planos', href: '/#planos' },
 ]
 
 function PublicHeader() {
@@ -29,16 +28,13 @@ function PublicHeader() {
 
         <nav className="public-header__nav" aria-label="Navegação pública">
           {publicNavItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === '/'}
-              className={({ isActive }) =>
-                `public-header__link ${isActive ? 'public-header__link--active' : ''}`
-              }
+            <a
+              key={item.href}
+              href={item.href}
+              className="public-header__link"
             >
               {item.label}
-            </NavLink>
+            </a>
           ))}
         </nav>
 
@@ -76,16 +72,14 @@ function PublicHeader() {
         <div className="public-header__mobile-panel">
           <nav className="public-header__mobile-nav" aria-label="Navegação pública no mobile">
             {publicNavItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                end={item.path === '/'}
-                className={({ isActive }) =>
-                  `public-header__mobile-link ${isActive ? 'public-header__mobile-link--active' : ''}`
-                }
+              <a
+                key={item.href}
+                href={item.href}
+                className="public-header__mobile-link"
+                onClick={() => setMenuOpenPath(null)}
               >
                 {item.label}
-              </NavLink>
+              </a>
             ))}
           </nav>
 

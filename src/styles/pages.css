@@ -177,6 +177,54 @@
   cursor: not-allowed;
 }
 
+.auth-card__submit--secondary {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.auth-card__submit--secondary:hover:not(:disabled) {
+  background: var(--color-canvas-muted);
+}
+
+.auth-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.auth-card__helper-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-canvas-muted);
+}
+
+.auth-card__helper-title {
+  font-size: var(--text-small);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.auth-card__helper-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+
+.auth-card__helper-list li {
+  line-height: 1.5;
+}
+
 .auth-card__terms {
   font-size: 0.72rem;
   color: var(--color-text-muted);

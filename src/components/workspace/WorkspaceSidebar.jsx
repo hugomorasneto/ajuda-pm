@@ -4,12 +4,6 @@ import { useAuth } from '../../hooks/useAuth'
 
 const baseNavItems = [
   { label: 'Área de trabalho', path: '/tool' },
-  { label: 'Início', path: '/' },
-  { label: 'Fundamentos', path: '/fundamentos' },
-  { label: 'Backlog', path: '/backlog' },
-  { label: 'User stories', path: '/user-stories' },
-  { label: 'Templates', path: '/templates' },
-  { label: 'Glossário', path: '/glossario' },
 ]
 
 function WorkspaceSidebar({ isOpen, onClose }) {
@@ -24,7 +18,10 @@ function WorkspaceSidebar({ isOpen, onClose }) {
   async function handleSignOut() {
     await signOut()
     onClose()
-    navigate('/login', { replace: true })
+    navigate('/login', {
+      replace: true,
+      state: { message: 'Você saiu da conta.' },
+    })
   }
 
   return (
