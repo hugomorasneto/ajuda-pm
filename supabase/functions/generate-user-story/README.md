@@ -10,13 +10,24 @@
 ## Local run
 
 ```bash
-supabase functions serve generate-user-story --no-verify-jwt
+supabase functions serve generate-user-story
 ```
 
 ## Deploy
 
 ```bash
-supabase functions deploy generate-user-story --no-verify-jwt
+supabase functions deploy generate-user-story
+```
+
+## Auth behavior
+
+- The function is intended for authenticated app users only.
+- `verify_jwt` stays enabled in the repo config.
+- Anonymous requests using only the public anon key must fail.
+- For low-level local debugging only, you may temporarily serve with:
+
+```bash
+supabase functions serve generate-user-story --no-verify-jwt
 ```
 
 ## Set secrets

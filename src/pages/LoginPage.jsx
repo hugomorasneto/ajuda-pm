@@ -96,7 +96,7 @@ function LoginPage() {
           <p className="auth-card__eyebrow">Acesso</p>
           <h1 className="auth-card__title">Entrar na sua conta</h1>
           <p className="auth-card__description">
-            Acesse sua área de trabalho e o histórico de user stories.
+            Acesse sua área de trabalho, o histórico e as revisões salvas.
           </p>
         </div>
 
@@ -171,7 +171,7 @@ function LoginPage() {
         <div className="auth-side__content">
           <p className="auth-side__eyebrow">Para PMs e POs</p>
           <h2 className="auth-side__title">
-            Do brief disperso ao documento pronto para revisão.
+            Do contexto solto à user story pronta para revisão.
           </h2>
           <ul className="auth-side__list">
             <li>User story com critérios de aceite</li>

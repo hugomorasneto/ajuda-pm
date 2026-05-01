@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { APP_NAME, FREE_GENERATION_LIMIT } from '../constants/app'
+import { APP_NAME, FREE_GENERATION_LIMIT, PRO_PLAN_NAME } from '../constants/app'
 import { useAuth } from '../hooks/useAuth'
 import { getAuthErrorMessage, signUpWithEmail } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
@@ -78,7 +78,7 @@ function SignupPage() {
           <p className="auth-card__eyebrow">Cadastro gratuito</p>
           <h1 className="auth-card__title">Criar sua conta</h1>
           <p className="auth-card__description">
-            Salve versões, mantenha histórico e continue a revisão quando quiser.
+            Crie sua conta para gerar, salvar versões e continuar a revisão quando quiser.
           </p>
         </div>
 
@@ -145,7 +145,7 @@ function SignupPage() {
         <div className="auth-side__content">
           <p className="auth-side__eyebrow">Plano gratuito inclui</p>
           <h2 className="auth-side__title">
-            Tudo que você precisa para começar.
+            Tudo que você precisa para validar o fluxo com contexto real.
           </h2>
           <ul className="auth-side__list">
             <li>{FREE_GENERATION_LIMIT} gerações de user story por conta</li>
@@ -155,7 +155,7 @@ function SignupPage() {
           </ul>
           <div className="auth-side__upgrade">
             <p className="auth-side__upgrade-label">Precisa de mais?</p>
-            <p>O plano Pro libera gerações ilimitadas e recursos avançados.</p>
+            <p>O plano {PRO_PLAN_NAME} entra quando você precisar de mais volume, versões e recursos avançados.</p>
           </div>
         </div>
       </aside>

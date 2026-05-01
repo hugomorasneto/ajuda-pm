@@ -43,4 +43,9 @@ npm run supabase:secrets:set -- GEMINI_API_KEY=YOUR_KEY
 npm run supabase:functions:deploy
 ```
 
+Notes:
+
+- `generate-user-story` is treated as an authenticated function in this repo.
+- The frontend must call it with the logged-in user's access token, not only the anon key.
+
 More details live in [supabase/README.md](C:/Projetos/ajuda-pm/supabase/README.md:1).

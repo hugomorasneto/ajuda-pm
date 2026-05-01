@@ -22,7 +22,7 @@ function LandingHero({ hero, isAuthenticated }) {
           ) : (
             <>
               <Link className="landing-button landing-button--primary" to="/signup">
-                Testar grátis
+                Criar conta grátis
               </Link>
               <a className="landing-button landing-button--secondary" href="#antes-depois">
                 Ver user story pronta

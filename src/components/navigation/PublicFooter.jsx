@@ -18,7 +18,7 @@ function PublicFooter() {
           <a href="/#como-funciona">Como funciona</a>
           <a href="/#antes-depois">Ver exemplo</a>
           <a href="/#planos">Planos</a>
-          {user ? <Link to="/tool">Abrir área de trabalho</Link> : <Link to="/signup">Criar conta</Link>}
+          {user ? <Link to="/tool">Abrir área de trabalho</Link> : <Link to="/signup">Criar conta grátis</Link>}
         </nav>
       </div>
     </footer>

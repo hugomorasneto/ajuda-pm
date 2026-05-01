@@ -422,7 +422,7 @@ export function useUserStoryWorkspace() {
         metadata: { usage_count: usageCount, free_limit: FREE_GENERATION_LIMIT },
       })
       setSaveMessage(
-        `Limite do plano Free atingido (${FREE_GENERATION_LIMIT} gerações). Atualize para Premium para continuar.`,
+        `Limite do plano Free atingido (${FREE_GENERATION_LIMIT} gerações). Atualize para Pro para continuar.`,
       )
       return
     }
@@ -547,17 +547,21 @@ export function useUserStoryWorkspace() {
       }
     } catch (error) {
       console.error('Falha ao gerar user story com IA:', error)
-      setWorkspaceError(
-        'Não foi possível gerar a user story agora. Seu contexto foi preservado para uma nova tentativa.',
-      )
-      setSaveMessage(
-        'Não foi possível gerar a user story agora. Seu contexto foi preservado. Tente novamente em alguns instantes.',
-      )
+      const baseMessage =
+        error instanceof Error && error.message
+          ? error.message
+          : 'Não foi possível gerar a user story agora.'
+      setWorkspaceError(`${baseMessage} Seu contexto foi preservado para uma nova tentativa.`)
+      setSaveMessage(`${baseMessage} Seu contexto foi preservado para uma nova tentativa.`)
       trackEvent({
         event_name: 'user_story_generate_failed',
         event_category: 'workspace',
         page_path: '/tool',
-        metadata: { stage: 'generate', error_message: error.message },
+        metadata: {
+          stage: 'generate',
+          error_code: error instanceof Error ? error.code ?? null : null,
+          error_message: error instanceof Error ? error.message : 'unknown_error',
+        },
       })
     } finally {
       setIsSubmitting(false)

@@ -73,9 +73,7 @@ function PlaceholderBlock({ icon, label, hint }) {
 function QualityPanel({
   story,
   isPremium,
-  usageCount,
   remainingGenerations,
-  freeGenerationLimit,
   hasReachedLimit,
   onCopyPlain,
   plainCopyMessage,

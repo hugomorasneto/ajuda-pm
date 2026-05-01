@@ -1,5 +1,6 @@
 param(
-  [string]$EnvFile = '.env.local'
+  [string]$EnvFile = '.env.local',
+  [switch]$SkipJwtVerification
 )
 
 . (Join-Path $PSScriptRoot 'supabase-context.ps1')
@@ -7,7 +8,12 @@ param(
 try {
   [void](Assert-SupabaseProjectContext -EnvFile $EnvFile)
 
-  & supabase functions serve generate-user-story --no-verify-jwt
+  $command = @('functions', 'serve', 'generate-user-story')
+  if ($SkipJwtVerification) {
+    $command += '--no-verify-jwt'
+  }
+
+  & supabase @command
   if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
   }

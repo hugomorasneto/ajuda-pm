@@ -1,3 +1,7 @@
+import { supabase } from '../lib/supabaseClient'
+
+const GENERATION_TIMEOUT_MS = 20000
+
 function withFallbackArray(value, fallbackItems) {
   if (Array.isArray(value)) {
     const cleaned = value.map((item) => String(item).trim()).filter(Boolean)
@@ -24,6 +28,53 @@ function withFallbackNumber(value, fallbackValue) {
   const parsed = Number(value)
   if (Number.isFinite(parsed)) return parsed
   return fallbackValue
+}
+
+function createGenerationError(code, message, details = {}) {
+  const error = new Error(message)
+  error.code = code
+  error.details = details
+  return error
+}
+
+function mapGenerationHttpError(response, payload) {
+  if (response.status === 400) {
+    return createGenerationError(
+      'INVALID_INPUT',
+      'Revise o contexto e os requisitos antes de gerar a user story.',
+      { status: response.status, payload },
+    )
+  }
+
+  if (response.status === 401 || response.status === 403) {
+    return createGenerationError(
+      'AUTH_REQUIRED',
+      'Sua sessão expirou. Entre novamente para continuar.',
+      { status: response.status, payload },
+    )
+  }
+
+  if (response.status === 429) {
+    return createGenerationError(
+      'RATE_LIMIT',
+      'O gerador está com alta demanda agora. Tente novamente em alguns instantes.',
+      { status: response.status, payload },
+    )
+  }
+
+  if (response.status >= 500) {
+    return createGenerationError(
+      'PROVIDER_UNAVAILABLE',
+      'A IA não conseguiu responder com estabilidade agora. Tente novamente em alguns instantes.',
+      { status: response.status, payload },
+    )
+  }
+
+  return createGenerationError(
+    'GENERATION_FAILED',
+    'Não foi possível concluir a geração agora. Tente novamente em instantes.',
+    { status: response.status, payload },
+  )
 }
 
 export function normalizeUserStoryGeneration(rawResult) {
@@ -76,30 +127,55 @@ export async function generateUserStory({ input_context, input_requirements, inp
     throw new Error('Configuração Supabase ausente no frontend (URL ou ANON KEY).')
   }
 
-  const response = await fetch(`${supabaseUrl}/functions/v1/generate-user-story`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: supabaseAnonKey,
-      Authorization: `Bearer ${supabaseAnonKey}`,
-    },
-    body: JSON.stringify({ input_context, input_requirements, input_adjustment }),
-  })
-
-  const payload = await response.json().catch(() => null)
-
-  if (!response.ok) {
-    const detailedGeminiMessage =
-      payload?.details?.error?.message ??
-      payload?.details?.message ??
-      payload?.details?.error_description
-    const errorMessage =
-      detailedGeminiMessage ??
-      payload?.error ??
-      payload?.message ??
-      'Falha na geração via IA. Tente novamente em instantes.'
-    throw new Error(errorMessage)
+  const { data } = await supabase.auth.getSession()
+  const accessToken = data?.session?.access_token
+  if (!accessToken) {
+    throw createGenerationError(
+      'AUTH_REQUIRED',
+      'Sua sessÃ£o expirou. Entre novamente para continuar.',
+    )
   }
+  const controller = new AbortController()
+  const timeoutId = window.setTimeout(() => controller.abort(), GENERATION_TIMEOUT_MS)
 
-  return normalizeUserStoryGeneration(payload)
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/generate-user-story`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: supabaseAnonKey,
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ input_context, input_requirements, input_adjustment }),
+      signal: controller.signal,
+    })
+
+    const payload = await response.json().catch(() => null)
+
+    if (!response.ok) {
+      throw mapGenerationHttpError(response, payload)
+    }
+
+    return normalizeUserStoryGeneration(payload)
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      throw createGenerationError(
+        'TIMEOUT',
+        'A geração demorou mais do que o esperado. Tente novamente em alguns instantes.',
+        { timeout_ms: GENERATION_TIMEOUT_MS },
+      )
+    }
+
+    if (error instanceof Error && error.code) {
+      throw error
+    }
+
+    throw createGenerationError(
+      'NETWORK',
+      'Não foi possível conectar ao gerador agora. Verifique sua conexão e tente novamente.',
+      { cause: error instanceof Error ? error.message : null },
+    )
+  } finally {
+    clearTimeout(timeoutId)
+  }
 }

@@ -1,3 +1,5 @@
+import { APP_NAME, FREE_GENERATION_LIMIT, FREE_PLAN_NAME, PRO_PLAN_NAME } from '../constants/app'
+
 export const landingCopy = {
   hero: {
     eyebrow: 'Do contexto disperso ao backlog pronto para revisão',
@@ -12,7 +14,7 @@ export const landingCopy = {
     stats: [
       { value: '1 fluxo', label: 'do contexto inicial até a versão pronta para revisão' },
       { value: 'PM, dev e QA', label: 'alinhados na mesma base de trabalho' },
-      { value: 'Free e Pro', label: 'comece simples e evolua para mais escala quando fizer sentido' },
+      { value: `${FREE_PLAN_NAME} e ${PRO_PLAN_NAME}`, label: 'comece simples e evolua quando o fluxo já estiver validado' },
     ],
     preview: {
       problemLabel: 'Contexto bruto',
@@ -128,21 +130,21 @@ export const landingCopy = {
   },
   pricing: {
     eyebrow: 'Planos',
-    title: 'Comece no Free e evolua para mais escala quando o processo já estiver validado.',
+    title: `Comece no ${FREE_PLAN_NAME} e evolua para o ${PRO_PLAN_NAME} quando o processo já estiver validado.`,
     description:
-      'O plano gratuito prova valor no uso real. O Pro entra quando o time precisa ganhar velocidade, padrão e profundidade de revisão.',
+      `O plano gratuito prova valor no uso real com ${FREE_GENERATION_LIMIT} gerações por conta. O ${PRO_PLAN_NAME} entra quando o time precisa de mais escala, padrão e profundidade de revisão.`,
     free: {
-      name: 'Free',
+      name: FREE_PLAN_NAME,
       badge: 'Disponível agora',
       description: 'Para validar o fluxo com contexto real e sair do texto solto com mais clareza.',
       items: [
-        'Gerações iniciais para testar o produto.',
+        `${FREE_GENERATION_LIMIT} gerações de user story por conta.`,
         'Histórico por usuário.',
         'Fluxo básico de revisão na área de trabalho.',
       ],
     },
     pro: {
-      name: 'Pro',
+      name: PRO_PLAN_NAME,
       badge: 'Evolução planejada',
       description: 'Para times que precisam de mais escala, padrão, versões e colaboração.',
       items: [
@@ -153,11 +155,11 @@ export const landingCopy = {
     },
   },
   leadCapture: {
-    eyebrow: 'Interesse no plano Pro',
+    eyebrow: `Interesse no plano ${PRO_PLAN_NAME}`,
     title: 'Cadastre seu interesse para acompanhar a evolução do produto.',
     description:
-      'Estamos finalizando a captura pública com segurança. Por enquanto, este bloco mostra como a lista de interesse vai funcionar.',
-    note: 'Lista de interesse em breve.',
+      `Deixe seu nome e e-mail para acompanhar novidades do plano ${PRO_PLAN_NAME}, exportações avançadas e próximas evoluções do ${APP_NAME}.`,
+    note: 'Usaremos seus dados apenas para avisos sobre a evolução do produto.',
   },
   finalCta: {
     eyebrow: 'Pronto para começar',

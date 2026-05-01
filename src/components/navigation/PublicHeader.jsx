@@ -49,7 +49,7 @@ function PublicHeader() {
                 Entrar
               </Link>
               <Link to="/signup" className="public-header__cta public-header__cta--primary">
-                Criar conta
+                Criar conta grátis
               </Link>
             </>
           )}
@@ -94,7 +94,7 @@ function PublicHeader() {
                   Entrar
                 </Link>
                 <Link to="/signup" className="public-header__cta public-header__cta--primary">
-                  Criar conta
+                  Criar conta grátis
                 </Link>
               </>
             )}

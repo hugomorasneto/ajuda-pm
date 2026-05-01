@@ -71,6 +71,12 @@ npm run supabase:sql:apply -- supabase/leads-rls.sql
 npm run supabase:functions:serve
 ```
 
+If you need low-level local debugging without JWT verification, call:
+
+```bash
+powershell -ExecutionPolicy Bypass -File scripts/supabase-serve.ps1 -SkipJwtVerification
+```
+
 ## Set edge function secrets
 
 ```bash
@@ -88,3 +94,4 @@ npm run supabase:functions:deploy
 - The scripts no longer hardcode the token env var name.
 - The scripts no longer rely on an implicit CLI account selection.
 - If the project context is wrong, the scripts fail before calling the Supabase CLI.
+- `generate-user-story` is expected to require an authenticated user token in production.

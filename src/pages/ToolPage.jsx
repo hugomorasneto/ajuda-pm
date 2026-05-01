@@ -25,7 +25,6 @@ function ToolPage() {
     copyMessage,
     editDraft,
     formValues,
-    freeGenerationLimit,
     handleCopy,
     handleEditDraftChange,
     handleFieldChange,
@@ -55,7 +54,6 @@ function ToolPage() {
     selectedStoryId,
     selectedVersion,
     setHistoryFilter,
-    usageCount,
     validationErrors,
     versions,
     workspaceError,
@@ -107,9 +105,7 @@ function ToolPage() {
       <QualityPanel
         story={reviewStory}
         isPremium={isPremium}
-        usageCount={usageCount}
         remainingGenerations={remainingGenerations}
-        freeGenerationLimit={freeGenerationLimit}
         hasReachedLimit={hasReachedLimit}
         onCopyPlain={() => handleCopy(reviewStory)}
         plainCopyMessage={copyMessage}

@@ -45,7 +45,7 @@ function HomePage() {
             ) : (
               <>
                 <Link className="landing-button landing-button--primary" to="/signup">
-                  Testar grátis
+                  Criar conta grátis
                 </Link>
                 <Link className="landing-button landing-button--secondary" to="/login">
                   Entrar

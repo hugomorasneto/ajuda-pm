@@ -101,6 +101,43 @@ function parseModelList(value: string | null): string[] {
     .filter(Boolean)
 }
 
+type AuthenticatedRequestContext = {
+  userId: string
+  role: string
+}
+
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  const parts = token.split('.')
+  if (parts.length < 2) return null
+
+  try {
+    const normalized = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=')
+    const decoded = atob(padded)
+    return JSON.parse(decoded)
+  } catch {
+    return null
+  }
+}
+
+function getAuthenticatedRequestContext(req: Request): AuthenticatedRequestContext | null {
+  const authorization = req.headers.get('Authorization') ?? req.headers.get('authorization')
+  if (!authorization?.startsWith('Bearer ')) return null
+
+  const token = authorization.slice('Bearer '.length).trim()
+  if (!token) return null
+
+  const payload = decodeJwtPayload(token)
+  const role = typeof payload?.role === 'string' ? payload.role : ''
+  const userId = typeof payload?.sub === 'string' ? payload.sub : ''
+
+  if (role !== 'authenticated' || !userId) {
+    return null
+  }
+
+  return { userId, role }
+}
+
 function shouldTryNextModel(status: number, payload: unknown): boolean {
   const errorCode = (payload as { error?: { status?: string } } | null)?.error?.status
   if (status === 404 || status === 429 || status >= 500) return true
@@ -324,6 +361,11 @@ Deno.serve(async (req) => {
   try {
     if (req.method !== 'POST') {
       return responseJson({ error: 'Método não permitido.' }, 405)
+    }
+
+    const authContext = getAuthenticatedRequestContext(req)
+    if (!authContext) {
+      return responseJson({ error: 'Autenticação obrigatória para gerar user stories.' }, 401)
     }
 
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY')

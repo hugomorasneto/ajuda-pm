@@ -42,7 +42,7 @@ function PricingTeaser({ content, isAuthenticated }) {
               </Link>
             ) : (
               <Link className="landing-button landing-button--primary" to="/signup">
-                Começar no Free
+                Criar conta grátis
               </Link>
             )
           }
@@ -52,9 +52,9 @@ function PricingTeaser({ content, isAuthenticated }) {
           plan={content.pro}
           variant="pro"
           cta={
-            <button type="button" className="landing-button landing-button--secondary" disabled>
-              Em evolução
-            </button>
+            <a className="landing-button landing-button--secondary" href="#lead-capture-title">
+              Receber novidades do Pro
+            </a>
           }
         />
       </div>

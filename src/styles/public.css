@@ -312,6 +312,35 @@
 .landing-lead-capture__form input:focus { border-color: var(--color-focus); outline: 2px solid var(--color-focus); }
 .landing-lead-capture__form input::placeholder { color: var(--color-text-muted); }
 .landing-lead-capture__form input:disabled { cursor: not-allowed; opacity: 0.6; }
+.landing-lead-capture__field-error {
+  margin: calc(var(--space-2) * -1) 0 0;
+  color: var(--color-error);
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+.landing-lead-capture__feedback {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-small);
+  line-height: 1.6;
+}
+.landing-lead-capture__feedback--success {
+  border-color: rgba(22,163,74,0.24);
+  background: var(--color-success-subtle);
+  color: var(--color-success);
+}
+.landing-lead-capture__feedback--info {
+  border-color: rgba(10,124,255,0.24);
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+.landing-lead-capture__feedback--error {
+  border-color: rgba(220,38,38,0.24);
+  background: var(--color-error-subtle);
+  color: var(--color-error);
+}
 .landing-lead-capture__note { margin: 0; font-size: var(--text-small); color: var(--color-text-muted); }
 
 /* --- Final CTA --- */

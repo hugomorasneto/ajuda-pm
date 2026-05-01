@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { APP_NAME } from '../constants/app'
+import { APP_NAME, FREE_GENERATION_LIMIT } from '../constants/app'
 import { useAuth } from '../hooks/useAuth'
 import { getAuthErrorMessage, maskEmail, resendSignupConfirmation } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
@@ -138,6 +138,7 @@ function CheckEmailPage() {
             Geração, histórico e revisão no mesmo fluxo.
           </h2>
           <ul className="auth-side__list">
+            <li>{FREE_GENERATION_LIMIT} gerações iniciais para validar o produto.</li>
             <li>User story com objetivo, critérios, gaps e checklist de QA.</li>
             <li>Histórico salvo por usuário para continuar o refinamento.</li>
             <li>Exportação rápida para levar a saída ao backlog.</li>
