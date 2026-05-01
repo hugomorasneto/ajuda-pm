@@ -3,73 +3,80 @@ import GapList from './GapList'
 import QaChecklist from './QaChecklist'
 import QualityScore from './QualityScore'
 
-// ── Shared icon set ───────────────────────────────────────────────
-function IconBarChart() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <line x1="18" y1="20" x2="18" y2="10"/>
-      <line x1="12" y1="20" x2="12" y2="4"/>
-      <line x1="6" y1="20" x2="6" y2="14"/>
-    </svg>
-  )
-}
-
 function IconAlertTriangle() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-      <line x1="12" y1="9" x2="12" y2="13"/>
-      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
     </svg>
   )
 }
 
 function IconClipboard() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-      <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+      <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
     </svg>
   )
 }
 
 function IconDownload() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-      <polyline points="7 10 12 15 17 10"/>
-      <line x1="12" y1="15" x2="12" y2="3"/>
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
     </svg>
   )
 }
 
-// ── Panel section wrapper ─────────────────────────────────────────
-function PanelSection({ icon, label, children }) {
+function RailSection({ icon, label, description, children, placeholder = false }) {
   return (
-    <div className="quality-panel__section">
+    <section className={`quality-panel__section ${placeholder ? 'quality-panel__section--placeholder' : ''}`}>
       <div className="quality-panel__section-header">
-        {icon && <span className="quality-panel__section-icon">{icon}</span>}
-        {label && <h3 className="quality-panel__section-label">{label}</h3>}
+        {icon ? <span className="quality-panel__section-icon">{icon}</span> : null}
+        <div className="quality-panel__section-copy">
+          <h3 className="quality-panel__section-label">{label}</h3>
+          {description ? <p className="quality-panel__section-description">{description}</p> : null}
+        </div>
       </div>
       {children}
-    </div>
+    </section>
   )
 }
 
-// ── Empty state placeholder blocks ───────────────────────────────
-function PlaceholderBlock({ icon, label, hint }) {
-  return (
-    <div className="quality-panel__placeholder-block">
-      <div className="quality-panel__section-header">
-        {icon && <span className="quality-panel__section-icon">{icon}</span>}
-        <h3 className="quality-panel__section-label">{label}</h3>
-      </div>
-      <p className="quality-panel__empty-note">{hint}</p>
-    </div>
-  )
-}
-
-// ── Main component ───────────────────────────────────────────────
 function QualityPanel({
   story,
   isPremium,
@@ -82,12 +89,11 @@ function QualityPanel({
   if (!story) {
     return (
       <aside className="panel quality-panel quality-panel--empty">
-        {/* Score placeholder */}
         <section className="quality-score quality-score--placeholder">
           <div className="quality-score__header">
             <div>
               <p className="quality-score__eyebrow">Qualidade</p>
-              <h3 className="quality-score__tone">—</h3>
+              <h3 className="quality-score__tone">-</h3>
             </div>
             <strong className="quality-score__value">
               --<span className="quality-score__denominator">/100</span>
@@ -99,9 +105,32 @@ function QualityPanel({
           <p className="quality-score__note">Disponível após a geração.</p>
         </section>
 
-        <PlaceholderBlock icon={<IconAlertTriangle />} label="Gaps" hint="Ambiguidades e exceções aparecem aqui." />
-        <PlaceholderBlock icon={<IconClipboard />} label="QA" hint="Checklist de validação da story." />
-        <PlaceholderBlock icon={<IconDownload />} label="Exportar" hint="Copie em Markdown, Jira ou texto." />
+        <RailSection
+          icon={<IconAlertTriangle />}
+          label="Gaps"
+          description="Ambiguidades e exceções aparecem aqui."
+          placeholder
+        >
+          <p className="quality-panel__empty-note">O painel de gaps será preenchido depois da primeira geração.</p>
+        </RailSection>
+
+        <RailSection
+          icon={<IconClipboard />}
+          label="QA"
+          description="Checklist de validação da story."
+          placeholder
+        >
+          <p className="quality-panel__empty-note">Os cenários de validação aparecerão quando a story estiver pronta.</p>
+        </RailSection>
+
+        <RailSection
+          icon={<IconDownload />}
+          label="Exportar"
+          description="Copie em Markdown, Jira ou texto."
+          placeholder
+        >
+          <p className="quality-panel__empty-note">As ações de exportação ficam disponíveis após a geração.</p>
+        </RailSection>
       </aside>
     )
   }
@@ -110,24 +139,31 @@ function QualityPanel({
     <aside className="panel quality-panel">
       <QualityScore story={story} />
 
-      <PanelSection icon={<IconAlertTriangle />} label="Gaps">
+      <RailSection
+        icon={<IconAlertTriangle />}
+        label="Gaps"
+        description="Pontos que ainda pedem decisão antes do refinamento."
+      >
         <GapList items={story.gaps} />
-      </PanelSection>
+      </RailSection>
 
-      <PanelSection icon={<IconClipboard />} label="QA">
+      <RailSection icon={<IconClipboard />} label="QA" description="Checklist mínimo para validar a entrega.">
         <QaChecklist items={story.qa_checklist} />
-      </PanelSection>
+      </RailSection>
 
-      <PanelSection icon={<IconDownload />} label="Exportar">
+      <RailSection
+        icon={<IconDownload />}
+        label="Exportar"
+        description="Leve a story para backlog, Jira ou compartilhamento rápido."
+      >
         <ExportActionsBar
           story={story}
           onCopyPlain={onCopyPlain}
           plainCopyMessage={plainCopyMessage}
           isCopyingPlain={isCopyingPlain}
         />
-      </PanelSection>
+      </RailSection>
 
-      {/* Usage pill */}
       <div className={`quality-panel__usage-pill ${hasReachedLimit ? 'quality-panel__usage-pill--warning' : ''}`}>
         <span className="quality-panel__plan-label">{isPremium ? 'Pro' : 'Free'}</span>
         <span className="quality-panel__plan-count">

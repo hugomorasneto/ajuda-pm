@@ -2,9 +2,7 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { APP_NAME } from '../../constants/app'
 import { useAuth } from '../../hooks/useAuth'
 
-const baseNavItems = [
-  { label: 'Área de trabalho', path: '/tool' },
-]
+const baseNavItems = [{ label: 'Área de trabalho', path: '/tool' }]
 
 function WorkspaceSidebar({ isOpen, onClose }) {
   const location = useLocation()
@@ -29,9 +27,9 @@ function WorkspaceSidebar({ isOpen, onClose }) {
       <div className="workspace-sidebar__header">
         <Link to="/tool" className="workspace-sidebar__brand" onClick={onClose}>
           <span className="workspace-sidebar__brand-mark" />
-          <div>
+          <div className="workspace-sidebar__brand-copy">
             <p className="workspace-sidebar__brand-name">{APP_NAME}</p>
-            <p className="workspace-sidebar__brand-caption">Área de trabalho para PMs e POs</p>
+            <p className="workspace-sidebar__brand-caption">Workspace para PMs e POs</p>
           </div>
         </Link>
 
@@ -45,13 +43,13 @@ function WorkspaceSidebar({ isOpen, onClose }) {
         </button>
       </div>
 
-      <div className="workspace-sidebar__intro">
-        <p className="workspace-sidebar__eyebrow">Área de trabalho</p>
-        <h2>Crie, revise e refine user stories no mesmo fluxo.</h2>
-        <p>Acesse a geração, o histórico e os materiais de apoio em um só lugar.</p>
+      <div className="workspace-sidebar__summary">
+        <p className="workspace-sidebar__eyebrow">Workspace</p>
+        <p className="workspace-sidebar__summary-copy">Brief, story e revisão no mesmo fluxo.</p>
       </div>
 
       <nav className="workspace-sidebar__nav" aria-label="Navegação da área de trabalho">
+        <p className="workspace-sidebar__section-label">Navegação</p>
         {navItems.map((item) => (
           <NavLink
             key={item.path}
@@ -71,14 +69,16 @@ function WorkspaceSidebar({ isOpen, onClose }) {
       <div className="workspace-sidebar__footer">
         {user ? (
           <div className="workspace-sidebar__account">
-            <p className="workspace-sidebar__account-label">Conta ativa</p>
-            <p className="workspace-sidebar__account-email">{user.email}</p>
+            <div className="workspace-sidebar__account-meta">
+              <p className="workspace-sidebar__account-label">Conta ativa</p>
+              <p className="workspace-sidebar__account-email">{user.email}</p>
+            </div>
             <button type="button" className="workspace-sidebar__signout" onClick={handleSignOut}>
               Sair
             </button>
           </div>
         ) : (
-          <div className="workspace-sidebar__account">
+          <div className="workspace-sidebar__account workspace-sidebar__account--guest">
             <p className="workspace-sidebar__account-label">Acesso</p>
             <div className="workspace-sidebar__account-links">
               <Link to="/login" onClick={onClose}>

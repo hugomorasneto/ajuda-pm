@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 const pageMeta = {
   '/tool': {
     title: 'Área de trabalho',
-    description: 'Brief, documento e revisão no mesmo fluxo.',
+    description: 'Brief, story e revisão no mesmo fluxo.',
   },
   '/admin': {
     title: 'Painel administrativo',
@@ -40,7 +40,7 @@ function WorkspaceTopbar({ onOpenSidebar }) {
 
         <div className="workspace-topbar__actions">
           <Link to="/" className="workspace-topbar__link">
-            Ver página pública
+            Página pública
           </Link>
         </div>
       </div>

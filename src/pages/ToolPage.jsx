@@ -10,10 +10,9 @@ import WorkspaceErrorState from '../components/workspace/WorkspaceErrorState'
 import WorkspaceLoadingState from '../components/workspace/WorkspaceLoadingState'
 import { useUserStoryWorkspace } from '../hooks/useUserStoryWorkspace'
 
-// Mobile tabs
 const TABS = [
-  { id: 'entrada', label: 'Entrada' },
-  { id: 'resultado', label: 'Resultado' },
+  { id: 'entrada', label: 'Brief' },
+  { id: 'resultado', label: 'Story' },
   { id: 'revisao', label: 'Revisão' },
 ]
 
@@ -61,11 +60,18 @@ function ToolPage() {
 
   const reviewStory = useMemo(() => {
     if (!result) return null
+
     const safeTitle = editDraft.title?.trim() || result.title
     const safeUserStory = editDraft.user_story?.trim() || result.user_story
     const safeCriteria =
       editDraft.acceptance_criteria?.length > 0 ? editDraft.acceptance_criteria : result.acceptance_criteria
-    return { ...result, title: safeTitle, user_story: safeUserStory, acceptance_criteria: safeCriteria }
+
+    return {
+      ...result,
+      title: safeTitle,
+      user_story: safeUserStory,
+      acceptance_criteria: safeCriteria,
+    }
   }, [editDraft, result])
 
   const hasDraft = Boolean(
@@ -74,6 +80,11 @@ function ToolPage() {
   const showBlockingLoadingState = !reviewStory && (isSubmitting || isLoadingSelection)
   const showBlockingErrorState = !reviewStory && Boolean(workspaceError) && !showBlockingLoadingState
   const showEmptyState = !reviewStory && !showBlockingLoadingState && !showBlockingErrorState
+  const workspaceStatusLabel = isEditing ? 'Base ativa' : 'Nova base'
+  const workspaceStatusTitle = isEditing && activeStoryTitle ? activeStoryTitle : 'Nova user story'
+  const workspaceStatusNote = isEditing
+    ? 'Revise a versão ativa, ajuste o texto e exporte quando estiver pronta.'
+    : 'Preencha o brief, gere a story e siga para revisão no mesmo fluxo.'
 
   const documentCanvas = showBlockingLoadingState ? (
     <WorkspaceLoadingState mode={isLoadingSelection ? 'selection' : 'generate'} />
@@ -99,18 +110,19 @@ function ToolPage() {
     />
   )
 
-  /* ── Painel direito: QualityPanel + histórico/versões ── */
   const rightPanel = (
     <aside className="workspace-right-panel">
-      <QualityPanel
-        story={reviewStory}
-        isPremium={isPremium}
-        remainingGenerations={remainingGenerations}
-        hasReachedLimit={hasReachedLimit}
-        onCopyPlain={() => handleCopy(reviewStory)}
-        plainCopyMessage={copyMessage}
-        isCopyingPlain={isCopying}
-      />
+      <div className="workspace-right-panel__review">
+        <QualityPanel
+          story={reviewStory}
+          isPremium={isPremium}
+          remainingGenerations={remainingGenerations}
+          hasReachedLimit={hasReachedLimit}
+          onCopyPlain={() => handleCopy(reviewStory)}
+          plainCopyMessage={copyMessage}
+          isCopyingPlain={isCopying}
+        />
+      </div>
 
       <div className="workspace-right-panel__history">
         <RecentStoriesPanel
@@ -125,7 +137,7 @@ function ToolPage() {
         />
 
         {isEditing ? (
-          <div className="story-workspace__versions-stack">
+          <div className="story-workspace__versions-stack workspace-right-panel__versions">
             <VersionTimeline
               versions={versions}
               selectedId={selectedStoryId}
@@ -141,14 +153,15 @@ function ToolPage() {
 
   return (
     <div className="tool-page story-workspace">
-      {/* ── Status bar (1 linha, compacta) ── */}
       <header className="workspace-status-bar">
-        <div className="workspace-status-bar__left">
-          <span className="workspace-status-bar__eyebrow">Área de trabalho</span>
-          <span className="workspace-status-bar__title">
-            {isEditing && activeStoryTitle ? activeStoryTitle : 'Nova user story'}
-          </span>
+        <div className="workspace-status-bar__copy">
+          <p className="workspace-status-bar__eyebrow">{workspaceStatusLabel}</p>
+          <div className="workspace-status-bar__headline">
+            <span className="workspace-status-bar__title">{workspaceStatusTitle}</span>
+            <p className="workspace-status-bar__note">{workspaceStatusNote}</p>
+          </div>
         </div>
+
         <div className="workspace-status-bar__right">
           <span className={`mode-pill ${isEditing ? 'mode-pill-editing' : 'mode-pill-new'}`}>
             {isEditing ? 'Em revisão' : 'Nova'}
@@ -163,7 +176,6 @@ function ToolPage() {
         </div>
       </header>
 
-      {/* ── Mobile tabs ── */}
       <nav className="workspace-tabs" aria-label="Áreas do workspace">
         {TABS.map((tab) => (
           <button
@@ -177,10 +189,12 @@ function ToolPage() {
         ))}
       </nav>
 
-      {/* ── 3-column grid (desktop) / tabs (mobile) ── */}
       <div className="workspace-canvas">
-        {/* Col 1: BriefComposer */}
-        <div className={`workspace-canvas__col workspace-canvas__col--left ${mobileTab === 'entrada' ? 'workspace-canvas__col--active' : ''}`}>
+        <div
+          className={`workspace-canvas__col workspace-canvas__col--left ${
+            mobileTab === 'entrada' ? 'workspace-canvas__col--active' : ''
+          }`}
+        >
           <BriefComposer
             formValues={formValues}
             validationErrors={validationErrors}
@@ -195,13 +209,19 @@ function ToolPage() {
           />
         </div>
 
-        {/* Col 2: StoryDocument (canvas principal) */}
-        <div className={`workspace-canvas__col workspace-canvas__col--center ${mobileTab === 'resultado' ? 'workspace-canvas__col--active' : ''}`}>
+        <div
+          className={`workspace-canvas__col workspace-canvas__col--center ${
+            mobileTab === 'resultado' ? 'workspace-canvas__col--active' : ''
+          }`}
+        >
           {documentCanvas}
         </div>
 
-        {/* Col 3: QualityPanel + histórico */}
-        <div className={`workspace-canvas__col workspace-canvas__col--right ${mobileTab === 'revisao' ? 'workspace-canvas__col--active' : ''}`}>
+        <div
+          className={`workspace-canvas__col workspace-canvas__col--right ${
+            mobileTab === 'revisao' ? 'workspace-canvas__col--active' : ''
+          }`}
+        >
           {rightPanel}
         </div>
       </div>

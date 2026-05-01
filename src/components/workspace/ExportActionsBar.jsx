@@ -12,6 +12,7 @@ function ExportActionsBar({ story, onCopyPlain, plainCopyMessage, isCopyingPlain
 
   async function handleCopyMarkdown() {
     if (!story) return
+
     setIsCopyingMarkdown(true)
     try {
       await copyTextToClipboard(buildStoryMarkdown(story))
@@ -26,6 +27,7 @@ function ExportActionsBar({ story, onCopyPlain, plainCopyMessage, isCopyingPlain
 
   async function handleCopyJira() {
     if (!story) return
+
     setIsCopyingJira(true)
     try {
       await copyTextToClipboard(buildStoryJiraLike(story))
@@ -39,14 +41,7 @@ function ExportActionsBar({ story, onCopyPlain, plainCopyMessage, isCopyingPlain
   }
 
   return (
-    <section className="quality-panel__block export-actions">
-      <div className="quality-panel__block-header">
-        <div>
-          <p className="quality-panel__eyebrow">Exportar</p>
-          <h3>Ações rápidas</h3>
-        </div>
-      </div>
-
+    <>
       <div className="export-actions__buttons">
         <button
           type="button"
@@ -76,7 +71,7 @@ function ExportActionsBar({ story, onCopyPlain, plainCopyMessage, isCopyingPlain
 
       {plainCopyMessage ? <p className="copy-message">{plainCopyMessage}</p> : null}
       {exportMessage ? <p className="copy-message">{exportMessage}</p> : null}
-    </section>
+    </>
   )
 }
 

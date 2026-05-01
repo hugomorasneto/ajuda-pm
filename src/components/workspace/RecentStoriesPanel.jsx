@@ -13,10 +13,10 @@ function RecentStoriesPanel({
   return (
     <section className="panel recent-stories-panel">
       <div className="panel-header panel-header-row">
-        <div>
+        <div className="recent-stories-panel__header-copy">
           <p className="recent-stories-panel__eyebrow">Histórico</p>
           <h2>Bases recentes</h2>
-          <p>Navegue pelas últimas bases salvas sem perder a user story que está em revisão.</p>
+          <p>Acesse stories salvas sem perder a revisão da base atual.</p>
         </div>
 
         <div className="history-controls">
@@ -44,7 +44,7 @@ function RecentStoriesPanel({
 
       {!isLoading && items.length === 0 ? (
         <p className="history-status">
-          Nenhuma base salva ainda. Gere a primeira user story para começar o histórico.
+          Nenhuma base salva ainda. Gere a primeira user story para iniciar o histórico.
         </p>
       ) : null}
 
@@ -67,13 +67,11 @@ function RecentStoriesPanel({
                 </span>
               </div>
 
-              {contextPreview ? (
-                <p className="recent-story-card__preview">{contextPreview}</p>
-              ) : null}
+              {contextPreview ? <p className="recent-story-card__preview">{contextPreview}</p> : null}
 
               <div className="recent-story-card__meta">
                 <span>{formatDateTime(item.created_at)}</span>
-                <span>Selecionar base</span>
+                <span>Abrir base</span>
               </div>
             </button>
           )
