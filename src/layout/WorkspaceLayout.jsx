@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import WorkspaceSidebar from '../components/workspace/WorkspaceSidebar'
 import WorkspaceTopbar from '../components/workspace/WorkspaceTopbar'
+import '../styles/workspace.css'
 
 function WorkspaceLayout() {
   const location = useLocation()

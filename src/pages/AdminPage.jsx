@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { APP_NAME } from '../constants/app'
 import { fetchAdminAnalytics } from '../services/adminAnalyticsService'
+import '../styles/pages.css'
 
 const periodOptions = [
   { value: 'today', label: 'Hoje' },

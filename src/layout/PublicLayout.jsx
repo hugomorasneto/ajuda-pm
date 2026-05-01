@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import PublicHeader from '../components/navigation/PublicHeader'
 import PublicFooter from '../components/navigation/PublicFooter'
+import '../styles/public.css'
 
 function PublicLayout() {
   return (

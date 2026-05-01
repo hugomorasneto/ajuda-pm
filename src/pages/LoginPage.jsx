@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { APP_NAME } from '../constants/app'
 import { useAuth } from '../hooks/useAuth'
+import '../styles/pages.css'
 import {
   getAuthErrorMessage,
   isEmailConfirmationError,

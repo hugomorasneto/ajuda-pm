@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import { trackEvent } from '../../services/analyticsService'
-import { createLead } from '../../services/leadsService'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -23,6 +21,15 @@ function validateLeadForm(values) {
   }
 
   return errors
+}
+
+async function loadLeadCaptureServices() {
+  const [{ trackEvent }, { createLead }] = await Promise.all([
+    import('../../services/analyticsService'),
+    import('../../services/leadsService'),
+  ])
+
+  return { trackEvent, createLead }
 }
 
 function LeadCaptureForm({ content }) {
@@ -71,6 +78,7 @@ function LeadCaptureForm({ content }) {
     setIsSubmitting(true)
     setFeedbackMessage('')
 
+    const { createLead, trackEvent } = await loadLeadCaptureServices()
     const result = await createLead(formValues)
     const emailDomain = formValues.email.trim().toLowerCase().split('@')[1] ?? null
 

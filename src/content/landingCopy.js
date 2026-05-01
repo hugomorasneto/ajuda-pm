@@ -128,6 +128,14 @@ export const landingCopy = {
       },
     ],
   },
+  learningTeaser: {
+    eyebrow: 'Aprenda na pratica',
+    title: 'Guias curtos para PMs e POs iniciantes estruturarem melhor o trabalho.',
+    description:
+      'A area Aprender organiza fundamentos, user stories, backlog, Scrum e discovery em leituras diretas, com exemplos e checklist final.',
+    footer:
+      'Use os guias para ganhar criterio. Use o workspace quando quiser transformar contexto em uma primeira versao revisavel.',
+  },
   pricing: {
     eyebrow: 'Planos',
     title: `Comece no ${FREE_PLAN_NAME} e evolua para o ${PRO_PLAN_NAME} quando o processo já estiver validado.`,

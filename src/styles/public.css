@@ -98,6 +98,15 @@
 .public-footer__brand h2 { font-family: var(--font-base); font-size: var(--text-h3); }
 .public-footer__brand p:last-child { margin: var(--space-3) 0 0; max-width: 34rem; color: var(--color-text-secondary); font-size: var(--text-body); }
 .public-footer__nav { display: grid; gap: var(--space-3); }
+.public-footer__links { display: grid; gap: var(--space-5); }
+.public-footer__nav-title {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--text-small);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 .public-footer__nav a { color: var(--color-text-secondary); text-decoration: none; font-weight: 500; font-size: var(--text-body); }
 
 /* --- Landing sections --- */
@@ -209,7 +218,17 @@
 .landing-before-after__panel,
 .landing-pricing__card,
 .landing-lead-capture__form,
-.landing-final-cta__content {
+.landing-final-cta__content,
+.learning-guide-block,
+.learning-guide-hero,
+.learning-hub-hero,
+.learning-rail-card,
+.learning-note-card,
+.learning-related-product__card,
+.learning-final-cta,
+.learning-guide-aside__card,
+.learning-guide-related__card,
+.learning-card {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
@@ -288,6 +307,26 @@
 .landing-benefits__grid { border-top: 0; }
 .landing-benefits__item { padding: 0 0 0 var(--space-4); border-left: 2px solid var(--color-border); }
 
+/* --- Learning teaser on landing --- */
+.landing-learning-teaser__grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.landing-learning-teaser__footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.landing-learning-teaser__footer p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-body);
+  line-height: 1.7;
+}
+
 /* --- Pricing --- */
 .landing-pricing__card { display: grid; align-content: start; gap: var(--space-5); padding: var(--space-6); }
 .landing-pricing__card--free { background: var(--color-surface); }
@@ -347,6 +386,274 @@
 .landing-final-cta__content { display: grid; gap: var(--space-6); padding: var(--space-8); }
 .landing-final-cta__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 
+/* --- Learning hub and guide pages --- */
+.learning-page {
+  display: grid;
+  gap: clamp(32px, 5vw, 56px);
+  max-width: 100%;
+}
+
+.learning-section,
+.learning-guide {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.learning-section__intro,
+.learning-guide-block__header,
+.learning-guide-hero__copy {
+  max-width: 46rem;
+}
+
+.learning-section__intro h2,
+.learning-guide-block__header h2,
+.learning-guide-hero__copy h1,
+.learning-hub-hero__copy h1,
+.learning-final-cta__copy h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+}
+
+.learning-section__intro h2,
+.learning-guide-block__header h2,
+.learning-final-cta__copy h2 {
+  font-size: clamp(1.55rem, 2.4vw, 2.3rem);
+}
+
+.learning-section__intro p:last-child,
+.learning-guide-block__header + p,
+.learning-guide-hero__copy > p:last-child,
+.learning-hub-hero__copy > p:last-child,
+.learning-final-cta__copy > p:last-child,
+.learning-guide-step__content p,
+.learning-guide-context__grid p,
+.learning-note-card p:not(.learning-note-card__tag),
+.learning-card__body p,
+.learning-related-product__card p,
+.learning-guide-related__card p,
+.learning-rail-card p:not(.learning-rail-card__eyebrow),
+.learning-guide-example__body p,
+.learning-guide-aside__card p:not(.learning-guide-aside__eyebrow) {
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+
+.learning-hub-hero,
+.learning-guide-hero,
+.learning-final-cta {
+  display: grid;
+  gap: var(--space-6);
+  padding: clamp(24px, 4vw, 40px);
+}
+
+.learning-hub-hero__copy,
+.learning-hub-hero__rail,
+.learning-guide-hero__copy {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.learning-hub-hero__rail {
+  align-content: start;
+}
+
+.learning-rail-card,
+.learning-guide-block,
+.learning-guide-related__card,
+.learning-note-card,
+.learning-related-product__card,
+.learning-guide-aside__card,
+.learning-card {
+  padding: var(--space-5);
+}
+
+.learning-rail-card__eyebrow,
+.learning-guide-aside__eyebrow,
+.learning-note-card__tag,
+.learning-card__meta,
+.learning-guide-related__meta,
+.learning-guide-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  color: var(--color-accent);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.learning-rail-card ol,
+.learning-guide-aside__card ul {
+  margin: var(--space-4) 0 0;
+  padding-left: 1.1rem;
+}
+
+.learning-rail-card li + li,
+.learning-guide-aside__card li + li {
+  margin-top: var(--space-2);
+}
+
+.learning-rail-card a,
+.learning-note-card a,
+.learning-related-product__card a,
+.learning-guide-related__card a,
+.learning-card__footer a,
+.learning-guide-aside__card a,
+.learning-guide-hero__backlink {
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.learning-guide-grid,
+.learning-note-grid,
+.learning-related-product,
+.learning-guide-related__grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.learning-card {
+  display: grid;
+  gap: var(--space-5);
+  align-content: start;
+}
+
+.learning-card__body {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.learning-card__body h3,
+.learning-note-card h3,
+.learning-related-product__card h3,
+.learning-guide-related__card h3,
+.learning-guide-step__content h3,
+.learning-guide-context__grid h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--text-h3);
+  line-height: 1.35;
+}
+
+.learning-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.learning-card__level {
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+
+.learning-guide__shell {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.learning-guide__article {
+  display: grid;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.learning-guide-block {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.learning-guide-summary__list,
+.learning-guide-example__body ul,
+.learning-guide-step__content ul,
+.learning-guide-mistakes__list {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--color-text-secondary);
+}
+
+.learning-guide-summary__list li + li,
+.learning-guide-example__body li + li,
+.learning-guide-step__content li + li,
+.learning-guide-mistakes__list li + li {
+  margin-top: var(--space-2);
+}
+
+.learning-guide-context__grid,
+.learning-guide-hero__top,
+.learning-guide-aside__actions {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.learning-guide-example__result {
+  margin: 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  font-weight: 600;
+}
+
+.learning-guide-steps__list {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.learning-guide-step {
+  display: grid;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.learning-guide-step__index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.learning-guide-checklist__list {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--color-text-secondary);
+}
+
+.learning-guide-checklist__list li + li {
+  margin-top: var(--space-3);
+}
+
+.learning-guide-aside__card nav ul {
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learning-guide-aside__card nav li + li {
+  margin-top: var(--space-2);
+}
+
+.learning-guide-aside__actions .landing-button {
+  width: 100%;
+}
+
+.learning-final-cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
 /* --- Login / Signup --- */
 .login-page,
 .signup-page {
@@ -386,12 +693,22 @@
   .landing-hero__actions .landing-button,
   .landing-final-cta__actions .landing-button,
   .landing-pricing__card .landing-button,
-  .public-header__mobile-actions .public-header__cta { width: 100%; }
+  .public-header__mobile-actions .public-header__cta,
+  .learning-final-cta__actions .landing-button { width: 100%; }
   .hero-transformation-preview__messy,
   .hero-transformation-preview__output,
   .landing-before-after__panel,
   .landing-pricing__card,
-  .landing-final-cta__content { padding-left: var(--space-4); padding-right: var(--space-4); }
+  .landing-final-cta__content,
+  .learning-hub-hero,
+  .learning-guide-hero,
+  .learning-final-cta,
+  .learning-guide-block,
+  .learning-note-card,
+  .learning-related-product__card,
+  .learning-guide-related__card,
+  .learning-guide-aside__card,
+  .learning-card { padding-left: var(--space-4); padding-right: var(--space-4); }
 }
 
 @media (min-width: 900px) {
@@ -406,15 +723,25 @@
     content: ''; position: absolute; left: 0; right: 0; bottom: -2px;
     height: 2px; border-radius: 999px; background: var(--color-accent);
   }
-  .public-footer__inner { grid-template-columns: minmax(0,1fr) auto; align-items: end; }
-  .public-footer__nav { justify-items: end; }
+  .public-footer__inner { grid-template-columns: minmax(0,1fr) auto; align-items: start; }
+  .public-footer__links { grid-template-columns: repeat(3, minmax(180px, 1fr)); }
   .landing-hero { grid-template-columns: minmax(0,1.04fr) minmax(460px,0.96fr); padding: var(--space-12); }
   .landing-hero__stats { grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0,1fr)); align-items: stretch; }
   .hero-transformation-preview__output { grid-template-columns: minmax(0,1.08fr) minmax(240px,0.92fr); }
   .landing-workflow__grid,
   .landing-benefits__grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .landing-learning-teaser__grid,
+  .learning-guide-grid,
+  .learning-note-grid,
+  .learning-related-product,
+  .learning-guide-related__grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
   .landing-pricing__grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .landing-before-after__grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .landing-lead-capture { grid-template-columns: minmax(0,1fr) minmax(360px,0.92fr); gap: var(--space-6); }
   .landing-final-cta__content { grid-template-columns: minmax(0,1fr) auto; align-items: end; }
+  .learning-hub-hero { grid-template-columns: minmax(0, 1.18fr) minmax(280px, 0.82fr); align-items: start; }
+  .learning-guide__shell { grid-template-columns: minmax(0, 1fr) 280px; align-items: start; }
+  .learning-guide__aside { position: sticky; top: 96px; display: grid; gap: var(--space-4); }
+  .learning-guide-context__grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .learning-guide-step { grid-template-columns: auto minmax(0,1fr); align-items: start; }
 }

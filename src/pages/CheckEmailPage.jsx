@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { APP_NAME, FREE_GENERATION_LIMIT } from '../constants/app'
 import { useAuth } from '../hooks/useAuth'
+import '../styles/pages.css'
 import { getAuthErrorMessage, maskEmail, resendSignupConfirmation } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
 

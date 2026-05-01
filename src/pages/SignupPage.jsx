@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { APP_NAME, FREE_GENERATION_LIMIT, PRO_PLAN_NAME } from '../constants/app'
 import { useAuth } from '../hooks/useAuth'
+import '../styles/pages.css'
 import { getAuthErrorMessage, signUpWithEmail } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
 
