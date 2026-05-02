@@ -30,6 +30,8 @@ export const landingCopy = {
       { value: '100% grátis', label: 'para começar sem cartão e validar com contexto real' },
     ],
     preview: {
+      imageAlt:
+        'Mockup do ProdForge mostrando briefing bruto entrando na forja e saindo como user story estruturada.',
       problemLabel: 'Briefing bruto',
       problemTitle: 'Domínio corporativo no onboarding B2B',
       problemItems: [

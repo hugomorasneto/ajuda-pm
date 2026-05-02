@@ -5004,3 +5004,213 @@
     transform: none;
   }
 }
+
+/* ============================================================
+   HOME FORGE — HERO ASSET MOCKUP
+   ============================================================ */
+
+.public-layout--home-forge .landing-hero {
+  width: min(calc(100vw - 28px), 1440px);
+  min-height: min(700px, calc(100vh - 112px));
+  padding: clamp(28px, 3.4vw, 58px);
+  gap: clamp(28px, 3.2vw, 58px);
+}
+
+.public-layout--home-forge .landing-hero__copy {
+  align-self: center;
+  max-width: 41rem;
+}
+
+.public-layout--home-forge .landing-hero__copy h1 {
+  max-width: 13.8ch;
+  font-size: clamp(3.15rem, 4vw, 4.45rem);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+}
+
+.public-layout--home-forge .landing-hero__description {
+  max-width: 35rem;
+}
+
+.public-layout--home-forge .hero-transformation-preview {
+  align-self: center;
+  justify-self: stretch;
+  width: 100%;
+  max-width: none;
+}
+
+.public-layout--home-forge .hero-transformation-preview__frame {
+  position: relative;
+  display: block;
+  min-height: 0;
+  padding: clamp(10px, 1.4vw, 18px);
+  overflow: hidden;
+  border: 1px solid var(--forge-border-strong);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 50% 55%, var(--forge-amber-glow) 0%, transparent 24%),
+    radial-gradient(circle at 78% 32%, var(--forge-tech-soft) 0%, transparent 32%),
+    linear-gradient(180deg, var(--forge-border-subtle) 0%, transparent 32%),
+    linear-gradient(180deg, var(--forge-surface-2) 0%, var(--forge-surface-inset) 100%);
+  box-shadow: var(--forge-shadow-floating);
+}
+
+.public-layout--home-forge .hero-transformation-preview__frame::before,
+.public-layout--home-forge .hero-transformation-preview__frame::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.public-layout--home-forge .hero-transformation-preview__frame::before {
+  inset: 0;
+  background:
+    linear-gradient(115deg, transparent 0%, var(--forge-border-subtle) 42%, transparent 68%),
+    linear-gradient(180deg, var(--forge-border-subtle) 0%, transparent 38%);
+  opacity: 0.28;
+}
+
+.public-layout--home-forge .hero-transformation-preview__frame::after {
+  inset: auto 10% 6%;
+  height: 22%;
+  border-radius: 999px;
+  background: var(--forge-gradient-radial-ember);
+  filter: blur(18px);
+  opacity: 0.42;
+}
+
+.public-layout--home-forge .hero-transformation-preview__media {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  min-height: clamp(360px, 36vw, 560px);
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 52% 52%, var(--forge-ember-soft) 0%, transparent 28%),
+    radial-gradient(circle at 82% 24%, var(--forge-tech-soft) 0%, transparent 30%),
+    linear-gradient(180deg, var(--forge-bg-graphite) 0%, var(--forge-bg-canvas) 100%);
+}
+
+.public-layout--home-forge .hero-transformation-preview__media::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent 0%, var(--forge-border-subtle) 48%, transparent 100%);
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.public-layout--home-forge .hero-transformation-preview__image {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: min(58vh, 560px);
+  object-fit: contain;
+  object-position: center;
+  filter: drop-shadow(0 28px 34px var(--forge-bg-canvas));
+}
+
+.public-layout--home-forge .hero-transformation-preview__asset-fallback {
+  display: none;
+  position: absolute;
+  inset: var(--space-5);
+  z-index: 1;
+  place-content: center;
+  justify-items: center;
+  gap: var(--space-2);
+  border: 1px dashed var(--forge-border-ember);
+  border-radius: var(--forge-radius-lg);
+  background:
+    radial-gradient(circle at 50% 42%, var(--forge-ember-soft) 0%, transparent 34%),
+    var(--forge-surface-inset);
+  color: var(--forge-text-secondary);
+  text-align: center;
+}
+
+.public-layout--home-forge .hero-transformation-preview__media--missing .hero-transformation-preview__asset-fallback {
+  display: grid;
+}
+
+.public-layout--home-forge .hero-transformation-preview__asset-fallback strong {
+  color: var(--forge-text-primary);
+  font-size: clamp(1.1rem, 1.6vw, 1.45rem);
+}
+
+.public-layout--home-forge .hero-transformation-preview__fallback-kicker {
+  color: var(--forge-ember-hover);
+  font-size: var(--text-label);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@media (min-width: 980px) {
+  .public-layout--home-forge .landing-hero {
+    grid-template-columns: minmax(420px, 0.42fr) minmax(0, 0.58fr);
+  }
+
+  .public-layout--home-forge .landing-hero__copy {
+    align-self: center;
+  }
+
+  .public-layout--home-forge .hero-transformation-preview {
+    align-self: center;
+    margin-top: 0;
+  }
+}
+
+@media (min-width: 1440px) {
+  .public-layout--home-forge .landing-hero__copy h1 {
+    max-width: 13ch;
+    font-size: 4.85rem;
+  }
+}
+
+@media (max-width: 979px) {
+  .public-layout--home-forge .landing-hero {
+    width: 100%;
+    min-height: auto;
+    margin-inline: 0;
+    transform: none;
+  }
+
+  .public-layout--home-forge .landing-hero__copy h1 {
+    max-width: 12.4ch;
+  }
+
+  .public-layout--home-forge .hero-transformation-preview__media {
+    min-height: clamp(280px, 62vw, 460px);
+  }
+}
+
+@media (max-width: 640px) {
+  .public-layout--home-forge .landing-hero {
+    width: min(calc(100vw - 24px), 100%);
+    padding: var(--space-5);
+  }
+
+  .public-layout--home-forge .landing-hero__copy h1 {
+    max-width: 11.6ch;
+    font-size: clamp(2.75rem, 12vw, 3.35rem);
+  }
+
+  .public-layout--home-forge .hero-transformation-preview__frame {
+    padding: var(--space-2);
+    border-radius: 24px;
+  }
+
+  .public-layout--home-forge .hero-transformation-preview__media {
+    min-height: clamp(220px, 72vw, 360px);
+    border-radius: 18px;
+  }
+
+  .public-layout--home-forge .hero-transformation-preview__asset-fallback {
+    inset: var(--space-3);
+  }
+}
