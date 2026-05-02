@@ -1,10 +1,5 @@
 const HERO_MOCKUP_SRC = '/images/prodforge/hero-mockup-desktop.webp'
 
-function handleMockupError(event) {
-  event.currentTarget.hidden = true
-  event.currentTarget.parentElement?.classList.add('hero-transformation-preview__media--missing')
-}
-
 function HeroTransformationPreview({ preview }) {
   const alt =
     preview?.imageAlt ||
@@ -21,14 +16,7 @@ function HeroTransformationPreview({ preview }) {
             loading="eager"
             decoding="async"
             fetchPriority="high"
-            onError={handleMockupError}
           />
-
-          <div className="hero-transformation-preview__asset-fallback" aria-hidden="true">
-            <span className="hero-transformation-preview__fallback-kicker">Hero mockup</span>
-            <strong>Imagem premium do produto</strong>
-            <span>/public/images/prodforge/hero-mockup-desktop.webp</span>
-          </div>
         </div>
       </div>
     </div>
