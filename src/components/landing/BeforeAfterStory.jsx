@@ -21,6 +21,11 @@ function BeforeAfterStory({ content }) {
           </ul>
         </article>
 
+        <div className="landing-before-after__transition" aria-hidden="true">
+          <span className="landing-before-after__transition-line" />
+          <span className="landing-before-after__transition-head" />
+        </div>
+
         <article className="landing-before-after__panel landing-before-after__panel--after forge-panel forge-panel--active-tech">
           <span className="landing-before-after__badge landing-before-after__badge--after">
             {content.after.label}

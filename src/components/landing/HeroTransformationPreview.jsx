@@ -1,7 +1,7 @@
 function HeroTransformationPreview({ preview }) {
   return (
     <div className="hero-transformation-preview" aria-label="Preview da transformação do briefing">
-      <div className="hero-transformation-preview__frame forge-texture-layer">
+      <div className="hero-transformation-preview__frame">
         <div className="hero-transformation-preview__chrome" aria-hidden="true">
           <span className="hero-transformation-preview__chrome-dot hero-transformation-preview__chrome-dot--red" />
           <span className="hero-transformation-preview__chrome-dot hero-transformation-preview__chrome-dot--yellow" />
@@ -110,18 +110,6 @@ function HeroTransformationPreview({ preview }) {
           </div>
         </div>
 
-        <div className="hero-transformation-preview__footer" aria-label="Resultados da forja">
-          {preview.footerHighlights.map((item, index) => (
-            <span
-              key={item}
-              className={`hero-transformation-preview__footer-pill forge-status-pill ${
-                index === 0 ? 'forge-status-pill--ready' : 'forge-status-pill--tech'
-              }`}
-            >
-              {item}
-            </span>
-          ))}
-        </div>
       </div>
     </div>
   )

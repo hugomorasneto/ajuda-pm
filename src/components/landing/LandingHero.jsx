@@ -5,7 +5,7 @@ function LandingHero({ hero, isAuthenticated, sectionId }) {
   return (
     <section
       id={sectionId}
-      className="landing-hero forge-panel forge-panel--metal forge-texture-layer"
+      className="landing-hero forge-panel forge-panel--metal"
       aria-labelledby="landing-hero-title"
     >
       <div className="landing-hero__copy">

@@ -22,7 +22,7 @@ export const landingCopy = {
     eyebrow: 'Feito para PMs e times de produto',
     title: 'Transforme briefings confusos em user stories claras que o time entende na primeira leitura.',
     description:
-      'O briefing entra como matéria-prima bruta. O ProdForge faz a forja com IA e entrega uma story estruturada, com critérios, gaps e QA prontos para revisão.',
+      'O briefing entra bruto. O ProdForge faz a forja com IA e devolve uma story estruturada, com critérios, gaps e QA prontos para revisão.',
     microcopy: 'Sem cartão · Setup em minutos · Resultado em cerca de 60 segundos',
     stats: [
       { value: '60 segundos', label: 'da demanda vaga a uma story pronta para revisão' },
@@ -34,8 +34,7 @@ export const landingCopy = {
       problemTitle: 'Solicitação espalhada entre ticket, mensagem e reunião',
       problemItems: [
         'Onboarding B2B perde conversão quando o domínio da empresa não é validado.',
-        'Dev precisa entender regra, exceções e impacto no cadastro.',
-        'QA ainda não tem critérios claros para inspecionar o fluxo.',
+        'Dev e QA ainda não têm regras e critérios claros para revisar o fluxo.',
       ],
       problemStatus: 'Entrada vaga',
       transitionLabel: 'A forja trabalha',
@@ -50,8 +49,7 @@ export const landingCopy = {
       criteriaLabel: 'Critérios de aceite',
       criteria: [
         'Bloquear avanço quando o domínio não estiver em formato válido.',
-        'Exibir mensagem orientando a correção sem perder os dados já preenchidos.',
-        'Registrar evento de falha para acompanhamento do funil.',
+        'Exibir mensagem orientando a correção sem perder os dados preenchidos.',
       ],
       qualityLabel: 'Nível de refinamento',
       qualityValue: '82%',
@@ -60,10 +58,9 @@ export const landingCopy = {
       gaps: ['Confirmar quais domínios parceiros devem entrar como exceção inicial.'],
       qaLabel: 'Inspeção final',
       qa: [
-        'Testar domínio válido, inválido e domínio bloqueado.',
-        'Validar preservação dos dados ao exibir erro.',
+        'Testar domínio válido, inválido e preservação dos dados ao exibir erro.',
       ],
-      footerHighlights: ['Objetivo claro', 'Gaps visíveis', 'Checklist pronto'],
+      footerHighlights: ['Objetivo claro', 'Checklist pronto'],
     },
   },
   workflow: {
@@ -96,7 +93,7 @@ export const landingCopy = {
     eyebrow: 'Antes e depois',
     title: 'Menos ruído. Mais clareza. Entregas melhores.',
     description:
-      'Não é sobre gerar texto bonito. É sobre transformar uma solicitação imprecisa em uma base que ajude o time a decidir, construir e testar.',
+      'Transforme uma solicitação imprecisa em uma base clara para decidir, construir e testar.',
     before: {
       label: 'Antes',
       title: 'Demanda vaga',
@@ -104,7 +101,7 @@ export const landingCopy = {
       issues: [
         'Não diz qual problema precisa ser resolvido.',
         'Não define o comportamento esperado para o usuário.',
-        'Não traz critérios de aceite nem exceções para dev e QA.',
+        'Não traz critérios de aceite nem exceções.',
       ],
     },
     after: {
@@ -117,9 +114,8 @@ export const landingCopy = {
       criteria: [
         'Permitir avanço apenas quando o domínio estiver em formato válido.',
         'Exibir mensagem clara quando o domínio não puder ser aceito.',
-        'Registrar a tentativa inválida para análise do funil.',
       ],
-      notes: 'Impureza identificada: confirmar a lista inicial de exceções para parceiros.',
+      notes: 'Gap visível: confirmar a lista inicial de exceções para parceiros.',
       scoreLabel: 'Pronta para priorizar',
       scoreValue: '91%',
     },
