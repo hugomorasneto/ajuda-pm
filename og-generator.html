@@ -2,66 +2,73 @@
 <!--
   ProdForge — Gerador de imagens Open Graph
   ==========================================
-  Como usar:
-  1. Abra este arquivo no Chrome (File > Open ou arraste para o browser)
-  2. Para cada card abaixo, use a extensão "Full Page Screen Capture" ou
-     DevTools > Ctrl+Shift+P > "Capture node screenshot" com o elemento selecionado
-  3. Cada card já está em 1200x630px — salve como PNG em /public/
-     - Primeiro card  → /public/og-prodforge.png  (Home)
-     - Segundo card   → /public/og-academia.png   (Academia)
+
+  COMO GERAR AS IMAGENS (Chrome):
+  1. Abra este arquivo no Chrome (arraste para o browser ou File > Open)
+  2. Abra o DevTools (F12)
+  3. Na aba "Elements", clique com botão direito no elemento .og-card desejado
+  4. Selecione "Capture node screenshot"
+  5. Salve os arquivos em /public/:
+       Primeiro card  → og-prodforge.png
+       Segundo card   → og-academia.png
+  6. Faça o deploy e valide em: https://www.linkedin.com/post-inspector/
 -->
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=1400" />
-  <title>OG Image Generator — ProdForge</title>
+  <title>OG Generator — ProdForge</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Inter', system-ui, sans-serif;
-      background: #1a1a2e;
-      padding: 40px;
+      background: #111827;
+      padding: 48px;
       display: flex;
       flex-direction: column;
-      gap: 40px;
+      gap: 48px;
       align-items: flex-start;
     }
 
     .label {
-      color: #888;
-      font-size: 13px;
+      color: #6B7280;
+      font-size: 12px;
       margin-bottom: 8px;
       font-family: monospace;
+      letter-spacing: 0.04em;
     }
 
-    /* ── Shared card base ── */
+    /* ── Base card 1200×630 ── */
     .og-card {
       width: 1200px;
       height: 630px;
-      border-radius: 16px;
+      border-radius: 0;
       overflow: hidden;
       position: relative;
       display: flex;
-      align-items: stretch;
+      flex-shrink: 0;
     }
 
-    /* ══════════════════════════════════════
-       OG 1 — HOME (og-prodforge.png)
-    ══════════════════════════════════════ */
+    /* ═══════════════════════════════════════════
+       CARD 1 — HOME  (og-prodforge.png)
+    ═══════════════════════════════════════════ */
 
     .og-home {
-      background: linear-gradient(140deg, #EEF4FF 0%, #F5F0FF 60%, #EEF4FF 100%);
+      background: linear-gradient(145deg, #EEF4FF 0%, #F5F0FF 55%, #EDF3FF 100%);
     }
 
+    /* Left column */
     .og-home__left {
-      flex: 1;
-      padding: 56px 52px;
+      width: 580px;
+      flex-shrink: 0;
+      padding: 56px 52px 48px 56px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      overflow: hidden;
     }
 
     .og-brand {
@@ -69,55 +76,47 @@
       align-items: center;
       gap: 10px;
     }
-
     .og-brand__mark {
       width: 5px;
-      height: 26px;
+      height: 24px;
       border-radius: 999px;
       background: #0A7CFF;
+      flex-shrink: 0;
     }
-
     .og-brand__name {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       color: #0F172A;
     }
 
-    .og-home__copy {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
     .og-home__headline {
-      font-size: 52px;
+      font-size: 50px;
       font-weight: 800;
       line-height: 1.0;
       letter-spacing: -0.03em;
       color: #0F172A;
-      max-width: 10ch;
+      max-width: 440px;
     }
-
     .og-home__headline em {
       font-style: normal;
       color: #0A7CFF;
     }
 
     .og-home__sub {
-      font-size: 17px;
+      font-size: 16px;
       color: #475569;
-      line-height: 1.5;
-      max-width: 38ch;
+      line-height: 1.55;
+      max-width: 420px;
+      margin-top: 0;
     }
 
     .og-home__footer {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
     }
-
     .og-pill {
       display: inline-flex;
       align-items: center;
@@ -126,123 +125,171 @@
       border-radius: 999px;
       font-size: 13px;
       font-weight: 600;
+      white-space: nowrap;
     }
+    .og-pill--blue { background: #0A7CFF; color: #fff; }
+    .og-pill--outline { border: 1.5px solid #CBD5E1; color: #475569; }
 
-    .og-pill--blue {
-      background: #0A7CFF;
-      color: #fff;
-    }
-
-    .og-pill--outline {
-      border: 1.5px solid #CBD5E1;
-      color: #475569;
-    }
-
+    /* Right column — dark mockup */
     .og-home__right {
-      width: 460px;
-      padding: 36px 36px 36px 0;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    /* Mini mockup dark */
-    .og-mockup {
       flex: 1;
-      background: #0D1117;
-      border-radius: 12px;
-      border: 1px solid #21262D;
-      padding: 16px;
+      padding: 40px 40px 40px 0;
       display: flex;
-      flex-direction: column;
-      gap: 10px;
+      align-items: center;
       overflow: hidden;
     }
 
+    .og-mockup {
+      width: 100%;
+      background: #0D1117;
+      border-radius: 12px;
+      border: 1px solid #21262D;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Chrome bar */
     .og-mockup__chrome {
       display: flex;
       align-items: center;
       gap: 6px;
-      padding-bottom: 10px;
+      padding: 10px 14px;
       border-bottom: 1px solid #21262D;
+      background: #161B22;
+      flex-shrink: 0;
     }
-
-    .og-dot { width: 9px; height: 9px; border-radius: 999px; }
-    .og-dot--red    { background: #F85149; }
-    .og-dot--yellow { background: #D29922; }
-    .og-dot--green  { background: #3FB950; }
-
-    .og-mockup__title {
+    .og-dot { width: 9px; height: 9px; border-radius: 999px; flex-shrink: 0; }
+    .og-dot--r { background: #F85149; }
+    .og-dot--y { background: #D29922; }
+    .og-dot--g { background: #3FB950; }
+    .og-mockup__chrome-title {
       flex: 1;
       text-align: center;
       color: #6E7681;
       font-size: 10px;
       font-weight: 600;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.04em;
     }
 
-    .og-mockup__section { display: flex; flex-direction: column; gap: 4px; }
+    /* Panels inside mockup */
+    .og-mockup__body {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 14px;
+      flex: 1;
+      overflow: hidden;
+    }
 
-    .og-mockup__label {
+    .og-panel {
+      border-radius: 8px;
+      padding: 12px 14px;
+      overflow: hidden;
+    }
+    .og-panel--input {
+      background: #1C2128;
+      border: 1px solid #30363D;
+      border-left: 3px solid #F85149;
+      margin-bottom: 8px;
+    }
+    .og-panel--output {
+      background: #161B22;
+      border: 1px solid #30363D;
+      border-left: 3px solid #3FB950;
+      flex: 1;
+    }
+
+    .og-panel__label {
       font-size: 9px;
       font-weight: 700;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
+      margin-bottom: 5px;
     }
+    .og-panel--input  .og-panel__label { color: #F85149; }
+    .og-panel--output .og-panel__label { color: #3FB950; }
 
-    .og-mockup__label--blue   { color: #58A6FF; }
-    .og-mockup__label--amber  { color: #D29922; }
-    .og-mockup__label--green  { color: #3FB950; }
-
-    .og-mockup__heading {
+    .og-panel__title {
       font-size: 12px;
       font-weight: 700;
       color: #E6EDF3;
       line-height: 1.3;
+      margin-bottom: 5px;
     }
-
-    .og-mockup__body {
+    .og-panel__body {
       font-size: 10px;
       color: #8B949E;
-      line-height: 1.5;
+      line-height: 1.55;
     }
-
-    .og-mockup__list {
+    .og-panel__criteria {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin-top: 5px;
+    }
+    .og-panel__criterion {
       font-size: 10px;
       color: #8B949E;
-      padding-left: 14px;
-      line-height: 1.7;
+      padding-left: 10px;
+      position: relative;
+      line-height: 1.4;
+    }
+    .og-panel__criterion::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: #3FB950;
+      font-size: 9px;
     }
 
-    .og-mockup__divider {
-      height: 1px;
-      background: #21262D;
+    /* Bridge arrow */
+    .og-bridge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 22px;
+      margin-bottom: 8px;
+      flex-shrink: 0;
+    }
+    .og-bridge span {
+      font-size: 10px;
+      font-weight: 600;
+      color: #A78BFA;
+      background: rgba(110,86,207,0.15);
+      padding: 2px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(110,86,207,0.25);
     }
 
+    /* Domain watermark */
     .og-domain {
       position: absolute;
-      bottom: 20px;
-      right: 36px;
-      font-size: 12px;
-      color: #94A3B8;
+      bottom: 18px;
+      right: 44px;
+      font-size: 11px;
+      color: #8B949E;
       font-weight: 500;
       letter-spacing: 0.02em;
+      z-index: 2;
     }
 
-    /* ══════════════════════════════════════
-       OG 2 — ACADEMIA (og-academia.png)
-    ══════════════════════════════════════ */
+    /* ═══════════════════════════════════════════
+       CARD 2 — ACADEMIA  (og-academia.png)
+    ═══════════════════════════════════════════ */
 
     .og-academia {
-      background: linear-gradient(140deg, #F5F0FF 0%, #EEF4FF 60%, #F5F0FF 100%);
+      background: linear-gradient(145deg, #F5F0FF 0%, #EEF4FF 55%, #F5F0FF 100%);
     }
 
     .og-academia__left {
-      flex: 1;
-      padding: 56px 52px;
+      width: 540px;
+      flex-shrink: 0;
+      padding: 52px 48px 48px 56px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      overflow: hidden;
     }
 
     .og-academia__badge {
@@ -251,61 +298,49 @@
       height: 26px;
       padding: 0 12px;
       border-radius: 999px;
-      border: 1px solid rgba(110,86,207,0.25);
-      background: rgba(110,86,207,0.08);
+      border: 1px solid rgba(110,86,207,0.3);
+      background: rgba(110,86,207,0.1);
       color: #6E56CF;
       font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.07em;
       text-transform: uppercase;
       width: fit-content;
     }
 
-    .og-academia__copy {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
     .og-academia__headline {
-      font-size: 48px;
+      font-size: 46px;
       font-weight: 800;
       line-height: 1.05;
       letter-spacing: -0.03em;
       color: #0F172A;
-      max-width: 12ch;
+      max-width: 420px;
     }
-
     .og-academia__headline em {
       font-style: normal;
       color: #6E56CF;
     }
 
     .og-academia__sub {
-      font-size: 16px;
+      font-size: 15px;
       color: #475569;
-      line-height: 1.55;
-      max-width: 36ch;
+      line-height: 1.6;
+      max-width: 400px;
     }
 
-    .og-academia__modules {
+    .og-academia__trail {
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
-
-    .og-academia__module {
+    .og-academia__step {
       display: flex;
       align-items: center;
       gap: 10px;
-      font-size: 13px;
-      color: #0F172A;
-      font-weight: 500;
     }
-
-    .og-academia__module-dot {
-      width: 20px;
-      height: 20px;
+    .og-academia__step-dot {
+      width: 22px;
+      height: 22px;
       border-radius: 999px;
       background: #6E56CF;
       display: flex;
@@ -313,61 +348,68 @@
       justify-content: center;
       flex-shrink: 0;
     }
-
-    .og-academia__module-num {
+    .og-academia__step-num {
       font-size: 9px;
       font-weight: 700;
       color: #fff;
     }
+    .og-academia__step-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: #0F172A;
+    }
 
     .og-academia__right {
-      width: 440px;
+      flex: 1;
       padding: 40px 40px 40px 0;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       justify-content: center;
+      overflow: hidden;
     }
 
     .og-guide-card {
       background: #fff;
       border: 1px solid #E2E8F0;
       border-radius: 10px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+      padding: 14px 16px;
+      overflow: hidden;
     }
-
+    .og-guide-card--done {
+      border-left: 3px solid #16A34A;
+    }
     .og-guide-card__cat {
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 700;
-      letter-spacing: 0.07em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: #6E56CF;
+      margin-bottom: 4px;
     }
-
     .og-guide-card__title {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
       color: #0F172A;
       line-height: 1.3;
     }
-
-    .og-guide-card__meta {
-      font-size: 11px;
-      color: #94A3B8;
+    .og-guide-card__done {
+      font-size: 10px;
+      color: #16A34A;
+      font-weight: 600;
+      margin-top: 4px;
     }
-
-    .og-guide-card--done {
-      border-left: 3px solid #16A34A;
+    .og-guide-card__time {
+      font-size: 10px;
+      color: #94A3B8;
+      margin-top: 4px;
     }
   </style>
 </head>
 <body>
 
-  <!-- ══ CARD 1: Home → salvar como /public/og-prodforge.png ══ -->
-  <p class="label">→ CARD 1: salvar como /public/og-prodforge.png (1200×630)</p>
+  <!-- ══ CARD 1 → salvar como /public/og-prodforge.png ══ -->
+  <p class="label">CARD 1 → /public/og-prodforge.png — selecione o .og-card abaixo, botão direito → Capture node screenshot</p>
   <div class="og-card og-home">
 
     <div class="og-home__left">
@@ -376,14 +418,13 @@
         <span class="og-brand__name">ProdForge</span>
       </div>
 
-      <div class="og-home__copy">
-        <h1 class="og-home__headline">
-          Escreva user stories que devs <em>entendem.</em>
-        </h1>
-        <p class="og-home__sub">
-          Para PMs e POs iniciantes. Do briefing bagunçado à história estruturada com critérios e gaps — em segundos.
-        </p>
-      </div>
+      <h1 class="og-home__headline">
+        Escreva user stories que devs <em>entendem.</em>
+      </h1>
+
+      <p class="og-home__sub">
+        Para PMs e POs iniciantes. Do briefing bagunçado à história estruturada com critérios de aceite e gaps — em segundos.
+      </p>
 
       <div class="og-home__footer">
         <span class="og-pill og-pill--blue">Grátis para começar</span>
@@ -394,38 +435,32 @@
     <div class="og-home__right">
       <div class="og-mockup">
         <div class="og-mockup__chrome">
-          <div class="og-dot og-dot--red"></div>
-          <div class="og-dot og-dot--yellow"></div>
-          <div class="og-dot og-dot--green"></div>
-          <span class="og-mockup__title">ProdForge — área de trabalho</span>
+          <div class="og-dot og-dot--r"></div>
+          <div class="og-dot og-dot--y"></div>
+          <div class="og-dot og-dot--g"></div>
+          <span class="og-mockup__chrome-title">ProdForge — área de trabalho</span>
         </div>
 
-        <div class="og-mockup__section">
-          <p class="og-mockup__label og-mockup__label--blue">Saída estruturada</p>
-          <p class="og-mockup__heading">Validar domínio corporativo no onboarding B2B</p>
-        </div>
+        <div class="og-mockup__body">
+          <div class="og-panel og-panel--input">
+            <p class="og-panel__label">Entrada real</p>
+            <p class="og-panel__title">Validar domínio corporativo no onboarding B2B</p>
+            <p class="og-panel__body">Muitos cadastros inconsistentes. Dev e QA sem critérios claros para validar o fluxo.</p>
+          </div>
 
-        <div class="og-mockup__section">
-          <p class="og-mockup__label og-mockup__label--blue">Objetivo</p>
-          <p class="og-mockup__body">Garantir que apenas empresas com domínio elegível concluam o cadastro inicial.</p>
-        </div>
+          <div class="og-bridge">
+            <span>✦ ProdForge organiza</span>
+          </div>
 
-        <div class="og-mockup__divider"></div>
-
-        <div class="og-mockup__section">
-          <p class="og-mockup__label og-mockup__label--blue">Critérios de aceite</p>
-          <ul class="og-mockup__list">
-            <li>Bloquear avanço quando o domínio não estiver em formato válido</li>
-            <li>Exibir mensagem orientando a correção sem perder dados</li>
-            <li>Registrar evento de falha para acompanhamento do funil</li>
-          </ul>
-        </div>
-
-        <div class="og-mockup__divider"></div>
-
-        <div class="og-mockup__section">
-          <p class="og-mockup__label og-mockup__label--amber">Gap identificado</p>
-          <p class="og-mockup__body">Confirmar a lista inicial de exceções para parceiros.</p>
+          <div class="og-panel og-panel--output">
+            <p class="og-panel__label">Saída estruturada</p>
+            <p class="og-panel__title">Como responsável pelo cadastro, quero validar o domínio corporativo para concluir o registro com menos retrabalho.</p>
+            <div class="og-panel__criteria">
+              <p class="og-panel__criterion">Bloquear avanço com domínio inválido</p>
+              <p class="og-panel__criterion">Exibir mensagem orientando a correção</p>
+              <p class="og-panel__criterion">Registrar falha para análise do funil</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -434,8 +469,8 @@
   </div>
 
 
-  <!-- ══ CARD 2: Academia → salvar como /public/og-academia.png ══ -->
-  <p class="label">→ CARD 2: salvar como /public/og-academia.png (1200×630)</p>
+  <!-- ══ CARD 2 → salvar como /public/og-academia.png ══ -->
+  <p class="label">CARD 2 → /public/og-academia.png — selecione o .og-card abaixo, botão direito → Capture node screenshot</p>
   <div class="og-card og-academia">
 
     <div class="og-academia__left">
@@ -444,28 +479,29 @@
         <span class="og-brand__name">ProdForge</span>
       </div>
 
-      <div class="og-academia__copy">
-        <span class="og-academia__badge">Academia ProdForge</span>
+      <div>
+        <div class="og-academia__badge" style="margin-bottom:20px">Academia ProdForge</div>
         <h1 class="og-academia__headline">
-          Aprenda e aplique com <em>IA.</em>
+          Aprenda e aplique<br>com <em>IA.</em>
         </h1>
-        <p class="og-academia__sub">
-          Trilha prática para PMs e POs iniciantes. 5 módulos com exemplo real e exercício direto na ferramenta.
-        </p>
       </div>
 
-      <div class="og-academia__modules">
-        <div class="og-academia__module">
-          <div class="og-academia__module-dot"><span class="og-academia__module-num">01</span></div>
-          Fundamentos de produto ágil
+      <p class="og-academia__sub">
+        Trilha prática para PMs e POs iniciantes. Cada módulo termina com exercício direto na ferramenta.
+      </p>
+
+      <div class="og-academia__trail">
+        <div class="og-academia__step">
+          <div class="og-academia__step-dot"><span class="og-academia__step-num">01</span></div>
+          <span class="og-academia__step-text">Fundamentos de produto ágil</span>
         </div>
-        <div class="og-academia__module">
-          <div class="og-academia__module-dot"><span class="og-academia__module-num">02</span></div>
-          User stories na prática
+        <div class="og-academia__step">
+          <div class="og-academia__step-dot"><span class="og-academia__step-num">02</span></div>
+          <span class="og-academia__step-text">User stories na prática</span>
         </div>
-        <div class="og-academia__module">
-          <div class="og-academia__module-dot"><span class="og-academia__module-num">03</span></div>
-          Backlog e refinamento
+        <div class="og-academia__step">
+          <div class="og-academia__step-dot"><span class="og-academia__step-num">03</span></div>
+          <span class="og-academia__step-text">Backlog e refinamento</span>
         </div>
       </div>
     </div>
@@ -474,19 +510,25 @@
       <div class="og-guide-card og-guide-card--done">
         <p class="og-guide-card__cat">Fundamentos · 6 min</p>
         <p class="og-guide-card__title">Fundamentos de produto ágil para PM/PO iniciante</p>
-        <p class="og-guide-card__meta">✓ Concluído</p>
+        <p class="og-guide-card__done">✓ Concluído</p>
       </div>
 
       <div class="og-guide-card">
         <p class="og-guide-card__cat">User Stories · 7 min</p>
         <p class="og-guide-card__title">User stories na prática</p>
-        <p class="og-guide-card__meta">Iniciante · Próximo módulo</p>
+        <p class="og-guide-card__time">Iniciante · Próximo módulo →</p>
       </div>
 
       <div class="og-guide-card">
         <p class="og-guide-card__cat">Backlog · 6 min</p>
         <p class="og-guide-card__title">Backlog e refinamento sem caos</p>
-        <p class="og-guide-card__meta">Iniciante</p>
+        <p class="og-guide-card__time">Iniciante</p>
+      </div>
+
+      <div class="og-guide-card">
+        <p class="og-guide-card__cat">Refinamento · 7 min</p>
+        <p class="og-guide-card__title">Como fazer refinamento sem desperdiçar reunião</p>
+        <p class="og-guide-card__time">Iniciante</p>
       </div>
     </div>
 
