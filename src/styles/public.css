@@ -5214,3 +5214,138 @@
     inset: var(--space-3);
   }
 }
+
+/* ============================================================
+   HOME FORGE — OVERFLOW GUARD
+   ============================================================ */
+
+.public-layout--home-forge {
+  overflow-x: clip;
+}
+
+.public-layout--home-forge .public-layout__main,
+.public-layout--home-forge .landing-page {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+  box-sizing: border-box;
+}
+
+.public-layout--home-forge .landing-page {
+  width: min(calc(100% - 32px), 1280px);
+  margin-inline: auto;
+}
+
+.public-layout--home-forge .landing-page > *,
+.public-layout--home-forge .landing-section,
+.public-layout--home-forge .landing-section__intro,
+.public-layout--home-forge .landing-hero,
+.public-layout--home-forge .context-strip,
+.public-layout--home-forge .landing-workflow__grid,
+.public-layout--home-forge .landing-before-after__grid,
+.public-layout--home-forge .landing-benefits__grid,
+.public-layout--home-forge .landing-learning-teaser__grid,
+.public-layout--home-forge .landing-pricing__grid,
+.public-layout--home-forge .landing-lead-capture,
+.public-layout--home-forge .landing-final-cta__content,
+.public-layout--home-forge .public-footer--forge-home .public-footer__inner {
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.public-layout--home-forge .landing-hero,
+.public-layout--home-forge .landing-hero + .context-strip {
+  width: 100%;
+  margin-inline: 0;
+  transform: none;
+}
+
+.public-layout--home-forge .landing-hero {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.public-layout--home-forge .hero-transformation-preview,
+.public-layout--home-forge .hero-transformation-preview__frame,
+.public-layout--home-forge .hero-transformation-preview__media {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.public-layout--home-forge .hero-transformation-preview__frame {
+  overflow: hidden;
+}
+
+.public-layout--home-forge .hero-transformation-preview__image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.public-layout--home-forge .landing-workflow__grid > *,
+.public-layout--home-forge .landing-before-after__grid > *,
+.public-layout--home-forge .landing-benefits__grid > *,
+.public-layout--home-forge .landing-learning-teaser__grid > *,
+.public-layout--home-forge .landing-pricing__grid > *,
+.public-layout--home-forge .landing-lead-capture > *,
+.public-layout--home-forge .landing-final-cta__content > *,
+.public-layout--home-forge .context-strip > * {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.public-layout--home-forge .landing-final-cta__actions {
+  max-width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.public-layout--home-forge .landing-final-cta__actions .forge-button,
+.public-layout--home-forge .landing-pricing__card .forge-button,
+.public-layout--home-forge .landing-learning-teaser__footer .forge-button {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+}
+
+@media (min-width: 900px) {
+  .public-layout--home-forge .landing-lead-capture {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
+  }
+
+  .public-layout--home-forge .landing-final-cta__content {
+    grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+  }
+}
+
+@media (min-width: 980px) {
+  .public-layout--home-forge .landing-hero {
+    grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr);
+  }
+}
+
+@media (min-width: 1440px) {
+  .public-layout--home-forge .landing-hero {
+    grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr);
+  }
+}
+
+@media (max-width: 1100px) {
+  .public-layout--home-forge .landing-final-cta__content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .public-layout--home-forge .landing-final-cta__actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .public-layout--home-forge .landing-page {
+    width: min(calc(100% - 24px), 1280px);
+  }
+}
