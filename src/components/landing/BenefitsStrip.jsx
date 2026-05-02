@@ -30,7 +30,10 @@ function BenefitsStrip({ content }) {
 
       <div className="landing-benefits__grid">
         {content.items.map((item) => (
-          <article key={item.role} className="landing-benefits__item">
+          <article
+            key={item.role}
+            className={`landing-benefits__item landing-benefits__item--${item.role.toLowerCase()} forge-panel forge-panel--metal forge-panel--interactive`}
+          >
             <div className="landing-benefits__icon">
               {ROLE_ICONS[item.role] ?? null}
             </div>

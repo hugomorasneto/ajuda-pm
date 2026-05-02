@@ -2,77 +2,101 @@ import { APP_NAME, FREE_GENERATION_LIMIT, FREE_PLAN_NAME, PRO_PLAN_NAME } from '
 
 export const landingCopy = {
   contextStrip: [
-    { icon: 'bolt',     label: 'Do briefing à story estruturada em 60 segundos' },
-    { icon: 'check',    label: 'Critérios de aceite gerados no mesmo fluxo' },
-    { icon: 'layers',   label: 'Funciona com qualquer formato de contexto' },
-    { icon: 'unlock',   label: 'Grátis para começar, sem cartão de crédito' },
+    {
+      icon: 'bolt',
+      value: '60 segundos',
+      description: 'Do briefing bruto a uma story utilizável no mesmo fluxo.',
+    },
+    {
+      icon: 'layers',
+      value: 'Critérios e gaps',
+      description: 'Acabamento, pontos a decidir e QA já entram estruturados.',
+    },
+    {
+      icon: 'unlock',
+      value: '100% grátis',
+      description: 'Comece sem cartão e valide a clareza antes do backlog.',
+    },
   ],
   hero: {
-    eyebrow: 'Novo · IA para PMs e POs iniciantes',
-    title: 'Escreva user stories que devs entendem na primeira leitura.',
+    eyebrow: 'Feito para PMs e times de produto',
+    title: 'Transforme briefings confusos em user stories claras que o time entende na primeira leitura.',
     description:
-      'ProdForge transforma contexto bagunçado em histórias estruturadas, com critérios de aceite e gaps identificados — em segundos. Para PMs e POs que querem clareza sem depender de sênior.',
-    microcopy: 'Grátis para começar · Sem cartão de crédito · Resultado em 60 segundos',
+      'O briefing entra como matéria-prima bruta. O ProdForge faz a forja com IA e entrega uma story estruturada, com critérios, gaps e QA prontos para revisão.',
+    microcopy: 'Sem cartão · Setup em minutos · Resultado em cerca de 60 segundos',
     stats: [
-      { value: '60 segundos', label: 'do briefing bagunçado à user story estruturada' },
-      { value: 'Critérios + Gaps', label: 'gerados automaticamente no mesmo fluxo' },
-      { value: '100% grátis', label: 'para começar, sem cartão de crédito necessário' },
+      { value: '60 segundos', label: 'da demanda vaga a uma story pronta para revisão' },
+      { value: 'Critérios + gaps', label: 'acabamento e impurezas mapeados no mesmo fluxo' },
+      { value: '100% grátis', label: 'para começar sem cartão e validar com contexto real' },
     ],
     preview: {
-      problemLabel: 'Contexto bruto',
-      problemTitle: 'Briefing espalhado em mensagem, reunião e ticket',
+      problemLabel: 'Briefing bruto',
+      problemTitle: 'Solicitação espalhada entre ticket, mensagem e reunião',
       problemItems: [
         'Onboarding B2B perde conversão quando o domínio da empresa não é validado.',
         'Dev precisa entender regra, exceções e impacto no cadastro.',
-        'QA ainda não tem critérios claros para testar o fluxo.',
+        'QA ainda não tem critérios claros para inspecionar o fluxo.',
       ],
-      transitionLabel: 'ProdForge organiza',
+      problemStatus: 'Entrada vaga',
+      transitionLabel: 'A forja trabalha',
+      furnaceTitle: 'Forjando...',
+      furnaceBody: 'Analisando, estruturando e refinando a entrada para revisão do time.',
+      storyLabel: 'Story estruturada',
       storyTitle: 'Validar domínio corporativo no onboarding B2B',
+      outputPills: ['Objetivo', 'Critérios', 'QA'],
+      objectiveLabel: 'Objetivo',
       objective:
         'Garantir que apenas empresas com domínio elegível concluam o cadastro inicial, reduzindo retrabalho operacional.',
+      criteriaLabel: 'Critérios de aceite',
       criteria: [
         'Bloquear avanço quando o domínio não estiver em formato válido.',
         'Exibir mensagem orientando a correção sem perder os dados já preenchidos.',
         'Registrar evento de falha para acompanhamento do funil.',
       ],
+      qualityLabel: 'Nível de refinamento',
+      qualityValue: '82%',
+      readyLabel: 'Pronta para revisão',
+      gapsLabel: 'Impurezas para decidir',
       gaps: ['Confirmar quais domínios parceiros devem entrar como exceção inicial.'],
+      qaLabel: 'Inspeção final',
       qa: [
         'Testar domínio válido, inválido e domínio bloqueado.',
         'Validar preservação dos dados ao exibir erro.',
       ],
+      footerHighlights: ['Objetivo claro', 'Gaps visíveis', 'Checklist pronto'],
     },
   },
   workflow: {
     eyebrow: 'Como funciona',
-    title: 'Uma sequência curta para sair do briefing confuso e chegar a uma user story utilizável.',
+    title: 'Do briefing confuso à story pronta em 3 passos.',
     description:
-      'O ProdForge organiza o raciocínio, entrega a primeira versão e apoia a revisão antes de a história entrar no backlog.',
+      'Uma sequência curta para organizar contexto, forjar a primeira versão e revisar antes do backlog.',
     steps: [
       {
         step: '01',
         title: 'Cole o contexto real',
         description:
-          'Traga o briefing como ele existe hoje: contexto, regra solta, dependência, restrição e necessidade de negócio.',
+          'Cole o briefing como ele existe hoje: contexto, regra, dependência e objetivo de negócio.',
       },
       {
         step: '02',
-        title: 'Receba uma primeira versão estruturada',
+        title: 'A forja trabalha',
         description:
-          'O ProdForge organiza objetivo, user story, critérios de aceite, gaps e checklist de QA.',
+          'O ProdForge estrutura objetivo, story, critérios, gaps e checklist de QA no mesmo fluxo.',
       },
       {
         step: '03',
-        title: 'Revise antes de enviar ao backlog',
+        title: 'Receba a story pronta',
         description:
-          'Revise a versão final com mais clareza para o squad, evitando ruído entre produto, dev e qualidade.',
+          'Revise com mais clareza antes de enviar ao backlog e reduzir ruído entre produto, dev e QA.',
       },
     ],
   },
   beforeAfter: {
     eyebrow: 'Antes e depois',
-    title: 'A diferença entre uma demanda vaga e uma base pronta para refinamento.',
+    title: 'Menos ruído. Mais clareza. Entregas melhores.',
     description:
-      'A proposta não é gerar texto bonito. É transformar uma solicitação imprecisa em uma user story que ajude o time a decidir, construir e testar.',
+      'Não é sobre gerar texto bonito. É sobre transformar uma solicitação imprecisa em uma base que ajude o time a decidir, construir e testar.',
     before: {
       label: 'Antes',
       title: 'Demanda vaga',
@@ -80,7 +104,7 @@ export const landingCopy = {
       issues: [
         'Não diz qual problema precisa ser resolvido.',
         'Não define o comportamento esperado para o usuário.',
-        'Não traz critérios de aceite ou exceções para dev e QA.',
+        'Não traz critérios de aceite nem exceções para dev e QA.',
       ],
     },
     after: {
@@ -95,12 +119,14 @@ export const landingCopy = {
         'Exibir mensagem clara quando o domínio não puder ser aceito.',
         'Registrar a tentativa inválida para análise do funil.',
       ],
-      notes: 'Gap identificado: confirmar a lista inicial de exceções para parceiros.',
+      notes: 'Impureza identificada: confirmar a lista inicial de exceções para parceiros.',
+      scoreLabel: 'Pronta para priorizar',
+      scoreValue: '91%',
     },
   },
   benefits: {
     eyebrow: 'Benefícios por função',
-    title: 'Mais clareza para quem define, constrói e valida.',
+    title: 'Cada papel com menos ruído e mais contexto.',
     description:
       'A mesma saída precisa ser útil para o PM que prioriza, para o dev que implementa e para o QA que valida.',
     items: [
@@ -134,14 +160,14 @@ export const landingCopy = {
     eyebrow: 'Academia ProdForge',
     title: 'Aprenda enquanto faz.',
     description:
-      'Guias práticos que ensinam o conceito e te levam direto para a ferramenta. Cada módulo termina com um exercício real.',
+      'Guias práticos que explicam o conceito e te levam direto para a ferramenta, com exemplos reais de backlog.',
     footer:
-      'Cada guia termina com um link para praticar imediatamente na ferramenta.',
+      'Cada guia termina com um caminho prático para sair do conceito e aplicar no fluxo real.',
   },
   pricing: {
     eyebrow: 'Planos',
     title: 'Comece grátis. Escale quando precisar.',
-    description: 'Sem assinatura anual obrigatória. Sem surpresas no cartão.',
+    description: 'Comece sem cartão. Evolua quando o time precisar de mais padrão e profundidade.',
     free: {
       name: FREE_PLAN_NAME,
       badge: 'Grátis',
@@ -174,6 +200,6 @@ export const landingCopy = {
     eyebrow: 'Pronto para começar',
     title: 'Seu próximo sprint começa com uma história melhor.',
     description:
-      'Cada user story mal escrita custa tempo de dev, retrabalho de QA e credibilidade do PM. ProdForge resolve isso antes do planning.',
+      'Cada story mal escrita custa tempo de dev, retrabalho de QA e credibilidade do PM. ProdForge resolve isso antes do planning.',
   },
 }

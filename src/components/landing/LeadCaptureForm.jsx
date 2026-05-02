@@ -167,7 +167,11 @@ function LeadCaptureForm({ content }) {
           </p>
         ) : null}
 
-        <button type="submit" className="landing-button landing-button--secondary" disabled={isSubmitting}>
+        <button
+          type="submit"
+          className="landing-button forge-button forge-button--ember forge-button--block forge-button--lg"
+          disabled={isSubmitting}
+        >
           {isSubmitting ? 'Registrando...' : isSubmitted ? 'Interesse registrado' : 'Avisar quando abrir'}
         </button>
 

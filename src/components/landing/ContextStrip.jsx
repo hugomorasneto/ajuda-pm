@@ -27,11 +27,14 @@ function ContextStrip({ items }) {
   return (
     <div className="context-strip" role="list" aria-label="Destaques do produto">
       {items.map((item, i) => (
-        <div key={item.label} className="context-strip__item" role="listitem">
+        <article key={item.value} className="context-strip__item forge-panel forge-panel--metal" role="listitem">
           {i > 0 && <span className="context-strip__divider" aria-hidden="true" />}
           <span className="context-strip__icon">{ICONS[item.icon]}</span>
-          <span className="context-strip__label">{item.label}</span>
-        </div>
+          <div className="context-strip__content">
+            <strong className="context-strip__value">{item.value}</strong>
+            <span className="context-strip__label">{item.description}</span>
+          </div>
+        </article>
       ))}
     </div>
   )

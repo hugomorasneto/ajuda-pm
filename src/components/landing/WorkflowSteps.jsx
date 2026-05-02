@@ -9,7 +9,7 @@ function WorkflowSteps({ content }) {
 
       <div className="landing-workflow__grid">
         {content.steps.map((step) => (
-          <article key={step.step} className="landing-workflow__item">
+          <article key={step.step} className="landing-workflow__item forge-panel forge-panel--metal forge-panel--interactive">
             <span className="landing-workflow__index">{step.step}</span>
             <h3>{step.title}</h3>
             <p>{step.description}</p>

@@ -3,7 +3,14 @@ import { Link, useLocation } from 'react-router-dom'
 import { APP_NAME } from '../../constants/app'
 import { useAuth } from '../../hooks/useAuth'
 
-const publicNavItems = [
+const forgeHomeNavItems = [
+  { label: 'Produto', href: '/#produto', activeOn: ['/'] },
+  { label: 'Como funciona', href: '/#como-funciona' },
+  { label: 'Academia', to: '/aprender', activeOn: ['/aprender'] },
+  { label: 'Planos', href: '/#planos' },
+]
+
+const legacyPublicNavItems = [
   { label: 'Aprender', to: '/aprender', activeOn: ['/aprender'] },
   { label: 'Como funciona', href: '/#como-funciona' },
   { label: 'Exemplo', href: '/#antes-depois' },
@@ -40,39 +47,64 @@ function PublicNavLink({ item, pathname, mobile = false, onNavigate }) {
   )
 }
 
-function PublicHeader() {
+function PublicHeader({ isHomeRoute = false }) {
   const location = useLocation()
   const { user } = useAuth()
   const [menuOpenPath, setMenuOpenPath] = useState(null)
   const isMenuOpen = menuOpenPath === location.pathname
+  const navItems = isHomeRoute ? forgeHomeNavItems : legacyPublicNavItems
+  const headerClassName = ['public-header', isHomeRoute ? 'public-header--forge-home' : '']
+    .filter(Boolean)
+    .join(' ')
+  const primaryCtaClassName = [
+    'public-header__cta',
+    'public-header__cta--primary',
+    isHomeRoute ? 'forge-button forge-button--ember forge-button--sm' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+  const secondaryCtaClassName = [
+    'public-header__cta',
+    'public-header__cta--secondary',
+    isHomeRoute ? 'forge-button forge-button--ghost forge-button--sm' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+  const menuButtonClassName = [
+    'public-header__menu-button',
+    isHomeRoute ? 'forge-button forge-button--ghost forge-button--sm' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
-    <header className="public-header">
+    <header className={headerClassName}>
       <div className="public-header__inner">
         <Link to="/" className="public-brand" aria-label={APP_NAME}>
           <span className="public-brand__mark" />
           <div className="public-brand__copy">
             <span className="public-brand__name">{APP_NAME}</span>
+            {isHomeRoute ? <span className="public-brand__tagline">Forja de user stories</span> : null}
           </div>
         </Link>
 
         <nav className="public-header__nav" aria-label="Navegação pública">
-          {publicNavItems.map((item) => (
+          {navItems.map((item) => (
             <PublicNavLink key={item.to ?? item.href} item={item} pathname={location.pathname} />
           ))}
         </nav>
 
         <div className="public-header__actions">
           {user ? (
-            <Link to="/tool" className="public-header__cta public-header__cta--primary">
+            <Link to="/tool" className={primaryCtaClassName}>
               Abrir área de trabalho
             </Link>
           ) : (
             <>
-              <Link to="/login" className="public-header__cta public-header__cta--secondary">
+              <Link to="/login" className={secondaryCtaClassName}>
                 Entrar
               </Link>
-              <Link to="/signup" className="public-header__cta public-header__cta--primary">
+              <Link to="/signup" className={primaryCtaClassName}>
                 Criar conta grátis
               </Link>
             </>
@@ -81,7 +113,7 @@ function PublicHeader() {
 
         <button
           type="button"
-          className="public-header__menu-button"
+          className={menuButtonClassName}
           onClick={() =>
             setMenuOpenPath((currentPath) => (currentPath === location.pathname ? null : location.pathname))
           }
@@ -95,7 +127,7 @@ function PublicHeader() {
       {isMenuOpen ? (
         <div className="public-header__mobile-panel">
           <nav className="public-header__mobile-nav" aria-label="Navegação pública — mobile">
-            {publicNavItems.map((item) => (
+            {navItems.map((item) => (
               <PublicNavLink
                 key={item.to ?? item.href}
                 item={item}
@@ -108,15 +140,15 @@ function PublicHeader() {
 
           <div className="public-header__mobile-actions">
             {user ? (
-              <Link to="/tool" className="public-header__cta public-header__cta--primary">
+              <Link to="/tool" className={primaryCtaClassName}>
                 Abrir área de trabalho
               </Link>
             ) : (
               <>
-                <Link to="/login" className="public-header__cta public-header__cta--secondary">
+                <Link to="/login" className={secondaryCtaClassName}>
                   Entrar
                 </Link>
-                <Link to="/signup" className="public-header__cta public-header__cta--primary">
+                <Link to="/signup" className={primaryCtaClassName}>
                   Criar conta grátis
                 </Link>
               </>

@@ -12,13 +12,13 @@ function LearningTeaser({ content, guides }) {
 
       <div className="landing-learning-teaser__grid">
         {guides.map((guide) => (
-          <LearningGuideCard key={guide.slug} guide={guide} />
+          <LearningGuideCard key={guide.slug} guide={guide} variant="landing" />
         ))}
       </div>
 
       <div className="landing-learning-teaser__footer">
         <p>{content.footer}</p>
-        <Link className="landing-button landing-button--secondary" to="/aprender">
+        <Link className="landing-button forge-button forge-button--metal" to="/aprender">
           Ver trilha completa →
         </Link>
       </div>

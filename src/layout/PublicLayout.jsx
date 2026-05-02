@@ -1,16 +1,26 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import PublicHeader from '../components/navigation/PublicHeader'
 import PublicFooter from '../components/navigation/PublicFooter'
 import '../styles/public.css'
 
 function PublicLayout() {
+  const location = useLocation()
+  const isHomeRoute = location.pathname === '/'
+  const layoutClassName = [
+    'page-shell',
+    'public-layout',
+    isHomeRoute ? 'public-layout--home-forge theme-forge' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
-    <div className="page-shell public-layout">
-      <PublicHeader />
+    <div className={layoutClassName}>
+      <PublicHeader isHomeRoute={isHomeRoute} />
       <main className="public-layout__main">
         <Outlet />
       </main>
-      <PublicFooter />
+      <PublicFooter isHomeRoute={isHomeRoute} />
     </div>
   )
 }

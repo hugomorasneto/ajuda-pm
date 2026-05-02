@@ -46,7 +46,7 @@ function HomePage() {
 
   return (
     <div className="page landing-page">
-      <LandingHero hero={landingCopy.hero} isAuthenticated={Boolean(user)} />
+      <LandingHero hero={landingCopy.hero} isAuthenticated={Boolean(user)} sectionId="produto" />
       <ContextStrip items={landingCopy.contextStrip} />
       <WorkflowSteps content={landingCopy.workflow} />
       <BeforeAfterStory content={landingCopy.beforeAfter} />
@@ -65,15 +65,15 @@ function HomePage() {
 
           <div className="landing-final-cta__actions">
             {user ? (
-              <Link className="landing-button landing-button--primary" to="/tool">
+              <Link className="landing-button forge-button forge-button--ember forge-button--lg" to="/tool">
                 Abrir área de trabalho
               </Link>
             ) : (
               <>
-                <Link className="landing-button landing-button--primary" to="/signup">
+                <Link className="landing-button forge-button forge-button--ember forge-button--lg" to="/signup">
                   Criar conta grátis
                 </Link>
-                <Link className="landing-button landing-button--secondary" to="/login">
+                <Link className="landing-button forge-button forge-button--metal forge-button--lg" to="/login">
                   Entrar
                 </Link>
               </>

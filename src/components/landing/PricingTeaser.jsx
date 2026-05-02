@@ -4,7 +4,11 @@ function PricingCard({ plan, cta, variant }) {
   const isFeatured = variant === 'pro'
 
   return (
-    <article className={`landing-pricing__card landing-pricing__card--${variant}`}>
+    <article
+      className={`landing-pricing__card landing-pricing__card--${variant} forge-panel ${
+        isFeatured ? 'forge-panel--active-tech' : 'forge-panel--metal'
+      } forge-panel--interactive`}
+    >
       <div className="landing-pricing__card-header">
         <div>
           <p className="landing-pricing__name">{plan.name}</p>
@@ -41,11 +45,11 @@ function PricingTeaser({ content, isAuthenticated }) {
           variant="free"
           cta={
             isAuthenticated ? (
-              <Link className="landing-button landing-button--secondary" to="/tool">
+              <Link className="landing-button forge-button forge-button--metal forge-button--block" to="/tool">
                 Abrir área de trabalho
               </Link>
             ) : (
-              <Link className="landing-button landing-button--primary" to="/signup">
+              <Link className="landing-button forge-button forge-button--ember forge-button--block" to="/signup">
                 Criar conta grátis
               </Link>
             )
@@ -56,7 +60,7 @@ function PricingTeaser({ content, isAuthenticated }) {
           plan={content.pro}
           variant="pro"
           cta={
-            <a className="landing-button landing-button--secondary" href="#lead-capture-title">
+            <a className="landing-button forge-button forge-button--tech forge-button--block" href="#lead-capture-title">
               Receber novidades do Pro
             </a>
           }

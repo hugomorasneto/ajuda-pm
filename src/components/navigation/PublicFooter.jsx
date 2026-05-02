@@ -9,24 +9,34 @@ const footerGuides = getLearningGuidesBySlugs([
   'backlog-e-refinamento',
 ])
 
-function PublicFooter() {
+function PublicFooter({ isHomeRoute = false }) {
   const { user } = useAuth()
+  const brandStatement = isHomeRoute
+    ? 'Transforme briefing bruto em user stories claras, revisáveis e prontas para dev, QA e negócio.'
+    : 'Para PMs e POs que querem escrever user stories mais claras, sem depender de sênior para revisar.'
+  const bottomCopy = isHomeRoute
+    ? `© ${new Date().getFullYear()} ${APP_NAME} · Feito para PMs e POs que precisam de stories mais claras`
+    : `© ${new Date().getFullYear()} ${APP_NAME} · Feito para PMs e POs iniciantes`
+  const footerClassName = ['public-footer', isHomeRoute ? 'public-footer--forge-home' : '']
+    .filter(Boolean)
+    .join(' ')
+  const footerCtaClassName = [
+    'public-footer__cta',
+    isHomeRoute ? 'forge-button forge-button--metal forge-button--sm' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
-    <footer className="public-footer">
+    <footer className={footerClassName}>
       <div className="public-footer__inner">
         <div className="public-footer__brand">
           <div className="public-footer__brand-logo">
             <span className="public-footer__brand-mark" aria-hidden="true" />
             <span className="public-footer__brand-name">{APP_NAME}</span>
           </div>
-          <p className="public-footer__brand-statement">
-            Para PMs e POs que querem escrever user stories mais claras, sem depender de sênior para revisar.
-          </p>
-          <Link
-            to={user ? '/tool' : '/signup'}
-            className="public-footer__cta"
-          >
+          <p className="public-footer__brand-statement">{brandStatement}</p>
+          <Link to={user ? '/tool' : '/signup'} className={footerCtaClassName}>
             {user ? 'Abrir área de trabalho' : 'Começar grátis →'}
           </Link>
         </div>
@@ -34,8 +44,9 @@ function PublicFooter() {
         <div className="public-footer__links">
           <nav className="public-footer__nav" aria-label="Produto">
             <p className="public-footer__nav-title">Produto</p>
+            {isHomeRoute ? <a href="/#produto">Produto</a> : null}
             <a href="/#como-funciona">Como funciona</a>
-            <a href="/#antes-depois">Ver exemplo</a>
+            <a href="/#antes-depois">{isHomeRoute ? 'Antes e depois' : 'Ver exemplo'}</a>
             <a href="/#planos">Planos</a>
           </nav>
 
@@ -52,7 +63,7 @@ function PublicFooter() {
       </div>
 
       <div className="public-footer__bottom">
-        <p>© {new Date().getFullYear()} {APP_NAME} · Feito para PMs e POs iniciantes</p>
+        <p>{bottomCopy}</p>
       </div>
     </footer>
   )
