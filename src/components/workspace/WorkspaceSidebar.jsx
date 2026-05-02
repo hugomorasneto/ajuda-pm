@@ -1,6 +1,9 @@
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { APP_NAME } from '../../constants/app'
 import { useAuth } from '../../hooks/useAuth'
+import { useLearningProgress } from '../../hooks/useLearningProgress'
+
+const TRAIL_SLUGS = ['fundamentos-produto-agil', 'user-stories-na-pratica', 'backlog-e-refinamento']
 
 const baseNavItems = [{ label: 'Área de trabalho', path: '/tool' }]
 
@@ -8,6 +11,10 @@ function WorkspaceSidebar({ isOpen, onClose }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
+  const { completedSlugs } = useLearningProgress()
+
+  const completedCount = TRAIL_SLUGS.filter((s) => completedSlugs.has(s)).length
+  const totalCount = TRAIL_SLUGS.length
 
   const navItems = location.pathname.startsWith('/admin')
     ? [...baseNavItems, { label: 'Admin', path: '/admin' }]
@@ -49,7 +56,7 @@ function WorkspaceSidebar({ isOpen, onClose }) {
       </div>
 
       <nav className="workspace-sidebar__nav" aria-label="Navegação da área de trabalho">
-        <p className="workspace-sidebar__section-label">Navegação</p>
+        <p className="workspace-sidebar__section-label">Ferramentas</p>
         {navItems.map((item) => (
           <NavLink
             key={item.path}
@@ -64,6 +71,36 @@ function WorkspaceSidebar({ isOpen, onClose }) {
             <span>{item.label}</span>
           </NavLink>
         ))}
+      </nav>
+
+      {/* ── Academia ── */}
+      <nav className="workspace-sidebar__nav" aria-label="Academia ProdForge">
+        <div className="workspace-sidebar__section-header">
+          <p className="workspace-sidebar__section-label">Academia</p>
+          {completedCount > 0 && (
+            <span className="workspace-sidebar__progress-pill">
+              {completedCount}/{totalCount}
+            </span>
+          )}
+        </div>
+
+        <Link
+          to="/aprender"
+          className="workspace-sidebar__link workspace-sidebar__link--academy"
+          onClick={onClose}
+        >
+          <span className="workspace-sidebar__link-marker workspace-sidebar__link-marker--academy" />
+          <span>Guias práticos</span>
+        </Link>
+
+        <Link
+          to="/aprender/user-stories-na-pratica"
+          className="workspace-sidebar__link workspace-sidebar__link--academy"
+          onClick={onClose}
+        >
+          <span className="workspace-sidebar__link-marker workspace-sidebar__link-marker--academy" />
+          <span>User stories na prática</span>
+        </Link>
       </nav>
 
       <div className="workspace-sidebar__footer">
@@ -81,12 +118,8 @@ function WorkspaceSidebar({ isOpen, onClose }) {
           <div className="workspace-sidebar__account workspace-sidebar__account--guest">
             <p className="workspace-sidebar__account-label">Acesso</p>
             <div className="workspace-sidebar__account-links">
-              <Link to="/login" onClick={onClose}>
-                Entrar
-              </Link>
-              <Link to="/signup" onClick={onClose}>
-                Criar conta
-              </Link>
+              <Link to="/login" onClick={onClose}>Entrar</Link>
+              <Link to="/signup" onClick={onClose}>Criar conta</Link>
             </div>
           </div>
         )}

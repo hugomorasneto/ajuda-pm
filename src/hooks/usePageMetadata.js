@@ -4,7 +4,11 @@ import { APP_NAME } from '../constants/app'
 const SITE_URL = 'https://prodforge.techtupa.com.br'
 const DEFAULT_IMAGE_URL = `${SITE_URL}/og-prodforge.png`
 const DEFAULT_IMAGE_ALT =
-  'Preview do ProdForge com proposta de valor e exemplo de user story estruturada.'
+  'ProdForge — Escreva user stories que devs entendem na primeira leitura. Para PMs e POs iniciantes.'
+
+export const ACADEMIA_IMAGE_URL = `${SITE_URL}/og-academia.png`
+export const ACADEMIA_IMAGE_ALT =
+  'Academia ProdForge — Trilha prática de product management para PMs e POs iniciantes.'
 
 function upsertMeta(selector, attributeName, attributeValue, content) {
   let element = document.head.querySelector(selector)
@@ -75,6 +79,7 @@ export function usePageMetadata({
     upsertMeta('meta[property="og:type"]', 'property', 'og:type', type)
     upsertMeta('meta[property="og:url"]', 'property', 'og:url', url)
     upsertMeta('meta[property="og:image"]', 'property', 'og:image', image)
+    upsertMeta('meta[property="og:image:type"]', 'property', 'og:image:type', 'image/png')
     upsertMeta('meta[property="og:image:width"]', 'property', 'og:image:width', '1200')
     upsertMeta('meta[property="og:image:height"]', 'property', 'og:image:height', '630')
     upsertMeta('meta[property="og:image:alt"]', 'property', 'og:image:alt', imageAlt)
@@ -83,6 +88,7 @@ export function usePageMetadata({
     upsertMeta('meta[name="twitter:title"]', 'name', 'twitter:title', title)
     upsertMeta('meta[name="twitter:description"]', 'name', 'twitter:description', description)
     upsertMeta('meta[name="twitter:image"]', 'name', 'twitter:image', image)
+    upsertMeta('meta[name="twitter:image:alt"]', 'name', 'twitter:image:alt', imageAlt)
 
     upsertStructuredData(jsonLd)
   }, [description, image, imageAlt, jsonLd, path, title, type])

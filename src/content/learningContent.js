@@ -9,6 +9,8 @@ export const learningHub = {
     'fundamentos-produto-agil',
     'user-stories-na-pratica',
     'backlog-e-refinamento',
+    'refinamento-e-criterios',
+    'alinhamento-com-stakeholders',
   ],
   relatedProductLinks: [
     {
@@ -465,6 +467,176 @@ export const learningGuides = [
         'Guia prático para validar problema, hipótese e necessidade sem burocracia, conectando discovery ao backlog real.',
     },
   },
+  {
+    slug: 'refinamento-e-criterios',
+    category: 'Refinamento',
+    title: 'Como fazer refinamento sem desperdiçar reunião',
+    excerpt:
+      'Como chegar preparado, escrever critérios de aceite que realmente orientam dev e QA, e sair com decisões em vez de mais dúvidas.',
+    readingTime: '7 min',
+    level: 'Iniciante',
+    problem:
+      'O refinamento virou reunião longa onde o time descobre o problema ao vivo, sem insumo suficiente para decidir nada.',
+    outcome:
+      'Você aprende a chegar no refinamento com material preparado, conduzir a conversa em torno de decisões reais e sair com pendências claras e donos definidos.',
+    quickSummary: [
+      'Refinamento não é o lugar para descobrir o problema — é o lugar para confirmar o que já foi pensado.',
+      'Critério de aceite ruim gera ambiguidade na implementação e teste sem base.',
+      'A reunião só tem valor quando produz decisão, não apenas descrição.',
+    ],
+    exampleScenario: {
+      title: 'Exemplo real',
+      summary:
+        'O PM leva um item para o refinamento com o título "Melhorar performance do checkout". Ninguém sabe o que "melhorar" significa e a reunião vira 40 minutos de discovery ao vivo.',
+      bullets: [
+        'Qual métrica de performance está falhando hoje?',
+        'Para qual usuário isso é crítico?',
+        'O que "melhorado" significa em número ou comportamento?',
+      ],
+      result:
+        'Sem essas respostas preparadas antes, o time sai sem decisão e o item volta para o backlog exatamente como entrou.',
+    },
+    sections: [
+      {
+        title: 'Prepare o insumo antes de sentar com o time',
+        paragraphs: [
+          'Refinamento não é sessão de brainstorming. É validação de entendimento.',
+          'O PM precisa chegar com objetivo claro, regras conhecidas, dependências identificadas e dúvidas abertas listadas — não para ler em voz alta, mas para ancorar a conversa em algo concreto.',
+        ],
+        bullets: [
+          'Qual é o comportamento esperado do usuário no fluxo afetado?',
+          'Quais regras de negócio impactam a implementação?',
+          'Quais dependências externas o time precisa conhecer antes de estimar?',
+        ],
+      },
+      {
+        title: 'Escreva critérios de aceite antes da reunião',
+        paragraphs: [
+          'Critério escrito antes do refinamento serve como âncora da conversa. O time valida, ajusta ou questiona — mas parte de algo concreto, não do vazio.',
+          'Critério genérico como "funcionar corretamente" não orienta nada. O critério útil descreve o comportamento esperado em situação específica.',
+        ],
+        bullets: [
+          'Cubra o caminho principal, o erro esperado e a exceção mais relevante.',
+          'Use linguagem de comportamento: "quando X acontece, o sistema deve Y".',
+          'Prefira 3 critérios precisos a 10 critérios vagos.',
+        ],
+      },
+      {
+        title: 'Saia com decisão, não com lista de perguntas',
+        paragraphs: [
+          'O objetivo do refinamento é reduzir ambiguidade, não registrar toda incerteza.',
+          'Para cada dúvida aberta, defina quem responde e quando — antes de marcar o item como pronto para a sprint.',
+        ],
+        bullets: [
+          'Liste explicitamente o que ficou decidido na reunião.',
+          'Atribua dono para cada pergunta em aberto.',
+          'Não marque o item como pronto se a resposta técnica crítica ainda depende de suposição.',
+        ],
+      },
+    ],
+    commonMistakes: [
+      'Levar item sem contexto e usar o refinamento como sessão de discovery do problema.',
+      'Escrever critérios de aceite depois que a implementação já começou.',
+      'Sair do refinamento com itens "aprovados" mas cheios de lacunas silenciosas.',
+    ],
+    checklist: [
+      'O objetivo da mudança está claro em uma frase antes da reunião.',
+      'Os critérios cobrem caminho principal, erro esperado e exceção mais relevante.',
+      'As dúvidas abertas têm dono e prazo definido para resposta.',
+      'O time consegue iniciar a implementação sem precisar de nova reunião de alinhamento.',
+    ],
+    nextReads: ['user-stories-na-pratica', 'backlog-e-refinamento'],
+    seo: {
+      title: 'Como fazer refinamento sem desperdiçar reunião | ProdForge',
+      description:
+        'Guia prático para PMs e POs prepararem o refinamento com insumo suficiente, escreverem critérios de aceite claros e saírem com decisões reais.',
+    },
+  },
+  {
+    slug: 'alinhamento-com-stakeholders',
+    category: 'Alinhamento',
+    title: 'Alinhamento com stakeholders sem virar telefone sem fio',
+    excerpt:
+      'Como ir à fonte do problema, confirmar entendimento antes de especificar e manter o alinhamento ativo ao longo do ciclo — sem surpresas na review.',
+    readingTime: '6 min',
+    level: 'Iniciante',
+    problem:
+      'A demanda chega transformada depois de passar por várias pessoas e o PM fica no meio traduzindo pedido em pedido sem clareza sobre o problema original.',
+    outcome:
+      'Você aprende a ir direto a quem sente o problema, confirmar entendimento antes de especificar e manter o alinhamento ativo para que a review não seja a primeira surpresa.',
+    quickSummary: [
+      'Alinhamento não é concordância — é clareza compartilhada sobre o problema e o que será entregue.',
+      'Quanto mais cedo o PM fala com quem sente o problema, menos ruído acumula na especificação.',
+      'O documento de user story é um artefato de alinhamento, não apenas de registro.',
+    ],
+    exampleScenario: {
+      title: 'Exemplo real',
+      summary:
+        'O comercial pede "um relatório novo". O PM especifica o relatório. Na review, o financeiro diz que não serve porque falta um campo. O problema: ninguém perguntou para o financeiro antes.',
+      bullets: [
+        'Quem realmente usa o relatório no dia a dia?',
+        'Qual decisão o relatório precisa apoiar?',
+        'O que está faltando hoje no relatório existente?',
+      ],
+      result:
+        'Uma conversa de 15 minutos com o usuário real teria evitado o retrabalho inteiro.',
+    },
+    sections: [
+      {
+        title: 'Vá à fonte do problema, não à cadeia de intermediários',
+        paragraphs: [
+          'Cada pessoa que retransmite um pedido adiciona interpretação. Quando o PM recebe a demanda de quem não sente o problema diretamente, o contexto já chegou filtrado.',
+          'Identificar quem é afetado de verdade e falar com essa pessoa antes de especificar é o atalho mais eficiente para chegar ao refinamento com contexto real.',
+        ],
+        bullets: [
+          'Identifique quem é afetado diretamente pelo problema, não apenas quem pediu.',
+          'Pergunte o que acontece quando o problema não é resolvido.',
+          'Valide se a solução pedida resolve o problema ou apenas o sintoma visível.',
+        ],
+      },
+      {
+        title: 'Confirme entendimento antes de especificar',
+        paragraphs: [
+          'Entendimento não é leitura silenciosa de um documento. É confirmação explícita do que será entregue.',
+          'Um parágrafo descrevendo o problema e o comportamento esperado, revisado pelo solicitante, vale mais do que horas de documentação não lida.',
+        ],
+        bullets: [
+          'Envie um resumo do problema e do que será construído antes de detalhar critérios.',
+          'Pergunte explicitamente: "Isso resolve o que você precisa?"',
+          'Ajuste o escopo antes de o item entrar em desenvolvimento, não depois.',
+        ],
+      },
+      {
+        title: 'Mantenha o alinhamento ativo ao longo do ciclo',
+        paragraphs: [
+          'Alinhamento inicial não garante alinhamento na entrega. O contexto muda, o escopo evolui e o stakeholder pode ter expectativa diferente da que foi especificada.',
+          'Checkpoints rápidos ao longo do desenvolvimento evitam que a review seja a primeira vez que alguém vê o resultado real.',
+        ],
+        bullets: [
+          'Mostre protótipo, rascunho ou versão intermediária antes da entrega final.',
+          'Sinalize proativamente quando o escopo mudar ou uma dependência travar.',
+          'Não espere a review para descobrir que o stakeholder esperava algo diferente.',
+        ],
+      },
+    ],
+    commonMistakes: [
+      'Especificar sem falar com quem usa o produto ou sente o problema.',
+      'Assumir que aprovação de documento equivale a alinhamento real.',
+      'Avisar problemas de escopo apenas na review, quando o custo de mudança é alto.',
+    ],
+    checklist: [
+      'Conversei com quem sente o problema, não apenas com quem pediu.',
+      'O solicitante confirmou que o que será entregue resolve o problema original.',
+      'Há pelo menos um checkpoint antes da entrega final.',
+      'Mudanças de escopo foram comunicadas proativamente antes da sprint terminar.',
+    ],
+    nextReads: ['backlog-e-refinamento', 'discovery-leve'],
+    seo: {
+      title: 'Alinhamento com stakeholders para PM e PO | ProdForge',
+      description:
+        'Guia prático para PMs e POs irem à fonte do problema, confirmarem entendimento e manterem alinhamento ativo ao longo do ciclo de desenvolvimento.',
+    },
+  },
 ]
 
 export const learningNotes = [
@@ -494,6 +666,24 @@ export const learningNotes = [
       'Quando várias histórias dependem de reunião extra para entender o básico, o backlog está sinalizando falta de contexto, não falta de velocidade.',
     ctaLabel: 'Ler guia de fundamentos',
     targetGuideSlug: 'fundamentos-produto-agil',
+  },
+  {
+    slug: 'criterio-de-aceite-vs-caso-de-teste',
+    title: 'Critério de aceite não é caso de teste — e a diferença importa',
+    tag: 'Novidade prática',
+    summary:
+      'Critério de aceite define o comportamento esperado do produto. Caso de teste descreve como validar esse comportamento. Misturar os dois gera especificação que nem o dev nem o QA conseguem usar bem.',
+    ctaLabel: 'Ler guia de refinamento',
+    targetGuideSlug: 'refinamento-e-criterios',
+  },
+  {
+    slug: 'como-evitar-surpresa-na-review',
+    title: 'Como evitar surpresa na review sem fazer reunião extra',
+    tag: 'Novidade prática',
+    summary:
+      'Surpresa na review quase sempre é sinal de alinhamento feito tarde demais. Um checkpoint rápido no meio do ciclo vale mais do que uma longa reunião de ajuste depois da entrega.',
+    ctaLabel: 'Ler guia de alinhamento',
+    targetGuideSlug: 'alinhamento-com-stakeholders',
   },
 ]
 

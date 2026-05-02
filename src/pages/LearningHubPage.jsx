@@ -9,14 +9,14 @@ import {
 } from '../content/learningContent'
 import { useAuth } from '../hooks/useAuth'
 import { useLearningProgress } from '../hooks/useLearningProgress'
-import { usePageMetadata } from '../hooks/usePageMetadata'
+import { ACADEMIA_IMAGE_ALT, ACADEMIA_IMAGE_URL, usePageMetadata } from '../hooks/usePageMetadata'
 
 const TRAIL_STEPS = [
   { num: '01', title: 'Fundamentos', slug: 'fundamentos-produto-agil' },
   { num: '02', title: 'User Stories', slug: 'user-stories-na-pratica' },
   { num: '03', title: 'Backlog', slug: 'backlog-e-refinamento' },
-  { num: '04', title: 'Refinamento', slug: null },
-  { num: '05', title: 'Alinhamento', slug: null },
+  { num: '04', title: 'Refinamento', slug: 'refinamento-e-criterios' },
+  { num: '05', title: 'Alinhamento', slug: 'alinhamento-com-stakeholders' },
 ]
 
 const AVAILABLE_STEPS = TRAIL_STEPS.filter((s) => s.slug)
@@ -92,6 +92,8 @@ function LearningHubPage() {
     description:
       'Trilha prática para PMs e POs iniciantes aprenderem fundamentos, user stories e backlog — e aplicarem imediatamente na ferramenta.',
     path: '/aprender',
+    image: ACADEMIA_IMAGE_URL,
+    imageAlt: ACADEMIA_IMAGE_ALT,
   })
 
   return (

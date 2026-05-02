@@ -12,7 +12,7 @@ import {
 } from '../content/learningContent'
 import { useAuth } from '../hooks/useAuth'
 import { useLearningProgress } from '../hooks/useLearningProgress'
-import { buildArticleJsonLd, usePageMetadata } from '../hooks/usePageMetadata'
+import { ACADEMIA_IMAGE_ALT, ACADEMIA_IMAGE_URL, buildArticleJsonLd, usePageMetadata } from '../hooks/usePageMetadata'
 
 const GUIDE_NAV_ITEMS = [
   { href: '#resumo', label: 'Resumo' },
@@ -33,12 +33,14 @@ function LearningGuidePage() {
   const metadataPath = guide ? `/aprender/${guide.slug}` : '/aprender'
 
   usePageMetadata({
-    title: guide?.seo.title ?? 'Aprender produto agil na pratica | ProdForge',
+    title: guide?.seo.title ?? 'Academia ProdForge | Aprenda product management na prática',
     description:
       guide?.seo.description ??
-      'Centro de aprendizado pratico para PMs e POs iniciantes com guias sobre fundamentos, user stories, backlog, Scrum e discovery.',
+      'Guias práticos para PMs e POs iniciantes sobre fundamentos, user stories, backlog, Scrum e discovery.',
     path: metadataPath,
     type: guide ? 'article' : 'website',
+    image: ACADEMIA_IMAGE_URL,
+    imageAlt: ACADEMIA_IMAGE_ALT,
     jsonLd: guide
       ? buildArticleJsonLd({
           title: guide.title,

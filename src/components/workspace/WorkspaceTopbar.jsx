@@ -39,8 +39,11 @@ function WorkspaceTopbar({ onOpenSidebar }) {
         </div>
 
         <div className="workspace-topbar__actions">
+          <Link to="/aprender" className="workspace-topbar__link workspace-topbar__link--academy">
+            Academia →
+          </Link>
           <Link to="/" className="workspace-topbar__link">
-            Página pública
+            Site
           </Link>
         </div>
       </div>

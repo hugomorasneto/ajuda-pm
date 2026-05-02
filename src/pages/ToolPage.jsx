@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import BriefComposer from '../components/workspace/BriefComposer'
+import OnboardingModal from '../components/workspace/OnboardingModal'
 import QualityPanel from '../components/workspace/QualityPanel'
 import RecentStoriesPanel from '../components/workspace/RecentStoriesPanel'
 import StoryDocument from '../components/workspace/StoryDocument'
@@ -8,6 +9,7 @@ import VersionTimeline from '../components/workspace/VersionTimeline'
 import WorkspaceEmptyState from '../components/workspace/WorkspaceEmptyState'
 import WorkspaceErrorState from '../components/workspace/WorkspaceErrorState'
 import WorkspaceLoadingState from '../components/workspace/WorkspaceLoadingState'
+import { useAuth } from '../hooks/useAuth'
 import { useUserStoryWorkspace } from '../hooks/useUserStoryWorkspace'
 
 const TABS = [
@@ -18,6 +20,23 @@ const TABS = [
 
 function ToolPage() {
   const [mobileTab, setMobileTab] = useState('entrada')
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const { user } = useAuth()
+
+  useEffect(() => {
+    if (!user) return
+    const key = `pf_ob_${user.id}`
+    if (!localStorage.getItem(key)) {
+      setShowOnboarding(true)
+    }
+  }, [user])
+
+  function dismissOnboarding() {
+    if (user) {
+      localStorage.setItem(`pf_ob_${user.id}`, '1')
+    }
+    setShowOnboarding(false)
+  }
 
   const {
     activeStoryTitle,
@@ -95,7 +114,14 @@ function ToolPage() {
       onRetry={handleSubmitStory}
     />
   ) : showEmptyState ? (
-    <WorkspaceEmptyState hasDraft={hasDraft} />
+    <WorkspaceEmptyState
+      hasDraft={hasDraft}
+      onApplyTemplate={(tpl) => {
+        handleFieldChange('problemContext', tpl.context)
+        handleFieldChange('requirements', tpl.requirements)
+        setMobileTab('entrada')
+      }}
+    />
   ) : (
     <StoryDocument
       key={selectedStoryId ?? 'workspace-document'}
@@ -225,6 +251,8 @@ function ToolPage() {
           {rightPanel}
         </div>
       </div>
+
+      {showOnboarding ? <OnboardingModal onDismiss={dismissOnboarding} /> : null}
     </div>
   )
 }
