@@ -2,6 +2,15 @@ function HeroTransformationPreview({ preview }) {
   return (
     <div className="hero-transformation-preview" aria-label="Preview do produto">
       <div className="hero-transformation-preview__frame">
+
+        {/* Window chrome */}
+        <div className="hero-transformation-preview__chrome" aria-hidden="true">
+          <span className="hero-transformation-preview__chrome-dot hero-transformation-preview__chrome-dot--red" />
+          <span className="hero-transformation-preview__chrome-dot hero-transformation-preview__chrome-dot--yellow" />
+          <span className="hero-transformation-preview__chrome-dot hero-transformation-preview__chrome-dot--green" />
+          <span className="hero-transformation-preview__chrome-title">ProdForge — área de trabalho</span>
+        </div>
+
         <div className="hero-transformation-preview__frame-top">
           <span className="hero-transformation-preview__frame-chip">Entrada real</span>
           <span className="hero-transformation-preview__frame-chip hero-transformation-preview__frame-chip--active">
@@ -77,6 +86,7 @@ function HeroTransformationPreview({ preview }) {
           <span>Gaps visíveis</span>
           <span>Checklist pronto</span>
         </div>
+
       </div>
     </div>
   )

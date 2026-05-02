@@ -1,6 +1,12 @@
 import { APP_NAME, FREE_GENERATION_LIMIT, FREE_PLAN_NAME, PRO_PLAN_NAME } from '../constants/app'
 
 export const landingCopy = {
+  contextStrip: [
+    { icon: 'bolt',     label: 'Do briefing à story estruturada em 60 segundos' },
+    { icon: 'check',    label: 'Critérios de aceite gerados no mesmo fluxo' },
+    { icon: 'layers',   label: 'Funciona com qualquer formato de contexto' },
+    { icon: 'unlock',   label: 'Grátis para começar, sem cartão de crédito' },
+  ],
   hero: {
     eyebrow: 'Novo · IA para PMs e POs iniciantes',
     title: 'Escreva user stories que devs entendem na primeira leitura.',

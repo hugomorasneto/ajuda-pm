@@ -4,7 +4,9 @@
       "Bash(Get-ChildItem -Path \"c:\\\\Projetos\\\\ajuda-pm\" -Recurse -Depth 3)",
       "Bash(Select-Object FullName, PSIsContainer)",
       "Bash(Format-Table -AutoSize)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "mcp__claude_ai_Supabase__list_projects",
+      "mcp__claude_ai_Supabase__list_tables"
     ]
   }
 }

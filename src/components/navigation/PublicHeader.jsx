@@ -56,7 +56,7 @@ function PublicHeader() {
           </div>
         </Link>
 
-        <nav className="public-header__nav" aria-label="Navegacao publica">
+        <nav className="public-header__nav" aria-label="Navegação pública">
           {publicNavItems.map((item) => (
             <PublicNavLink key={item.to ?? item.href} item={item} pathname={location.pathname} />
           ))}
@@ -65,7 +65,7 @@ function PublicHeader() {
         <div className="public-header__actions">
           {user ? (
             <Link to="/tool" className="public-header__cta public-header__cta--primary">
-              Abrir area de trabalho
+              Abrir área de trabalho
             </Link>
           ) : (
             <>
@@ -73,7 +73,7 @@ function PublicHeader() {
                 Entrar
               </Link>
               <Link to="/signup" className="public-header__cta public-header__cta--primary">
-                Criar conta gratis
+                Criar conta grátis
               </Link>
             </>
           )}
@@ -86,7 +86,7 @@ function PublicHeader() {
             setMenuOpenPath((currentPath) => (currentPath === location.pathname ? null : location.pathname))
           }
           aria-expanded={isMenuOpen}
-          aria-label={isMenuOpen ? 'Fechar navegacao' : 'Abrir navegacao'}
+          aria-label={isMenuOpen ? 'Fechar navegação' : 'Abrir navegação'}
         >
           {isMenuOpen ? 'Fechar' : 'Menu'}
         </button>
@@ -94,7 +94,7 @@ function PublicHeader() {
 
       {isMenuOpen ? (
         <div className="public-header__mobile-panel">
-          <nav className="public-header__mobile-nav" aria-label="Navegacao publica no mobile">
+          <nav className="public-header__mobile-nav" aria-label="Navegação pública — mobile">
             {publicNavItems.map((item) => (
               <PublicNavLink
                 key={item.to ?? item.href}
@@ -109,7 +109,7 @@ function PublicHeader() {
           <div className="public-header__mobile-actions">
             {user ? (
               <Link to="/tool" className="public-header__cta public-header__cta--primary">
-                Abrir area de trabalho
+                Abrir área de trabalho
               </Link>
             ) : (
               <>
@@ -117,7 +117,7 @@ function PublicHeader() {
                   Entrar
                 </Link>
                 <Link to="/signup" className="public-header__cta public-header__cta--primary">
-                  Criar conta gratis
+                  Criar conta grátis
                 </Link>
               </>
             )}

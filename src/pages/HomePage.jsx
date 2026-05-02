@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import BeforeAfterStory from '../components/landing/BeforeAfterStory'
 import BenefitsStrip from '../components/landing/BenefitsStrip'
+import ContextStrip from '../components/landing/ContextStrip'
 import LandingHero from '../components/landing/LandingHero'
 import LeadCaptureForm from '../components/landing/LeadCaptureForm'
 import LearningTeaser from '../components/landing/LearningTeaser'
@@ -19,7 +20,7 @@ function HomePage() {
   usePageMetadata({
     title: 'ProdForge | Gere user stories mais claras com IA',
     description:
-      'Transforme contexto solto em user stories com objetivo, criterios de aceite, gaps e checklist de QA. Feito para PMs e POs.',
+      'Transforme contexto solto em user stories com objetivo, critérios de aceite, gaps e checklist de QA. Feito para PMs e POs.',
     path: '/',
   })
 
@@ -46,6 +47,7 @@ function HomePage() {
   return (
     <div className="page landing-page">
       <LandingHero hero={landingCopy.hero} isAuthenticated={Boolean(user)} />
+      <ContextStrip items={landingCopy.contextStrip} />
       <WorkflowSteps content={landingCopy.workflow} />
       <BeforeAfterStory content={landingCopy.beforeAfter} />
       <BenefitsStrip content={landingCopy.benefits} />
@@ -64,12 +66,12 @@ function HomePage() {
           <div className="landing-final-cta__actions">
             {user ? (
               <Link className="landing-button landing-button--primary" to="/tool">
-                Abrir area de trabalho
+                Abrir área de trabalho
               </Link>
             ) : (
               <>
                 <Link className="landing-button landing-button--primary" to="/signup">
-                  Criar conta gratis
+                  Criar conta grátis
                 </Link>
                 <Link className="landing-button landing-button--secondary" to="/login">
                   Entrar

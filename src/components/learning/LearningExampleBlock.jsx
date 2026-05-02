@@ -2,7 +2,7 @@ function LearningExampleBlock({ example }) {
   return (
     <section className="learning-guide-block learning-guide-example" id="exemplo">
       <div className="learning-guide-block__header">
-        <p className="landing-section__eyebrow">Exemplo real</p>
+        <span className="badge-pill">Exemplo real</span>
         <h2>{example.title}</h2>
       </div>
 

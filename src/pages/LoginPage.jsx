@@ -170,16 +170,32 @@ function LoginPage() {
       {/* Side panel — value prop */}
       <aside className="auth-side">
         <div className="auth-side__content">
-          <p className="auth-side__eyebrow">Para PMs e POs</p>
+          <p className="auth-side__eyebrow">Para PMs e POs iniciantes</p>
           <h2 className="auth-side__title">
-            Do contexto solto à user story pronta para revisão.
+            Escreva user stories que devs entendem na primeira leitura.
           </h2>
           <ul className="auth-side__list">
-            <li>User story com critérios de aceite</li>
-            <li>Checklist de QA integrado</li>
+            <li>User story estruturada com critérios de aceite</li>
+            <li>Gaps e checklist de QA no mesmo fluxo</li>
             <li>Histórico de versões por feature</li>
             <li>Exportação em Markdown e texto simples</li>
+            <li>Guias práticos da Academia ProdForge</li>
           </ul>
+          <div className="auth-side__preview">
+            <p className="auth-side__preview-label">Exemplo de saída</p>
+            <div className="auth-side__preview-card">
+              <p className="auth-side__preview-story">
+                "Como <em>responsável pelo cadastro</em>, quero{' '}
+                <em>validar o domínio corporativo</em> para concluir o
+                registro com menos retrabalho."
+              </p>
+              <ul className="auth-side__preview-criteria">
+                <li>Bloquear avanço com domínio inválido</li>
+                <li>Exibir mensagem orientando a correção</li>
+                <li>Registrar falha para análise do funil</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </aside>
     </div>

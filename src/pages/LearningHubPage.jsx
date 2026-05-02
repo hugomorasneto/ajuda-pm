@@ -8,6 +8,7 @@ import {
   learningNotes,
 } from '../content/learningContent'
 import { useAuth } from '../hooks/useAuth'
+import { useLearningProgress } from '../hooks/useLearningProgress'
 import { usePageMetadata } from '../hooks/usePageMetadata'
 
 const TRAIL_STEPS = [
@@ -18,14 +19,40 @@ const TRAIL_STEPS = [
   { num: '05', title: 'Alinhamento', slug: null },
 ]
 
-function TrailStep({ step, index }) {
+const AVAILABLE_STEPS = TRAIL_STEPS.filter((s) => s.slug)
+
+function CheckIcon() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+      <path d="M2 5.5l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function TrailStep({ step, index, isCompleted }) {
   const isActive = Boolean(step.slug)
+  const isDone = isActive && isCompleted(step.slug)
+
+  const stepClass = [
+    'learning-path-step',
+    !isActive ? 'learning-path-step--locked' :
+    isDone    ? 'learning-path-step--completed' :
+                'learning-path-step--active',
+  ].join(' ')
+
+  const connectorClass = [
+    'learning-path-step__connector',
+    isDone ? 'learning-path-step__connector--done' : '',
+  ].filter(Boolean).join(' ')
 
   return (
-    <div className={`learning-path-step${isActive ? ' learning-path-step--active' : ' learning-path-step--locked'}`}>
-      {index > 0 && <div className="learning-path-step__connector" aria-hidden="true" />}
+    <div className={stepClass} role="listitem">
+      {index > 0 && <div className={connectorClass} aria-hidden="true" />}
+
       <div className="learning-path-step__dot" aria-hidden="true">
-        {isActive ? (
+        {isDone ? (
+          <CheckIcon />
+        ) : isActive ? (
           <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor">
             <circle cx="4" cy="4" r="4" />
           </svg>
@@ -35,13 +62,17 @@ function TrailStep({ step, index }) {
           </svg>
         )}
       </div>
+
       <span className="learning-path-step__num">{step.num}</span>
+
       {step.slug ? (
         <Link to={`/aprender/${step.slug}`} className="learning-path-step__title">
           {step.title}
         </Link>
       ) : (
-        <span className="learning-path-step__title learning-path-step__title--locked">{step.title}</span>
+        <span className="learning-path-step__title learning-path-step__title--locked">
+          {step.title}
+        </span>
       )}
     </div>
   )
@@ -49,7 +80,12 @@ function TrailStep({ step, index }) {
 
 function LearningHubPage() {
   const { user } = useAuth()
+  const { isCompleted, isLoading } = useLearningProgress()
   const starterGuides = getLearningGuidesBySlugs(learningHub.starterGuideSlugs)
+
+  const completedCount = AVAILABLE_STEPS.filter((s) => isCompleted(s.slug)).length
+  const totalCount = AVAILABLE_STEPS.length
+  const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0
 
   usePageMetadata({
     title: 'Academia ProdForge | Aprenda product management na prática',
@@ -93,9 +129,38 @@ function LearningHubPage() {
           </p>
         </div>
 
+        {/* Barra de progresso — só para usuários logados */}
+        {user && !isLoading && (
+          <div className="learning-trail-progress">
+            <div className="learning-trail-progress__header">
+              <span className="learning-trail-progress__label">
+                {completedCount === 0
+                  ? 'Nenhum módulo concluído ainda'
+                  : completedCount === totalCount
+                  ? '🎉 Trilha concluída!'
+                  : `${completedCount} de ${totalCount} módulos concluídos`}
+              </span>
+              <span className="learning-trail-progress__fraction">
+                {completedCount}/{totalCount}
+              </span>
+            </div>
+            <div className="learning-trail-progress__bar" role="progressbar" aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={totalCount}>
+              <div
+                className="learning-trail-progress__fill"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         <div className="learning-path-trail" role="list" aria-label="Módulos da trilha">
           {TRAIL_STEPS.map((step, i) => (
-            <TrailStep key={step.num} step={step} index={i} />
+            <TrailStep
+              key={step.num}
+              step={step}
+              index={i}
+              isCompleted={isCompleted}
+            />
           ))}
         </div>
       </section>
@@ -113,7 +178,12 @@ function LearningHubPage() {
 
         <div className="learning-guide-grid learning-guide-grid--featured">
           {starterGuides.map((guide) => (
-            <LearningGuideCard key={guide.slug} guide={guide} variant="featured" />
+            <LearningGuideCard
+              key={guide.slug}
+              guide={guide}
+              variant="featured"
+              isCompleted={isCompleted(guide.slug)}
+            />
           ))}
         </div>
       </section>
@@ -179,7 +249,11 @@ function LearningHubPage() {
 
         <div className="learning-guide-grid">
           {learningGuides.map((guide) => (
-            <LearningGuideCard key={guide.slug} guide={guide} />
+            <LearningGuideCard
+              key={guide.slug}
+              guide={guide}
+              isCompleted={isCompleted(guide.slug)}
+            />
           ))}
         </div>
       </section>

@@ -144,18 +144,34 @@ function SignupPage() {
       {/* Side panel — value prop */}
       <aside className="auth-side">
         <div className="auth-side__content">
-          <p className="auth-side__eyebrow">Plano gratuito inclui</p>
+          <p className="auth-side__eyebrow">Grátis para começar</p>
           <h2 className="auth-side__title">
-            Tudo que você precisa para validar o fluxo com contexto real.
+            Comece agora. Sua primeira user story em 60 segundos.
           </h2>
           <ul className="auth-side__list">
-            <li>{FREE_GENERATION_LIMIT} gerações de user story por conta</li>
-            <li>Critérios de aceite e checklist de QA</li>
-            <li>Histórico de versões salvo</li>
+            <li>{FREE_GENERATION_LIMIT} gerações de user story incluídas</li>
+            <li>Critérios de aceite e checklist de QA automáticos</li>
+            <li>Histórico de versões salvo por feature</li>
             <li>Exportação em Markdown e texto simples</li>
+            <li>Acesso à Academia ProdForge</li>
           </ul>
+          <div className="auth-side__preview">
+            <p className="auth-side__preview-label">O que você vai gerar</p>
+            <div className="auth-side__preview-card">
+              <p className="auth-side__preview-story">
+                "Como <em>responsável pelo cadastro</em>, quero{' '}
+                <em>validar o domínio corporativo</em> para concluir o
+                registro com menos retrabalho."
+              </p>
+              <ul className="auth-side__preview-criteria">
+                <li>Bloquear avanço com domínio inválido</li>
+                <li>Exibir mensagem orientando a correção</li>
+                <li>Registrar falha para análise do funil</li>
+              </ul>
+            </div>
+          </div>
           <div className="auth-side__upgrade">
-            <p className="auth-side__upgrade-label">Precisa de mais?</p>
+            <p className="auth-side__upgrade-label">Precisa de mais escala?</p>
             <p>O plano {PRO_PLAN_NAME} entra quando você precisar de mais volume, versões e recursos avançados.</p>
           </div>
         </div>

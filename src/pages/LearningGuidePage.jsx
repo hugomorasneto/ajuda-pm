@@ -10,6 +10,8 @@ import {
   getLearningGuidesBySlugs,
   getLearningNotesForGuide,
 } from '../content/learningContent'
+import { useAuth } from '../hooks/useAuth'
+import { useLearningProgress } from '../hooks/useLearningProgress'
 import { buildArticleJsonLd, usePageMetadata } from '../hooks/usePageMetadata'
 
 const GUIDE_NAV_ITEMS = [
@@ -23,6 +25,8 @@ const GUIDE_NAV_ITEMS = [
 
 function LearningGuidePage() {
   const { slug } = useParams()
+  const { user } = useAuth()
+  const { isCompleted, markCompleted, unmarkCompleted } = useLearningProgress()
   const guide = getLearningGuideBySlug(slug)
   const nextGuides = guide ? getLearningGuidesBySlugs(guide.nextReads) : []
   const relatedNotes = guide ? getLearningNotesForGuide(guide.slug) : []
@@ -56,12 +60,12 @@ function LearningGuidePage() {
 
       <div className="learning-guide__shell">
         <article className="learning-guide__article">
-          <LearningSummaryBlock title="O que voce precisa levar desta leitura" items={guide.quickSummary} />
+          <LearningSummaryBlock title="O que você precisa levar desta leitura" items={guide.quickSummary} />
 
           <section className="learning-guide-block learning-guide-context" id="quando-importa">
             <div className="learning-guide-block__header">
               <p className="landing-section__eyebrow">Quando isso importa</p>
-              <h2>O contexto pratico por tras do conceito</h2>
+              <h2>O contexto prático por trás do conceito</h2>
             </div>
 
             <div className="learning-guide-context__grid">
@@ -109,8 +113,8 @@ function LearningGuidePage() {
           {relatedNotes.length > 0 ? (
             <section className="learning-guide-block learning-guide-notes" id="notas-praticas">
               <div className="learning-guide-block__header">
-                <p className="landing-section__eyebrow">Notas praticas</p>
-                <h2>Conexoes uteis para o trabalho diario</h2>
+                <p className="landing-section__eyebrow">Notas práticas</p>
+                <h2>Conexões úteis para o trabalho diário</h2>
               </div>
 
               <div className="learning-note-grid">
@@ -144,18 +148,58 @@ function LearningGuidePage() {
             </nav>
           </div>
 
-          <div className="learning-guide-aside__card">
-            <p className="learning-guide-aside__eyebrow">Aplicar agora</p>
-            <p>Quando quiser transformar contexto em uma primeira versao estruturada, use o workspace.</p>
-            <div className="learning-guide-aside__actions">
-              <Link className="landing-button landing-button--primary" to="/signup">
-                Criar conta gratis
+          <div className="learning-guide-aside__apply-card">
+            <p className="learning-guide-aside__apply-label">Pronto para praticar?</p>
+            <p className="learning-guide-aside__apply-body">
+              Aplique o que você acabou de ler. Gere uma user story com contexto real — não um exemplo fictício.
+            </p>
+            <div className="learning-guide-aside__apply-actions">
+              <Link
+                className="landing-button landing-button--primary"
+                to={user ? '/tool' : '/signup'}
+              >
+                {user ? 'Abrir área de trabalho →' : 'Gerar minha primeira história →'}
               </Link>
-              <Link className="landing-button landing-button--secondary" to="/tool">
-                Abrir area de trabalho
-              </Link>
+              {!user && (
+                <p className="learning-guide-aside__apply-microcopy">Grátis · Sem cartão de crédito</p>
+              )}
             </div>
           </div>
+
+          {user && (
+            <div className="learning-guide-aside__progress-card">
+              {isCompleted(guide.slug) ? (
+                <>
+                  <div className="learning-guide-aside__progress-done">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                      <circle cx="7" cy="7" r="6" fill="currentColor" opacity="0.15" />
+                      <path d="M4 7.5l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    Módulo concluído
+                  </div>
+                  <button
+                    type="button"
+                    className="learning-guide-aside__progress-undo"
+                    onClick={() => unmarkCompleted(guide.slug)}
+                  >
+                    Desmarcar conclusão
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className="learning-guide-aside__progress-btn"
+                  onClick={() => markCompleted(guide.slug)}
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.4" />
+                    <path d="M4 7.5l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Marcar como concluído
+                </button>
+              )}
+            </div>
+          )}
         </aside>
       </div>
     </div>

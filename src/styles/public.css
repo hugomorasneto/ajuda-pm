@@ -749,6 +749,59 @@
 }
 
 /* ============================================================
+   CONTEXT STRIP
+   ============================================================ */
+
+.context-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-6);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.context-strip__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.context-strip__divider {
+  width: 1px;
+  height: 16px;
+  background: var(--color-border-strong);
+  margin: 0 var(--space-3);
+  flex-shrink: 0;
+  display: none;
+}
+
+.context-strip__icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.context-strip__label {
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .context-strip { gap: 0; }
+  .context-strip__item { flex-wrap: nowrap; }
+  .context-strip__divider { display: block; }
+}
+
+/* ============================================================
    BADGE PILL
    ============================================================ */
 
@@ -1254,6 +1307,167 @@
 }
 
 /* ============================================================
+   LEARNING TRAIL — PROGRESS BAR
+   ============================================================ */
+
+.learning-trail-progress {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.learning-trail-progress__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.learning-trail-progress__label {
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.learning-trail-progress__fraction {
+  font-size: var(--text-small);
+  font-weight: 700;
+  color: var(--color-academy);
+  font-variant-numeric: tabular-nums;
+}
+
+.learning-trail-progress__bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-canvas-muted);
+  overflow: hidden;
+}
+
+.learning-trail-progress__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-academy);
+  transition: width 0.4s ease;
+  min-width: 0;
+}
+
+/* ── Trail step — completed state ── */
+
+.learning-path-step--completed .learning-path-step__dot {
+  background: var(--color-success);
+  color: #fff;
+}
+
+.learning-path-step--completed .learning-path-step__num {
+  color: var(--color-success);
+}
+
+.learning-path-step--completed a.learning-path-step__title {
+  color: var(--color-text-primary);
+  text-decoration: line-through;
+  text-decoration-color: var(--color-success);
+}
+
+.learning-path-step--completed a.learning-path-step__title:hover {
+  color: var(--color-success);
+  text-decoration: none;
+}
+
+.learning-path-step__connector--done {
+  background: var(--color-success);
+}
+
+/* ── Guide card — completed state ── */
+
+.learning-card--completed {
+  border-left: 3px solid var(--color-success);
+}
+
+.learning-card__done-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 20px;
+  padding: 0 var(--space-2);
+  border-radius: 999px;
+  background: var(--color-success-subtle);
+  border: 1px solid rgba(22,163,74,0.2);
+  color: var(--color-success);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── Guide page sidebar — progress card ── */
+
+.learning-guide-aside__progress-card {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.learning-guide-aside__progress-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1.5px dashed var(--color-border-strong);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: var(--font-base);
+  font-size: var(--text-small);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.learning-guide-aside__progress-btn:hover {
+  border-color: var(--color-success);
+  color: var(--color-success);
+  background: var(--color-success-subtle);
+  border-style: solid;
+}
+
+.learning-guide-aside__progress-done {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-small);
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+.learning-guide-aside__progress-undo {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-text-muted);
+  font-family: var(--font-base);
+  font-size: var(--text-small);
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
+
+.learning-guide-aside__progress-undo:hover {
+  color: var(--color-text-secondary);
+}
+
+/* ============================================================
    QUICK NOTES STRIP
    ============================================================ */
 
@@ -1314,4 +1528,433 @@
 }
 
 .quick-note-item__link:hover { text-decoration: underline; }
+
+/* ============================================================
+   LEARNING GUIDE PAGE — PREMIUM UPGRADE
+   ============================================================ */
+
+/* Hero gradient */
+.learning-guide-hero {
+  background: linear-gradient(135deg, #F5F0FF 0%, #EEF4FF 100%);
+  border-color: rgba(110,86,207,0.12);
+}
+
+.learning-guide-hero__copy h1 {
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+/* Backlink */
+.learning-guide-hero__backlink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-academy);
+  font-size: var(--text-small);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.learning-guide-hero__backlink:hover { color: var(--color-academy-hover); }
+
+/* Meta chips */
+.learning-guide-hero__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.learning-guide-hero__chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 var(--space-3);
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--text-label);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.learning-guide-hero__chip--level {
+  border-color: rgba(110,86,207,0.2);
+  background: var(--color-academy-subtle);
+  color: var(--color-academy);
+}
+
+/* Summary block — checkmark list */
+.learning-guide-summary__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.learning-guide-summary__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-subtle);
+  border: 1px solid rgba(10,124,255,0.12);
+  color: var(--color-text-secondary);
+  font-size: var(--text-body);
+  line-height: 1.6;
+}
+
+.learning-guide-summary__check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: #fff;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Example block — callout style */
+.learning-guide-example__body {
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  background: var(--color-canvas-muted);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.learning-guide-example__body > p { margin: 0; }
+
+.learning-guide-example__body ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+/* Mistakes — warning items */
+.learning-guide-mistakes__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.learning-guide-mistakes__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: rgba(217,119,6,0.05);
+  border: 1px solid rgba(217,119,6,0.15);
+  color: var(--color-text-secondary);
+  font-size: var(--text-body);
+  line-height: 1.6;
+}
+
+.learning-guide-mistakes__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(217,119,6,0.12);
+  color: var(--color-warning);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Checklist — success numbered items */
+.learning-guide-checklist__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  counter-reset: checklist-counter;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.learning-guide-checklist__list li {
+  counter-increment: checklist-counter;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-success-subtle);
+  border: 1px solid rgba(22,163,74,0.15);
+  color: var(--color-text-secondary);
+  font-size: var(--text-body);
+  line-height: 1.6;
+}
+
+.learning-guide-checklist__list li::before {
+  content: counter(checklist-counter, decimal-leading-zero);
+  display: inline-flex;
+  flex-shrink: 0;
+  min-width: 24px;
+  color: var(--color-success);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-top: 3px;
+}
+
+/* Related reads — dual action cards */
+.learning-guide-related__card {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.learning-guide-related__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.learning-guide-related__read {
+  color: var(--color-accent);
+  font-size: var(--text-small);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.learning-guide-related__read:hover { text-decoration: underline; }
+
+.learning-guide-related__practice {
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.learning-guide-related__practice:hover { color: var(--color-accent); }
+
+/* Badge pill variants — warning + success */
+.badge-pill--warning {
+  border-color: rgba(217,119,6,0.2);
+  background: rgba(217,119,6,0.08);
+  color: var(--color-warning);
+}
+
+.badge-pill--success {
+  border-color: rgba(22,163,74,0.2);
+  background: var(--color-success-subtle);
+  color: var(--color-success);
+}
+
+/* Sidebar — Apply card (premium dark) */
+.learning-guide-aside__apply-card {
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  background: linear-gradient(160deg, #1a0f3a 0%, #0a1a3a 100%);
+  border: 1px solid rgba(110,86,207,0.35);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.learning-guide-aside__apply-label {
+  margin: 0;
+  color: #fff;
+  font-size: var(--text-body);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.learning-guide-aside__apply-body {
+  margin: 0;
+  color: rgba(255,255,255,0.65);
+  font-size: var(--text-small);
+  line-height: 1.65;
+}
+
+.learning-guide-aside__apply-actions {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.learning-guide-aside__apply-card .landing-button--primary {
+  background: var(--color-academy);
+  border-color: var(--color-academy);
+  width: 100%;
+}
+
+.learning-guide-aside__apply-card .landing-button--primary:hover:not(:disabled) {
+  background: var(--color-academy-hover);
+  border-color: var(--color-academy-hover);
+}
+
+.learning-guide-aside__apply-microcopy {
+  margin: 0;
+  color: rgba(255,255,255,0.35);
+  font-size: 11px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* ============================================================
+   HERO — GRADIENT BACKGROUND
+   ============================================================ */
+
+.landing-hero {
+  background: linear-gradient(160deg, #F0F4FF 0%, #F5F0FF 100%);
+  border-color: rgba(110,86,207,0.12);
+}
+
+/* ============================================================
+   HERO TRANSFORMATION PREVIEW — DARK MOCKUP
+   ============================================================ */
+
+/* Frame: janela de app dark */
+.hero-transformation-preview__frame {
+  background: #0D1117;
+  border-color: #21262D;
+}
+
+/* Window chrome (três pontos macOS) */
+.hero-transformation-preview__chrome {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid #21262D;
+  margin-bottom: 0;
+}
+
+.hero-transformation-preview__chrome-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.hero-transformation-preview__chrome-dot--red    { background: #F85149; }
+.hero-transformation-preview__chrome-dot--yellow { background: #D29922; }
+.hero-transformation-preview__chrome-dot--green  { background: #3FB950; }
+
+.hero-transformation-preview__chrome-title {
+  flex: 1;
+  text-align: center;
+  color: #6E7681;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+/* Chips do topo */
+.hero-transformation-preview__frame-chip {
+  background: #161B22;
+  border-color: #30363D;
+  color: #8B949E;
+}
+
+.hero-transformation-preview__frame-chip--active {
+  color: #58A6FF;
+  background: rgba(88,166,255,0.1);
+  border-color: rgba(88,166,255,0.25);
+}
+
+/* Painel de entrada (messy) */
+.hero-transformation-preview__messy {
+  background: #161B22;
+  border-color: #30363D;
+  border-left: 3px solid #F85149;
+}
+
+.hero-transformation-preview__messy h3 {
+  color: #E6EDF3;
+}
+
+.hero-transformation-preview__messy-list {
+  color: #8B949E;
+}
+
+/* Painel de saída */
+.hero-transformation-preview__output {
+  background: #161B22;
+  border-color: #30363D;
+}
+
+.hero-transformation-preview__document h3 {
+  color: #E6EDF3;
+}
+
+/* Label azul claro para dark */
+.hero-transformation-preview__label {
+  color: #58A6FF;
+}
+
+/* Gaps label em amarelo âmbar */
+.hero-transformation-preview__rail-block .hero-transformation-preview__label {
+  color: #D29922;
+}
+
+/* QA label em verde */
+.hero-transformation-preview__rail-block:last-child .hero-transformation-preview__label {
+  color: #3FB950;
+}
+
+/* Pills Objetivo / Critérios / QA */
+.hero-transformation-preview__document-pills span {
+  background: #21262D;
+  border-color: #30363D;
+  color: #8B949E;
+}
+
+/* Seções do documento */
+.hero-transformation-preview__section strong {
+  color: #E6EDF3;
+}
+
+.hero-transformation-preview__section p {
+  color: #8B949E;
+}
+
+.hero-transformation-preview__document ul,
+.hero-transformation-preview__document li {
+  color: #8B949E;
+}
+
+/* Bridge: ProdForge organiza */
+.hero-transformation-preview__bridge {
+  background: rgba(110,86,207,0.15);
+  color: #A78BFA;
+  border: 1px solid rgba(110,86,207,0.25);
+}
+
+/* Rail blocks (Gaps / QA) */
+.hero-transformation-preview__rail-block {
+  background: #0D1117;
+  border-color: #21262D;
+}
+
+.hero-transformation-preview__rail-block ul,
+.hero-transformation-preview__rail-block li {
+  color: #8B949E;
+}
+
+/* Footer chips */
+.hero-transformation-preview__footer span {
+  background: #21262D;
+  border-color: #30363D;
+  color: #8B949E;
+}
+
+.hero-transformation-preview__footer span:first-child {
+  color: #3FB950;
+  background: rgba(63,185,80,0.1);
+  border-color: rgba(63,185,80,0.25);
+}
 

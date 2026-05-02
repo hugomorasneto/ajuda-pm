@@ -2,7 +2,7 @@ function LearningChecklist({ items }) {
   return (
     <section className="learning-guide-block learning-guide-checklist" id="checklist">
       <div className="learning-guide-block__header">
-        <p className="landing-section__eyebrow">Checklist final</p>
+        <span className="badge-pill badge-pill--success">Checklist final</span>
         <h2>Use isto antes de seguir</h2>
       </div>
 
