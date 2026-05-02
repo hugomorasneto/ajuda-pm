@@ -887,6 +887,7 @@
     position: sticky;
     top: calc(70px + var(--space-4));
     max-height: calc(100vh - 70px - var(--space-8));
+    overflow-x: hidden;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--color-border) transparent;
@@ -897,6 +898,7 @@
     position: sticky;
     top: calc(70px + var(--space-4));
     max-height: calc(100vh - 70px - var(--space-8));
+    overflow-x: hidden;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--color-border) transparent;
@@ -1912,6 +1914,7 @@
     position: sticky;
     top: calc(64px + var(--space-4));
     max-height: calc(100vh - 96px);
+    overflow-x: hidden;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--color-border) transparent;
@@ -1925,6 +1928,40 @@
     grid-template-columns: 1fr;
     gap: var(--space-4);
   }
+}
+
+/* ============================================================
+   OVERFLOW FIX — previne scroll horizontal nas colunas sticky
+   ============================================================ */
+
+/* Garante que todos os filhos diretos da coluna esquerda
+   não ultrapassem a largura do container */
+.workspace-canvas__col--left > *,
+.workspace-canvas__col--right > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* BriefComposer e seus containers internos */
+.brief-composer,
+.brief-composer__form,
+.brief-accordion,
+.composer-section,
+.brief-composer__active-story {
+  min-width: 0;
+}
+
+/* Textareas nunca ultrapassam o container */
+.story-workspace textarea {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Chips de prompt nunca ultrapassam */
+.prompt-chips,
+.brief-stepper {
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* ============================================================
