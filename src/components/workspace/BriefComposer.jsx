@@ -78,8 +78,8 @@ const STEPS = [
   { id: 'generate', label: 'Gerar' },
 ]
 
-function ComposerStepper({ contextFilled, requirementsFilled }) {
-  const activeIndex = requirementsFilled ? 2 : contextFilled ? 1 : 0
+function ComposerStepper({ contextFilled, requirementsFilled, isGenerated }) {
+  const activeIndex = isGenerated ? 3 : requirementsFilled ? 2 : contextFilled ? 1 : 0
   return (
     <div className="brief-stepper" aria-label="Progresso do brief">
       {STEPS.map((step, i) => {
@@ -150,6 +150,7 @@ function BriefComposer({
   onReset,
   isSubmitting,
   isEditing,
+  isGenerated,
   activeStoryTitle,
   hasAdjustment,
 }) {
@@ -180,7 +181,7 @@ function BriefComposer({
   return (
     <section className="panel brief-composer" id="workspace-composer">
       {/* Stepper */}
-      <ComposerStepper contextFilled={contextFilled} requirementsFilled={requirementsFilled} />
+      <ComposerStepper contextFilled={contextFilled} requirementsFilled={requirementsFilled} isGenerated={isGenerated} />
 
       {/* Active story banner (editing mode) */}
       {isEditing && (

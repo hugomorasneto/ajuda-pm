@@ -230,6 +230,7 @@ function ToolPage() {
             onReset={handleResetToCreate}
             isSubmitting={isSubmitting}
             isEditing={isEditing}
+            isGenerated={Boolean(result)}
             activeStoryTitle={activeStoryTitle}
             hasAdjustment={Boolean(formValues.adjustment.trim())}
           />
