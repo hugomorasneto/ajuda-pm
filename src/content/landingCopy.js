@@ -3,19 +3,19 @@ import { APP_NAME, FREE_GENERATION_LIMIT, FREE_PLAN_NAME, PRO_PLAN_NAME } from '
 export const landingCopy = {
   contextStrip: [
     {
-      icon: 'bolt',
-      value: '60 segundos',
-      description: 'Do briefing bruto a uma story utilizável no mesmo fluxo.',
+      icon: 'layers',
+      value: 'Entrada flexível',
+      description: 'Cole contexto de reunião, ticket, chat ou briefing sem formatar tudo antes.',
     },
     {
-      icon: 'layers',
-      value: 'Critérios e gaps',
-      description: 'Acabamento, pontos a decidir e QA já entram estruturados.',
+      icon: 'check',
+      value: 'Revisão guiada',
+      description: 'A saída já separa objetivo, critérios, gaps e pontos de QA para alinhar o time.',
     },
     {
       icon: 'unlock',
-      value: '100% grátis',
-      description: 'Comece sem cartão e valide a clareza antes do backlog.',
+      value: 'Pronto para o time',
+      description: 'Use como base de refinamento antes de enviar para dev, QA e negócio.',
     },
   ],
   hero: {
