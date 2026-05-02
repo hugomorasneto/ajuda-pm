@@ -8,6 +8,7 @@ function WorkspaceLayout() {
   const location = useLocation()
   const [sidebarOpenPath, setSidebarOpenPath] = useState(null)
   const isSidebarOpen = sidebarOpenPath === location.pathname
+  const isForgeWorkspace = location.pathname === '/tool'
 
   function openSidebar() {
     setSidebarOpenPath(location.pathname)
@@ -18,7 +19,7 @@ function WorkspaceLayout() {
   }
 
   return (
-    <div className="workspace-shell">
+    <div className={`workspace-shell ${isForgeWorkspace ? 'theme-forge workspace-shell--forge' : ''}`}>
       {/* Sidebar: col 1 no desktop, drawer no mobile */}
       <WorkspaceSidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
 

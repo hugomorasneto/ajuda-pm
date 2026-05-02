@@ -2383,3 +2383,353 @@
   }
 }
 
+/* ============================================================
+   WORKSPACE FORGE SHELL - FASE 3A
+   Scope: only /tool through .workspace-shell--forge.
+   ============================================================ */
+
+.workspace-shell--forge {
+  min-height: 100vh;
+  background-color: var(--forge-bg-canvas);
+  background-image:
+    var(--forge-gradient-radial-ember),
+    var(--forge-gradient-radial-tech),
+    linear-gradient(180deg, var(--forge-bg-canvas) 0%, var(--forge-bg-graphite) 52%, var(--forge-bg-canvas) 100%);
+  color: var(--forge-text-secondary);
+}
+
+.workspace-shell--forge .workspace-shell__main {
+  position: relative;
+  min-width: 0;
+}
+
+.workspace-shell--forge .workspace-shell__content {
+  position: relative;
+  z-index: 1;
+}
+
+.workspace-shell--forge .workspace-shell__backdrop {
+  background: var(--forge-bg-canvas);
+  opacity: 0.72;
+  backdrop-filter: blur(8px);
+}
+
+.workspace-shell--forge .workspace-sidebar {
+  background:
+    linear-gradient(180deg, var(--forge-ember-soft) 0%, transparent 28%),
+    var(--forge-gradient-metal);
+  border-right: 1px solid var(--forge-border);
+  box-shadow: var(--forge-shadow-panel);
+  color: var(--forge-text-secondary);
+  scrollbar-color: var(--forge-border-strong) transparent;
+}
+
+.workspace-shell--forge .workspace-sidebar__header,
+.workspace-shell--forge .workspace-sidebar__summary,
+.workspace-shell--forge .workspace-sidebar__footer {
+  border-color: var(--forge-border-subtle);
+}
+
+.workspace-shell--forge .workspace-sidebar__brand {
+  color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .workspace-sidebar__brand-mark {
+  position: relative;
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--forge-border-ember);
+  border-radius: var(--forge-radius-md);
+  background:
+    linear-gradient(180deg, var(--forge-ember-soft), transparent),
+    var(--forge-surface-inset);
+  box-shadow: var(--forge-glow-ember-sm), inset 0 1px 0 var(--forge-border-subtle);
+}
+
+.workspace-shell--forge .workspace-sidebar__brand-mark::before {
+  content: '';
+  width: 18px;
+  height: 10px;
+  border: 1px solid var(--forge-ember);
+  border-top-width: 2px;
+  border-radius: 3px 3px 6px 6px;
+  box-shadow: inset 0 -4px 0 var(--forge-ember-soft);
+}
+
+.workspace-shell--forge .workspace-sidebar__brand-mark::after {
+  content: '';
+  position: absolute;
+  bottom: 9px;
+  width: 16px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--forge-ember-hover);
+  box-shadow: 0 0 10px var(--forge-amber-glow);
+}
+
+.workspace-shell--forge .workspace-sidebar__brand-name {
+  color: var(--forge-text-primary);
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+.workspace-shell--forge .workspace-sidebar__brand-caption,
+.workspace-shell--forge .workspace-sidebar__summary-copy,
+.workspace-shell--forge .workspace-sidebar__account-email {
+  color: var(--forge-text-secondary);
+}
+
+.workspace-shell--forge .workspace-sidebar__account-email {
+  overflow-wrap: anywhere;
+}
+
+.workspace-shell--forge .workspace-sidebar__eyebrow,
+.workspace-shell--forge .workspace-sidebar__account-label,
+.workspace-shell--forge .workspace-topbar__eyebrow {
+  color: var(--forge-ember-hover);
+}
+
+.workspace-shell--forge .workspace-sidebar__section-label {
+  color: var(--forge-text-muted);
+}
+
+.workspace-shell--forge .workspace-sidebar__section-header {
+  align-items: center;
+}
+
+.workspace-shell--forge .workspace-sidebar__progress-pill {
+  border: 1px solid var(--forge-border-tech);
+  background: var(--forge-tech-soft);
+  color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .workspace-sidebar__link {
+  border: 1px solid transparent;
+  color: var(--forge-text-secondary);
+}
+
+.workspace-shell--forge .workspace-sidebar__link:hover,
+.workspace-shell--forge .workspace-sidebar__link--active {
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(90deg, var(--forge-ember-soft), transparent 78%),
+    var(--forge-surface-2);
+  color: var(--forge-text-primary);
+  box-shadow: var(--forge-glow-ember-sm);
+}
+
+.workspace-shell--forge .workspace-sidebar__link-marker {
+  background: var(--forge-border-strong);
+  box-shadow: none;
+}
+
+.workspace-shell--forge .workspace-sidebar__link--active .workspace-sidebar__link-marker {
+  background: var(--forge-ember);
+  box-shadow: 0 0 12px var(--forge-amber-glow);
+}
+
+.workspace-shell--forge .workspace-sidebar__link--academy:hover,
+.workspace-shell--forge .workspace-sidebar__link--academy.workspace-sidebar__link--active {
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(90deg, var(--forge-tech-soft), transparent 78%),
+    var(--forge-surface-2);
+  box-shadow: var(--forge-glow-tech-sm);
+}
+
+.workspace-shell--forge .workspace-sidebar__link-marker--academy,
+.workspace-shell--forge .workspace-sidebar__link--academy:hover .workspace-sidebar__link-marker--academy {
+  background: var(--forge-tech);
+  box-shadow: 0 0 12px var(--forge-tech-glow);
+}
+
+.workspace-shell--forge .workspace-sidebar__account {
+  border: 1px solid var(--forge-border);
+  border-radius: var(--forge-radius-md);
+  background:
+    linear-gradient(180deg, var(--forge-border-subtle), transparent),
+    var(--forge-surface-inset);
+  padding: var(--forge-space-4);
+}
+
+.workspace-shell--forge .workspace-sidebar__signout,
+.workspace-shell--forge .workspace-sidebar__close,
+.workspace-shell--forge .workspace-topbar__menu {
+  border: 1px solid var(--forge-border);
+  background: var(--forge-gradient-metal);
+  color: var(--forge-text-primary);
+  box-shadow: var(--forge-shadow-soft);
+}
+
+.workspace-shell--forge .workspace-sidebar__signout:hover,
+.workspace-shell--forge .workspace-sidebar__close:hover,
+.workspace-shell--forge .workspace-topbar__menu:hover {
+  border-color: var(--forge-border-strong);
+  background: var(--forge-surface-3);
+}
+
+.workspace-shell--forge .workspace-sidebar__account-links a {
+  color: var(--forge-text-secondary);
+}
+
+.workspace-shell--forge .workspace-sidebar__account-links a:hover {
+  color: var(--forge-tech-hover);
+}
+
+.workspace-shell--forge .workspace-topbar {
+  border-bottom: 1px solid var(--forge-border);
+  background:
+    linear-gradient(90deg, var(--forge-ember-soft), transparent 34%),
+    linear-gradient(180deg, var(--forge-bg-graphite), var(--forge-bg-charcoal));
+  box-shadow: var(--forge-shadow-soft);
+  backdrop-filter: blur(14px);
+}
+
+.workspace-shell--forge .workspace-topbar__inner {
+  width: min(100%, 1360px);
+}
+
+.workspace-shell--forge .workspace-topbar__copy h1 {
+  color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .workspace-topbar__copy p:last-child {
+  color: var(--forge-text-muted);
+}
+
+.workspace-shell--forge .workspace-topbar__actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.workspace-shell--forge .workspace-topbar__link {
+  border: 1px solid var(--forge-border);
+  background: var(--forge-gradient-metal);
+  color: var(--forge-text-primary);
+  box-shadow: var(--forge-shadow-soft);
+}
+
+.workspace-shell--forge .workspace-topbar__link:hover {
+  border-color: var(--forge-border-strong);
+  background: var(--forge-surface-3);
+}
+
+.workspace-shell--forge .workspace-topbar__link--academy {
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(90deg, var(--forge-tech-soft), transparent),
+    var(--forge-gradient-metal);
+  color: var(--forge-text-primary);
+  box-shadow: var(--forge-glow-tech-sm), var(--forge-shadow-soft);
+}
+
+.workspace-shell--forge .workspace-status-bar {
+  border-bottom: 1px solid var(--forge-border);
+}
+
+.workspace-shell--forge .workspace-status-bar__eyebrow {
+  color: var(--forge-ember-hover);
+}
+
+.workspace-shell--forge .workspace-status-bar__title {
+  color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .workspace-status-bar__note {
+  color: var(--forge-text-muted);
+}
+
+.workspace-shell--forge .story-workspace .mode-pill,
+.workspace-shell--forge .story-workspace__mini-pill {
+  border: 1px solid var(--forge-border);
+  background: var(--forge-surface-inset);
+  color: var(--forge-text-secondary);
+}
+
+.workspace-shell--forge .story-workspace .mode-pill-new {
+  border-color: var(--forge-success);
+  background: var(--forge-success-soft);
+  color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .story-workspace .mode-pill-editing {
+  border-color: var(--forge-border-tech);
+  background: var(--forge-tech-soft);
+  color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .story-workspace__mini-pill--warning {
+  border-color: var(--forge-warning);
+  background: var(--forge-warning-soft);
+  color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .workspace-tabs {
+  border: 1px solid var(--forge-border);
+  background: var(--forge-surface-inset);
+  box-shadow: var(--forge-shadow-soft);
+}
+
+.workspace-shell--forge .workspace-tabs__tab {
+  color: var(--forge-text-secondary);
+}
+
+.workspace-shell--forge .workspace-tabs__tab:hover {
+  color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .workspace-tabs__tab--active {
+  background:
+    linear-gradient(90deg, var(--forge-ember-soft), transparent),
+    var(--forge-surface-2);
+  color: var(--forge-text-primary);
+  box-shadow: var(--forge-glow-ember-sm);
+}
+
+.workspace-shell--forge .workspace-sidebar__brand:focus-visible,
+.workspace-shell--forge .workspace-sidebar__link:focus-visible,
+.workspace-shell--forge .workspace-sidebar__signout:focus-visible,
+.workspace-shell--forge .workspace-sidebar__close:focus-visible,
+.workspace-shell--forge .workspace-topbar__menu:focus-visible,
+.workspace-shell--forge .workspace-topbar__link:focus-visible,
+.workspace-shell--forge .workspace-tabs__tab:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow:
+    0 0 0 1px var(--forge-focus-ring-offset),
+    0 0 0 4px var(--forge-focus-ring);
+}
+
+@media (max-width: 767px) {
+  .workspace-shell--forge .workspace-topbar__inner {
+    align-items: flex-start;
+    gap: var(--forge-space-3);
+  }
+
+  .workspace-shell--forge .workspace-topbar__actions {
+    max-width: 100%;
+  }
+
+  .workspace-shell--forge .workspace-topbar__link {
+    min-height: 34px;
+    padding: 0 var(--forge-space-3);
+  }
+
+  .workspace-shell--forge .workspace-status-bar__right {
+    flex-wrap: wrap;
+  }
+}
+
+@media (min-width: 1280px) {
+  .workspace-shell--forge .workspace-shell__content {
+    padding: var(--forge-space-6) var(--forge-space-8) var(--forge-space-10);
+  }
+
+  .workspace-shell--forge .workspace-sidebar {
+    border-right-color: var(--forge-border-strong);
+  }
+}
+
