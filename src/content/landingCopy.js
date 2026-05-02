@@ -31,9 +31,9 @@ export const landingCopy = {
     ],
     preview: {
       problemLabel: 'Briefing bruto',
-      problemTitle: 'Solicitação espalhada entre ticket, mensagem e reunião',
+      problemTitle: 'Domínio corporativo no onboarding B2B',
       problemItems: [
-        'Onboarding B2B perde conversão quando o domínio da empresa não é validado.',
+        'Usuários avançam com domínio inválido e geram retrabalho.',
         'Dev e QA ainda não têm regras e critérios claros para revisar o fluxo.',
       ],
       problemStatus: 'Entrada vaga',
@@ -45,20 +45,20 @@ export const landingCopy = {
       outputPills: ['Objetivo', 'Critérios', 'QA'],
       objectiveLabel: 'Objetivo',
       objective:
-        'Garantir que apenas empresas com domínio elegível concluam o cadastro inicial, reduzindo retrabalho operacional.',
+        'Validar domínio elegível antes de concluir o cadastro inicial.',
       criteriaLabel: 'Critérios de aceite',
       criteria: [
-        'Bloquear avanço quando o domínio não estiver em formato válido.',
+        'Bloquear avanço com domínio em formato inválido.',
         'Exibir mensagem orientando a correção sem perder os dados preenchidos.',
       ],
       qualityLabel: 'Nível de refinamento',
       qualityValue: '82%',
-      readyLabel: 'Pronta para revisão',
+      readyLabel: 'Pronta',
       gapsLabel: 'Impurezas para decidir',
-      gaps: ['Confirmar quais domínios parceiros devem entrar como exceção inicial.'],
+      gaps: ['Confirmar exceções para domínios parceiros.'],
       qaLabel: 'Inspeção final',
       qa: [
-        'Testar domínio válido, inválido e preservação dos dados ao exibir erro.',
+        'Testar domínio válido, inválido e preservação dos dados.',
       ],
       footerHighlights: ['Objetivo claro', 'Checklist pronto'],
     },
