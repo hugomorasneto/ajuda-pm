@@ -39,15 +39,6 @@ function LandingHero({ hero, isAuthenticated, sectionId }) {
       </div>
 
       <HeroTransformationPreview preview={hero.preview} />
-
-      <div className="landing-hero__stats" aria-label="Métricas da proposta de valor">
-        {hero.stats.map((item) => (
-          <article key={item.label} className="landing-stat forge-panel forge-panel--interactive forge-panel--metal">
-            <p className="landing-stat__value">{item.value}</p>
-            <span className="landing-stat__label">{item.label}</span>
-          </article>
-        ))}
-      </div>
     </section>
   )
 }
