@@ -1,4 +1,4 @@
-const HERO_MOCKUP_SRC = '/images/prodforge/hero-mockup-desktop.webp'
+const HERO_MOCKUP_SRC = '/images/prodforge/hero-mockup-desktop.webp?v=20260502-1'
 
 function HeroTransformationPreview({ preview }) {
   const alt =
