@@ -16,35 +16,43 @@ function PublicFooter() {
     <footer className="public-footer">
       <div className="public-footer__inner">
         <div className="public-footer__brand">
-          <p className="public-footer__eyebrow">ProdForge</p>
-          <h2>{APP_NAME}</h2>
-          <p>Plataforma para PMs e POs criarem user stories claras, completas e prontas para refinamento.</p>
+          <div className="public-footer__brand-logo">
+            <span className="public-footer__brand-mark" aria-hidden="true" />
+            <span className="public-footer__brand-name">{APP_NAME}</span>
+          </div>
+          <p className="public-footer__brand-statement">
+            Para PMs e POs que querem escrever user stories mais claras, sem depender de sênior para revisar.
+          </p>
+          <Link
+            to={user ? '/tool' : '/signup'}
+            className="public-footer__cta"
+          >
+            {user ? 'Abrir área de trabalho' : 'Começar grátis →'}
+          </Link>
         </div>
 
         <div className="public-footer__links">
-          <nav className="public-footer__nav" aria-label="Links principais">
+          <nav className="public-footer__nav" aria-label="Produto">
             <p className="public-footer__nav-title">Produto</p>
             <a href="/#como-funciona">Como funciona</a>
             <a href="/#antes-depois">Ver exemplo</a>
             <a href="/#planos">Planos</a>
-            <Link to="/aprender">Aprender</Link>
           </nav>
 
-          <nav className="public-footer__nav" aria-label="Guias para iniciantes">
-            <p className="public-footer__nav-title">Guias para comecar</p>
+          <nav className="public-footer__nav" aria-label="Aprender">
+            <p className="public-footer__nav-title">Academia</p>
             {footerGuides.map((guide) => (
               <Link key={guide.slug} to={`/aprender/${guide.slug}`}>
                 {guide.title}
               </Link>
             ))}
-          </nav>
-
-          <nav className="public-footer__nav" aria-label="Acao principal">
-            <p className="public-footer__nav-title">Proximo passo</p>
-            {user ? <Link to="/tool">Abrir area de trabalho</Link> : <Link to="/signup">Criar conta gratis</Link>}
-            <a href="/#lead-capture-title">Receber novidades do Pro</a>
+            <Link to="/aprender">Ver todos os guias →</Link>
           </nav>
         </div>
+      </div>
+
+      <div className="public-footer__bottom">
+        <p>© {new Date().getFullYear()} {APP_NAME} · Feito para PMs e POs iniciantes</p>
       </div>
     </footer>
   )

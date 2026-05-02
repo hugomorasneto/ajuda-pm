@@ -7,51 +7,108 @@ import {
   learningHub,
   learningNotes,
 } from '../content/learningContent'
+import { useAuth } from '../hooks/useAuth'
 import { usePageMetadata } from '../hooks/usePageMetadata'
 
+const TRAIL_STEPS = [
+  { num: '01', title: 'Fundamentos', slug: 'fundamentos-produto-agil' },
+  { num: '02', title: 'User Stories', slug: 'user-stories-na-pratica' },
+  { num: '03', title: 'Backlog', slug: 'backlog-e-refinamento' },
+  { num: '04', title: 'Refinamento', slug: null },
+  { num: '05', title: 'Alinhamento', slug: null },
+]
+
+function TrailStep({ step, index }) {
+  const isActive = Boolean(step.slug)
+
+  return (
+    <div className={`learning-path-step${isActive ? ' learning-path-step--active' : ' learning-path-step--locked'}`}>
+      {index > 0 && <div className="learning-path-step__connector" aria-hidden="true" />}
+      <div className="learning-path-step__dot" aria-hidden="true">
+        {isActive ? (
+          <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor">
+            <circle cx="4" cy="4" r="4" />
+          </svg>
+        ) : (
+          <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+            <circle cx="4" cy="4" r="3" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+        )}
+      </div>
+      <span className="learning-path-step__num">{step.num}</span>
+      {step.slug ? (
+        <Link to={`/aprender/${step.slug}`} className="learning-path-step__title">
+          {step.title}
+        </Link>
+      ) : (
+        <span className="learning-path-step__title learning-path-step__title--locked">{step.title}</span>
+      )}
+    </div>
+  )
+}
+
 function LearningHubPage() {
+  const { user } = useAuth()
   const starterGuides = getLearningGuidesBySlugs(learningHub.starterGuideSlugs)
 
   usePageMetadata({
-    title: 'Aprender produto agil na pratica | ProdForge',
+    title: 'Academia ProdForge | Aprenda product management na prática',
     description:
-      'Centro de aprendizado pratico para PMs e POs iniciantes com guias sobre fundamentos, user stories, backlog, Scrum e discovery.',
+      'Trilha prática para PMs e POs iniciantes aprenderem fundamentos, user stories e backlog — e aplicarem imediatamente na ferramenta.',
     path: '/aprender',
   })
 
   return (
     <div className="page learning-page learning-hub">
+
+      {/* ── Hero ── */}
       <section className="learning-hub-hero">
         <div className="learning-hub-hero__copy">
-          <p className="landing-section__eyebrow">{learningHub.eyebrow}</p>
-          <h1>{learningHub.title}</h1>
-          <p>{learningHub.description}</p>
-        </div>
-
-        <div className="learning-hub-hero__rail">
-          <div className="learning-rail-card">
-            <p className="learning-rail-card__eyebrow">Comece por aqui</p>
-            <ol>
-              {starterGuides.map((guide) => (
-                <li key={guide.slug}>
-                  <Link to={`/aprender/${guide.slug}`}>{guide.title}</Link>
-                </li>
-              ))}
-            </ol>
+          <span className="badge-pill badge-pill--academy">Academia ProdForge</span>
+          <h1>De iniciante a PM que entrega com clareza.</h1>
+          <p>
+            5 módulos práticos. Cada um termina com um exercício real na ferramenta.
+            Aprenda o conceito — aplique imediatamente.
+          </p>
+          <div className="learning-hub-hero__actions">
+            <Link className="landing-button landing-button--primary" to="/aprender/fundamentos-produto-agil">
+              Começar trilha →
+            </Link>
+            <a className="landing-button landing-button--secondary" href="#guias">
+              Ver todos os guias
+            </a>
           </div>
-
-          <div className="learning-rail-card">
-            <p className="learning-rail-card__eyebrow">Leitura curta</p>
-            <p>Guias de 6 a 7 minutos, com exemplo concreto, erros comuns e checklist final.</p>
-          </div>
+          <p className="learning-hub-hero__microcopy">5 módulos · Nível iniciante · Grátis para começar</p>
         </div>
       </section>
 
+      {/* ── Trilha visual ── */}
+      <section className="learning-path-section">
+        <div className="learning-section__intro">
+          <span className="badge-pill badge-pill--academy">Trilha PM na Prática</span>
+          <h2>Aprenda na sequência certa.</h2>
+          <p>
+            Comece pelo módulo 01 se você está montando base agora.
+            Pule por tema se já estiver vivendo a dor no backlog.
+          </p>
+        </div>
+
+        <div className="learning-path-trail" role="list" aria-label="Módulos da trilha">
+          {TRAIL_STEPS.map((step, i) => (
+            <TrailStep key={step.num} step={step} index={i} />
+          ))}
+        </div>
+      </section>
+
+      {/* ── Módulos disponíveis ── */}
       <section className="learning-section">
         <div className="learning-section__intro">
-          <p className="landing-section__eyebrow">Trilha inicial</p>
+          <span className="badge-pill">Módulos disponíveis</span>
           <h2>Por onde um PM iniciante costuma ganhar mais clareza</h2>
-          <p>Leia na ordem se voce esta montando base agora. Pule por tema se ja estiver vivendo a dor no backlog.</p>
+          <p>
+            Leia na ordem se você está montando base agora. Pule por tema se já estiver
+            vivendo a dor no backlog.
+          </p>
         </div>
 
         <div className="learning-guide-grid learning-guide-grid--featured">
@@ -61,11 +118,63 @@ function LearningHubPage() {
         </div>
       </section>
 
-      <section className="learning-section">
+      {/* ── Aprenda e Aplique ── */}
+      <section className="learn-apply-block" aria-labelledby="learn-apply-title">
+        <div className="learn-apply-block__copy">
+          <span className="badge-pill badge-pill--academy">Aprenda e aplique</span>
+          <h2 id="learn-apply-title">Cada guia termina onde o trabalho começa.</h2>
+          <p>
+            Não adianta ler sobre user stories sem escrever uma. Cada módulo tem um link
+            direto para praticar o conceito na ferramenta — com contexto real, não exercício fictício.
+          </p>
+          <Link
+            className="landing-button landing-button--primary"
+            to={user ? '/tool' : '/signup'}
+          >
+            {user ? 'Abrir área de trabalho →' : 'Gerar minha primeira história →'}
+          </Link>
+        </div>
+
+        <div className="learn-apply-block__preview">
+          <div className="learn-apply-block__panel learn-apply-block__panel--concept">
+            <p className="learn-apply-block__panel-label">O conceito</p>
+            <p className="learn-apply-block__panel-text">
+              User story tem 3 partes: <strong>persona</strong>, <strong>ação</strong> e{' '}
+              <strong>resultado</strong>.
+            </p>
+            <p className="learn-apply-block__panel-example">
+              "Como [quem], quero [fazer o quê] para [qual resultado]."
+            </p>
+          </div>
+
+          <div className="learn-apply-block__panel learn-apply-block__panel--output">
+            <p className="learn-apply-block__panel-label">Na prática</p>
+            <p className="learn-apply-block__panel-story">
+              Como <strong>responsável pelo cadastro</strong>, quero{' '}
+              <strong>validar o domínio corporativo</strong> para{' '}
+              <strong>concluir o registro com menos retrabalho</strong>.
+            </p>
+            <div className="learn-apply-block__criteria">
+              <p>Critérios de aceite</p>
+              <ol>
+                <li>Bloquear avanço com domínio inválido</li>
+                <li>Exibir mensagem orientando a correção</li>
+                <li>Registrar falha para análise do funil</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Todos os guias ── */}
+      <section className="learning-section" id="guias">
         <div className="learning-section__intro">
-          <p className="landing-section__eyebrow">Guias principais</p>
+          <span className="badge-pill">Guias principais</span>
           <h2>Leituras para sair da teoria e voltar para o trabalho real</h2>
-          <p>Os guias abaixo foram escritos para situacoes tipicas de quem esta comecando a estruturar produto em contexto agil.</p>
+          <p>
+            Escritos para situações típicas de quem está começando a estruturar produto
+            em contexto ágil.
+          </p>
         </div>
 
         <div className="learning-guide-grid">
@@ -75,24 +184,28 @@ function LearningHubPage() {
         </div>
       </section>
 
+      {/* ── Notas rápidas ── */}
       <section className="learning-section">
         <div className="learning-section__intro">
-          <p className="landing-section__eyebrow">Novidades praticas</p>
-          <h2>Notas curtas para melhorar conversa e criterio no dia a dia</h2>
-          <p>Em vez de um feed de noticias, usamos notas curadas e conectadas aos guias principais.</p>
+          <span className="badge-pill">Notas rápidas</span>
+          <h2>Conceitos em 2 minutos</h2>
+          <p>
+            Notas curtas e diretas para resolver dúvidas do dia a dia sem precisar ler
+            um guia inteiro.
+          </p>
         </div>
 
-        <div className="learning-note-grid">
+        <div className="quick-notes-strip" role="list">
           {learningNotes.map((note) => {
             const targetGuide = getLearningGuideBySlug(note.targetGuideSlug)
-
             return (
-              <article key={note.slug} className="learning-note-card">
-                <p className="learning-note-card__tag">{note.tag}</p>
-                <h3>{note.title}</h3>
-                <p>{note.summary}</p>
+              <article key={note.slug} className="quick-note-item" role="listitem">
+                <span className="quick-note-item__tag">{note.tag}</span>
+                <span className="quick-note-item__title">{note.title}</span>
                 {targetGuide ? (
-                  <Link to={`/aprender/${targetGuide.slug}`}>{note.ctaLabel}</Link>
+                  <Link to={`/aprender/${targetGuide.slug}`} className="quick-note-item__link">
+                    Ler →
+                  </Link>
                 ) : null}
               </article>
             )
@@ -100,45 +213,26 @@ function LearningHubPage() {
         </div>
       </section>
 
-      <section className="learning-section">
-        <div className="learning-section__intro">
-          <p className="landing-section__eyebrow">Leituras relacionadas ao ProdForge</p>
-          <h2>Conteudo para aprender. Produto para executar.</h2>
-          <p>Use os guias para estruturar criterio. Use o workspace quando quiser transformar contexto em historia pronta para revisao.</p>
-        </div>
-
-        <div className="learning-related-product">
-          {learningHub.relatedProductLinks.map((item) => {
-            const action = item.external ? (
-              <a href={item.to}>{item.label}</a>
-            ) : (
-              <Link to={item.to}>{item.label}</Link>
-            )
-
-            return (
-              <article key={item.title} className="learning-related-product__card">
-                <h3>{item.title}</h3>
-                <p>{item.description}</p>
-                {action}
-              </article>
-            )
-          })}
-        </div>
-      </section>
-
+      {/* ── CTA final ── */}
       <section className="learning-final-cta">
         <div className="learning-final-cta__copy">
-          <p className="landing-section__eyebrow">Pronto para aplicar</p>
-          <h2>{learningHub.finalCta.title}</h2>
-          <p>{learningHub.finalCta.description}</p>
+          <span className="badge-pill badge-pill--academy">Pronto para aplicar</span>
+          <h2>Aprenda e execute no mesmo lugar.</h2>
+          <p>
+            Os guias estruturam o repertório. O workspace transforma o contexto em user
+            story pronta para revisão.
+          </p>
         </div>
 
         <div className="learning-final-cta__actions">
-          <Link className="landing-button landing-button--primary" to="/signup">
-            Criar conta gratis
+          <Link
+            className="landing-button landing-button--primary"
+            to={user ? '/tool' : '/signup'}
+          >
+            {user ? 'Abrir área de trabalho' : 'Gerar minha primeira história →'}
           </Link>
           <Link className="landing-button landing-button--secondary" to="/">
-            Voltar para a pagina inicial
+            Voltar para a página inicial
           </Link>
         </div>
       </section>

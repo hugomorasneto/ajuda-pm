@@ -739,9 +739,579 @@
   .landing-before-after__grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .landing-lead-capture { grid-template-columns: minmax(0,1fr) minmax(360px,0.92fr); gap: var(--space-6); }
   .landing-final-cta__content { grid-template-columns: minmax(0,1fr) auto; align-items: end; }
-  .learning-hub-hero { grid-template-columns: minmax(0, 1.18fr) minmax(280px, 0.82fr); align-items: start; }
+  .learning-hub-hero { grid-template-columns: 1fr; }
   .learning-guide__shell { grid-template-columns: minmax(0, 1fr) 280px; align-items: start; }
   .learning-guide__aside { position: sticky; top: 96px; display: grid; gap: var(--space-4); }
   .learning-guide-context__grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .learning-guide-step { grid-template-columns: auto minmax(0,1fr); align-items: start; }
+  .learn-apply-block { grid-template-columns: minmax(0,1fr) minmax(0,1fr); align-items: center; }
+  .public-footer__links { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
 }
+
+/* ============================================================
+   BADGE PILL
+   ============================================================ */
+
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 var(--space-3);
+  border-radius: 999px;
+  border: 1px solid rgba(10,124,255,0.2);
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.badge-pill--academy {
+  border-color: rgba(110,86,207,0.2);
+  background: var(--color-academy-subtle);
+  color: var(--color-academy);
+}
+
+/* ============================================================
+   HERO MICROCOPY
+   ============================================================ */
+
+.landing-hero__microcopy {
+  margin: var(--space-3) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+/* ============================================================
+   BENEFITS — ICON + CARD STYLE
+   ============================================================ */
+
+.landing-benefits__item {
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+}
+
+.landing-benefits__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  flex-shrink: 0;
+  margin-bottom: var(--space-2);
+}
+
+/* ============================================================
+   BEFORE/AFTER — BADGES + SCORE
+   ============================================================ */
+
+.landing-before-after__badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-xs);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.landing-before-after__badge--before {
+  background: rgba(220,38,38,0.08);
+  color: var(--color-error);
+  border: 1px solid rgba(220,38,38,0.2);
+}
+
+.landing-before-after__badge--after {
+  background: var(--color-success-subtle);
+  color: var(--color-success);
+  border: 1px solid rgba(22,163,74,0.2);
+}
+
+.landing-before-after__panel--before {
+  border-left: 3px solid var(--color-error);
+}
+
+.landing-before-after__panel--after {
+  border-left: 3px solid var(--color-success);
+}
+
+.landing-before-after__score {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-success-subtle);
+  border: 1px solid rgba(22,163,74,0.2);
+  margin-top: 0;
+}
+
+.landing-before-after__score span {
+  font-size: var(--text-small);
+  color: var(--color-text-secondary);
+}
+
+.landing-before-after__score strong {
+  font-size: var(--text-small);
+  color: var(--color-success);
+  font-weight: 700;
+}
+
+/* ============================================================
+   PRICING — PRO BADGE FEATURED
+   ============================================================ */
+
+.landing-pricing__badge--featured {
+  background: var(--color-accent);
+  color: #fff;
+  border: 1px solid var(--color-accent);
+}
+
+.landing-pricing__card--pro {
+  border-color: var(--color-accent);
+  background: linear-gradient(160deg, rgba(10,124,255,0.04) 0%, var(--color-surface) 100%);
+}
+
+/* ============================================================
+   LEARNING GUIDE CARD — DUAL ACTIONS
+   ============================================================ */
+
+.learning-card__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.learning-card__action-read {
+  color: var(--color-accent);
+  font-size: var(--text-small);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.learning-card__action-read:hover { text-decoration: underline; }
+
+.learning-card__action-practice {
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.learning-card__action-practice:hover { color: var(--color-accent); }
+
+/* ============================================================
+   FOOTER — DARK THEME
+   ============================================================ */
+
+.public-footer {
+  background: #0D1117;
+  border-top-color: #21262D;
+}
+
+.public-footer__inner {
+  padding-top: var(--space-10);
+  padding-bottom: var(--space-10);
+}
+
+.public-footer__brand-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.public-footer__brand-mark {
+  width: 5px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.public-footer__brand-name {
+  color: #fff;
+  font-size: var(--text-small);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.public-footer__brand-statement {
+  color: #8B949E;
+  font-size: var(--text-body);
+  line-height: 1.65;
+  max-width: 30rem;
+  margin: 0;
+}
+
+.public-footer__cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 var(--space-4);
+  margin-top: var(--space-5);
+  border-radius: var(--radius-sm);
+  border: 1px solid #30363D;
+  background: transparent;
+  color: #fff;
+  font-weight: 600;
+  font-size: var(--text-body);
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.public-footer__cta:hover {
+  border-color: var(--color-accent);
+  background: rgba(10,124,255,0.1);
+  color: #fff;
+}
+
+.public-footer__nav-title { color: #fff; }
+
+.public-footer__nav a,
+.public-footer__nav .router-link {
+  color: #8B949E;
+}
+
+.public-footer__nav a:hover,
+.public-footer__nav a:focus-visible { color: #fff; }
+
+.public-footer__brand p:last-child { color: #8B949E; }
+
+.public-footer__brand h2 { color: #fff; }
+
+.public-footer__bottom {
+  border-top: 1px solid #21262D;
+}
+
+.public-footer__bottom p {
+  width: min(calc(100% - 32px), var(--container-public));
+  margin: 0 auto;
+  padding: var(--space-4) 0;
+  color: #6E7681;
+  font-size: var(--text-small);
+}
+
+/* ============================================================
+   LEARNING HUB HERO — GRADIENT BACKGROUND
+   ============================================================ */
+
+.learning-hub-hero {
+  background: linear-gradient(135deg, #EEF4FF 0%, #F5F0FF 100%);
+  border-color: rgba(110,86,207,0.12);
+}
+
+.learning-hub-hero__copy {
+  max-width: 56rem;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.learning-hub-hero__copy h1 {
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.learning-hub-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.learning-hub-hero__microcopy {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+}
+
+/* ============================================================
+   LEARNING PATH TRAIL
+   ============================================================ */
+
+.learning-path-section {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.learning-path-trail {
+  display: flex;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+  -webkit-overflow-scrolling: touch;
+}
+
+.learning-path-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  position: relative;
+  flex: 1;
+  min-width: 80px;
+  text-align: center;
+  padding-top: var(--space-2);
+}
+
+.learning-path-step__connector {
+  position: absolute;
+  top: 13px;
+  right: 50%;
+  left: -50%;
+  height: 2px;
+  background: var(--color-border);
+  z-index: 0;
+}
+
+.learning-path-step--active .learning-path-step__connector {
+  background: var(--color-academy);
+}
+
+.learning-path-step__dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.learning-path-step--active .learning-path-step__dot {
+  background: var(--color-academy);
+  color: #fff;
+}
+
+.learning-path-step--locked .learning-path-step__dot {
+  background: var(--color-canvas-muted);
+  border: 1.5px solid var(--color-border-strong);
+  color: var(--color-border-strong);
+}
+
+.learning-path-step__num {
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.learning-path-step--active .learning-path-step__num {
+  color: var(--color-academy);
+}
+
+.learning-path-step__title {
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  line-height: 1.3;
+}
+
+.learning-path-step--active a.learning-path-step__title {
+  color: var(--color-text-primary);
+}
+
+.learning-path-step--active a.learning-path-step__title:hover {
+  color: var(--color-academy);
+}
+
+.learning-path-step__title--locked {
+  color: var(--color-text-muted);
+}
+
+/* ============================================================
+   LEARN AND APPLY BLOCK
+   ============================================================ */
+
+.learn-apply-block {
+  display: grid;
+  gap: var(--space-8);
+  padding: clamp(24px, 4vw, 48px);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #F5F0FF 0%, #EEF4FF 100%);
+  border: 1px solid rgba(110,86,207,0.15);
+}
+
+.learn-apply-block__copy {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.learn-apply-block__copy h2 {
+  margin: 0;
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--color-text-primary);
+}
+
+.learn-apply-block__copy p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-body);
+  line-height: 1.7;
+}
+
+.learn-apply-block__preview {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.learn-apply-block__panel {
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.learn-apply-block__panel--concept {
+  background: var(--color-surface);
+}
+
+.learn-apply-block__panel--output {
+  background: #0D1117;
+  border-color: #21262D;
+}
+
+.learn-apply-block__panel-label {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.learn-apply-block__panel--concept .learn-apply-block__panel-label {
+  color: var(--color-academy);
+}
+
+.learn-apply-block__panel--output .learn-apply-block__panel-label {
+  color: #8B949E;
+}
+
+.learn-apply-block__panel-text {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-body);
+  line-height: 1.6;
+}
+
+.learn-apply-block__panel-example {
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-academy-subtle);
+  border-left: 3px solid var(--color-academy);
+  color: var(--color-text-primary);
+  font-size: var(--text-small);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+.learn-apply-block__panel-story {
+  margin: 0 0 var(--space-4);
+  color: #E6EDF3;
+  font-size: var(--text-body);
+  line-height: 1.7;
+}
+
+.learn-apply-block__criteria p {
+  margin: 0 0 var(--space-2);
+  color: #8B949E;
+  font-size: var(--text-small);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.learn-apply-block__criteria ol {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: #8B949E;
+  font-size: var(--text-small);
+  line-height: 1.7;
+}
+
+/* ============================================================
+   QUICK NOTES STRIP
+   ============================================================ */
+
+.quick-notes-strip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.quick-note-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.quick-note-item:hover {
+  border-color: rgba(10,124,255,0.3);
+  background: var(--color-accent-subtle);
+}
+
+.quick-note-item__tag {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-xs);
+  background: var(--color-canvas-muted);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.quick-note-item__title {
+  flex: 1;
+  color: var(--color-text-primary);
+  font-size: var(--text-body);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.quick-note-item__link {
+  flex-shrink: 0;
+  color: var(--color-accent);
+  font-size: var(--text-small);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.quick-note-item__link:hover { text-decoration: underline; }
+

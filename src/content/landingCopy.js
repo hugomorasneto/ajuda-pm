@@ -2,19 +2,15 @@ import { APP_NAME, FREE_GENERATION_LIMIT, FREE_PLAN_NAME, PRO_PLAN_NAME } from '
 
 export const landingCopy = {
   hero: {
-    eyebrow: 'Do contexto disperso ao backlog pronto para revisão',
-    title: 'Transforme contexto solto em user stories prontas para desenvolvimento.',
+    eyebrow: 'Novo · IA para PMs e POs iniciantes',
+    title: 'Escreva user stories que devs entendem na primeira leitura.',
     description:
-      'O ProdForge organiza briefings confusos, regras espalhadas e requisitos incompletos em um documento claro para revisão por produto, dev e QA.',
-    highlights: [
-      'Objetivo, critérios de aceite, gaps e checklist no mesmo fluxo.',
-      'Mais clareza para produto. Menos retrabalho para dev e QA.',
-      'Estrutura profissional para sair do texto solto e chegar ao backlog com mais consistência.',
-    ],
+      'ProdForge transforma contexto bagunçado em histórias estruturadas, com critérios de aceite e gaps identificados — em segundos. Para PMs e POs que querem clareza sem depender de sênior.',
+    microcopy: 'Grátis para começar · Sem cartão de crédito · Resultado em 60 segundos',
     stats: [
-      { value: '1 fluxo', label: 'do contexto inicial até a versão pronta para revisão' },
-      { value: 'PM, dev e QA', label: 'alinhados na mesma base de trabalho' },
-      { value: `${FREE_PLAN_NAME} e ${PRO_PLAN_NAME}`, label: 'comece simples e evolua quando o fluxo já estiver validado' },
+      { value: '60 segundos', label: 'do briefing bagunçado à user story estruturada' },
+      { value: 'Critérios + Gaps', label: 'gerados automaticamente no mesmo fluxo' },
+      { value: '100% grátis', label: 'para começar, sem cartão de crédito necessário' },
     ],
     preview: {
       problemLabel: 'Contexto bruto',
@@ -129,22 +125,21 @@ export const landingCopy = {
     ],
   },
   learningTeaser: {
-    eyebrow: 'Aprenda na pratica',
-    title: 'Guias curtos para PMs e POs iniciantes estruturarem melhor o trabalho.',
+    eyebrow: 'Academia ProdForge',
+    title: 'Aprenda enquanto faz.',
     description:
-      'A area Aprender organiza fundamentos, user stories, backlog, Scrum e discovery em leituras diretas, com exemplos e checklist final.',
+      'Guias práticos que ensinam o conceito e te levam direto para a ferramenta. Cada módulo termina com um exercício real.',
     footer:
-      'Use os guias para ganhar criterio. Use o workspace quando quiser transformar contexto em uma primeira versao revisavel.',
+      'Cada guia termina com um link para praticar imediatamente na ferramenta.',
   },
   pricing: {
     eyebrow: 'Planos',
-    title: `Comece no ${FREE_PLAN_NAME} e evolua para o ${PRO_PLAN_NAME} quando o processo já estiver validado.`,
-    description:
-      `O plano gratuito prova valor no uso real com ${FREE_GENERATION_LIMIT} gerações por conta. O ${PRO_PLAN_NAME} entra quando o time precisa de mais escala, padrão e profundidade de revisão.`,
+    title: 'Comece grátis. Escale quando precisar.',
+    description: 'Sem assinatura anual obrigatória. Sem surpresas no cartão.',
     free: {
       name: FREE_PLAN_NAME,
-      badge: 'Disponível agora',
-      description: 'Para validar o fluxo com contexto real e sair do texto solto com mais clareza.',
+      badge: 'Grátis',
+      description: 'Para validar o fluxo com contexto real e sair do texto solto.',
       items: [
         `${FREE_GENERATION_LIMIT} gerações de user story por conta.`,
         'Histórico por usuário.',
@@ -153,8 +148,8 @@ export const landingCopy = {
     },
     pro: {
       name: PRO_PLAN_NAME,
-      badge: 'Evolução planejada',
-      description: 'Para times que precisam de mais escala, padrão, versões e colaboração.',
+      badge: 'Mais popular',
+      description: 'Para times que precisam de mais escala, padrão e profundidade.',
       items: [
         'Mais gerações e mais versões por fluxo.',
         'Comparação de versões e exportações avançadas.',
@@ -171,8 +166,8 @@ export const landingCopy = {
   },
   finalCta: {
     eyebrow: 'Pronto para começar',
-    title: 'Troque briefing confuso por user stories mais confiáveis para produto, dev e QA.',
+    title: 'Seu próximo sprint começa com uma história melhor.',
     description:
-      'Use o ProdForge para estruturar melhor o contexto antes de ele virar backlog, retrabalho e alinhamento manual.',
+      'Cada user story mal escrita custa tempo de dev, retrabalho de QA e credibilidade do PM. ProdForge resolve isso antes do planning.',
   },
 }

@@ -53,7 +53,6 @@ function PublicHeader() {
           <span className="public-brand__mark" />
           <div className="public-brand__copy">
             <span className="public-brand__name">{APP_NAME}</span>
-            <span className="public-brand__tagline">User stories mais claras para PMs e POs</span>
           </div>
         </Link>
 

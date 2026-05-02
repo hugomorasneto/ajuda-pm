@@ -15,7 +15,14 @@ function LearningGuideCard({ guide, variant = 'default' }) {
 
       <div className="learning-card__footer">
         <span className="learning-card__level">{guide.level}</span>
-        <Link to={`/aprender/${guide.slug}`}>Ler guia</Link>
+        <div className="learning-card__actions">
+          <Link to={`/aprender/${guide.slug}`} className="learning-card__action-read">
+            Ler guia
+          </Link>
+          <Link to="/signup" className="learning-card__action-practice">
+            Praticar →
+          </Link>
+        </div>
       </div>
     </article>
   )

@@ -19,7 +19,7 @@ function LearningTeaser({ content, guides }) {
       <div className="landing-learning-teaser__footer">
         <p>{content.footer}</p>
         <Link className="landing-button landing-button--secondary" to="/aprender">
-          Ver todos os guias
+          Ver trilha completa →
         </Link>
       </div>
     </section>

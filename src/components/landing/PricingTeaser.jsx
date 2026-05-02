@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 
 function PricingCard({ plan, cta, variant }) {
+  const isFeatured = variant === 'pro'
+
   return (
     <article className={`landing-pricing__card landing-pricing__card--${variant}`}>
       <div className="landing-pricing__card-header">
@@ -8,7 +10,9 @@ function PricingCard({ plan, cta, variant }) {
           <p className="landing-pricing__name">{plan.name}</p>
           <p className="landing-pricing__description">{plan.description}</p>
         </div>
-        <span className="landing-pricing__badge">{plan.badge}</span>
+        <span className={`landing-pricing__badge${isFeatured ? ' landing-pricing__badge--featured' : ''}`}>
+          {plan.badge}
+        </span>
       </div>
 
       <ul className="landing-pricing__list">

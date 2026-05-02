@@ -9,7 +9,9 @@ function BeforeAfterStory({ content }) {
 
       <div className="landing-before-after__grid">
         <article className="landing-before-after__panel landing-before-after__panel--before">
-          <p className="landing-before-after__tag">{content.before.label}</p>
+          <span className="landing-before-after__badge landing-before-after__badge--before">
+            {content.before.label}
+          </span>
           <h3>{content.before.title}</h3>
           <p className="landing-before-after__raw">{content.before.story}</p>
           <ul>
@@ -20,7 +22,9 @@ function BeforeAfterStory({ content }) {
         </article>
 
         <article className="landing-before-after__panel landing-before-after__panel--after">
-          <p className="landing-before-after__tag">{content.after.label}</p>
+          <span className="landing-before-after__badge landing-before-after__badge--after">
+            {content.after.label}
+          </span>
           <h3>{content.after.title}</h3>
 
           <div className="landing-before-after__section">
@@ -43,6 +47,11 @@ function BeforeAfterStory({ content }) {
           </div>
 
           <p className="landing-before-after__note">{content.after.notes}</p>
+
+          <div className="landing-before-after__score" aria-label="Indicador de qualidade">
+            <span>Clareza da história</span>
+            <strong>Alta ↑</strong>
+          </div>
         </article>
       </div>
     </section>

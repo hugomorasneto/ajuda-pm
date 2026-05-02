@@ -5,7 +5,7 @@ function LandingHero({ hero, isAuthenticated }) {
   return (
     <section className="landing-hero" aria-labelledby="landing-hero-title">
       <div className="landing-hero__copy">
-        <p className="landing-section__eyebrow">{hero.eyebrow}</p>
+        <span className="badge-pill">{hero.eyebrow}</span>
         <h1 id="landing-hero-title">{hero.title}</h1>
         <p className="landing-hero__description">{hero.description}</p>
 
@@ -13,7 +13,7 @@ function LandingHero({ hero, isAuthenticated }) {
           {isAuthenticated ? (
             <>
               <Link className="landing-button landing-button--primary" to="/tool">
-                Abrir área de trabalho
+                Abrir área de trabalho →
               </Link>
               <a className="landing-button landing-button--secondary" href="#como-funciona">
                 Ver o fluxo
@@ -22,20 +22,18 @@ function LandingHero({ hero, isAuthenticated }) {
           ) : (
             <>
               <Link className="landing-button landing-button--primary" to="/signup">
-                Criar conta grátis
+                Gerar minha primeira história →
               </Link>
               <a className="landing-button landing-button--secondary" href="#antes-depois">
-                Ver user story pronta
+                Ver exemplo pronto
               </a>
             </>
           )}
         </div>
 
-        <ul className="landing-hero__highlights">
-          {hero.highlights.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
+        {hero.microcopy ? (
+          <p className="landing-hero__microcopy">{hero.microcopy}</p>
+        ) : null}
       </div>
 
       <HeroTransformationPreview preview={hero.preview} />

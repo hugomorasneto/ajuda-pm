@@ -77,6 +77,11 @@
   --color-text-muted:     #94A3B8;
   --color-text-inverse:   #FFFFFF;
 
+  /* Academy accent — learning section */
+  --color-academy:        #6E56CF;
+  --color-academy-hover:  #5B46B8;
+  --color-academy-subtle: rgba(110,86,207,0.08);
+
   /* Legacy aliases — kept so existing JSX classnames don't break */
   --color-info: var(--color-accent);
   --color-accent-teal: var(--color-accent);
