@@ -5528,3 +5528,369 @@
     width: min(calc(100% - 24px), 1280px);
   }
 }
+
+/* ============================================================
+   HOME FORGE — POLISH PREMIUM FINAL (Auditoria Visual)
+   Sobrescreve fases anteriores. Não tocar em nada fora desta seção.
+   ============================================================ */
+
+/* --- FASE A: Header + Logo + Hero --- */
+
+/* Header: presença e âncora visual */
+.public-layout--home-forge .public-header--forge-home {
+  border-bottom: 1px solid rgba(255, 122, 26, 0.14);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04),
+    0 4px 24px rgba(0, 0, 0, 0.32);
+}
+
+/* Logo: maior e com presença sutil */
+.public-layout--home-forge .brand-logo--header {
+  height: 38px;
+}
+
+@media (min-width: 900px) {
+  .public-layout--home-forge .brand-logo--header {
+    height: 48px;
+    filter: drop-shadow(0 0 10px rgba(255, 122, 26, 0.16));
+  }
+}
+
+/* Nav links: refinamento tipográfico */
+.public-layout--home-forge .public-header--forge-home .public-header__link {
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 0.02em;
+  transition: color 0.18s;
+}
+
+.public-layout--home-forge .public-header--forge-home .public-header__link:hover,
+.public-layout--home-forge .public-header--forge-home .public-header__link--active {
+  color: rgba(255, 255, 255, 0.96);
+}
+
+/* Hero H1: dominância clara na primeira dobra */
+.public-layout--home-forge .landing-hero__copy h1 {
+  max-width: 13ch;
+  font-size: clamp(3rem, 5.4vw, 5.6rem);
+  line-height: 0.96;
+  letter-spacing: -0.055em;
+}
+
+/* Eyebrow: mais contraste e presença */
+.public-layout--home-forge .landing-hero__eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+}
+
+/* Descrição: leitura confortável */
+.public-layout--home-forge .landing-hero__description {
+  font-size: clamp(1.02rem, 1.6vw, 1.12rem);
+  line-height: 1.68;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+/* Microcopy: hierarquia clara, diferenciado dos bullets */
+.public-layout--home-forge .landing-hero__microcopy {
+  color: rgba(255, 122, 26, 0.65);
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+}
+
+/* CTA Primário do Hero: maior presença e glow */
+.public-layout--home-forge .landing-hero__actions .forge-button--ember {
+  min-height: 54px;
+  padding: 0 var(--space-7);
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+  box-shadow: 0 0 28px rgba(255, 122, 26, 0.32), 0 4px 16px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.public-layout--home-forge .landing-hero__actions .forge-button--ember:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 42px rgba(255, 122, 26, 0.46), 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Botão secundário do Hero: mais elegante */
+.public-layout--home-forge .landing-hero__actions .forge-button--metal {
+  min-height: 54px;
+  padding: 0 var(--space-6);
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.72);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Frame do mockup: mais dramático */
+.public-layout--home-forge .hero-transformation-preview__frame {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 32px 64px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* --- FASE B: Ritmo visual entre seções --- */
+
+/* Faixa ContextStrip: leve calor amber para quebrar o cinza uniforme */
+.public-layout--home-forge .context-strip {
+  position: relative;
+}
+
+.public-layout--home-forge .context-strip::before {
+  content: '';
+  position: absolute;
+  inset: -24px -16px;
+  border-radius: 24px;
+  background: radial-gradient(ellipse at 50% 50%, rgba(255, 122, 26, 0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Workflow: fundo ligeiramente diferenciado */
+.public-layout--home-forge .landing-workflow {
+  position: relative;
+}
+
+.public-layout--home-forge .landing-workflow__item {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%),
+    rgba(255, 255, 255, 0.025);
+  border-color: rgba(255, 255, 255, 0.07);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.public-layout--home-forge .landing-workflow__item:hover {
+  border-color: rgba(77, 163, 255, 0.22);
+  box-shadow: 0 0 0 1px rgba(77, 163, 255, 0.08), 0 8px 24px rgba(0, 0, 0, 0.24);
+}
+
+/* Before/After: "spotlight" com fundo mais distinto */
+.public-layout--home-forge .landing-before-after {
+  padding: clamp(28px, 4vw, 48px) 0;
+}
+
+/* Seção Pricing: glow de destaque sutil no container */
+.public-layout--home-forge .landing-pricing {
+  position: relative;
+}
+
+.public-layout--home-forge .landing-pricing::before {
+  content: '';
+  position: absolute;
+  inset: -32px -24px;
+  border-radius: 32px;
+  background: radial-gradient(ellipse at 50% 60%, rgba(77, 163, 255, 0.04) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+/* --- FASE C: Seções de prova e valor --- */
+
+/* Before/After — títulos maiores, painéis mais presentes */
+.public-layout--home-forge .landing-before-after__panel h3 {
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
+  letter-spacing: -0.02em;
+}
+
+.public-layout--home-forge .landing-before-after__panel--before {
+  border-top: 3px solid rgba(255, 177, 74, 0.5);
+}
+
+.public-layout--home-forge .landing-before-after__panel--after {
+  border-top: 3px solid rgba(77, 163, 255, 0.55);
+  border-left: 3px solid rgba(77, 163, 255, 0.25);
+  box-shadow: 0 0 0 1px rgba(77, 163, 255, 0.1), 0 12px 32px rgba(0, 0, 0, 0.32);
+}
+
+/* Cards PM/Dev/QA — linha superior mais viva, ícone maior, h3 maior */
+.public-layout--home-forge .landing-benefits__item::before {
+  height: 3px;
+  opacity: 1.0;
+}
+
+.public-layout--home-forge .landing-benefits__icon {
+  width: 52px;
+  height: 52px;
+}
+
+.public-layout--home-forge .landing-benefits__item h3 {
+  font-size: 1.18rem;
+  letter-spacing: -0.01em;
+}
+
+/* Hover premium nos cards de benefício */
+.public-layout--home-forge .landing-benefits__item {
+  transition: border-color 0.22s, box-shadow 0.22s, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.public-layout--home-forge .landing-benefits__item--pm:hover {
+  border-color: rgba(255, 122, 26, 0.32);
+  box-shadow: 0 0 0 1px rgba(255, 122, 26, 0.1), 0 12px 32px rgba(0, 0, 0, 0.32);
+  transform: translateY(-3px);
+}
+
+.public-layout--home-forge .landing-benefits__item--dev:hover {
+  border-color: rgba(77, 163, 255, 0.32);
+  box-shadow: 0 0 0 1px rgba(77, 163, 255, 0.1), 0 12px 32px rgba(0, 0, 0, 0.32);
+  transform: translateY(-3px);
+}
+
+.public-layout--home-forge .landing-benefits__item--qa:hover {
+  border-color: rgba(34, 197, 94, 0.3);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.08), 0 12px 32px rgba(0, 0, 0, 0.32);
+  transform: translateY(-3px);
+}
+
+/* Academia: card com presença maior */
+.public-layout--home-forge .learning-card--landing .learning-card__body h3 {
+  font-size: 1.06rem;
+  line-height: 1.38;
+}
+
+.public-layout--home-forge .learning-card--landing .learning-card__image-badge {
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+}
+
+/* Pricing: Card Pro mais dominante */
+.public-layout--home-forge .landing-pricing__card--pro {
+  border-color: rgba(77, 163, 255, 0.3);
+  box-shadow: 0 0 0 1px rgba(77, 163, 255, 0.1), 0 16px 48px rgba(0, 0, 0, 0.4), 0 0 48px rgba(77, 163, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(77, 163, 255, 0.1) 0%, rgba(77, 163, 255, 0.03) 40%, transparent 100%),
+    var(--forge-surface-1);
+}
+
+.public-layout--home-forge .landing-pricing__name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* Card Free: recuado sutilmente para criar hierarquia */
+.public-layout--home-forge .landing-pricing__card--free {
+  opacity: 0.88;
+}
+
+.public-layout--home-forge .landing-pricing__card--free:hover {
+  opacity: 1;
+}
+
+/* --- FASE D: CTA Final + Formulário + Footer --- */
+
+/* CTA Final: H2 imponente como última palavra */
+.public-layout--home-forge .landing-final-cta__copy h2 {
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  letter-spacing: -0.05em;
+  line-height: 0.98;
+}
+
+/* CTA Final: painel com mais drama */
+.public-layout--home-forge .landing-final-cta__content {
+  padding: clamp(40px, 6vw, 72px);
+  border: 1px solid rgba(255, 122, 26, 0.2);
+  background:
+    radial-gradient(ellipse at 80% 50%, rgba(255, 122, 26, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 14% 50%, rgba(77, 163, 255, 0.05) 0%, transparent 40%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, transparent 100%),
+    linear-gradient(180deg, var(--forge-bg-charcoal) 0%, var(--forge-bg-graphite) 100%);
+  box-shadow: 0 0 0 1px rgba(255, 122, 26, 0.08), 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+/* Botão CTA Final: closing shot premium */
+.public-layout--home-forge .landing-final-cta__actions .forge-button--ember {
+  min-height: 58px;
+  padding: 0 var(--space-8);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow: 0 0 32px rgba(255, 122, 26, 0.38), 0 6px 20px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.public-layout--home-forge .landing-final-cta__actions .forge-button--ember:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 52px rgba(255, 122, 26, 0.5), 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Formulário Lead: inputs mais premium */
+.public-layout--home-forge .landing-lead-capture__form input {
+  min-height: 52px;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--forge-text-primary);
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.public-layout--home-forge .landing-lead-capture__form input:focus {
+  border-color: rgba(255, 122, 26, 0.45);
+  box-shadow: 0 0 0 3px rgba(255, 122, 26, 0.14);
+  outline: none;
+}
+
+.public-layout--home-forge .landing-lead-capture__form label {
+  font-size: 0.94rem;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Footer: mais respiro e logo visível */
+.public-layout--home-forge .brand-logo--footer {
+  height: 34px;
+}
+
+.public-layout--home-forge .public-footer--forge-home .public-footer__inner {
+  padding-top: clamp(40px, 6vw, 64px);
+}
+
+.public-layout--home-forge .public-footer--forge-home .public-footer__nav a {
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.16s;
+}
+
+.public-layout--home-forge .public-footer--forge-home .public-footer__nav a:hover {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+/* Seção intro das seções: h2 com mais peso */
+.public-layout--home-forge .landing-section__intro h2 {
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+}
+
+/* --- Responsividade: garantias mobile/tablet --- */
+@media (max-width: 640px) {
+  .public-layout--home-forge .landing-hero__copy h1 {
+    font-size: clamp(2.8rem, 12.5vw, 3.5rem);
+    letter-spacing: -0.045em;
+  }
+
+  .public-layout--home-forge .landing-hero__actions .forge-button--ember,
+  .public-layout--home-forge .landing-hero__actions .forge-button--metal {
+    min-height: 52px;
+    width: 100%;
+  }
+
+  .public-layout--home-forge .landing-final-cta__actions .forge-button--ember {
+    min-height: 52px;
+    width: 100%;
+  }
+
+  .public-layout--home-forge .landing-final-cta__copy h2 {
+    font-size: clamp(2rem, 10vw, 2.8rem);
+  }
+
+  .public-layout--home-forge .landing-section__intro h2 {
+    font-size: clamp(1.75rem, 8vw, 2.4rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-layout--home-forge .landing-benefits__item,
+  .public-layout--home-forge .landing-hero__actions .forge-button--ember,
+  .public-layout--home-forge .landing-hero__actions .forge-button--metal,
+  .public-layout--home-forge .landing-final-cta__actions .forge-button--ember {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
