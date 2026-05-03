@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    PUBLIC — FASE 1 LIMPEZA VISUAL
    ============================================================ */
 
@@ -5198,102 +5198,102 @@
   filter: drop-shadow(0 28px 34px var(--forge-bg-canvas));
 }
 
-@keyframes hero-mockup-drift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-
-  50% {
-    transform: translate3d(0, -7px, 0);
-  }
+@keyframes forgePulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.98); }
+  50% { opacity: 0.6; transform: scale(1.02); }
 }
 
-@keyframes hero-forge-glow-pulse {
-  0%,
-  100% {
-    opacity: 0.32;
-    transform: scale(0.98);
-  }
-
-  50% {
-    opacity: 0.52;
-    transform: scale(1.03);
-  }
+@keyframes emberFloat {
+  0% { opacity: 0; transform: translateY(15px); }
+  30%, 70% { opacity: 0.35; }
+  100% { opacity: 0; transform: translateY(-35px); }
 }
 
-@keyframes hero-frame-sheen {
-  0%,
-  100% {
-    opacity: 0.18;
-    transform: translateX(-8%);
-  }
-
-  50% {
-    opacity: 0.32;
-    transform: translateX(8%);
-  }
+@keyframes blueAura {
+  0%, 100% { opacity: 0.2; transform: translateX(-2%); }
+  50% { opacity: 0.4; transform: translateX(2%); }
 }
 
-@keyframes hero-image-sheen {
-  0%,
-  100% {
-    opacity: 0.08;
-    transform: translateX(-18%);
-  }
-
-  50% {
-    opacity: 0.2;
-    transform: translateX(18%);
-  }
+@keyframes subtleShine {
+  0%, 100% { opacity: 0.1; transform: translateX(-5%); }
+  50% { opacity: 0.25; transform: translateX(5%); }
 }
 
-@keyframes hero-embers-rise {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 18px, 0);
-  }
-
-  24%,
-  72% {
-    opacity: 0.24;
-  }
-
-  100% {
-    opacity: 0;
-    transform: translate3d(0, -28px, 0);
-  }
+.hero-art-frame {
+  position: relative;
+  border-radius: inherit;
 }
 
-.public-layout--home-forge .hero-transformation-preview__frame::before {
-  animation: hero-frame-sheen 12s ease-in-out infinite;
+.hero-art-frame::before {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  z-index: 0;
+  border-radius: inherit;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(255, 122, 26, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 80% 60%, rgba(77, 163, 255, 0.08) 0%, transparent 50%);
+  animation: forgePulse 6s ease-in-out infinite, blueAura 8s ease-in-out infinite;
+  pointer-events: none;
 }
 
-.public-layout--home-forge .hero-transformation-preview__frame::after {
-  animation: hero-forge-glow-pulse 7.5s ease-in-out infinite;
-}
-
-.public-layout--home-forge .hero-transformation-preview__media::before {
-  animation: hero-image-sheen 13s ease-in-out infinite;
-}
-
-.public-layout--home-forge .hero-transformation-preview__media::after {
-  animation: hero-embers-rise 10s ease-in-out infinite;
-}
-
-.public-layout--home-forge .hero-transformation-preview__image {
-  animation: hero-mockup-drift 9s ease-in-out infinite;
-  will-change: transform;
+.hero-art-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border-radius: inherit;
+  background: 
+    radial-gradient(circle, rgba(255, 177, 74, 0.8) 0 1px, transparent 2px) 15% 85% / 120px 140px,
+    radial-gradient(circle, rgba(255, 122, 26, 0.5) 0 1px, transparent 2px) 65% 95% / 170px 190px,
+    linear-gradient(110deg, transparent 0%, transparent 30%, rgba(255,255,255,0.06) 45%, transparent 60%, transparent 100%);
+  animation: emberFloat 7s ease-in-out infinite, subtleShine 5s ease-in-out infinite;
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .public-layout--home-forge .hero-transformation-preview__image,
-  .public-layout--home-forge .hero-transformation-preview__frame::before,
-  .public-layout--home-forge .hero-transformation-preview__frame::after,
-  .public-layout--home-forge .hero-transformation-preview__media::before,
-  .public-layout--home-forge .hero-transformation-preview__media::after {
-    animation: none;
-    transform: none;
+  .hero-art-frame::before,
+  .hero-art-frame::after {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* --- Ajuste Logo Header e Footer --- */
+.public-brand__mark {
+  display: block;
+  width: auto;
+  height: 28px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  line-height: 1;
+}
+
+@media (min-width: 900px) {
+  .public-brand__mark {
+    height: 32px;
+  }
+}
+
+.public-footer__brand-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.public-footer__brand-mark {
+  display: block;
+  width: auto;
+  height: 26px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  line-height: 1;
+}
+
+@media (min-width: 900px) {
+  .public-footer__brand-mark {
+    height: 30px;
   }
 }
 

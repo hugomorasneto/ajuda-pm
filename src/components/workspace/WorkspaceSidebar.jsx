@@ -37,8 +37,6 @@ function WorkspaceSidebar({ isOpen, onClose }) {
             src={BRAND_MARK_SRC}
             alt="ProdForge"
             className="workspace-sidebar__brand-mark"
-            width="40"
-            height="40"
           />
           <div className="workspace-sidebar__brand-copy">
             <p className="workspace-sidebar__brand-name">{APP_NAME}</p>

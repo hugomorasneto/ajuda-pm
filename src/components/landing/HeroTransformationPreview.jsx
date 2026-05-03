@@ -35,7 +35,7 @@ function HeroTransformationPreview({ preview }) {
   return (
     <div className="hero-transformation-preview" aria-label="Preview visual do workspace ProdForge">
       <div className="hero-transformation-preview__frame">
-        <div className="hero-transformation-preview__media">
+        <div className="hero-transformation-preview__media hero-art-frame">
           {isImageUnavailable ? null : (
             <img
               className="hero-transformation-preview__image"

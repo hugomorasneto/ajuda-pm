@@ -36,8 +36,6 @@ function PublicFooter({ isHomeRoute = false }) {
               src={BRAND_MARK_SRC}
               alt="ProdForge"
               className="public-footer__brand-mark"
-              width="30"
-              height="30"
               loading="lazy"
             />
             <span className="public-footer__brand-name">{APP_NAME}</span>

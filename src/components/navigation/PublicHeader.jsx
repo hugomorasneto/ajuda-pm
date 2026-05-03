@@ -85,8 +85,6 @@ function PublicHeader({ isHomeRoute = false }) {
             src={BRAND_MARK_SRC}
             alt="ProdForge"
             className="public-brand__mark"
-            width="32"
-            height="32"
             loading="eager"
           />
           <div className="public-brand__copy">
