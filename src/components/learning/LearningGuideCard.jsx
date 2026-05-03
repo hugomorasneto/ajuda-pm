@@ -1,8 +1,36 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 function LearningGuideCard({ guide, variant = 'default', isCompleted = false }) {
+  const [isThumbnailUnavailable, setIsThumbnailUnavailable] = useState(false)
+  const hasLandingThumbnail = variant === 'landing' && Boolean(guide.thumbnailSrc)
+
   return (
     <article className={`learning-card learning-card--${variant}${isCompleted ? ' learning-card--completed' : ''}`}>
+      {hasLandingThumbnail ? (
+        <div className="learning-card__media">
+          {isThumbnailUnavailable ? (
+            <div
+              className="learning-card__image-fallback"
+              role="img"
+              aria-label={guide.thumbnailAlt ?? `Capa do guia ${guide.title}`}
+            >
+              <span className="learning-card__image-badge">Academia ProdForge</span>
+              <strong>{guide.category}</strong>
+            </div>
+          ) : (
+            <img
+              className="learning-card__image"
+              src={guide.thumbnailSrc}
+              alt={guide.thumbnailAlt ?? `Capa do guia ${guide.title}`}
+              loading="lazy"
+              decoding="async"
+              onError={() => setIsThumbnailUnavailable(true)}
+            />
+          )}
+        </div>
+      ) : null}
+
       <div className="learning-card__meta">
         <span>{guide.category}</span>
         <span>{guide.readingTime}</span>
