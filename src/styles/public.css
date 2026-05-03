@@ -24,8 +24,13 @@
   text-decoration: none; min-width: 0; max-width: calc(100% - 88px);
 }
 .public-brand__mark {
-  width: 6px; height: 30px; border-radius: 999px;
-  background: var(--color-accent); flex: 0 0 auto;
+  display: block;
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  border-radius: 8px;
+  flex: 0 0 auto;
+  max-width: 100%;
 }
 .public-brand__copy { display: grid; gap: 1px; }
 .public-brand__name {
@@ -1045,11 +1050,13 @@
 }
 
 .public-footer__brand-mark {
-  width: 5px;
-  height: 22px;
-  border-radius: 999px;
-  background: var(--color-accent);
+  display: block;
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  border-radius: 8px;
   flex-shrink: 0;
+  max-width: 100%;
 }
 
 .public-footer__brand-name {
@@ -2117,20 +2124,9 @@
 }
 
 .public-layout--home-forge .public-header--forge-home .public-brand__mark {
-  position: relative;
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  background: var(--forge-gradient-cta-ember);
-  box-shadow: var(--forge-glow-ember-sm);
-}
-
-.public-layout--home-forge .public-header--forge-home .public-brand__mark::after {
-  content: '';
-  position: absolute;
-  inset: 4px;
-  border: 1px solid rgba(11, 13, 16, 0.48);
-  border-radius: 3px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
 }
 
 .public-layout--home-forge .public-header--forge-home .public-brand__copy {
@@ -3028,11 +3024,9 @@
 }
 
 .public-layout--home-forge .public-footer--forge-home .public-footer__brand-mark {
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  background: var(--forge-gradient-cta-ember);
-  box-shadow: var(--forge-glow-ember-sm);
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
 }
 
 .public-layout--home-forge .public-footer--forge-home .public-footer__brand-name,
@@ -3178,21 +3172,9 @@
 }
 
 .public-layout--home-forge .public-header--forge-home .public-brand__mark {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-}
-
-.public-layout--home-forge .public-header--forge-home .public-brand__mark::before {
-  content: '';
-  position: absolute;
-  left: 5px;
-  right: 5px;
-  top: -5px;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--forge-ember);
-  box-shadow: 0 0 12px var(--forge-amber-glow);
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
 }
 
 .public-layout--home-forge .public-header--forge-home .public-brand__name {
@@ -3577,8 +3559,8 @@
   }
 
   .public-layout--home-forge .public-header--forge-home .public-brand__mark {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
   }
 
   .public-layout--home-forge .landing-hero {

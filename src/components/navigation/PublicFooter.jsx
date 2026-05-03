@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { APP_NAME } from '../../constants/app'
+import { APP_NAME, BRAND_MARK_SRC } from '../../constants/app'
 import { getLearningGuidesBySlugs } from '../../content/learningContent'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -32,7 +32,14 @@ function PublicFooter({ isHomeRoute = false }) {
       <div className="public-footer__inner">
         <div className="public-footer__brand">
           <div className="public-footer__brand-logo">
-            <span className="public-footer__brand-mark" aria-hidden="true" />
+            <img
+              src={BRAND_MARK_SRC}
+              alt="ProdForge"
+              className="public-footer__brand-mark"
+              width="30"
+              height="30"
+              loading="lazy"
+            />
             <span className="public-footer__brand-name">{APP_NAME}</span>
           </div>
           <p className="public-footer__brand-statement">{brandStatement}</p>

@@ -43,10 +43,13 @@
 .workspace-sidebar__brand { gap: var(--space-3); text-decoration: none; min-width: 0; }
 
 .workspace-sidebar__brand-mark {
-  width: 6px; height: 32px;
-  border-radius: 999px;
-  background: var(--color-accent);
+  display: block;
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 10px;
   flex: 0 0 auto;
+  max-width: 100%;
 }
 .workspace-sidebar__brand-name {
   margin: 0;
@@ -2435,39 +2438,9 @@
 }
 
 .workspace-shell--forge .workspace-sidebar__brand-mark {
-  position: relative;
-  display: inline-flex;
-  width: 38px;
-  height: 38px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--forge-border-ember);
-  border-radius: var(--forge-radius-md);
-  background:
-    linear-gradient(180deg, var(--forge-ember-soft), transparent),
-    var(--forge-surface-inset);
-  box-shadow: var(--forge-glow-ember-sm), inset 0 1px 0 var(--forge-border-subtle);
-}
-
-.workspace-shell--forge .workspace-sidebar__brand-mark::before {
-  content: '';
-  width: 18px;
-  height: 10px;
-  border: 1px solid var(--forge-ember);
-  border-top-width: 2px;
-  border-radius: 3px 3px 6px 6px;
-  box-shadow: inset 0 -4px 0 var(--forge-ember-soft);
-}
-
-.workspace-shell--forge .workspace-sidebar__brand-mark::after {
-  content: '';
-  position: absolute;
-  bottom: 9px;
-  width: 16px;
-  height: 2px;
-  border-radius: 999px;
-  background: var(--forge-ember-hover);
-  box-shadow: 0 0 10px var(--forge-amber-glow);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
 }
 
 .workspace-shell--forge .workspace-sidebar__brand-name {

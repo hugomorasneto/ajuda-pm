@@ -1,5 +1,5 @@
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { APP_NAME } from '../../constants/app'
+import { APP_NAME, BRAND_MARK_SRC } from '../../constants/app'
 import { useAuth } from '../../hooks/useAuth'
 import { useLearningProgress } from '../../hooks/useLearningProgress'
 
@@ -33,7 +33,13 @@ function WorkspaceSidebar({ isOpen, onClose }) {
     <aside className={`workspace-sidebar ${isOpen ? 'workspace-sidebar--open' : ''}`}>
       <div className="workspace-sidebar__header">
         <Link to="/tool" className="workspace-sidebar__brand" onClick={onClose}>
-          <span className="workspace-sidebar__brand-mark" />
+          <img
+            src={BRAND_MARK_SRC}
+            alt="ProdForge"
+            className="workspace-sidebar__brand-mark"
+            width="40"
+            height="40"
+          />
           <div className="workspace-sidebar__brand-copy">
             <p className="workspace-sidebar__brand-name">{APP_NAME}</p>
             <p className="workspace-sidebar__brand-caption">Workspace para PMs e POs</p>
