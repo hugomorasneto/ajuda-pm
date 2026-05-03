@@ -1,9 +1,9 @@
 const loadingPresets = {
   generate: {
     steps: [
-      { label: 'Analisando contexto…', pct: 30 },
-      { label: 'Identificando persona…', pct: 65 },
-      { label: 'Montando critérios…', pct: 90 },
+      { label: 'Aquecendo a forja…', pct: 30 },
+      { label: 'Refinando a estrutura…', pct: 65 },
+      { label: 'Preparando critérios…', pct: 90 },
     ],
   },
   selection: {

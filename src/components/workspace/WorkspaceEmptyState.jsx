@@ -52,7 +52,7 @@ function WorkspaceEmptyState({ hasDraft, onApplyTemplate }) {
           </div>
           <div className="workspace-state__copy">
             <h2>Parece que você tem algo em mente.</h2>
-            <p>Clique em <strong>Gerar Story</strong> para transformar o contexto em uma user story estruturada.</p>
+            <p>Clique em <strong>Forjar Story</strong> para transformar o contexto em uma user story estruturada.</p>
           </div>
           <ul className="workspace-state__hints" aria-label="Dicas">
             <li><span className="workspace-state__hint-mark" aria-hidden="true">✦</span> Seja específico</li>

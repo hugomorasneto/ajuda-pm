@@ -171,12 +171,12 @@ function BriefComposer({
   }
 
   const submitLabel = isSubmitting
-    ? 'Gerando…'
+    ? 'Forjando...'
     : isEditing
       ? hasAdjustment
-        ? 'Gerar com ajuste'
-        : 'Gerar nova versão'
-      : 'Gerar Story'
+        ? 'Forjar com ajuste'
+        : 'Forjar nova versão'
+      : 'Forjar Story'
 
   return (
     <section className="panel brief-composer" id="workspace-composer">
