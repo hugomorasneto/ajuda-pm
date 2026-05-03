@@ -1,25 +1,34 @@
 import { Link } from 'react-router-dom'
 import LearningGuideCard from '../learning/LearningGuideCard'
 
+function buildPublicAssetCandidates(path) {
+  const normalizedPath = path.replace(/^\/+/, '')
+  const basePath = import.meta.env.BASE_URL.endsWith('/')
+    ? import.meta.env.BASE_URL
+    : `${import.meta.env.BASE_URL}/`
+
+  return [...new Set([`/${normalizedPath}`, `${basePath}${normalizedPath}`])]
+}
+
 const academyGuideThumbnailsBySlug = {
   'fundamentos-produto-agil': {
-    src: '/images/prodforge/academy/fundamentos-produto-agil-pm-po-iniciante.webp',
+    src: 'images/prodforge/academy/fundamentos-produto-agil-pm-po-iniciante.webp',
     alt: 'Capa do guia Fundamentos de produto agil para PM/PO iniciante',
   },
   'user-stories-na-pratica': {
-    src: '/images/prodforge/academy/user-stories-na-pratica.webp',
+    src: 'images/prodforge/academy/user-stories-na-pratica.webp',
     alt: 'Capa do guia User stories na pratica',
   },
   'backlog-e-refinamento': {
-    src: '/images/prodforge/academy/backlog-e-refinamento-sem-caos.webp',
+    src: 'images/prodforge/academy/backlog-e-refinamento-sem-caos.webp',
     alt: 'Capa do guia Backlog e refinamento sem caos',
   },
   'refinamento-e-criterios': {
-    src: '/images/prodforge/academy/como-fazer-refinamento-sem-desperdicio.webp',
+    src: 'images/prodforge/academy/como-fazer-refinamento-sem-desperdicio.webp',
     alt: 'Capa do guia Como fazer refinamento sem desperdicio',
   },
   'alinhamento-com-stakeholders': {
-    src: '/images/prodforge/academy/alinhamento-com-stakeholders-sem-virar-telefone-sem-fio.webp',
+    src: 'images/prodforge/academy/alinhamento-com-stakeholders-sem-virar-telefone-sem-fio.webp',
     alt: 'Capa do guia Alinhamento com stakeholders sem virar telefone sem fio',
   },
 }
@@ -34,7 +43,8 @@ function LearningTeaser({ content, guides }) {
 
     return {
       ...guide,
-      thumbnailSrc: thumbnail.src,
+      thumbnailSrc: buildPublicAssetCandidates(thumbnail.src)[0],
+      thumbnailSrcCandidates: buildPublicAssetCandidates(thumbnail.src),
       thumbnailAlt: thumbnail.alt,
     }
   })

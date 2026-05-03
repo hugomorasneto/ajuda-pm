@@ -3,7 +3,23 @@ import { Link } from 'react-router-dom'
 
 function LearningGuideCard({ guide, variant = 'default', isCompleted = false }) {
   const [isThumbnailUnavailable, setIsThumbnailUnavailable] = useState(false)
+  const [thumbnailAttemptIndex, setThumbnailAttemptIndex] = useState(0)
   const hasLandingThumbnail = variant === 'landing' && Boolean(guide.thumbnailSrc)
+  const thumbnailSrcCandidates = hasLandingThumbnail
+    ? guide.thumbnailSrcCandidates?.filter(Boolean) ?? [guide.thumbnailSrc]
+    : []
+  const activeThumbnailSrc = thumbnailSrcCandidates[thumbnailAttemptIndex] ?? guide.thumbnailSrc
+
+  const handleThumbnailError = () => {
+    const hasAnotherCandidate = thumbnailAttemptIndex < thumbnailSrcCandidates.length - 1
+
+    if (hasAnotherCandidate) {
+      setThumbnailAttemptIndex((currentIndex) => currentIndex + 1)
+      return
+    }
+
+    setIsThumbnailUnavailable(true)
+  }
 
   return (
     <article className={`learning-card learning-card--${variant}${isCompleted ? ' learning-card--completed' : ''}`}>
@@ -21,11 +37,12 @@ function LearningGuideCard({ guide, variant = 'default', isCompleted = false }) 
           ) : (
             <img
               className="learning-card__image"
-              src={guide.thumbnailSrc}
+              src={activeThumbnailSrc}
               alt={guide.thumbnailAlt ?? `Capa do guia ${guide.title}`}
-              loading="lazy"
+              loading={variant === 'landing' ? 'eager' : 'lazy'}
               decoding="async"
-              onError={() => setIsThumbnailUnavailable(true)}
+              fetchPriority={variant === 'landing' ? 'high' : undefined}
+              onError={handleThumbnailError}
             />
           )}
         </div>
