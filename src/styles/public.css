@@ -5286,13 +5286,16 @@
 
 /* --- Brand Logo System --- */
 .brand-logo {
-  display: block;
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .brand-logo__image {
   display: block;
+  height: 100%;
   width: auto;
   object-fit: contain;
   margin: 0;
@@ -5300,12 +5303,14 @@
 }
 
 .brand-logo--header {
-  height: 32px;
+  height: 44px;
+  width: auto;
 }
 
 @media (min-width: 900px) {
   .brand-logo--header {
-    height: 40px;
+    height: 56px;
+    width: auto;
   }
 }
 
@@ -5546,12 +5551,12 @@
 
 /* Logo: maior e com presença sutil */
 .public-layout--home-forge .brand-logo--header {
-  height: 38px;
+  height: 44px;
 }
 
 @media (min-width: 900px) {
   .public-layout--home-forge .brand-logo--header {
-    height: 48px;
+    height: 56px;
     filter: drop-shadow(0 0 10px rgba(255, 122, 26, 0.16));
   }
 }
@@ -5834,7 +5839,7 @@
 
 /* Footer: mais respiro e logo visível */
 .public-layout--home-forge .brand-logo--footer {
-  height: 34px;
+  height: 40px;
 }
 
 .public-layout--home-forge .public-footer--forge-home .public-footer__inner {
