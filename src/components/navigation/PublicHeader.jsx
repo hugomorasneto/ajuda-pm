@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { APP_NAME, BRAND_MARK_SRC } from '../../constants/app'
+import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC } from '../../constants/app'
 import { useAuth } from '../../hooks/useAuth'
 
 const forgeHomeNavItems = [
@@ -80,17 +80,13 @@ function PublicHeader({ isHomeRoute = false }) {
   return (
     <header className={headerClassName}>
       <div className="public-header__inner">
-        <Link to="/" className="public-brand" aria-label={APP_NAME}>
+        <Link to="/" className="brand-logo" aria-label={APP_NAME}>
           <img
-            src={BRAND_MARK_SRC}
-            alt="ProdForge"
-            className="public-brand__mark"
+            src={BRAND_LOGO_HORIZONTAL_SRC}
+            alt={APP_NAME}
+            className="brand-logo__image brand-logo--header"
             loading="eager"
           />
-          <div className="public-brand__copy">
-            <span className="public-brand__name">{APP_NAME}</span>
-            {isHomeRoute ? <span className="public-brand__tagline">Forja de user stories</span> : null}
-          </div>
         </Link>
 
         <nav className="public-header__nav" aria-label="Navegação pública">

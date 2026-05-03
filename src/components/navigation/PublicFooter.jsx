@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { APP_NAME, BRAND_MARK_SRC } from '../../constants/app'
+import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC } from '../../constants/app'
 import { getLearningGuidesBySlugs } from '../../content/learningContent'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -31,14 +31,13 @@ function PublicFooter({ isHomeRoute = false }) {
     <footer className={footerClassName}>
       <div className="public-footer__inner">
         <div className="public-footer__brand">
-          <div className="public-footer__brand-logo">
+          <div className="brand-logo">
             <img
-              src={BRAND_MARK_SRC}
-              alt="ProdForge"
-              className="public-footer__brand-mark"
+              src={BRAND_LOGO_HORIZONTAL_SRC}
+              alt={APP_NAME}
+              className="brand-logo__image brand-logo--footer"
               loading="lazy"
             />
-            <span className="public-footer__brand-name">{APP_NAME}</span>
           </div>
           <p className="public-footer__brand-statement">{brandStatement}</p>
           <Link to={user ? '/tool' : '/signup'} className={footerCtaClassName}>

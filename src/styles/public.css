@@ -2191,8 +2191,8 @@
 
 .public-layout--home-forge .landing-hero {
   position: relative;
-  gap: clamp(24px, 4vw, 42px);
-  padding: clamp(24px, 4vw, 48px);
+  gap: clamp(16px, 3vw, 32px);
+  padding: clamp(20px, 3vw, 36px);
   overflow: hidden;
   border-color: var(--forge-border);
   background:
@@ -3205,8 +3205,8 @@
 }
 
 .public-layout--home-forge .landing-hero {
-  gap: clamp(28px, 4.2vw, 56px);
-  padding: clamp(28px, 4.4vw, 56px);
+  gap: clamp(20px, 3.5vw, 40px);
+  padding: clamp(24px, 3.5vw, 40px);
 }
 
 .public-layout--home-forge .landing-hero__copy h1 {
@@ -3214,8 +3214,8 @@
 }
 
 .public-layout--home-forge .hero-transformation-preview__frame {
-  gap: var(--space-5);
-  padding: clamp(20px, 2.4vw, 30px);
+  gap: var(--space-4);
+  padding: clamp(12px, 2vw, 20px);
   border-radius: 20px;
 }
 
@@ -5199,24 +5199,29 @@
 }
 
 @keyframes forgePulse {
-  0%, 100% { opacity: 0.3; transform: scale(0.98); }
-  50% { opacity: 0.6; transform: scale(1.02); }
+  0%, 100% { opacity: 0.4; transform: scale(0.95); }
+  50% { opacity: 0.85; transform: scale(1.05); }
 }
 
 @keyframes emberFloat {
-  0% { opacity: 0; transform: translateY(15px); }
-  30%, 70% { opacity: 0.35; }
-  100% { opacity: 0; transform: translateY(-35px); }
+  0% { opacity: 0; transform: translateY(20px) scale(0.8); }
+  25%, 75% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-50px) scale(1.2); }
 }
 
 @keyframes blueAura {
-  0%, 100% { opacity: 0.2; transform: translateX(-2%); }
-  50% { opacity: 0.4; transform: translateX(2%); }
+  0%, 100% { opacity: 0.4; transform: translateX(-3%); }
+  50% { opacity: 0.7; transform: translateX(3%); }
 }
 
 @keyframes subtleShine {
-  0%, 100% { opacity: 0.1; transform: translateX(-5%); }
-  50% { opacity: 0.25; transform: translateX(5%); }
+  0%, 100% { opacity: 0.15; transform: translateX(-10%); }
+  50% { opacity: 0.4; transform: translateX(10%); }
+}
+
+@keyframes heatShimmer {
+  0%, 100% { transform: scale(1) translateY(0); opacity: 0.6; }
+  50% { transform: scale(1.02) translateY(-2px); opacity: 0.9; }
 }
 
 .hero-art-frame {
@@ -5231,9 +5236,10 @@
   z-index: 0;
   border-radius: inherit;
   background: 
-    radial-gradient(circle at 20% 50%, rgba(255, 122, 26, 0.12) 0%, transparent 50%),
-    radial-gradient(circle at 80% 60%, rgba(77, 163, 255, 0.08) 0%, transparent 50%);
-  animation: forgePulse 6s ease-in-out infinite, blueAura 8s ease-in-out infinite;
+    radial-gradient(circle at 20% 50%, rgba(255, 122, 26, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at 80% 60%, rgba(77, 163, 255, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255, 150, 50, 0.15) 0%, transparent 40%);
+  animation: forgePulse 5s ease-in-out infinite, blueAura 7s ease-in-out infinite, heatShimmer 3s infinite alternate;
   pointer-events: none;
 }
 
@@ -5244,10 +5250,11 @@
   z-index: 4;
   border-radius: inherit;
   background: 
-    radial-gradient(circle, rgba(255, 177, 74, 0.8) 0 1px, transparent 2px) 15% 85% / 120px 140px,
-    radial-gradient(circle, rgba(255, 122, 26, 0.5) 0 1px, transparent 2px) 65% 95% / 170px 190px,
-    linear-gradient(110deg, transparent 0%, transparent 30%, rgba(255,255,255,0.06) 45%, transparent 60%, transparent 100%);
-  animation: emberFloat 7s ease-in-out infinite, subtleShine 5s ease-in-out infinite;
+    radial-gradient(circle, rgba(255, 177, 74, 1) 0 1.5px, transparent 3px) 15% 85% / 90px 110px,
+    radial-gradient(circle, rgba(255, 122, 26, 0.9) 0 2px, transparent 4px) 65% 95% / 140px 160px,
+    radial-gradient(circle, rgba(255, 200, 100, 0.8) 0 1.5px, transparent 3px) 40% 70% / 120px 130px,
+    linear-gradient(110deg, transparent 0%, transparent 30%, rgba(255,255,255,0.08) 45%, transparent 60%, transparent 100%);
+  animation: emberFloat 6s ease-in-out infinite, subtleShine 4s ease-in-out infinite;
   pointer-events: none;
 }
 
@@ -5259,42 +5266,43 @@
   }
 }
 
-/* --- Ajuste Logo Header e Footer --- */
-.public-brand__mark {
+/* --- Brand Logo System --- */
+.brand-logo {
+  display: block;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.brand-logo__image {
   display: block;
   width: auto;
+  object-fit: contain;
+  margin: 0;
+  padding: 0;
+}
+
+.brand-logo--header {
   height: 28px;
-  object-fit: contain;
-  flex: 0 0 auto;
-  line-height: 1;
 }
 
 @media (min-width: 900px) {
-  .public-brand__mark {
-    height: 32px;
+  .brand-logo--header {
+    height: 36px;
   }
 }
 
-.public-footer__brand-logo {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
-}
-
-.public-footer__brand-mark {
-  display: block;
-  width: auto;
-  height: 26px;
-  object-fit: contain;
-  flex: 0 0 auto;
-  line-height: 1;
+.brand-logo--footer {
+  height: 24px;
 }
 
 @media (min-width: 900px) {
-  .public-footer__brand-mark {
-    height: 30px;
+  .brand-logo--footer {
+    height: 28px;
   }
+}
+
+.brand-logo--sidebar {
+  height: 28px;
 }
 
 @media (min-width: 980px) {
