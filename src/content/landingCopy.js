@@ -22,8 +22,8 @@ export const landingCopy = {
     eyebrow: 'Feito para PMs e times de produto',
     title: 'Transforme briefings confusos em user stories claras que o time entende na primeira leitura.',
     description:
-      'O briefing entra bruto. O ProdForge faz a forja com IA e devolve uma story estruturada, com critérios, gaps e QA prontos para revisão.',
-    microcopy: 'Sem cartão · Setup em minutos · Resultado em cerca de 60 segundos',
+      'A demanda entra bruta. A IA forja a estrutura com objetivo, critérios de aceite, gaps e checklist de QA prontos para revisão.',
+    microcopy: 'Grátis para começar · Sem cartão · Resultado em 60 segundos',
     stats: [
       { value: '60 segundos', label: 'da demanda vaga a uma story pronta para revisão' },
       { value: 'Critérios + gaps', label: 'acabamento e impurezas mapeados no mesmo fluxo' },
@@ -75,7 +75,7 @@ export const landingCopy = {
         step: '01',
         title: 'Cole o contexto real',
         description:
-          'Cole o briefing como ele existe hoje: contexto, regra, dependência e objetivo de negócio.',
+      'Cole a demanda como ela é hoje: regras de negócio, dependências e contexto.',
       },
       {
         step: '02',
@@ -160,7 +160,7 @@ export const landingCopy = {
     description:
       'Guias práticos que explicam o conceito e te levam direto para a ferramenta, com exemplos reais de backlog.',
     footer:
-      'Cada guia termina com um caminho prático para sair do conceito e aplicar no fluxo real.',
+      'Cada guia traz um caminho prático para você sair da teoria e aplicar no seu fluxo real de trabalho.',
   },
   pricing: {
     eyebrow: 'Planos',
@@ -191,13 +191,13 @@ export const landingCopy = {
     eyebrow: `Interesse no plano ${PRO_PLAN_NAME}`,
     title: 'Cadastre seu interesse para acompanhar a evolução do produto.',
     description:
-      `Deixe seu nome e e-mail para acompanhar novidades do plano ${PRO_PLAN_NAME}, exportações avançadas e próximas evoluções do ${APP_NAME}.`,
-    note: 'Usaremos seus dados apenas para avisos sobre a evolução do produto.',
+      `Cadastre-se para acompanhar novidades do plano ${PRO_PLAN_NAME}, exportações avançadas e evoluções do ${APP_NAME}.`,
+    note: 'Zero spam. Apenas avisos importantes sobre o produto.',
   },
   finalCta: {
     eyebrow: 'Pronto para começar',
     title: 'Seu próximo sprint começa com uma história melhor.',
     description:
-      'Cada story mal escrita custa tempo de dev, retrabalho de QA e credibilidade do PM. ProdForge resolve isso antes do planning.',
+      'Stories mal escritas geram dúvidas, retrabalho e atrasos. O ProdForge estrutura o contexto para que seu time foque no que importa: construir soluções incríveis.',
   },
 }

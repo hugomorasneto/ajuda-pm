@@ -17,7 +17,7 @@
 .public-header__inner {
   position: relative;
   display: flex; align-items: center; justify-content: space-between;
-  gap: var(--space-4); padding: var(--space-4) 72px var(--space-4) 0;
+  gap: var(--space-4); padding: var(--space-5) 72px var(--space-5) 0;
 }
 .public-brand {
   display: inline-flex; align-items: center; gap: var(--space-3);
@@ -115,7 +115,7 @@
 .public-footer__nav a { color: var(--color-text-secondary); text-decoration: none; font-weight: 500; font-size: var(--text-body); }
 
 /* --- Landing sections --- */
-.landing-page { display: grid; gap: clamp(48px, 6vw, 80px); overflow-x: clip; }
+.landing-page { display: grid; gap: clamp(64px, 8vw, 120px); overflow-x: clip; }
 .landing-section { display: grid; gap: clamp(20px, 2.5vw, 32px); scroll-margin-top: 96px; }
 .landing-section__intro { max-width: 48rem; }
 .landing-section__eyebrow {
@@ -771,7 +771,7 @@
 }
 
 @media (min-width: 900px) {
-  .public-header__inner { display: grid; grid-template-columns: auto minmax(0,1fr) auto; padding-right: 0; }
+  .public-header__inner { display: grid; grid-template-columns: auto minmax(0,1fr) auto; padding: 24px 0; }
   .public-header__menu-button, .public-header__mobile-panel { display: none; }
   .public-header__nav { display: flex; align-items: center; gap: var(--space-5); justify-self: center; }
   .public-brand__tagline { display: inline; }
@@ -2802,6 +2802,13 @@
     linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%),
     var(--forge-gradient-panel);
   box-shadow: var(--forge-shadow-panel);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.public-layout--home-forge .learning-card--landing:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--forge-border-tech);
+  border-color: var(--forge-border-tech);
 }
 
 .public-layout--home-forge .learning-card--landing::before {
@@ -2889,6 +2896,12 @@
 .public-layout--home-forge .landing-pricing__card {
   gap: var(--space-5);
   padding: var(--space-6);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.public-layout--home-forge .landing-pricing__card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
 }
 
 .public-layout--home-forge .landing-pricing__card--free {
@@ -2982,7 +2995,7 @@
 
 .public-layout--home-forge .landing-final-cta__content {
   position: relative;
-  padding: clamp(28px, 4vw, 44px);
+  padding: clamp(40px, 6vw, 64px);
   border: 1px solid var(--forge-border);
   border-radius: 24px;
   overflow: hidden;
@@ -2991,6 +3004,11 @@
     linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%),
     linear-gradient(180deg, var(--forge-bg-charcoal) 0%, var(--forge-bg-graphite) 100%);
   box-shadow: var(--forge-shadow-floating);
+}
+
+.public-layout--home-forge .landing-final-cta__copy h2 {
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  letter-spacing: -0.04em;
 }
 
 .public-layout--home-forge .landing-final-cta__content::after {
@@ -5282,12 +5300,12 @@
 }
 
 .brand-logo--header {
-  height: 28px;
+  height: 32px;
 }
 
 @media (min-width: 900px) {
   .brand-logo--header {
-    height: 36px;
+    height: 40px;
   }
 }
 
