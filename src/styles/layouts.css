@@ -60,6 +60,10 @@
     grid-template-columns: 248px minmax(0, 1fr);
   }
 
+  .workspace-shell--sidebar-compact {
+    grid-template-columns: 92px minmax(0, 1fr);
+  }
+
   .workspace-shell__backdrop {
     display: none;
   }

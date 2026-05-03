@@ -6,24 +6,23 @@ import {
 } from '../services/learningProgressService'
 import { useAuth } from './useAuth'
 
+const EMPTY_COMPLETED_SLUGS = new Set()
+
 export function useLearningProgress() {
   const { user } = useAuth()
-  const [completedSlugs, setCompletedSlugs] = useState(new Set())
-  const [isLoading, setIsLoading] = useState(false)
+  const [completedSlugs, setCompletedSlugs] = useState(EMPTY_COMPLETED_SLUGS)
+  const [loadedUserId, setLoadedUserId] = useState(null)
 
   useEffect(() => {
-    if (!user) {
-      setCompletedSlugs(new Set())
-      return
-    }
+    if (!user) return undefined
 
     let active = true
-    setIsLoading(true)
 
     getCompletedGuides(user.id).then(({ data }) => {
       if (!active) return
-      setCompletedSlugs(new Set(data.map((r) => r.guide_slug)))
-      setIsLoading(false)
+
+      setCompletedSlugs(new Set(data.map((row) => row.guide_slug)))
+      setLoadedUserId(user.id)
     })
 
     return () => {
@@ -31,16 +30,21 @@ export function useLearningProgress() {
     }
   }, [user])
 
+  const resolvedCompletedSlugs =
+    user && loadedUserId === user.id ? completedSlugs : EMPTY_COMPLETED_SLUGS
+  const isLoading = Boolean(user && loadedUserId !== user.id)
+
   const markCompleted = useCallback(
     async (slug) => {
       if (!user) return
-      // optimistic update
-      setCompletedSlugs((prev) => new Set([...prev, slug]))
+
+      setLoadedUserId(user.id)
+      setCompletedSlugs((previous) => new Set([...previous, slug]))
+
       const { success } = await markGuideCompleted(user.id, slug)
       if (!success) {
-        // revert on failure
-        setCompletedSlugs((prev) => {
-          const next = new Set(prev)
+        setCompletedSlugs((previous) => {
+          const next = new Set(previous)
           next.delete(slug)
           return next
         })
@@ -52,25 +56,32 @@ export function useLearningProgress() {
   const unmarkCompleted = useCallback(
     async (slug) => {
       if (!user) return
-      // optimistic update
-      setCompletedSlugs((prev) => {
-        const next = new Set(prev)
+
+      setLoadedUserId(user.id)
+      setCompletedSlugs((previous) => {
+        const next = new Set(previous)
         next.delete(slug)
         return next
       })
+
       const { success } = await unmarkGuideCompleted(user.id, slug)
       if (!success) {
-        // revert on failure
-        setCompletedSlugs((prev) => new Set([...prev, slug]))
+        setCompletedSlugs((previous) => new Set([...previous, slug]))
       }
     },
     [user],
   )
 
   const isCompleted = useCallback(
-    (slug) => completedSlugs.has(slug),
-    [completedSlugs],
+    (slug) => resolvedCompletedSlugs.has(slug),
+    [resolvedCompletedSlugs],
   )
 
-  return { isCompleted, markCompleted, unmarkCompleted, isLoading, completedSlugs }
+  return {
+    isCompleted,
+    markCompleted,
+    unmarkCompleted,
+    isLoading,
+    completedSlugs: resolvedCompletedSlugs,
+  }
 }

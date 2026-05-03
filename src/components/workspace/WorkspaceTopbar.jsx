@@ -2,19 +2,29 @@ import { Link, useLocation } from 'react-router-dom'
 
 const pageMeta = {
   '/tool': {
-    title: 'Área de trabalho',
-    description: 'Brief, story e revisão no mesmo fluxo.',
+    title: 'Area de trabalho',
+    description: 'Brief, story e revisao no mesmo fluxo.',
   },
   '/admin': {
     title: 'Painel administrativo',
-    description: 'Acompanhe a operação e os principais indicadores do produto.',
+    description: 'Acompanhe a operacao e os principais indicadores do produto.',
   },
+}
+
+function IconMenu() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+      <path d="M4 7h16" />
+      <path d="M4 12h16" />
+      <path d="M4 17h16" />
+    </svg>
+  )
 }
 
 function WorkspaceTopbar({ onOpenSidebar }) {
   const location = useLocation()
   const meta = pageMeta[location.pathname] ?? {
-    title: 'Área de trabalho',
+    title: 'Area de trabalho',
     description: 'Ambiente interno do ProdForge.',
   }
 
@@ -26,9 +36,10 @@ function WorkspaceTopbar({ onOpenSidebar }) {
             type="button"
             className="workspace-topbar__menu"
             onClick={onOpenSidebar}
-            aria-label="Abrir navegação"
+            aria-label="Abrir navegacao"
           >
-            Menu
+            <IconMenu />
+            <span>Menu</span>
           </button>
 
           <div className="workspace-topbar__copy">
@@ -40,7 +51,7 @@ function WorkspaceTopbar({ onOpenSidebar }) {
 
         <div className="workspace-topbar__actions">
           <Link to="/aprender" className="workspace-topbar__link workspace-topbar__link--academy">
-            Academia →
+            Academia
           </Link>
           <Link to="/" className="workspace-topbar__link">
             Site
