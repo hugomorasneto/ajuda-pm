@@ -5168,9 +5168,10 @@
   position: relative;
   z-index: 1;
   display: grid;
-  min-height: clamp(360px, 36vw, 560px);
+  aspect-ratio: 16 / 9;
+  min-height: 0;
   overflow: hidden;
-  place-items: center;
+  place-items: stretch;
   border: 1px solid var(--forge-border-subtle);
   border-radius: 24px;
   background:
@@ -5209,11 +5210,10 @@
   z-index: 2;
   display: block;
   width: 100%;
-  max-width: 100%;
-  height: auto;
-  object-fit: contain;
-  object-position: center;
-  filter: drop-shadow(0 28px 34px var(--forge-bg-canvas));
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.6));
 }
 
 @keyframes forgePulse {
@@ -5358,7 +5358,7 @@
   }
 
   .public-layout--home-forge .hero-transformation-preview__media {
-    min-height: clamp(280px, 62vw, 460px);
+    aspect-ratio: 4 / 3;
   }
 }
 
@@ -5379,7 +5379,7 @@
   }
 
   .public-layout--home-forge .hero-transformation-preview__media {
-    min-height: clamp(220px, 72vw, 360px);
+    aspect-ratio: 4 / 3;
     border-radius: 18px;
   }
 }
@@ -5450,9 +5450,9 @@
 .public-layout--home-forge .hero-transformation-preview__image {
   display: block;
   width: 100%;
-  max-width: 100%;
-  height: auto;
-  object-fit: contain;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
   animation: hero-mockup-drift 9s ease-in-out infinite;
   will-change: transform;
 }
