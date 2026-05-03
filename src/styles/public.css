@@ -5216,6 +5216,17 @@
   filter: drop-shadow(0 28px 34px var(--forge-bg-canvas));
 }
 
+@keyframes hero-mockup-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -7px, 0);
+  }
+}
+
 @keyframes hero-forge-glow-pulse {
   0%,
   100% {
@@ -5288,12 +5299,19 @@
   animation: hero-embers-rise 10s ease-in-out infinite;
 }
 
+.public-layout--home-forge .hero-transformation-preview__image {
+  animation: hero-mockup-drift 9s ease-in-out infinite;
+  will-change: transform;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .public-layout--home-forge .hero-transformation-preview__image,
   .public-layout--home-forge .hero-transformation-preview__frame::before,
   .public-layout--home-forge .hero-transformation-preview__frame::after,
   .public-layout--home-forge .hero-transformation-preview__media::before,
   .public-layout--home-forge .hero-transformation-preview__media::after {
     animation: none;
+    transform: none;
   }
 }
 
@@ -5427,6 +5445,16 @@
   max-width: 100%;
   height: auto;
   object-fit: contain;
+  animation: hero-mockup-drift 9s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-layout--home-forge .hero-transformation-preview__image {
+    animation: none;
+    transform: none;
+    will-change: auto;
+  }
 }
 
 .public-layout--home-forge .landing-workflow__grid > *,

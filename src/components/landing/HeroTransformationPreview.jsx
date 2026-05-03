@@ -10,7 +10,7 @@ function buildPublicAssetCandidates(path) {
 }
 
 const HERO_MOCKUP_SRC_CANDIDATES = buildPublicAssetCandidates(
-  'images/prodforge/hero/hero-mockup-desktop.webp',
+  'images/prodforge/hero/hero-mockup-desktop.webp?v=20260503-final-v2',
 )
 
 function HeroTransformationPreview({ preview }) {

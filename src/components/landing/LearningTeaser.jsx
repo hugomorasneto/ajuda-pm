@@ -12,23 +12,23 @@ function buildPublicAssetCandidates(path) {
 
 const academyGuideThumbnailsBySlug = {
   'fundamentos-produto-agil': {
-    src: 'images/prodforge/academy/fundamentos-produto-agil-pm-po-iniciante.webp',
+    src: 'images/prodforge/academy/fundamentos-produto-agil-pm-po-iniciante.webp?v=20260503-final-v2',
     alt: 'Capa do guia Fundamentos de produto agil para PM/PO iniciante',
   },
   'user-stories-na-pratica': {
-    src: 'images/prodforge/academy/user-stories-na-pratica.webp',
+    src: 'images/prodforge/academy/user-stories-na-pratica.webp?v=20260503-final-v2',
     alt: 'Capa do guia User stories na pratica',
   },
   'backlog-e-refinamento': {
-    src: 'images/prodforge/academy/backlog-e-refinamento-sem-caos.webp',
+    src: 'images/prodforge/academy/backlog-e-refinamento-sem-caos.webp?v=20260503-final-v2',
     alt: 'Capa do guia Backlog e refinamento sem caos',
   },
   'refinamento-e-criterios': {
-    src: 'images/prodforge/academy/como-fazer-refinamento-sem-desperdicio.webp',
+    src: 'images/prodforge/academy/como-fazer-refinamento-sem-desperdicio.webp?v=20260503-final-v2',
     alt: 'Capa do guia Como fazer refinamento sem desperdicio',
   },
   'alinhamento-com-stakeholders': {
-    src: 'images/prodforge/academy/alinhamento-com-stakeholders-sem-virar-telefone-sem-fio.webp',
+    src: 'images/prodforge/academy/alinhamento-com-stakeholders-sem-virar-telefone-sem-fio.webp?v=20260503-final-v2',
     alt: 'Capa do guia Alinhamento com stakeholders sem virar telefone sem fio',
   },
 }
