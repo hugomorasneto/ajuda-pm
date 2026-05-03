@@ -540,6 +540,7 @@
 .learning-card__image {
   display: block;
   object-fit: cover;
+  object-position: center;
 }
 
 .learning-card__image-fallback {
@@ -2823,6 +2824,11 @@
     radial-gradient(circle at 18% 18%, var(--forge-amber-glow) 0%, transparent 36%),
     radial-gradient(circle at 82% 20%, var(--forge-tech-soft) 0%, transparent 34%),
     linear-gradient(180deg, var(--forge-surface-metal) 0%, var(--forge-surface-inset) 100%);
+}
+
+.public-layout--home-forge .learning-card--landing .learning-card__image {
+  object-fit: cover;
+  object-position: center;
 }
 
 .public-layout--home-forge .learning-card--landing .learning-card__image-fallback {
@@ -5177,9 +5183,24 @@
   content: '';
   position: absolute;
   inset: 0;
+  z-index: 3;
   background:
+    linear-gradient(112deg, transparent 0%, transparent 36%, rgba(255, 255, 255, 0.12) 48%, transparent 60%, transparent 100%),
     linear-gradient(90deg, transparent 0%, var(--forge-border-subtle) 48%, transparent 100%);
-  opacity: 0.2;
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.public-layout--home-forge .hero-transformation-preview__media::after {
+  content: '';
+  position: absolute;
+  inset: 14% 10% 8%;
+  z-index: 4;
+  background:
+    radial-gradient(circle, rgba(255, 177, 74, 0.75) 0 1px, transparent 2px) 8% 88% / 140px 190px,
+    radial-gradient(circle, rgba(255, 122, 26, 0.52) 0 1px, transparent 2px) 62% 96% / 180px 220px,
+    radial-gradient(circle, rgba(77, 163, 255, 0.28) 0 1px, transparent 2px) 88% 82% / 160px 210px;
+  opacity: 0.22;
   pointer-events: none;
 }
 
@@ -5193,6 +5214,87 @@
   object-fit: contain;
   object-position: center;
   filter: drop-shadow(0 28px 34px var(--forge-bg-canvas));
+}
+
+@keyframes hero-forge-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.32;
+    transform: scale(0.98);
+  }
+
+  50% {
+    opacity: 0.52;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes hero-frame-sheen {
+  0%,
+  100% {
+    opacity: 0.18;
+    transform: translateX(-8%);
+  }
+
+  50% {
+    opacity: 0.32;
+    transform: translateX(8%);
+  }
+}
+
+@keyframes hero-image-sheen {
+  0%,
+  100% {
+    opacity: 0.08;
+    transform: translateX(-18%);
+  }
+
+  50% {
+    opacity: 0.2;
+    transform: translateX(18%);
+  }
+}
+
+@keyframes hero-embers-rise {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+  }
+
+  24%,
+  72% {
+    opacity: 0.24;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -28px, 0);
+  }
+}
+
+.public-layout--home-forge .hero-transformation-preview__frame::before {
+  animation: hero-frame-sheen 12s ease-in-out infinite;
+}
+
+.public-layout--home-forge .hero-transformation-preview__frame::after {
+  animation: hero-forge-glow-pulse 7.5s ease-in-out infinite;
+}
+
+.public-layout--home-forge .hero-transformation-preview__media::before {
+  animation: hero-image-sheen 13s ease-in-out infinite;
+}
+
+.public-layout--home-forge .hero-transformation-preview__media::after {
+  animation: hero-embers-rise 10s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-layout--home-forge .hero-transformation-preview__frame::before,
+  .public-layout--home-forge .hero-transformation-preview__frame::after,
+  .public-layout--home-forge .hero-transformation-preview__media::before,
+  .public-layout--home-forge .hero-transformation-preview__media::after {
+    animation: none;
+  }
 }
 
 @media (min-width: 980px) {
