@@ -1006,9 +1006,10 @@
 
 /* â”€â”€ BriefComposer: Stepper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .brief-stepper {
-  display: flex;
-  align-items: center;
-  gap: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: var(--space-2);
   padding-bottom: var(--space-4);
   border-bottom: 1px solid var(--color-border);
   margin-bottom: var(--space-2);
@@ -1016,18 +1017,26 @@
 
 .brief-stepper__step {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--space-2);
+  justify-content: center;
+  gap: var(--space-1);
   position: relative;
-  flex: 1;
+  min-width: 0;
+  min-height: 50px;
+  padding: var(--space-2) var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  text-align: center;
 }
 
 .brief-stepper__dot {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 999px;
   border: 2px solid var(--color-border-strong);
   background: var(--color-surface);
@@ -1038,10 +1047,20 @@
   transition: border-color 0.2s, background 0.2s, color 0.2s;
 }
 
+.brief-stepper__step--active {
+  border-color: rgba(10, 124, 255, 0.28);
+  background: var(--color-accent-subtle);
+}
+
 .brief-stepper__step--active .brief-stepper__dot {
   border-color: var(--color-accent);
   background: var(--color-accent-subtle);
   color: var(--color-accent);
+}
+
+.brief-stepper__step--done {
+  border-color: rgba(22, 163, 74, 0.24);
+  background: var(--color-success-subtle);
 }
 
 .brief-stepper__step--done .brief-stepper__dot {
@@ -1052,10 +1071,12 @@
 }
 
 .brief-stepper__label {
-  font-size: var(--text-small);
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--color-text-muted);
   white-space: nowrap;
+  min-width: 0;
+  max-width: 100%;
   transition: color 0.2s;
 }
 
@@ -1063,10 +1084,7 @@
 .brief-stepper__step--done .brief-stepper__label { color: var(--color-success); }
 
 .brief-stepper__line {
-  flex: 1;
-  height: 1px;
-  background: var(--color-border);
-  margin: 0 var(--space-2);
+  display: none;
 }
 
 /* â”€â”€ BriefComposer: active story banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -1659,7 +1677,7 @@
 }
 
 .brief-stepper__label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
 }
 
 .composer-section {
@@ -2041,10 +2059,14 @@
 }
 
 /* Chips de prompt nunca ultrapassam */
-.prompt-chips,
-.brief-stepper {
+.prompt-chips {
   min-width: 0;
   overflow: hidden;
+}
+
+.brief-stepper {
+  min-width: 0;
+  overflow: visible;
 }
 
 /* ============================================================
@@ -3018,6 +3040,21 @@
   border-bottom-color: var(--forge-border);
 }
 
+.workspace-shell--forge .brief-stepper__step {
+  border-color: var(--forge-border);
+  background: var(--forge-surface-inset);
+}
+
+.workspace-shell--forge .brief-stepper__step--active {
+  border-color: var(--forge-border-ember);
+  background: linear-gradient(90deg, var(--forge-ember-soft), transparent), var(--forge-surface-inset);
+}
+
+.workspace-shell--forge .brief-stepper__step--done {
+  border-color: var(--forge-border-tech);
+  background: linear-gradient(90deg, var(--forge-tech-soft), transparent), var(--forge-surface-inset);
+}
+
 .workspace-shell--forge .brief-stepper__dot {
   border-color: var(--forge-border-strong);
   background: var(--forge-surface-inset);
@@ -3457,13 +3494,13 @@
   }
 
   .workspace-shell--forge .brief-stepper {
-    overflow-x: auto;
+    overflow: visible;
     scrollbar-width: thin;
     scrollbar-color: var(--forge-border) transparent;
   }
 
   .workspace-shell--forge .brief-stepper__step {
-    min-width: max-content;
+    min-width: 0;
   }
 
   .workspace-shell--forge .workspace-state__hints,
