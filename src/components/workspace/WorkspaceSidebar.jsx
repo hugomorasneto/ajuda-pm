@@ -208,16 +208,6 @@ function WorkspaceSidebar({
               {!isCompact ? <span>Compactar</span> : null}
             </button>
           ) : null}
-
-          <button
-            type="button"
-            className="workspace-sidebar__close"
-            onClick={onClose}
-            aria-label="Fechar navegacao"
-          >
-            <IconClose />
-            <span>Fechar</span>
-          </button>
         </div>
       </div>
 

@@ -48,6 +48,7 @@ function WorkspaceLayout() {
       density: readSidebarDensityPreference(initialUserId),
     }
   })
+  const [topbarStatus, setTopbarStatus] = useState(null)
 
   const isSidebarOpen = sidebarOpenPath === location.pathname
   const isForgeWorkspace = location.pathname === '/tool'
@@ -130,9 +131,9 @@ function WorkspaceLayout() {
       ) : null}
 
       <div className="workspace-shell__main">
-        <WorkspaceTopbar onOpenSidebar={openSidebar} />
+        <WorkspaceTopbar onOpenSidebar={openSidebar} topbarStatus={topbarStatus} />
         <main className="workspace-shell__content" id="main-content">
-          <Outlet />
+          <Outlet context={{ setTopbarStatus }} />
         </main>
       </div>
     </div>

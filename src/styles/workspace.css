@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    WORKSPACE â€” FASE 1 LIMPEZA VISUAL
    ============================================================ */
 
@@ -211,6 +211,51 @@
 @media (min-width: 1100px) {
   .workspace-topbar__menu { display: none; }
   .workspace-topbar__inner { padding: var(--space-4) var(--space-6); }
+}
+
+/* --- Topbar unified status (desktop only) --- */
+.workspace-topbar__status {
+  display: none; /* hidden on mobile */
+}
+
+@media (min-width: 1100px) {
+  .workspace-topbar__status {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex: 1;
+    min-width: 0;
+    padding-left: var(--space-4);
+    border-left: 1px solid var(--color-border);
+    margin-left: var(--space-2);
+  }
+
+  .workspace-topbar__status-eyebrow {
+    color: var(--color-accent);
+    font-size: var(--text-label);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .workspace-topbar__status-title {
+    color: var(--color-text-primary);
+    font-size: var(--text-body);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  .workspace-topbar__status-pills {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
+  }
 }
 /* --- Workspace page shell --- */
 .tool-page.story-workspace { display: grid; gap: 0; overflow-x: clip; }

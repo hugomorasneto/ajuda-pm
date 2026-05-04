@@ -21,12 +21,14 @@ function IconMenu() {
   )
 }
 
-function WorkspaceTopbar({ onOpenSidebar }) {
+function WorkspaceTopbar({ onOpenSidebar, topbarStatus }) {
   const location = useLocation()
   const meta = pageMeta[location.pathname] ?? {
     title: 'Area de trabalho',
     description: 'Ambiente interno do ProdForge.',
   }
+
+  const hasStatus = Boolean(topbarStatus)
 
   return (
     <header className="workspace-topbar">
@@ -45,9 +47,23 @@ function WorkspaceTopbar({ onOpenSidebar }) {
           <div className="workspace-topbar__copy">
             <p className="workspace-topbar__eyebrow">ProdForge</p>
             <h1>{meta.title}</h1>
-            <p>{meta.description}</p>
+            {!hasStatus && <p>{meta.description}</p>}
           </div>
         </div>
+
+        {hasStatus ? (
+          <div className="workspace-topbar__status">
+            <span className="workspace-topbar__status-eyebrow">{topbarStatus.label}</span>
+            <span className="workspace-topbar__status-title">{topbarStatus.title}</span>
+            <div className="workspace-topbar__status-pills">
+              {topbarStatus.pills?.map((pill, i) => (
+                <span key={i} className={`mode-pill ${pill.className ?? ''}`}>
+                  {pill.text}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <div className="workspace-topbar__actions">
           <Link to="/aprender" className="workspace-topbar__link workspace-topbar__link--academy">

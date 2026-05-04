@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import BriefComposer from '../components/workspace/BriefComposer'
 import HistoryDrawerPanel from '../components/workspace/HistoryDrawerPanel'
 import OnboardingModal from '../components/workspace/OnboardingModal'
@@ -229,6 +230,41 @@ function ToolPage() {
       !hasSeenOnboarding(onboardingStorageKey),
   )
 
+  const { setTopbarStatus } = useOutletContext() ?? {}
+
+  useEffect(() => {
+    if (typeof setTopbarStatus !== 'function') return
+
+    const generationsText = isPremium
+      ? 'Pro'
+      : `${remainingGenerations} ${remainingGenerations === 1 ? 'geracao' : 'geracoes'}`
+
+    setTopbarStatus({
+      label: workspaceStatusLabel,
+      title: workspaceStatusTitle,
+      pills: [
+        {
+          text: isEditing ? 'Em revisao' : 'Nova',
+          className: isEditing ? 'mode-pill-editing' : 'mode-pill-new',
+        },
+        {
+          text: generationsText,
+          className: hasReachedLimit ? 'mode-pill-warning' : '',
+        },
+      ],
+    })
+
+    return () => setTopbarStatus(null)
+  }, [
+    setTopbarStatus,
+    workspaceStatusLabel,
+    workspaceStatusTitle,
+    isEditing,
+    isPremium,
+    remainingGenerations,
+    hasReachedLimit,
+  ])
+
   const documentCanvas = showBlockingLoadingState ? (
     <WorkspaceLoadingState mode={isLoadingSelection ? 'selection' : 'generate'} />
   ) : showBlockingErrorState ? (
@@ -305,28 +341,6 @@ function ToolPage() {
 
   return (
     <div className="tool-page story-workspace">
-      <header className="workspace-status-bar">
-        <div className="workspace-status-bar__copy">
-          <p className="workspace-status-bar__eyebrow">{workspaceStatusLabel}</p>
-          <div className="workspace-status-bar__headline">
-            <span className="workspace-status-bar__title">{workspaceStatusTitle}</span>
-            <p className="workspace-status-bar__note">{workspaceStatusNote}</p>
-          </div>
-        </div>
-
-        <div className="workspace-status-bar__right">
-          <span className={`mode-pill ${isEditing ? 'mode-pill-editing' : 'mode-pill-new'}`}>
-            {isEditing ? 'Em revisao' : 'Nova'}
-          </span>
-          <span
-            className={`story-workspace__mini-pill ${hasReachedLimit ? 'story-workspace__mini-pill--warning' : ''}`}
-          >
-            {isPremium
-              ? 'Pro'
-              : `${remainingGenerations} ${remainingGenerations === 1 ? 'geracao' : 'geracoes'}`}
-          </span>
-        </div>
-      </header>
 
       <nav className="workspace-tabs" aria-label="Areas do workspace">
         {TABS.map((tab) => (
