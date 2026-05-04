@@ -4147,7 +4147,7 @@
 
 @media (min-width: 1100px) {
   .workspace-shell.workspace-shell--sidebar-compact {
-    grid-template-columns: 68px minmax(0, 1fr);
+    grid-template-columns: var(--workspace-sidebar-width, 68px) minmax(0, 1fr);
   }
 
   .workspace-shell--sidebar-compact .workspace-topbar__inner {

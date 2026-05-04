@@ -61,6 +61,7 @@ function WorkspaceLayout() {
     return readSidebarDensityPreference(currentUserId)
   }, [sidebarDensityState, user])
   const isSidebarCompact = canUseCompactSidebar && resolvedSidebarDensity === 'compact'
+  const sidebarTrackWidth = isSidebarCompact ? '68px' : '248px'
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
@@ -112,6 +113,7 @@ function WorkspaceLayout() {
       className={`workspace-shell ${
         isForgeWorkspace ? 'theme-forge workspace-shell--forge' : ''
       } ${isSidebarCompact ? 'workspace-shell--sidebar-compact' : ''}`.trim()}
+      style={{ '--workspace-sidebar-width': sidebarTrackWidth }}
     >
       <WorkspaceSidebar
         isOpen={isSidebarOpen}
