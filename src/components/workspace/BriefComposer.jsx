@@ -204,13 +204,6 @@ function LoadingProgress() {
   )
 }
 
-function countRequirementItems(value) {
-  return String(value ?? '')
-    .split('\n')
-    .map((item) => item.trim())
-    .filter(Boolean).length
-}
-
 function getBriefStage({ contextFilled, requirementsFilled, isGenerated, isSubmitting }) {
   if (isSubmitting) return 'Forjando'
   if (isGenerated) return 'Story pronta'
@@ -231,18 +224,12 @@ function BriefComposer({
   isGenerated,
   activeStoryTitle,
   hasAdjustment,
-  isCollapsed = false,
-  onToggleCollapse,
 }) {
   const [reqOpen, setReqOpen] = useState(Boolean(formValues.requirements?.trim()))
   const [adjOpen, setAdjOpen] = useState(Boolean(formValues.adjustment?.trim()))
 
   const contextFilled = formValues.problemContext?.trim().length > 9
   const requirementsFilled = formValues.requirements?.trim().length > 4
-  const requirementsCount = countRequirementItems(formValues.requirements)
-  const canGenerateFromSummary = Boolean(
-    formValues.problemContext.trim() && formValues.requirements.trim(),
-  )
   const currentStage = getBriefStage({
     contextFilled,
     requirementsFilled,
@@ -255,15 +242,6 @@ function BriefComposer({
     await onSubmit()
   }
 
-  async function handleSummaryAction() {
-    if (!canGenerateFromSummary) {
-      onToggleCollapse?.()
-      return
-    }
-
-    await onSubmit()
-  }
-
   const submitLabel = isSubmitting
     ? 'Forjando...'
     : isEditing
@@ -272,13 +250,10 @@ function BriefComposer({
         : 'Forjar nova versao'
       : 'Forjar Story'
 
-  const summaryActionLabel = canGenerateFromSummary ? submitLabel : 'Abrir para preencher'
-
   return (
     <section
-      className={`panel brief-composer ${isCollapsed ? 'brief-composer--collapsed' : ''}`}
+      className="panel brief-composer"
       id="workspace-composer"
-      data-collapsed={isCollapsed ? 'true' : 'false'}
     >
       <header className="brief-composer__panel-header">
         <div className="brief-composer__panel-copy">
@@ -289,19 +264,10 @@ function BriefComposer({
 
         <div className="brief-composer__panel-actions">
           <span className="brief-composer__panel-pill">{currentStage}</span>
-          <button
-            type="button"
-            className="btn btn-ghost btn-small brief-composer__collapse-btn"
-            onClick={onToggleCollapse}
-            aria-expanded={!isCollapsed}
-            aria-controls="workspace-composer-body"
-          >
-            {isCollapsed ? 'Expandir' : 'Recolher'}
-          </button>
         </div>
       </header>
 
-      <div className="brief-composer__body" id="workspace-composer-body" hidden={isCollapsed}>
+      <div className="brief-composer__body" id="workspace-composer-body">
         <ComposerStepper
           contextFilled={contextFilled}
           requirementsFilled={requirementsFilled}
@@ -452,54 +418,6 @@ function BriefComposer({
             </button>
           </div>
         </form>
-      </div>
-
-      <div className="brief-composer__collapsed-summary" hidden={!isCollapsed}>
-        <div className="brief-composer__summary-grid">
-          <article className="brief-composer__summary-item">
-            <span className="brief-composer__summary-label">Etapa</span>
-            <strong>{currentStage}</strong>
-          </article>
-
-          <article className="brief-composer__summary-item">
-            <span className="brief-composer__summary-label">Contexto</span>
-            <strong>{contextFilled ? 'Preenchido' : 'Pendente'}</strong>
-          </article>
-
-          <article className="brief-composer__summary-item">
-            <span className="brief-composer__summary-label">Requisitos</span>
-            <strong>{requirementsCount > 0 ? `${requirementsCount} item(ns)` : 'Nenhum'}</strong>
-          </article>
-
-          <article className="brief-composer__summary-item">
-            <span className="brief-composer__summary-label">Ajuste</span>
-            <strong>{hasAdjustment ? 'Ativo' : 'Sem ajuste'}</strong>
-          </article>
-        </div>
-
-        {isEditing ? (
-          <div className="brief-composer__collapsed-active">
-            <span className="brief-composer__active-label">Base ativa</span>
-            <strong>{activeStoryTitle || 'User story selecionada'}</strong>
-          </div>
-        ) : null}
-
-        <div className="brief-composer__collapsed-actions">
-          <button
-            type="button"
-            className="btn btn-secondary btn-small"
-            onClick={handleSummaryAction}
-            disabled={isSubmitting}
-          >
-            {summaryActionLabel}
-          </button>
-
-          {isEditing ? (
-            <button type="button" className="btn btn-ghost btn-small" onClick={onReset}>
-              Nova base
-            </button>
-          ) : null}
-        </div>
       </div>
     </section>
   )

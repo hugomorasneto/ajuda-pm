@@ -18,7 +18,6 @@ const TABS = [
 ]
 
 const DEFAULT_PANEL_PREFERENCES = Object.freeze({
-  briefing: 'auto',
   inspection: 'auto',
   history: 'auto',
 })
@@ -180,9 +179,6 @@ function ToolPage() {
     }
   }, [editDraft, result])
 
-  const isBriefingCollapsed =
-    panelPreferences.briefing === 'collapsed' ||
-    (panelPreferences.briefing === 'auto' && Boolean(reviewStory))
   const isInspectionCollapsed =
     canCollapseDesktopPanels &&
     (panelPreferences.inspection === 'collapsed' ||
@@ -190,10 +186,6 @@ function ToolPage() {
   const isHistoryCollapsed =
     canCollapseDesktopPanels &&
     (panelPreferences.history === 'collapsed' || panelPreferences.history === 'auto')
-
-  function toggleBriefingPanel() {
-    updatePanelPreference('briefing', isBriefingCollapsed ? 'open' : 'collapsed')
-  }
 
   function toggleInspectionPanel() {
     updatePanelPreference('inspection', isInspectionCollapsed ? 'open' : 'collapsed')
@@ -207,7 +199,6 @@ function ToolPage() {
     handleFieldChange('problemContext', template.context)
     handleFieldChange('requirements', template.requirements)
     setMobileTab('entrada')
-    updatePanelPreference('briefing', 'open')
   }
 
   const hasDraft = Boolean(
@@ -354,8 +345,8 @@ function ToolPage() {
 
       <div
         className={`workspace-canvas ${
-          isBriefingCollapsed ? 'workspace-canvas--briefing-collapsed' : ''
-        } ${isInspectionCollapsed ? 'workspace-canvas--inspection-collapsed' : ''} ${
+          isInspectionCollapsed ? 'workspace-canvas--inspection-collapsed' : ''
+        } ${
           isHistoryCollapsed ? 'workspace-canvas--history-collapsed' : ''
         }`.trim()}
       >
@@ -376,8 +367,6 @@ function ToolPage() {
             isGenerated={Boolean(result)}
             activeStoryTitle={activeStoryTitle}
             hasAdjustment={Boolean(formValues.adjustment.trim())}
-            isCollapsed={isBriefingCollapsed}
-            onToggleCollapse={toggleBriefingPanel}
           />
         </div>
 

@@ -807,7 +807,6 @@
     grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
     align-items: start;
   }
-  .brief-composer { position: sticky; top: calc(var(--space-4) + 70px); }
   .quality-panel { position: sticky; top: calc(var(--space-4) + 70px); }
   .story-workspace__versions-stack { position: sticky; top: calc(var(--space-4) + 70px); }
 }
@@ -980,8 +979,8 @@
   /* Left col sticky too */
   .workspace-canvas__col--left {
     position: sticky;
-    top: calc(70px + var(--space-4));
-    max-height: calc(100vh - 70px - var(--space-8));
+    top: 70px;
+    max-height: calc(100vh - 70px);
     overflow-x: hidden;
     overflow-y: auto;
     scrollbar-width: thin;
@@ -3474,13 +3473,8 @@
 }
 
 /* ============================================================
-   WORKSPACE PANELS - FASE 1 COLAPSAVEL
+   WORKSPACE PANELS - BRIEFING
    ============================================================ */
-
-.story-workspace .workspace-canvas--briefing-collapsed,
-.story-workspace .workspace-canvas--briefing-collapsed .workspace-canvas__col {
-  min-width: 0;
-}
 
 .brief-composer__panel-header {
   display: flex;
@@ -3529,10 +3523,6 @@
   color: var(--color-text-secondary);
   font-size: var(--text-small);
   font-weight: 600;
-}
-
-.brief-composer__collapse-btn {
-  white-space: nowrap;
 }
 
 .brief-composer__body {
@@ -3605,73 +3595,9 @@
   min-width: 0;
 }
 
-.brief-composer--collapsed {
-  gap: var(--space-4);
-}
-
-.brief-composer--collapsed .brief-composer__panel-header {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-
-.brief-composer__collapsed-summary {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.brief-composer__summary-grid {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.brief-composer__summary-item,
-.brief-composer__collapsed-active {
-  display: grid;
-  gap: var(--space-1);
-  padding: var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-canvas-muted);
-}
-
-.brief-composer__summary-item strong,
-.brief-composer__collapsed-active strong {
-  color: var(--color-text-primary);
-  font-size: var(--text-small);
-}
-
-.brief-composer__summary-label {
-  color: var(--color-text-muted);
-  font-size: var(--text-label);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.brief-composer__collapsed-actions {
-  display: grid;
-  gap: var(--space-2);
-}
-
 @media (min-width: 960px) {
-  .story-workspace .workspace-canvas--briefing-collapsed {
-    grid-template-columns: minmax(196px, 212px) minmax(0, 1fr);
-  }
-
   .brief-composer__template-list {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-}
-
-@media (min-width: 1280px) {
-  .story-workspace .workspace-canvas--briefing-collapsed {
-    grid-template-columns: minmax(196px, 212px) minmax(0, 1fr) minmax(272px, 288px);
-  }
-}
-
-@media (max-width: 959px) {
-  .brief-composer__collapse-btn {
-    display: none;
   }
 }
 
@@ -3695,9 +3621,7 @@
   color: var(--forge-text-primary);
 }
 
-.workspace-shell--forge .brief-composer__quick-start,
-.workspace-shell--forge .brief-composer__summary-item,
-.workspace-shell--forge .brief-composer__collapsed-active {
+.workspace-shell--forge .brief-composer__quick-start {
   border-color: var(--forge-border);
   background:
     linear-gradient(180deg, rgba(255,255,255,0.025), transparent),
@@ -3724,15 +3648,6 @@
     linear-gradient(90deg, var(--forge-ember-soft), transparent),
     var(--forge-surface-2);
   box-shadow: var(--forge-glow-ember-sm);
-}
-
-.workspace-shell--forge .brief-composer__summary-label {
-  color: var(--forge-text-muted);
-}
-
-.workspace-shell--forge .brief-composer__summary-item strong,
-.workspace-shell--forge .brief-composer__collapsed-active strong {
-  color: var(--forge-text-primary);
 }
 
 /* ============================================================
@@ -3881,10 +3796,6 @@
 @media (min-width: 1280px) {
   .story-workspace .workspace-canvas--inspection-collapsed {
     grid-template-columns: minmax(292px, 308px) minmax(0, 1fr) minmax(236px, 248px);
-  }
-
-  .story-workspace .workspace-canvas--briefing-collapsed.workspace-canvas--inspection-collapsed {
-    grid-template-columns: minmax(196px, 212px) minmax(0, 1fr) minmax(236px, 248px);
   }
 
   .quality-panel__summary-grid {
@@ -4086,15 +3997,6 @@
 
   .story-workspace .workspace-canvas--inspection-collapsed.workspace-canvas--history-collapsed {
     grid-template-columns: minmax(292px, 308px) minmax(0, 1fr) minmax(212px, 228px);
-  }
-
-  .story-workspace .workspace-canvas--briefing-collapsed.workspace-canvas--history-collapsed {
-    grid-template-columns: minmax(196px, 212px) minmax(0, 1fr) minmax(244px, 256px);
-  }
-
-  .story-workspace
-    .workspace-canvas--briefing-collapsed.workspace-canvas--inspection-collapsed.workspace-canvas--history-collapsed {
-    grid-template-columns: minmax(196px, 212px) minmax(0, 1fr) minmax(212px, 228px);
   }
 
   .workspace-canvas--history-collapsed .workspace-history-panel__summary-grid,
@@ -4379,4 +4281,3 @@
     box-shadow: var(--forge-shadow-panel);
   }
 }
-
