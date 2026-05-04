@@ -4146,6 +4146,15 @@
 }
 
 @media (min-width: 1100px) {
+  .workspace-shell.workspace-shell--sidebar-compact {
+    grid-template-columns: 68px minmax(0, 1fr);
+  }
+
+  .workspace-shell--sidebar-compact .workspace-topbar__inner {
+    width: 100%;
+    margin: 0;
+  }
+
   .workspace-sidebar--compact {
     align-items: center;
     gap: var(--space-5);
@@ -4245,6 +4254,36 @@
   .workspace-sidebar--compact [data-tooltip]:focus-visible::after {
     opacity: 1;
     transform: translateY(-50%) translateX(0);
+  }
+}
+
+@media (min-width: 1280px) {
+  .workspace-shell--forge.workspace-shell--sidebar-compact .workspace-topbar__inner {
+    padding-left: var(--forge-space-4);
+    padding-right: var(--forge-space-6);
+  }
+
+  .workspace-shell--forge.workspace-shell--sidebar-compact .workspace-shell__content {
+    padding-left: var(--forge-space-4);
+    padding-right: var(--forge-space-6);
+  }
+
+  .workspace-shell--forge.workspace-shell--sidebar-compact .workspace-canvas {
+    grid-template-columns: minmax(340px, 380px) minmax(0, 1fr) minmax(272px, 288px);
+  }
+
+  .workspace-shell--forge.workspace-shell--sidebar-compact
+    .workspace-canvas--inspection-collapsed {
+    grid-template-columns: minmax(340px, 380px) minmax(0, 1fr) minmax(236px, 248px);
+  }
+
+  .workspace-shell--forge.workspace-shell--sidebar-compact .workspace-canvas--history-collapsed {
+    grid-template-columns: minmax(340px, 380px) minmax(0, 1fr) minmax(244px, 256px);
+  }
+
+  .workspace-shell--forge.workspace-shell--sidebar-compact
+    .workspace-canvas--inspection-collapsed.workspace-canvas--history-collapsed {
+    grid-template-columns: minmax(340px, 380px) minmax(0, 1fr) minmax(212px, 228px);
   }
 }
 
