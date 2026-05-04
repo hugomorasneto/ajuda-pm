@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import ComposerSection from './ComposerSection'
 import PromptChips from './PromptChips'
-import { QUICK_TEMPLATES } from './workspaceTemplates'
 
 function IconFileText() {
   return (
@@ -225,7 +224,6 @@ function BriefComposer({
   validationErrors,
   onChange,
   onApplyPrompt,
-  onApplyTemplate,
   onSubmit,
   onReset,
   isSubmitting,
@@ -309,31 +307,6 @@ function BriefComposer({
           requirementsFilled={requirementsFilled}
           isGenerated={isGenerated}
         />
-
-        {!isEditing ? (
-          <section className="brief-composer__quick-start" aria-label="Templates de partida">
-            <div className="brief-composer__quick-start-copy">
-              <p className="brief-composer__quick-start-label">Comecar rapido</p>
-              <p>Use uma base pronta para popular o briefing sem sair da forja.</p>
-            </div>
-
-            <div className="brief-composer__template-list">
-              {QUICK_TEMPLATES.map((template) => (
-                <button
-                  key={template.id}
-                  type="button"
-                  className="brief-composer__template-chip"
-                  onClick={() => onApplyTemplate?.(template)}
-                >
-                  <span className="brief-composer__template-emoji" aria-hidden="true">
-                    {template.emoji}
-                  </span>
-                  <span className="brief-composer__template-label">{template.label}</span>
-                </button>
-              ))}
-            </div>
-          </section>
-        ) : null}
 
         {isEditing ? (
           <div className="brief-composer__active-story">

@@ -221,9 +221,6 @@ function ToolPage() {
   const showEmptyState = !reviewStory && !showBlockingLoadingState && !showBlockingErrorState
   const workspaceStatusLabel = isEditing ? 'Base ativa' : 'Nova base'
   const workspaceStatusTitle = isEditing && activeStoryTitle ? activeStoryTitle : 'Nova user story'
-  const workspaceStatusNote = isEditing
-    ? 'Revise a versao ativa, ajuste o texto e exporte quando estiver pronta.'
-    : 'Preencha o brief, gere a story e siga para revisao no mesmo fluxo.'
   const showOnboarding = Boolean(
     onboardingStorageKey &&
       dismissedOnboardingKey !== onboardingStorageKey &&
@@ -372,7 +369,6 @@ function ToolPage() {
             validationErrors={validationErrors}
             onChange={handleFieldChange}
             onApplyPrompt={handlePromptChipApply}
-            onApplyTemplate={applyTemplateToBriefing}
             onSubmit={handleSubmitStory}
             onReset={handleResetToCreate}
             isSubmitting={isSubmitting}
