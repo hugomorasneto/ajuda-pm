@@ -15,7 +15,7 @@ function LearningGuideHero({ guide }) {
       </div>
 
       <div className="learning-guide-hero__copy">
-        <span className="badge-pill badge-pill--academy">Guia prático</span>
+        <span className="badge-pill badge-pill--academy">Academia ProdForge</span>
         <h1>{guide.title}</h1>
         <p>{guide.excerpt}</p>
       </div>

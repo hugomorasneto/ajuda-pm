@@ -6,10 +6,12 @@ import '../styles/public.css'
 function PublicLayout() {
   const location = useLocation()
   const isHomeRoute = location.pathname === '/'
+  const isLearningRoute = location.pathname.startsWith('/aprender')
   const layoutClassName = [
     'page-shell',
     'public-layout',
     isHomeRoute ? 'public-layout--home-forge theme-forge' : '',
+    isLearningRoute ? 'public-layout--academy-forge theme-forge' : '',
   ]
     .filter(Boolean)
     .join(' ')

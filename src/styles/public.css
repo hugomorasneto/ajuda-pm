@@ -5899,3 +5899,896 @@
   }
 }
 
+/* ============================================================
+   LANDING PERSONA CARDS
+   ============================================================ */
+
+.landing-benefits__media {
+  position: relative;
+  overflow: hidden;
+  min-height: 220px;
+  aspect-ratio: 4 / 3;
+  background: var(--color-canvas-muted);
+}
+
+.landing-benefits__media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(5, 8, 13, 0.08) 0%, rgba(5, 8, 13, 0.74) 100%),
+    radial-gradient(circle at 18% 12%, rgba(255, 177, 74, 0.16), transparent 38%),
+    radial-gradient(circle at 82% 18%, rgba(77, 163, 255, 0.14), transparent 36%);
+}
+
+.landing-benefits__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--persona-object-position, center 24%);
+  transition: transform 0.28s ease, filter 0.28s ease;
+}
+
+.landing-benefits__body {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.landing-benefits__description {
+  margin: 0;
+}
+
+.landing-benefits__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.public-layout--home-forge .landing-benefits__item {
+  --persona-object-position: center 24%;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 0;
+  min-width: 0;
+  padding: 0;
+  border-left: 1px solid var(--forge-border);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.012) 100%),
+    rgba(8, 13, 21, 0.82);
+  box-shadow: var(--forge-shadow-panel);
+}
+
+.public-layout--home-forge .landing-benefits__item--pm {
+  --persona-object-position: center 22%;
+}
+
+.public-layout--home-forge .landing-benefits__item--dev {
+  --persona-object-position: center 28%;
+}
+
+.public-layout--home-forge .landing-benefits__item--qa {
+  --persona-object-position: center 20%;
+}
+
+.public-layout--home-forge .landing-benefits__item::before {
+  z-index: 3;
+}
+
+.public-layout--home-forge .landing-benefits__media {
+  border-radius: 21px 21px 0 0;
+  background:
+    linear-gradient(135deg, rgba(255, 122, 26, 0.08), rgba(77, 163, 255, 0.08)),
+    var(--forge-surface-inset);
+}
+
+.public-layout--home-forge .landing-benefits__item:hover .landing-benefits__image {
+  transform: scale(1.035);
+  filter: saturate(1.08) contrast(1.03);
+}
+
+.public-layout--home-forge .landing-benefits__media .landing-benefits__role {
+  position: absolute;
+  z-index: 2;
+  left: var(--space-4);
+  bottom: var(--space-4);
+  margin: 0;
+  backdrop-filter: blur(14px);
+  line-height: 1.2;
+}
+
+.public-layout--home-forge .landing-benefits__body {
+  align-content: start;
+  padding: clamp(20px, 2.3vw, 28px);
+}
+
+.public-layout--home-forge .landing-benefits__body h3 {
+  max-width: 18rem;
+  font-size: clamp(1.16rem, 1.5vw, 1.32rem);
+  line-height: 1.22;
+  letter-spacing: 0;
+}
+
+.public-layout--home-forge .landing-benefits__description {
+  color: var(--forge-text-secondary);
+  font-size: var(--text-body);
+  line-height: 1.65;
+}
+
+.public-layout--home-forge .landing-benefits__list {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+}
+
+.public-layout--home-forge .landing-benefits__list li {
+  position: relative;
+  min-width: 0;
+  padding-left: var(--space-5);
+  line-height: 1.55;
+}
+
+.public-layout--home-forge .landing-benefits__list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 12px currentColor;
+  opacity: 0.72;
+}
+
+@media (max-width: 899px) {
+  .public-layout--home-forge .landing-benefits__media {
+    min-height: 0;
+    aspect-ratio: 16 / 10;
+  }
+
+  .public-layout--home-forge .landing-benefits__body h3 {
+    max-width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-layout--home-forge .landing-benefits__image {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* ============================================================
+   ACADEMIA PROD FORGE - DARK PREMIUM
+   ============================================================ */
+
+.public-layout--academy-forge {
+  color-scheme: dark;
+  overflow-x: clip;
+  background:
+    radial-gradient(circle at 12% 4%, rgba(255, 122, 26, 0.16), transparent 30rem),
+    radial-gradient(circle at 88% 10%, rgba(77, 163, 255, 0.15), transparent 34rem),
+    linear-gradient(180deg, #05080d 0%, var(--forge-bg-canvas) 42%, #070a0f 100%);
+  color: var(--forge-text-secondary);
+}
+
+.public-layout--academy-forge .public-layout__main {
+  position: relative;
+  z-index: 1;
+  width: min(calc(100% - 32px), 1180px);
+  padding-top: clamp(28px, 4vw, 48px);
+}
+
+.public-layout--academy-forge .public-header {
+  border-bottom-color: var(--forge-border);
+  background:
+    linear-gradient(90deg, rgba(255, 122, 26, 0.10), transparent 34%),
+    rgba(5, 8, 13, 0.88);
+  box-shadow: var(--forge-shadow-soft);
+  backdrop-filter: blur(18px);
+}
+
+.public-layout--academy-forge .public-header__inner {
+  padding-top: var(--forge-space-4);
+  padding-bottom: var(--forge-space-4);
+}
+
+.public-layout--academy-forge .brand-logo--header,
+.public-layout--academy-forge .brand-logo--footer {
+  filter: drop-shadow(0 0 18px rgba(255, 145, 56, 0.12));
+}
+
+.public-layout--academy-forge .public-header__link,
+.public-layout--academy-forge .public-header__mobile-link,
+.public-layout--academy-forge .public-footer__nav a {
+  color: var(--forge-text-secondary);
+}
+
+.public-layout--academy-forge .public-header__link:hover,
+.public-layout--academy-forge .public-header__link:focus-visible,
+.public-layout--academy-forge .public-header__mobile-link:hover,
+.public-layout--academy-forge .public-header__mobile-link:focus-visible,
+.public-layout--academy-forge .public-header__link--active,
+.public-layout--academy-forge .public-footer__nav a:hover,
+.public-layout--academy-forge .public-footer__nav a:focus-visible {
+  color: var(--forge-text-primary);
+}
+
+.public-layout--academy-forge .public-header__link--active::after {
+  background: linear-gradient(90deg, var(--forge-ember-hover), var(--forge-tech));
+  box-shadow: 0 0 12px rgba(255, 145, 56, 0.22);
+}
+
+.public-layout--academy-forge .public-header__mobile-panel {
+  border-color: var(--forge-border);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), transparent),
+    rgba(11, 13, 16, 0.96);
+  box-shadow: var(--forge-shadow-panel);
+}
+
+.public-layout--academy-forge .public-header__mobile-link--active {
+  background: var(--forge-ember-soft);
+  color: var(--forge-text-primary);
+}
+
+.public-layout--academy-forge .public-header__menu-button,
+.public-layout--academy-forge .public-header__cta,
+.public-layout--academy-forge .public-footer__cta,
+.public-layout--academy-forge .learning-guide-aside__apply-card .landing-button--primary {
+  border-color: var(--forge-border);
+  background: var(--forge-gradient-metal);
+  color: var(--forge-text-primary);
+  box-shadow: var(--forge-shadow-soft);
+}
+
+.public-layout--academy-forge .public-header__cta--primary,
+.public-layout--academy-forge .public-footer__cta,
+.public-layout--academy-forge .learning-guide-aside__apply-card .landing-button--primary {
+  border-color: var(--forge-border-ember);
+  background: var(--forge-gradient-cta-ember);
+  box-shadow: var(--forge-shadow-soft), 0 0 22px rgba(255, 145, 56, 0.18);
+}
+
+.public-layout--academy-forge .public-header__cta--primary:hover,
+.public-layout--academy-forge .public-footer__cta:hover,
+.public-layout--academy-forge .learning-guide-aside__apply-card .landing-button--primary:hover:not(:disabled) {
+  border-color: rgba(255, 145, 56, 0.46);
+  background: linear-gradient(135deg, #ffa14e 0%, var(--forge-ember-hover) 36%, var(--forge-ember-active) 100%);
+  box-shadow: var(--forge-shadow-soft), 0 0 28px rgba(255, 145, 56, 0.24);
+}
+
+.public-layout--academy-forge .public-header__cta--secondary {
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(135deg, rgba(77, 163, 255, 0.14), rgba(77, 163, 255, 0.04)),
+    var(--forge-gradient-metal);
+}
+
+.public-layout--academy-forge .public-header__cta,
+.public-layout--academy-forge .public-header__menu-button,
+.public-layout--academy-forge .public-footer__cta,
+.public-layout--academy-forge .landing-button {
+  min-width: max-content;
+  white-space: nowrap;
+}
+
+.public-layout--academy-forge .learning-page.learning-guide {
+  gap: clamp(28px, 4vw, 48px);
+}
+
+.public-layout--academy-forge .learning-guide-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: clamp(320px, 40vw, 430px);
+  padding: clamp(28px, 5vw, 56px);
+  border-color: rgba(255, 145, 56, 0.24);
+  background:
+    linear-gradient(90deg, rgba(5, 8, 13, 0.96) 0%, rgba(7, 17, 28, 0.88) 46%, rgba(7, 17, 28, 0.58) 74%, rgba(7, 17, 28, 0.30) 100%),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.42), transparent 44%),
+    url('../assets/forge/forging-workspace-bg.png') 62% center / cover no-repeat,
+    var(--forge-gradient-panel);
+  box-shadow:
+    var(--forge-shadow-panel),
+    0 0 0 1px rgba(255, 145, 56, 0.06),
+    0 30px 90px rgba(0, 0, 0, 0.34);
+}
+
+.public-layout--academy-forge .learning-guide-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 17% 16%, rgba(255, 145, 56, 0.20), transparent 22rem),
+    radial-gradient(circle at 82% 20%, rgba(77, 163, 255, 0.14), transparent 26rem);
+}
+
+.public-layout--academy-forge .learning-guide-hero__top {
+  align-items: start;
+}
+
+.public-layout--academy-forge .learning-guide-hero__backlink {
+  width: fit-content;
+  max-width: 100%;
+  padding: var(--forge-space-2) var(--forge-space-3);
+  border: 1px solid var(--forge-border);
+  border-radius: 999px;
+  background: rgba(5, 8, 13, 0.72);
+  color: var(--forge-text-secondary);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.public-layout--academy-forge .learning-guide-hero__backlink:hover {
+  border-color: var(--forge-border-ember);
+  color: var(--forge-text-primary);
+}
+
+.public-layout--academy-forge .learning-guide-hero__chips {
+  justify-content: flex-start;
+}
+
+.public-layout--academy-forge .learning-guide-hero__chip,
+.public-layout--academy-forge .badge-pill {
+  min-height: 28px;
+  max-width: 100%;
+  padding: 0 var(--forge-space-3);
+  border-color: var(--forge-border);
+  background: rgba(255, 255, 255, 0.055);
+  color: var(--forge-text-secondary);
+  line-height: 1.2;
+  white-space: normal;
+  backdrop-filter: blur(14px);
+}
+
+.public-layout--academy-forge .learning-guide-hero__chip:first-child,
+.public-layout--academy-forge .badge-pill--academy {
+  border-color: var(--forge-border-tech);
+  background: var(--forge-tech-soft);
+  color: #c7e1ff;
+}
+
+.public-layout--academy-forge .learning-guide-hero__chip--level {
+  border-color: var(--forge-border-ember);
+  background: var(--forge-ember-soft);
+  color: #ffd0a8;
+}
+
+.public-layout--academy-forge .learning-guide-hero__copy {
+  max-width: 43rem;
+  gap: var(--forge-space-4);
+}
+
+.public-layout--academy-forge .learning-guide-hero__copy h1 {
+  color: var(--forge-text-primary);
+  font-size: clamp(2.15rem, 5vw, 4rem);
+  line-height: 1;
+  letter-spacing: 0;
+  text-wrap: balance;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.42);
+}
+
+.public-layout--academy-forge .learning-guide-hero__copy p {
+  max-width: 40rem;
+  color: var(--forge-text-secondary);
+  font-size: clamp(1rem, 1.6vw, 1.12rem);
+  line-height: 1.72;
+}
+
+.public-layout--academy-forge .learning-guide__shell {
+  gap: clamp(20px, 3vw, 32px);
+}
+
+.public-layout--academy-forge .learning-guide__article {
+  gap: clamp(20px, 3vw, 30px);
+}
+
+.public-layout--academy-forge .learning-guide-block,
+.public-layout--academy-forge .learning-guide-aside__card,
+.public-layout--academy-forge .learning-guide-aside__apply-card,
+.public-layout--academy-forge .learning-guide-aside__progress-card,
+.public-layout--academy-forge .learning-note-card,
+.public-layout--academy-forge .learning-guide-related__card {
+  position: relative;
+  overflow: hidden;
+  border-color: var(--forge-border);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.014)),
+    rgba(11, 16, 22, 0.86);
+  color: var(--forge-text-secondary);
+  box-shadow: var(--forge-shadow-panel);
+}
+
+.public-layout--academy-forge .learning-guide-block {
+  padding: clamp(22px, 3vw, 34px);
+}
+
+.public-layout--academy-forge .learning-guide-block::before,
+.public-layout--academy-forge .learning-note-card::before,
+.public-layout--academy-forge .learning-guide-related__card::before,
+.public-layout--academy-forge .learning-guide-aside__card::before,
+.public-layout--academy-forge .learning-guide-aside__apply-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(77, 163, 255, 0.72), transparent);
+  opacity: 0.72;
+}
+
+.public-layout--academy-forge .learning-guide-block__header {
+  display: grid;
+  gap: var(--forge-space-3);
+  max-width: 48rem;
+}
+
+.public-layout--academy-forge .landing-section__eyebrow,
+.public-layout--academy-forge .learning-guide-aside__eyebrow,
+.public-layout--academy-forge .learning-note-card__tag,
+.public-layout--academy-forge .learning-guide-related__meta {
+  color: var(--forge-tech-hover);
+}
+
+.public-layout--academy-forge .learning-guide-block__header h2,
+.public-layout--academy-forge .learning-guide-context__grid h3,
+.public-layout--academy-forge .learning-guide-step__content h3,
+.public-layout--academy-forge .learning-note-card h3,
+.public-layout--academy-forge .learning-guide-related__card h3,
+.public-layout--academy-forge .learning-guide-aside__apply-label {
+  color: var(--forge-text-primary);
+  letter-spacing: 0;
+}
+
+.public-layout--academy-forge .learning-guide-block__header h2 {
+  font-size: clamp(1.45rem, 2.5vw, 2.1rem);
+  line-height: 1.16;
+  text-wrap: balance;
+}
+
+.public-layout--academy-forge .learning-guide-block__header + p,
+.public-layout--academy-forge .learning-guide-step__content p,
+.public-layout--academy-forge .learning-guide-context__grid p,
+.public-layout--academy-forge .learning-note-card p:not(.learning-note-card__tag),
+.public-layout--academy-forge .learning-guide-related__card p,
+.public-layout--academy-forge .learning-guide-example__body p,
+.public-layout--academy-forge .learning-guide-aside__apply-body,
+.public-layout--academy-forge .learning-guide-aside__card p:not(.learning-guide-aside__eyebrow) {
+  color: var(--forge-text-secondary);
+}
+
+.public-layout--academy-forge .learning-guide-summary::before,
+.public-layout--academy-forge .learning-guide-context::before,
+.public-layout--academy-forge .learning-guide-steps::before,
+.public-layout--academy-forge .learning-guide-notes::before {
+  background: linear-gradient(90deg, transparent, var(--forge-tech), transparent);
+}
+
+.public-layout--academy-forge .learning-guide-example::before {
+  background: linear-gradient(90deg, transparent, var(--forge-ember-hover), transparent);
+}
+
+.public-layout--academy-forge .learning-guide-mistakes::before {
+  background: linear-gradient(90deg, transparent, var(--forge-warning), transparent);
+}
+
+.public-layout--academy-forge .learning-guide-checklist::before {
+  background: linear-gradient(90deg, transparent, var(--forge-success), transparent);
+}
+
+.public-layout--academy-forge .learning-guide-related::before {
+  background: linear-gradient(90deg, transparent, var(--forge-ember-hover), var(--forge-tech), transparent);
+}
+
+.public-layout--academy-forge .learning-guide-summary__list,
+.public-layout--academy-forge .learning-guide-mistakes__list,
+.public-layout--academy-forge .learning-guide-checklist__list {
+  gap: var(--forge-space-3);
+}
+
+.public-layout--academy-forge .learning-guide-summary__list li,
+.public-layout--academy-forge .learning-guide-mistakes__list li,
+.public-layout--academy-forge .learning-guide-checklist__list li {
+  min-width: 0;
+  border-radius: var(--forge-radius-md);
+  color: var(--forge-text-secondary);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.public-layout--academy-forge .learning-guide-summary__list li {
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(90deg, var(--forge-tech-soft), transparent 80%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.public-layout--academy-forge .learning-guide-summary__check {
+  border: 1px solid var(--forge-border-tech);
+  background: var(--forge-tech-soft);
+  color: var(--forge-tech-hover);
+  box-shadow: var(--forge-glow-tech-sm);
+}
+
+.public-layout--academy-forge .learning-guide-context__grid {
+  gap: var(--forge-space-4);
+}
+
+.public-layout--academy-forge .learning-guide-context__grid > div {
+  min-width: 0;
+  padding: var(--forge-space-5);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--forge-radius-md);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.public-layout--academy-forge .learning-guide-context__grid > div:first-child {
+  border-color: rgba(255, 177, 74, 0.24);
+  background:
+    linear-gradient(135deg, var(--forge-warning-soft), transparent 74%),
+    rgba(255, 255, 255, 0.03);
+}
+
+.public-layout--academy-forge .learning-guide-context__grid > div:last-child {
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(135deg, var(--forge-tech-soft), transparent 74%),
+    rgba(255, 255, 255, 0.03);
+}
+
+.public-layout--academy-forge .learning-guide-example__body {
+  border-color: var(--forge-border-ember);
+  border-left: 0;
+  background:
+    linear-gradient(135deg, var(--forge-ember-soft), transparent 62%),
+    rgba(5, 8, 13, 0.50);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 18px 44px rgba(0, 0, 0, 0.24);
+}
+
+.public-layout--academy-forge .learning-guide-example__body ul,
+.public-layout--academy-forge .learning-guide-step__content ul {
+  color: var(--forge-text-secondary);
+}
+
+.public-layout--academy-forge .learning-guide-example__result {
+  border-top-color: var(--forge-border-ember);
+  color: var(--forge-text-primary);
+}
+
+.public-layout--academy-forge .learning-guide-steps__list {
+  position: relative;
+  gap: var(--forge-space-5);
+}
+
+.public-layout--academy-forge .learning-guide-steps__list::before {
+  content: '';
+  position: absolute;
+  top: 22px;
+  bottom: 22px;
+  left: 20px;
+  width: 1px;
+  background: linear-gradient(180deg, var(--forge-tech), var(--forge-ember-hover));
+  opacity: 0.42;
+}
+
+.public-layout--academy-forge .learning-guide-step {
+  position: relative;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--forge-space-4);
+  padding: 0;
+  border-top: 0;
+}
+
+.public-layout--academy-forge .learning-guide-step__index {
+  position: relative;
+  z-index: 1;
+  border: 1px solid var(--forge-border-tech);
+  background:
+    radial-gradient(circle, var(--forge-tech-soft), transparent 76%),
+    var(--forge-surface-inset);
+  color: var(--forge-tech-hover);
+  box-shadow: var(--forge-glow-tech-sm);
+}
+
+.public-layout--academy-forge .learning-guide-step__content {
+  display: grid;
+  gap: var(--forge-space-3);
+  min-width: 0;
+  padding: var(--forge-space-5);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--forge-radius-md);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.public-layout--academy-forge .learning-guide-step__content p {
+  margin: 0;
+}
+
+.public-layout--academy-forge .learning-guide-mistakes__list li {
+  border-color: rgba(255, 177, 74, 0.24);
+  background:
+    linear-gradient(90deg, var(--forge-warning-soft), transparent 82%),
+    rgba(255, 255, 255, 0.03);
+}
+
+.public-layout--academy-forge .learning-guide-mistakes__icon {
+  border: 1px solid rgba(255, 177, 74, 0.30);
+  background: var(--forge-warning-soft);
+  color: var(--forge-warning);
+  box-shadow: 0 0 14px rgba(255, 177, 74, 0.12);
+}
+
+.public-layout--academy-forge .badge-pill--warning {
+  border-color: rgba(255, 177, 74, 0.30);
+  background: var(--forge-warning-soft);
+  color: #ffd9a3;
+}
+
+.public-layout--academy-forge .badge-pill--success {
+  border-color: rgba(54, 201, 143, 0.28);
+  background: var(--forge-success-soft);
+  color: #bdf4da;
+}
+
+.public-layout--academy-forge .learning-guide-checklist__list li {
+  border-color: rgba(54, 201, 143, 0.24);
+  background:
+    linear-gradient(90deg, var(--forge-success-soft), transparent 82%),
+    rgba(255, 255, 255, 0.03);
+}
+
+.public-layout--academy-forge .learning-guide-checklist__list li::before {
+  color: var(--forge-success);
+}
+
+.public-layout--academy-forge .learning-note-grid,
+.public-layout--academy-forge .learning-guide-related__grid {
+  gap: var(--forge-space-4);
+}
+
+.public-layout--academy-forge .learning-note-card,
+.public-layout--academy-forge .learning-guide-related__card {
+  min-width: 0;
+  padding: var(--forge-space-5);
+}
+
+.public-layout--academy-forge .learning-note-card:hover,
+.public-layout--academy-forge .learning-guide-related__card:hover {
+  border-color: var(--forge-border-tech);
+  box-shadow: var(--forge-shadow-floating), var(--forge-glow-tech-sm);
+  transform: translateY(-1px);
+}
+
+.public-layout--academy-forge .learning-guide-related__actions {
+  flex-wrap: wrap;
+  gap: var(--forge-space-3);
+  border-top-color: var(--forge-border-subtle);
+}
+
+.public-layout--academy-forge .learning-guide-related__read {
+  color: var(--forge-tech-hover);
+}
+
+.public-layout--academy-forge .learning-guide-related__practice {
+  color: var(--forge-ember-hover);
+}
+
+.public-layout--academy-forge .learning-guide__aside {
+  min-width: 0;
+}
+
+.public-layout--academy-forge .learning-guide-aside__card,
+.public-layout--academy-forge .learning-guide-aside__apply-card,
+.public-layout--academy-forge .learning-guide-aside__progress-card {
+  padding: var(--forge-space-5);
+}
+
+.public-layout--academy-forge .learning-guide-aside__card {
+  backdrop-filter: blur(18px);
+}
+
+.public-layout--academy-forge .learning-guide-aside__card nav ul {
+  display: grid;
+  gap: var(--forge-space-2);
+}
+
+.public-layout--academy-forge .learning-guide-aside__card nav li + li {
+  margin-top: 0;
+}
+
+.public-layout--academy-forge .learning-guide-aside__card nav a {
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 var(--forge-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--forge-radius-sm);
+  color: var(--forge-text-secondary);
+  line-height: 1.2;
+}
+
+.public-layout--academy-forge .learning-guide-aside__card nav a:hover,
+.public-layout--academy-forge .learning-guide-aside__card nav a:focus-visible {
+  border-color: var(--forge-border-tech);
+  background: var(--forge-tech-soft);
+  color: var(--forge-text-primary);
+}
+
+.public-layout--academy-forge .learning-guide-aside__apply-card {
+  border-color: var(--forge-border-ember);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 145, 56, 0.18), transparent 18rem),
+    linear-gradient(150deg, rgba(255, 122, 26, 0.11), rgba(77, 163, 255, 0.07)),
+    var(--forge-gradient-panel);
+  box-shadow: var(--forge-shadow-panel), var(--forge-glow-ember-sm);
+}
+
+.public-layout--academy-forge .learning-guide-aside__apply-body {
+  margin: 0;
+  font-size: var(--text-small);
+}
+
+.public-layout--academy-forge .learning-guide-aside__apply-actions {
+  display: grid;
+  gap: var(--forge-space-2);
+}
+
+.public-layout--academy-forge .learning-guide-aside__apply-card .landing-button--primary {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--forge-space-4);
+}
+
+.public-layout--academy-forge .learning-guide-aside__apply-microcopy {
+  color: var(--forge-text-muted);
+}
+
+.public-layout--academy-forge .learning-guide-aside__progress-card {
+  border-color: rgba(54, 201, 143, 0.22);
+  background:
+    linear-gradient(135deg, var(--forge-success-soft), transparent 70%),
+    rgba(11, 16, 22, 0.84);
+}
+
+.public-layout--academy-forge .learning-guide-aside__progress-btn {
+  min-height: 42px;
+  border-color: rgba(54, 201, 143, 0.32);
+  background: rgba(54, 201, 143, 0.06);
+  color: var(--forge-text-primary);
+}
+
+.public-layout--academy-forge .learning-guide-aside__progress-btn:hover {
+  border-color: var(--forge-success);
+  background: var(--forge-success-soft);
+  color: #bdf4da;
+}
+
+.public-layout--academy-forge .learning-guide-aside__progress-done {
+  color: #bdf4da;
+}
+
+.public-layout--academy-forge .learning-guide-aside__progress-undo {
+  color: var(--forge-text-muted);
+}
+
+.public-layout--academy-forge .learning-guide-aside__progress-undo:hover {
+  color: var(--forge-text-primary);
+}
+
+.public-layout--academy-forge .public-footer {
+  border-top-color: var(--forge-border);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(255, 122, 26, 0.10), transparent 24rem),
+    linear-gradient(180deg, rgba(5, 8, 13, 0.82), #05080d);
+}
+
+.public-layout--academy-forge .public-footer__inner {
+  border-top: 1px solid var(--forge-border-subtle);
+}
+
+.public-layout--academy-forge .public-footer__brand-statement,
+.public-layout--academy-forge .public-footer__bottom p {
+  color: var(--forge-text-muted);
+}
+
+.public-layout--academy-forge .public-footer__nav-title {
+  color: var(--forge-text-primary);
+}
+
+.public-layout--academy-forge .public-footer__bottom {
+  border-top-color: var(--forge-border-subtle);
+}
+
+@media (min-width: 1024px) {
+  .public-layout--academy-forge .learning-guide__shell {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
+  }
+}
+
+@media (max-width: 900px) {
+  .public-layout--academy-forge .learning-guide-hero {
+    min-height: 0;
+    background:
+      linear-gradient(180deg, rgba(5, 8, 13, 0.97) 0%, rgba(7, 17, 28, 0.90) 66%, rgba(7, 17, 28, 0.76) 100%),
+      url('../assets/forge/forging-workspace-bg.png') 58% center / cover no-repeat,
+      var(--forge-gradient-panel);
+  }
+
+  .public-layout--academy-forge .learning-guide-steps__list::before {
+    display: none;
+  }
+
+  .public-layout--academy-forge .learning-guide-step {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .public-layout--academy-forge .learning-guide-step__content {
+    padding: var(--forge-space-4);
+  }
+}
+
+@media (max-width: 767px) {
+  .public-layout--academy-forge .public-layout__main {
+    width: min(calc(100% - 24px), 1180px);
+    padding-top: var(--forge-space-5);
+  }
+
+  .public-layout--academy-forge .learning-page.learning-guide {
+    gap: var(--forge-space-5);
+  }
+
+  .public-layout--academy-forge .learning-guide-hero,
+  .public-layout--academy-forge .learning-guide-block,
+  .public-layout--academy-forge .learning-guide-aside__card,
+  .public-layout--academy-forge .learning-guide-aside__apply-card,
+  .public-layout--academy-forge .learning-guide-aside__progress-card,
+  .public-layout--academy-forge .learning-note-card,
+  .public-layout--academy-forge .learning-guide-related__card {
+    padding: var(--forge-space-4);
+  }
+
+  .public-layout--academy-forge .learning-guide-hero__top {
+    gap: var(--forge-space-3);
+  }
+
+  .public-layout--academy-forge .learning-guide-hero__chips {
+    gap: var(--forge-space-2);
+  }
+
+  .public-layout--academy-forge .learning-guide-hero__copy h1 {
+    font-size: clamp(2rem, 12vw, 3rem);
+  }
+
+  .public-layout--academy-forge .learning-guide-context__grid > div,
+  .public-layout--academy-forge .learning-guide-step__content {
+    padding: var(--forge-space-4);
+  }
+
+  .public-layout--academy-forge .learning-guide-related__actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .public-layout--academy-forge .public-header__cta,
+  .public-layout--academy-forge .public-footer__cta,
+  .public-layout--academy-forge .landing-button {
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+  }
+}

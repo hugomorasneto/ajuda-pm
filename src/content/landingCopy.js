@@ -123,33 +123,48 @@ export const landingCopy = {
     },
   },
   benefits: {
-    eyebrow: 'Benefícios por função',
+    eyebrow: 'Produto, desenvolvimento e QA',
     title: 'Cada papel com menos ruído e mais contexto.',
     description:
-      'A mesma saída precisa ser útil para o PM que prioriza, para o dev que implementa e para o QA que valida.',
+      'A ProdForge transforma briefing confuso em uma base clara para produto, desenvolvimento e QA trabalharem no mesmo artefato.',
     items: [
       {
-        role: 'PM',
-        title: 'Mais contexto para decidir',
-        bullets: [
-          'Organiza o problema antes de virar tarefa.',
-          'Ajuda a identificar trincas, riscos e dependências cedo.',
+        role: 'PM/PO',
+        tone: 'pm',
+        image: 'pm-strategist-forge',
+        imageAlt: 'Estrategista de produto representando clareza e priorização na ProdForge',
+        title: 'PM/PO: estratégia sem perder contexto',
+        description: 'Organize problema, objetivo, impacto e regras antes da story chegar ao time.',
+        benefits: [
+          'Menos briefing solto',
+          'Mais clareza de decisão',
+          'Melhor alinhamento com negócio',
         ],
       },
       {
         role: 'Dev',
-        title: 'Menos ambiguidade na implementação',
-        bullets: [
-          'Entrega critérios de aceite mais objetivos.',
-          'Facilita a leitura do comportamento esperado.',
+        tone: 'dev',
+        image: 'dev-forgemaster-blade',
+        imageAlt: 'Engenheiro representando implementação clara com apoio da ProdForge',
+        title: 'Dev: implementação com menos adivinhação',
+        description: 'Receba histórias com comportamento esperado, critérios de aceite e restrições explícitas.',
+        benefits: [
+          'Menos retrabalho',
+          'Menos dúvida no refinamento',
+          'Mais previsibilidade técnica',
         ],
       },
       {
         role: 'QA',
-        title: 'Mais previsibilidade na validação',
-        bullets: [
-          'Aponta pontos críticos para teste funcional.',
-          'Dá uma base melhor para cenários positivos e alternativos.',
+        tone: 'qa',
+        image: 'qa-guardian-shield',
+        imageAlt: 'Guardião de qualidade representando validação e critérios de aceite na ProdForge',
+        title: 'QA: validação antes do problema virar bug',
+        description: 'Use critérios e cenários mais claros para testar fluxos principais, exceções e regras críticas.',
+        benefits: [
+          'Critérios mais testáveis',
+          'Exceções mais visíveis',
+          'Menos falhas escapando',
         ],
       },
     ],

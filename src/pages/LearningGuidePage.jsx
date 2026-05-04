@@ -139,7 +139,7 @@ function LearningGuidePage() {
         <aside className="learning-guide__aside">
           <div className="learning-guide-aside__card">
             <p className="learning-guide-aside__eyebrow">Nesta leitura</p>
-            <nav aria-label="Sumario do guia">
+            <nav aria-label="Sumário do guia">
               <ul>
                 {GUIDE_NAV_ITEMS.map((item) => (
                   <li key={item.href}>
