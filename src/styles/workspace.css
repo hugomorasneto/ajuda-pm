@@ -3287,9 +3287,20 @@
 .workspace-shell--forge .workspace-state__tip,
 .workspace-shell--forge .workspace-state__example,
 .workspace-shell--forge .ws-template-chip {
-  border: 1px solid var(--forge-border);
-  background: var(--forge-surface-inset);
-  color: var(--forge-text-secondary);
+  border: 1px solid var(--forge-border-strong);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.055), transparent),
+    var(--forge-surface-inset);
+  color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .ws-template-chip__label {
+  color: var(--forge-text-primary);
+  font-weight: 700;
+}
+
+.workspace-shell--forge .ws-template-chip__emoji {
+  filter: drop-shadow(0 0 6px rgba(255, 145, 56, 0.36));
 }
 
 .workspace-shell--forge .ws-template-chip:hover {
@@ -3299,6 +3310,10 @@
     var(--forge-surface-2);
   color: var(--forge-text-primary);
   box-shadow: var(--forge-glow-ember-sm);
+}
+
+.workspace-shell--forge .ws-template-chip:hover .ws-template-chip__label {
+  color: var(--forge-text-primary);
 }
 
 .workspace-shell--forge .workspace-state__divider {
