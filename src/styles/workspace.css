@@ -1,5 +1,5 @@
-/* ============================================================
-   WORKSPACE — FASE 1 LIMPEZA VISUAL
+﻿/* ============================================================
+   WORKSPACE â€” FASE 1 LIMPEZA VISUAL
    ============================================================ */
 
 /* --- Sidebar --- */
@@ -27,10 +27,13 @@
   .workspace-sidebar {
     position: sticky;
     top: 0;
+    width: 100%;
     transform: none !important;
     height: 100vh;
     z-index: 1;
     flex-shrink: 0;
+    overflow-x: hidden;
+    transition: padding 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .workspace-sidebar__close {
     display: none;
@@ -366,7 +369,7 @@
 .brief-composer__active-story strong { color: var(--color-text-primary); font-size: var(--text-small); }
 .brief-composer__form { display: grid; gap: var(--space-4); }
 
-/* ComposerSection — sem borda dupla, fundo sutil */
+/* ComposerSection â€” sem borda dupla, fundo sutil */
 .composer-section {
   display: grid; gap: var(--space-4);
   padding: var(--space-5);
@@ -433,7 +436,7 @@
 .story-workspace .save-message { margin: 0; font-size: var(--text-small); }
 .story-document__body { display: grid; gap: var(--space-3); }
 
-/* StorySection — sem borda dupla, clean */
+/* StorySection â€” sem borda dupla, clean */
 .story-section {
   display: grid; gap: var(--space-4);
   padding: var(--space-5);
@@ -765,7 +768,7 @@
 }
 
 /* ============================================================
-   WORKSPACE CANVAS — 3 colunas desktop / tabs mobile
+   WORKSPACE CANVAS â€” 3 colunas desktop / tabs mobile
    ============================================================ */
 
 /* Status bar compacta */
@@ -848,7 +851,7 @@
   box-shadow: var(--shadow-soft);
 }
 
-/* Canvas — mobile: single column via tabs */
+/* Canvas â€” mobile: single column via tabs */
 .workspace-canvas {
   display: grid;
   gap: var(--space-4);
@@ -877,7 +880,7 @@
   gap: var(--space-4);
 }
 
-/* Tablet: 768px — show left + center, hide tabs, right via scroll */
+/* Tablet: 768px â€” show left + center, hide tabs, right via scroll */
 @media (min-width: 768px) {
   .workspace-tabs {
     display: none;
@@ -894,13 +897,13 @@
     gap: var(--space-4);
   }
 
-  /* Right panel hidden on tablet — accessible via scroll below */
+  /* Right panel hidden on tablet â€” accessible via scroll below */
   .workspace-canvas__col--right {
     display: none;
   }
 }
 
-/* Desktop: 1100px — full 3-column layout */
+/* Desktop: 1100px â€” full 3-column layout */
 @media (min-width: 1100px) {
   .workspace-tabs {
     display: none;
@@ -951,13 +954,13 @@
 }
 
 /* ============================================================
-   REDESIGN — UX PREMIUM
+   REDESIGN â€” UX PREMIUM
    ============================================================ */
 
-/* ── btn-full ───────────────────────────────────────────────── */
+/* â”€â”€ btn-full â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .story-workspace .btn-full { width: 100%; justify-content: center; }
 
-/* ── BriefComposer: Stepper ─────────────────────────────────── */
+/* â”€â”€ BriefComposer: Stepper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .brief-stepper {
   display: flex;
   align-items: center;
@@ -1022,7 +1025,7 @@
   margin: 0 var(--space-2);
 }
 
-/* ── BriefComposer: active story banner ─────────────────────── */
+/* â”€â”€ BriefComposer: active story banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .brief-composer__active-story {
   display: flex;
   align-items: center;
@@ -1060,7 +1063,7 @@
   flex-shrink: 0;
 }
 
-/* ── ComposerSection: icon + label pattern ──────────────────── */
+/* â”€â”€ ComposerSection: icon + label pattern â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .composer-section__header {
   display: flex;
   align-items: center;
@@ -1087,7 +1090,7 @@
   border-color: var(--color-error);
 }
 
-/* ── Accordion ──────────────────────────────────────────────── */
+/* â”€â”€ Accordion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .brief-accordion {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -1160,7 +1163,7 @@
 
 .brief-accordion__chevron--open { transform: rotate(180deg); }
 
-/* Accordion body — animated open/close */
+/* Accordion body â€” animated open/close */
 .brief-accordion__body {
   display: grid;
   grid-template-rows: 0fr;
@@ -1180,14 +1183,14 @@
   padding: var(--space-2) 0;
 }
 
-/* ── BriefComposer: CTA button ──────────────────────────────── */
+/* â”€â”€ BriefComposer: CTA button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .brief-composer__submit {
   gap: var(--space-2);
   min-height: 44px;
   font-size: var(--text-body);
 }
 
-/* ── BriefComposer: Loading progress ───────────────────────── */
+/* â”€â”€ BriefComposer: Loading progress â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .brief-loading {
   display: grid;
   gap: var(--space-3);
@@ -1227,7 +1230,7 @@
   to { width: var(--target-width, 80%); }
 }
 
-/* ── Empty State: redesign ──────────────────────────────────── */
+/* â”€â”€ Empty State: redesign â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .workspace-state__icon {
   display: flex;
   align-items: center;
@@ -1267,7 +1270,7 @@
   margin-right: var(--space-1);
 }
 
-/* ── Loading State: redesign ────────────────────────────────── */
+/* â”€â”€ Loading State: redesign â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .workspace-state__skeleton {
   display: grid;
   gap: var(--space-3);
@@ -1320,7 +1323,7 @@
   to { width: var(--target-pct, 80%); }
 }
 
-/* ── QualityPanel: section pattern ─────────────────────────── */
+/* â”€â”€ QualityPanel: section pattern â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .quality-panel__section {
   display: grid;
   gap: var(--space-3);
@@ -1395,7 +1398,7 @@
   color: var(--color-warning);
 }
 
-/* ── QualityScore: denominator + eyebrow ───────────────────── */
+/* â”€â”€ QualityScore: denominator + eyebrow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .quality-score__eyebrow {
   margin: 0;
   color: var(--color-accent);
@@ -1967,11 +1970,11 @@
 }
 
 /* ============================================================
-   OVERFLOW FIX — previne scroll horizontal nas colunas sticky
+   OVERFLOW FIX â€” previne scroll horizontal nas colunas sticky
    ============================================================ */
 
 /* Garante que todos os filhos diretos da coluna esquerda
-   não ultrapassem a largura do container */
+   nÃ£o ultrapassem a largura do container */
 .workspace-canvas__col--left > *,
 .workspace-canvas__col--right > * {
   min-width: 0;
@@ -2001,7 +2004,7 @@
 }
 
 /* ============================================================
-   WORKSPACE ↔ ACADEMIA — conexão entre workspace e aprendizagem
+   WORKSPACE â†” ACADEMIA â€” conexÃ£o entre workspace e aprendizagem
    ============================================================ */
 
 /* Empty state: exemplo concreto */
@@ -2050,7 +2053,7 @@
 
 .workspace-state__learn-cta:hover { text-decoration: underline; }
 
-/* Sidebar: seção Academia */
+/* Sidebar: seÃ§Ã£o Academia */
 .workspace-sidebar__section-header {
   display: flex;
   align-items: center;
@@ -2105,7 +2108,7 @@
 }
 
 /* ============================================================
-   QUICK TEMPLATES — empty state
+   QUICK TEMPLATES â€” empty state
    ============================================================ */
 
 .ws-templates {
@@ -2186,7 +2189,7 @@
 }
 
 /* ============================================================
-   ONBOARDING MODAL — primeiro acesso ao workspace
+   ONBOARDING MODAL â€” primeiro acesso ao workspace
    ============================================================ */
 
 .onboarding-overlay {
@@ -4195,11 +4198,13 @@
   padding: 0;
 }
 
-@media (min-width: 1280px) {
+@media (min-width: 1100px) {
   .workspace-sidebar--compact {
     align-items: center;
     gap: var(--space-5);
-    padding: var(--space-4) 12px;
+    padding: var(--space-4) 10px;
+    width: 68px;
+    overflow-x: hidden;
   }
 
   .workspace-sidebar--compact .workspace-sidebar__header {
@@ -4234,8 +4239,8 @@
   }
 
   .workspace-sidebar--compact .workspace-sidebar__link {
-    width: 48px;
-    min-height: 48px;
+    width: 44px;
+    min-height: 44px;
     padding: 0;
     justify-content: center;
     gap: 0;
@@ -4256,6 +4261,9 @@
     display: grid;
     justify-items: center;
     gap: var(--space-3);
+    padding: var(--space-3) 0;
+    border: none;
+    background: none;
   }
 
   .workspace-sidebar--compact [data-tooltip] {
@@ -4314,7 +4322,7 @@
     var(--forge-surface-inset);
 }
 
-@media (min-width: 1280px) {
+@media (min-width: 1100px) {
   .workspace-shell--forge .workspace-sidebar--compact {
     border-right-color: var(--forge-border-strong);
   }

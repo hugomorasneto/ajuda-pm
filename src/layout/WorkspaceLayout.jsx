@@ -5,7 +5,7 @@ import WorkspaceTopbar from '../components/workspace/WorkspaceTopbar'
 import { useAuth } from '../hooks/useAuth'
 import '../styles/workspace.css'
 
-const DESKTOP_SIDEBAR_QUERY = '(min-width: 1280px)'
+const DESKTOP_SIDEBAR_QUERY = '(min-width: 1100px)'
 const DEFAULT_SIDEBAR_DENSITY = 'expanded'
 
 function getMediaQueryMatch(query) {
