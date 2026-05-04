@@ -13,7 +13,7 @@ import { useUserStoryWorkspace } from '../hooks/useUserStoryWorkspace'
 const TABS = [
   { id: 'entrada', label: 'Brief' },
   { id: 'resultado', label: 'Story' },
-  { id: 'revisao', label: 'Revisao' },
+  { id: 'revisao', label: 'Revisão' },
 ]
 
 function hasSeenOnboarding(storageKey) {
@@ -131,14 +131,14 @@ function ToolPage() {
 
     const generationsText = isPremium
       ? 'Pro'
-      : `${remainingGenerations} ${remainingGenerations === 1 ? 'geracao' : 'geracoes'}`
+      : `${remainingGenerations} ${remainingGenerations === 1 ? 'geração' : 'gerações'}`
 
     setTopbarStatus({
       label: workspaceStatusLabel,
       title: workspaceStatusTitle,
       pills: [
         {
-          text: isEditing ? 'Em revisao' : 'Nova',
+          text: isEditing ? 'Em revisão' : 'Nova',
           className: isEditing ? 'mode-pill-editing' : 'mode-pill-new',
         },
         {

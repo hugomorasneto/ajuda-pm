@@ -37,7 +37,7 @@ function getFilterLabel(filterValue) {
 }
 
 function getHistoryStatus({ isLoadingRecent, isLoadingVersions, loadErrorMessage, itemCount, isEditing }) {
-  if (loadErrorMessage) return 'Atencao'
+  if (loadErrorMessage) return 'Atenção'
   if (isLoadingRecent || isLoadingVersions) return 'Atualizando'
   if (itemCount === 0) return 'Vazio'
   return isEditing ? 'Base ativa' : 'Pronto'
@@ -67,7 +67,7 @@ function HistoryDrawerPanel({
   const activeItem = safeItems.find((item) => item.id === selectedId)
   const activeTitle = activeStoryTitle || activeItem?.title || 'Nenhuma base ativa'
   const activeSummaryNote = selectedId
-    ? 'Base carregada para revisao'
+    ? 'Base carregada para revisão'
     : isEditing
       ? 'Story ativa carregada'
       : 'Abra uma base salva quando quiser comparar'
@@ -87,9 +87,9 @@ function HistoryDrawerPanel({
     >
       <div className="workspace-history-panel__header">
         <div className="workspace-history-panel__copy">
-          <p className="workspace-history-panel__eyebrow">Historico</p>
+          <p className="workspace-history-panel__eyebrow">Histórico</p>
           <h2>Stories forjadas</h2>
-          <p>Bases recentes, versoes e comparacao da base ativa no mesmo drawer lateral.</p>
+          <p>Bases recentes, versões e comparação da base ativa no mesmo painel lateral.</p>
         </div>
 
         <div className="workspace-history-panel__actions">
@@ -119,9 +119,9 @@ function HistoryDrawerPanel({
             note={safeItems.length === 0 ? 'Nenhum resultado no recorte atual' : 'Recorte aplicado'}
           />
           <SummaryCard
-            label="Versoes"
+            label="Versões"
             value={versionsCount}
-            note={isEditing ? 'Timeline disponivel' : 'Sem base ativa para comparar'}
+            note={isEditing ? 'Timeline disponível' : 'Sem base ativa para comparar'}
           />
           <SummaryCard
             label="Estado"

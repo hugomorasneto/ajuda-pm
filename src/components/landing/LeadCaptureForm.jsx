@@ -144,7 +144,7 @@ function LeadCaptureForm({ content }) {
         <input
           id="lead-email"
           type="email"
-          placeholder="voce@empresa.com"
+          placeholder="seu.email@empresa.com"
           value={formValues.email}
           onChange={(event) => updateField('email', event.target.value)}
           aria-invalid={Boolean(errors.email)}

@@ -100,9 +100,9 @@ function QualityPanel({
     <aside className={`panel quality-panel ${!story ? 'quality-panel--empty' : ''}`}>
       <div className="quality-panel__panel-header">
         <div className="quality-panel__panel-copy">
-          <p className="quality-panel__panel-eyebrow">Inspecao</p>
-          <h2>Revisao e entrega</h2>
-          <p>Score, gaps, QA e exportacao no mesmo trilho de revisao.</p>
+          <p className="quality-panel__panel-eyebrow">Inspeção</p>
+          <h2>Revisão e entrega</h2>
+          <p>Score, gaps, QA e exportação no mesmo trilho de revisão.</p>
         </div>
 
         <div className="quality-panel__panel-actions">
@@ -126,28 +126,28 @@ function QualityPanel({
               <div className="quality-score__bar" aria-hidden="true">
                 <span className="quality-score__bar-fill" style={{ width: '0%' }} />
               </div>
-              <p className="quality-score__note">Disponivel apos a geracao.</p>
+              <p className="quality-score__note">Disponível após a geração.</p>
             </section>
 
             <RailSection
               icon={<IconAlertTriangle />}
               label="Gaps"
-              description="Ambiguidades e excecoes aparecem aqui."
+              description="Ambiguidades e exceções aparecem aqui."
               placeholder
             >
               <p className="quality-panel__empty-note">
-                O painel de gaps sera preenchido depois da primeira geracao.
+                O painel de gaps será preenchido depois da primeira geração.
               </p>
             </RailSection>
 
             <RailSection
               icon={<IconClipboard />}
               label="QA"
-              description="Checklist de validacao da story."
+              description="Checklist de validação da story."
               placeholder
             >
               <p className="quality-panel__empty-note">
-                Os cenarios de validacao aparecerao quando a story estiver pronta.
+                Os cenários de validação aparecerão quando a story estiver pronta.
               </p>
             </RailSection>
 
@@ -158,7 +158,7 @@ function QualityPanel({
               placeholder
             >
               <p className="quality-panel__empty-note">
-                As acoes de exportacao ficam disponiveis apos a geracao.
+                As ações de exportação ficam disponíveis após a geração.
               </p>
             </RailSection>
           </>
@@ -169,7 +169,7 @@ function QualityPanel({
             <RailSection
               icon={<IconAlertTriangle />}
               label="Gaps"
-              description="Pontos que ainda pedem decisao antes do refinamento."
+              description="Pontos que ainda pedem decisão antes do refinamento."
             >
               <GapList items={story.gaps} />
             </RailSection>
@@ -177,7 +177,7 @@ function QualityPanel({
             <RailSection
               icon={<IconClipboard />}
               label="QA"
-              description="Checklist minimo para validar a entrega."
+              description="Checklist mínimo para validar a entrega."
             >
               <QaChecklist items={story.qa_checklist} />
             </RailSection>
@@ -185,7 +185,7 @@ function QualityPanel({
             <RailSection
               icon={<IconDownload />}
               label="Exportar"
-              description="Leve a story para backlog, Jira ou compartilhamento rapido."
+              description="Leve a story para backlog, Jira ou compartilhamento rápido."
             >
               <ExportActionsBar
                 story={story}
@@ -203,11 +203,11 @@ function QualityPanel({
               <span className="quality-panel__plan-label">{isPremium ? 'Pro' : 'Free'}</span>
               <span className="quality-panel__plan-count">
                 {isPremium
-                  ? 'Geracoes ilimitadas'
+                  ? 'Gerações ilimitadas'
                   : hasReachedLimit
-                    ? 'Limite atingido - Faca upgrade'
+                  ? 'Limite atingido - Faça upgrade'
                     : `${remainingGenerations} ${
-                        remainingGenerations === 1 ? 'geracao restante' : 'geracoes restantes'
+                        remainingGenerations === 1 ? 'geração restante' : 'gerações restantes'
                       }`}
               </span>
             </div>

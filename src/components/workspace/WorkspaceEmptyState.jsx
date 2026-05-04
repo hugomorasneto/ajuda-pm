@@ -22,7 +22,7 @@ function WorkspaceEmptyState({ hasDraft, onApplyTemplate }) {
             </svg>
           </div>
           <div className="workspace-state__copy">
-            <h2>Parece que voce tem algo em mente.</h2>
+            <h2>Parece que você tem algo em mente.</h2>
             <p>Clique em <strong>Forjar Story</strong> para transformar o contexto em uma user story estruturada.</p>
           </div>
           <ul className="workspace-state__hints" aria-label="Dicas">
@@ -55,16 +55,16 @@ function WorkspaceEmptyState({ hasDraft, onApplyTemplate }) {
         </div>
 
         <div className="workspace-state__copy">
-          <h2>Cole seu contexto e gere a primeira versao.</h2>
+          <h2>Cole seu contexto e gere a primeira versão.</h2>
           <p>
             Preencha o <strong>Contexto</strong> com o problema real e os{' '}
-            <strong>Requisitos</strong> com regras e restricoes - ou escolha um
-            template abaixo para comecar em segundos.
+            <strong>Requisitos</strong> com regras e restrições - ou escolha um
+            template abaixo para começar em segundos.
           </p>
         </div>
 
         <div className="ws-templates">
-          <p className="ws-templates__label">Comecar com um template</p>
+          <p className="ws-templates__label">Começar com um template</p>
           <div className="ws-templates__grid">
             {QUICK_TEMPLATES.map((tpl) => (
               <button
@@ -93,7 +93,7 @@ function WorkspaceEmptyState({ hasDraft, onApplyTemplate }) {
         <div className="workspace-state__learn-link">
           <span>Nunca escreveu uma user story?</span>
           <Link to="/aprender/user-stories-na-pratica" className="workspace-state__learn-cta">
-            Ver guia pratico -&gt;
+            Ver guia prático -&gt;
           </Link>
         </div>
       </div>

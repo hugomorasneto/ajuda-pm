@@ -13,11 +13,11 @@ function buildPublicAssetCandidates(path) {
 const academyGuideThumbnailsBySlug = {
   'fundamentos-produto-agil': {
     src: 'images/prodforge/academy/fundamentos-produto-agil-pm-po-iniciante.webp?v=20260503-final-v2',
-    alt: 'Capa do guia Fundamentos de produto agil para PM/PO iniciante',
+    alt: 'Capa do guia Fundamentos de produto ágil para PM/PO iniciante',
   },
   'user-stories-na-pratica': {
     src: 'images/prodforge/academy/user-stories-na-pratica.webp?v=20260503-final-v2',
-    alt: 'Capa do guia User stories na pratica',
+    alt: 'Capa do guia User stories na prática',
   },
   'backlog-e-refinamento': {
     src: 'images/prodforge/academy/backlog-e-refinamento-sem-caos.webp?v=20260503-final-v2',
@@ -25,7 +25,7 @@ const academyGuideThumbnailsBySlug = {
   },
   'refinamento-e-criterios': {
     src: 'images/prodforge/academy/como-fazer-refinamento-sem-desperdicio.webp?v=20260503-final-v2',
-    alt: 'Capa do guia Como fazer refinamento sem desperdicio',
+    alt: 'Capa do guia Como fazer refinamento sem desperdício',
   },
   'alinhamento-com-stakeholders': {
     src: 'images/prodforge/academy/alinhamento-com-stakeholders-sem-virar-telefone-sem-fio.webp?v=20260503-final-v2',

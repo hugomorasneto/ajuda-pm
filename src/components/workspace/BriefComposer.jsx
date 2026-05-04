@@ -137,27 +137,27 @@ const STEPS = [
 ]
 
 const contextPrompts = [
-  { label: 'Problema do usuario', text: 'Problema do usuario: ' },
+  { label: 'Problema do usuário', text: 'Problema do usuário: ' },
   { label: 'Fluxo atual', text: 'Fluxo atual: ' },
-  { label: 'Impacto no negocio', text: 'Impacto no negocio: ' },
+  { label: 'Impacto no negócio', text: 'Impacto no negócio: ' },
 ]
 
 const requirementPrompts = [
-  { label: 'Regra de negocio', text: 'Regra de negocio: ' },
-  { label: 'Criterio minimo', text: 'Criterio minimo: ' },
-  { label: 'Cenario alternativo', text: 'Cenario alternativo: ' },
+  { label: 'Regra de negócio', text: 'Regra de negócio: ' },
+  { label: 'Critério mínimo', text: 'Critério mínimo: ' },
+  { label: 'Cenário alternativo', text: 'Cenário alternativo: ' },
 ]
 
 const adjustmentPrompts = [
-  { label: 'Mais objetivo', text: 'Deixe a saida mais objetiva e pronta para refinamento.' },
-  { label: 'Mais tecnico', text: 'Aprofunde impactos tecnicos, integracoes e observabilidade.' },
-  { label: 'Foco em QA', text: 'Reforce criterios de aceite, excecoes e checklist de QA.' },
+  { label: 'Mais objetivo', text: 'Deixe a saída mais objetiva e pronta para refinamento.' },
+  { label: 'Mais técnico', text: 'Aprofunde impactos técnicos, integrações e observabilidade.' },
+  { label: 'Foco em QA', text: 'Reforce critérios de aceite, exceções e checklist de QA.' },
 ]
 
 const LOADING_STEPS = [
   { label: 'Analisando contexto...', pct: 30 },
   { label: 'Identificando persona...', pct: 65 },
-  { label: 'Montando criterios...', pct: 90 },
+  { label: 'Montando critérios...', pct: 90 },
 ]
 
 function ComposerStepper({ contextFilled, requirementsFilled, isGenerated }) {
@@ -247,7 +247,7 @@ function BriefComposer({
     : isEditing
       ? hasAdjustment
         ? 'Forjar com ajuste'
-        : 'Forjar nova versao'
+        : 'Forjar nova versão'
       : 'Forjar Story'
 
   return (
@@ -258,7 +258,7 @@ function BriefComposer({
       <header className="brief-composer__panel-header">
         <div className="brief-composer__panel-copy">
           <p className="brief-composer__eyebrow">Briefing</p>
-          <h2>Materia-prima da story</h2>
+          <h2>Matéria-prima da story</h2>
           <p>Contexto, requisitos e ajuste no mesmo trilho antes da forja.</p>
         </div>
 
@@ -296,7 +296,7 @@ function BriefComposer({
             error={validationErrors.problemContext}
             footer={
               <PromptChips
-                label="Sugestoes para contexto"
+                label="Sugestões para contexto"
                 items={contextPrompts}
                 onSelect={(value) => onApplyPrompt('problemContext', value)}
               />
@@ -307,7 +307,7 @@ function BriefComposer({
               id="workspace-context"
               value={formValues.problemContext}
               onChange={(event) => onChange('problemContext', event.target.value)}
-              placeholder='Ex: "Usuarios nao conseguem recuperar senha em dispositivos mobile"'
+              placeholder='Ex: "Usuários não conseguem recuperar senha em dispositivos mobile"'
               rows={5}
               className={validationErrors.problemContext ? 'textarea--error' : ''}
             />
@@ -326,7 +326,7 @@ function BriefComposer({
                 {validationErrors.requirements ? (
                   <span
                     className="brief-accordion__error-dot"
-                    aria-label="Campo obrigatorio com erro"
+                    aria-label="Campo obrigatório com erro"
                   />
                 ) : null}
                 {requirementsFilled && !reqOpen ? (
@@ -345,18 +345,18 @@ function BriefComposer({
                 error={validationErrors.requirements}
                 footer={
                   <PromptChips
-                    label="Sugestoes para requisitos"
+                    label="Sugestões para requisitos"
                     items={requirementPrompts}
                     onSelect={(value) => onApplyPrompt('requirements', value)}
                   />
                 }
               >
-                <label className="sr-only" htmlFor="workspace-requirements">Requisitos e criterios</label>
+                <label className="sr-only" htmlFor="workspace-requirements">Requisitos e critérios</label>
                 <textarea
                   id="workspace-requirements"
                   value={formValues.requirements}
                   onChange={(event) => onChange('requirements', event.target.value)}
-                  placeholder='Ex: "Fluxo por e-mail, link expira em 24h, compativel com iOS e Android"'
+                  placeholder='Ex: "Fluxo por e-mail, link expira em 24h, compatível com iOS e Android"'
                   rows={4}
                   tabIndex={reqOpen ? 0 : -1}
                   className={validationErrors.requirements ? 'textarea--error' : ''}
@@ -386,18 +386,18 @@ function BriefComposer({
               <ComposerSection
                 footer={
                   <PromptChips
-                    label="Sugestoes para ajuste"
+                    label="Sugestões para ajuste"
                     items={adjustmentPrompts}
                     onSelect={(value) => onApplyPrompt('adjustment', value)}
                   />
                 }
               >
-                <label className="sr-only" htmlFor="workspace-adjustment">Ajuste para a proxima versao</label>
+                <label className="sr-only" htmlFor="workspace-adjustment">Ajuste para a próxima versão</label>
                 <textarea
                   id="workspace-adjustment"
                   value={formValues.adjustment}
                   onChange={(event) => onChange('adjustment', event.target.value)}
-                  placeholder='Ex: "Foque em criterios de aceite mais detalhados"'
+                  placeholder='Ex: "Foque em critérios de aceite mais detalhados"'
                   rows={3}
                   tabIndex={adjOpen ? 0 : -1}
                 />

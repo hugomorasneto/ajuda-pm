@@ -22,10 +22,10 @@ const PERIOD_OPTIONS = [
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'Todos' },
-  { value: 'generated', label: 'Generated' },
-  { value: 'reviewed', label: 'Reviewed' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'archived', label: 'Archived' },
+  { value: 'generated', label: 'Gerado' },
+  { value: 'reviewed', label: 'Revisado' },
+  { value: 'approved', label: 'Aprovado' },
+  { value: 'archived', label: 'Arquivado' },
 ]
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50]
@@ -68,7 +68,7 @@ function buildPlainText(story) {
   return [
     `User story: ${story?.user_story ?? '-'}`,
     '',
-    'Criterios de aceite:',
+    'Critérios de aceite:',
     ...acceptanceCriteria.map((item, index) => `${index + 1}. ${item}`),
   ].join('\n')
 }
@@ -142,11 +142,11 @@ function HistoryPage() {
     if (typeof setTopbarStatus !== 'function') return
 
     setTopbarStatus({
-      label: 'Historico',
+      label: 'Histórico',
       title: selectedStory?.title || 'Stories forjadas',
       pills: [
-        { text: `${totalCount} ${totalCount === 1 ? 'historia' : 'historias'}` },
-        { text: `${pageSize} por pagina` },
+        { text: `${totalCount} ${totalCount === 1 ? 'história' : 'histórias'}` },
+        { text: `${pageSize} por página` },
       ],
     })
 
@@ -203,7 +203,7 @@ function HistoryPage() {
         setTotalCount(0)
         setTotalPages(0)
         setLoadError(
-          'Nao foi possivel carregar o historico. Verifique se a migration story-history-search.sql foi aplicada.',
+          'Não foi possível carregar o histórico. Verifique se a migration story-history-search.sql foi aplicada.',
         )
       }
 
@@ -238,8 +238,8 @@ function HistoryPage() {
       await copyTextToClipboard(buildPlainText(selectedResult))
       setCopyMessage('Texto simples copiado.')
     } catch (error) {
-      console.error('Falha ao copiar texto simples do historico:', error)
-      setCopyMessage('Nao foi possivel copiar o texto simples agora.')
+      console.error('Falha ao copiar texto simples do histórico:', error)
+      setCopyMessage('Não foi possível copiar o texto simples agora.')
     } finally {
       setIsCopyingPlain(false)
     }
@@ -275,10 +275,10 @@ function HistoryPage() {
     <div className="history-page">
       <section className="panel history-page__hero">
         <div className="history-page__hero-copy">
-          <p className="history-page__eyebrow">Historico</p>
+          <p className="history-page__eyebrow">Histórico</p>
           <h1>Stories forjadas</h1>
           <p>
-            Busque, filtre, exporte e reabra bases salvas sem poluir a area de trabalho principal.
+            Busque, filtre, exporte e reabra bases salvas sem poluir a área de trabalho principal.
           </p>
         </div>
         <Link className="btn btn-secondary btn-small" to="/tool">
@@ -286,19 +286,19 @@ function HistoryPage() {
         </Link>
       </section>
 
-      <section className="panel history-filters" aria-label="Filtros do historico">
+      <section className="panel history-filters" aria-label="Filtros do histórico">
         <label className="history-filter-field history-filter-field--search">
           <span>Buscar</span>
           <input
             type="search"
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="Titulo, contexto, requisito ou criterio"
+            placeholder="Título, contexto, requisito ou critério"
           />
         </label>
 
         <label className="history-filter-field">
-          <span>Periodo</span>
+          <span>Período</span>
           <select value={period} onChange={(event) => resetPageWith(setPeriod, event.target.value)}>
             {PERIOD_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -320,7 +320,7 @@ function HistoryPage() {
         </label>
 
         <label className="history-filter-field">
-          <span>Por pagina</span>
+          <span>Por página</span>
           <select
             value={pageSize}
             onChange={(event) => resetPageWith(setPageSize, Number(event.target.value))}
@@ -335,21 +335,21 @@ function HistoryPage() {
       </section>
 
       <div className="history-layout">
-        <section className="panel history-results" aria-label="Lista de historias">
+        <section className="panel history-results" aria-label="Lista de histórias">
           <div className="history-results__header">
             <div>
               <p className="history-page__eyebrow">Resultados</p>
-              <h2>{totalCount} historias</h2>
+              <h2>{totalCount} histórias</h2>
             </div>
             <span className="history-results__range">
               {visibleRange} de {totalCount}
             </span>
           </div>
 
-          {isLoading ? <p className="history-status">Carregando historico...</p> : null}
+          {isLoading ? <p className="history-status">Carregando histórico...</p> : null}
           {loadError ? <p className="history-status history-status-error">{loadError}</p> : null}
           {!isLoading && !loadError && items.length === 0 ? (
-            <p className="history-status">Nenhuma historia encontrada para os filtros atuais.</p>
+            <p className="history-status">Nenhuma história encontrada para os filtros atuais.</p>
           ) : null}
 
           <div className="history-results__list">
@@ -372,7 +372,7 @@ function HistoryPage() {
                   {preview ? <p>{preview}</p> : null}
                   <div className="history-result-card__meta">
                     <span>{formatDateTime(item.created_at)}</span>
-                    <span>{item.versions_count ?? item.version_number ?? 1} versoes</span>
+                    <span>{item.versions_count ?? item.version_number ?? 1} versões</span>
                     <span>{isActive ? 'Aberta no detalhe' : 'Ver detalhe'}</span>
                   </div>
                 </button>
@@ -380,9 +380,9 @@ function HistoryPage() {
             })}
           </div>
 
-          <div className="history-pagination" aria-label="Paginacao do historico">
+          <div className="history-pagination" aria-label="Paginação do histórico">
             <button type="button" className="btn btn-ghost btn-small" onClick={() => goToPage(1)} disabled={page <= 1}>
-              Inicio
+              Início
             </button>
             <button
               type="button"
@@ -393,7 +393,7 @@ function HistoryPage() {
               Anterior
             </button>
             <form className="history-pagination__jump" onSubmit={handlePageJump}>
-              <span>Pagina</span>
+              <span>Página</span>
               <input
                 type="number"
                 min="1"
@@ -412,7 +412,7 @@ function HistoryPage() {
               onClick={() => goToPage(page + 1)}
               disabled={totalPages === 0 || page >= totalPages}
             >
-              Proxima
+              Próxima
             </button>
             <button
               type="button"
@@ -425,14 +425,14 @@ function HistoryPage() {
           </div>
         </section>
 
-        <aside className="history-detail" aria-label="Detalhe da historia selecionada">
+        <aside className="history-detail" aria-label="Detalhe da história selecionada">
           {selectedResult ? (
             <>
               <div className="panel history-detail__actions">
                 <div>
                   <p className="history-page__eyebrow">Detalhe</p>
                   <h2>{selectedStory.title}</h2>
-                  <p>Revise, exporte ou envie esta base para a area de trabalho.</p>
+                  <p>Revise, exporte ou envie esta base para a área de trabalho.</p>
                 </div>
                 <button
                   type="button"
@@ -485,8 +485,8 @@ function HistoryPage() {
           ) : (
             <section className="panel history-detail__empty">
               <p className="history-page__eyebrow">Detalhe</p>
-              <h2>Selecione uma historia</h2>
-              <p>O detalhe da base selecionada aparece aqui com versoes e exportacao.</p>
+              <h2>Selecione uma história</h2>
+              <p>O detalhe da base selecionada aparece aqui com versões e exportação.</p>
             </section>
           )}
         </aside>

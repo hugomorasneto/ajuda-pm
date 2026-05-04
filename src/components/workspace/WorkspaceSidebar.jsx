@@ -151,8 +151,8 @@ function WorkspaceSidebar({
   const accountInitial = user?.email?.charAt(0)?.toUpperCase() || 'P'
 
   const baseToolNavItems = [
-    { label: 'Area de trabalho', path: '/tool', end: true, icon: <IconWorkspace /> },
-    { label: 'Historico', path: '/historico', end: true, icon: <IconHistory /> },
+    { label: 'Área de trabalho', path: '/tool', end: true, icon: <IconWorkspace /> },
+    { label: 'Histórico', path: '/historico', end: true, icon: <IconHistory /> },
   ]
   const toolNavItems = location.pathname.startsWith('/admin')
     ? [...baseToolNavItems, { label: 'Admin', path: '/admin', end: false, icon: <IconAdmin /> }]
@@ -160,7 +160,7 @@ function WorkspaceSidebar({
 
   const academyNavItems = [
     {
-      label: 'Guias praticos',
+      label: 'Guias práticos',
       path: '/aprender',
       end: false,
       icon: <IconAcademy />,
@@ -168,7 +168,7 @@ function WorkspaceSidebar({
       markerClass: 'workspace-sidebar__link-marker--academy',
     },
     {
-      label: 'User stories na pratica',
+      label: 'User stories na prática',
       path: '/aprender/user-stories-na-pratica',
       end: true,
       icon: <IconStoryGuide />,
@@ -182,7 +182,7 @@ function WorkspaceSidebar({
     onClose()
     navigate('/login', {
       replace: true,
-      state: { message: 'Voce saiu da conta.' },
+      state: { message: 'Você saiu da conta.' },
     })
   }
 
@@ -227,11 +227,11 @@ function WorkspaceSidebar({
       {!isCompact ? (
         <div className="workspace-sidebar__summary">
           <p className="workspace-sidebar__eyebrow">Workspace</p>
-          <p className="workspace-sidebar__summary-copy">Brief, story e revisao no mesmo fluxo.</p>
+          <p className="workspace-sidebar__summary-copy">Brief, story e revisão no mesmo fluxo.</p>
         </div>
       ) : null}
 
-      <nav className="workspace-sidebar__nav" aria-label="Navegacao da area de trabalho">
+      <nav className="workspace-sidebar__nav" aria-label="Navegação da área de trabalho">
         {!isCompact ? <p className="workspace-sidebar__section-label">Ferramentas</p> : null}
         {toolNavItems.map((item) => (
           <SidebarNavLink key={item.path} item={item} isCompact={isCompact} onClose={onClose} />

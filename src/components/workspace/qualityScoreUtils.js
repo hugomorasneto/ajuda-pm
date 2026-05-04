@@ -18,7 +18,7 @@ export function getScoreMeta(score) {
   if (score >= 85) {
     return {
       label: 'Alta clareza',
-      note: 'Pronta para revisao e encaminhamento.',
+      note: 'Pronta para revisão e encaminhamento.',
       toneClass: 'quality-score--good',
     }
   }
@@ -26,7 +26,7 @@ export function getScoreMeta(score) {
   if (score >= 70) {
     return {
       label: 'Boa base',
-      note: 'Utilizavel. Revise gaps e checklist.',
+      note: 'Utilizável. Revise gaps e checklist.',
       toneClass: 'quality-score--mid',
     }
   }

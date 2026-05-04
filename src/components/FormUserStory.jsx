@@ -18,16 +18,16 @@ function FormUserStory({
     <section className="panel">
       <div className="panel-header panel-header-row">
         <div>
-          <h2>{isEditing ? 'Gerar nova versao' : 'Gerador de User Story'}</h2>
+          <h2>{isEditing ? 'Gerar nova versão' : 'Gerador de User Story'}</h2>
           <p>
             {isEditing
-              ? `Base selecionada: ${activeStoryTitle || 'historia selecionada'}. Gere uma nova versao sem sobrescrever as anteriores.`
-              : 'Descreva o cenario e gere uma versao mais contextual para priorizacao do backlog.'}
+              ? `Base selecionada: ${activeStoryTitle || 'história selecionada'}. Gere uma nova versão sem sobrescrever as anteriores.`
+              : 'Descreva o cenário e gere uma versão mais contextual para priorização do backlog.'}
           </p>
         </div>
         {isEditing ? (
           <button type="button" className="btn btn-ghost btn-small" onClick={onReset}>
-            Nova historia
+            Nova história
           </button>
         ) : null}
       </div>
@@ -38,7 +38,7 @@ function FormUserStory({
           id="contexto"
           value={formValues.problemContext}
           onChange={(event) => onChange('problemContext', event.target.value)}
-          placeholder="Exemplo: usuarios B2B abandonam onboarding por falta de validacao de dominio."
+          placeholder="Exemplo: usuários B2B abandonam onboarding por falta de validação de domínio."
           rows={4}
         />
         {validationErrors.problemContext ? (
@@ -50,7 +50,7 @@ function FormUserStory({
           id="requisitos"
           value={formValues.requirements}
           onChange={(event) => onChange('requirements', event.target.value)}
-          placeholder="Descreva regras, resultados esperados e limitacoes tecnicas/negociais."
+          placeholder="Descreva regras, resultados esperados e limitações técnicas/negociais."
           rows={4}
         />
         {validationErrors.requirements ? <p className="field-error">{validationErrors.requirements}</p> : null}
@@ -60,7 +60,7 @@ function FormUserStory({
           id="ajuste"
           value={formValues.adjustment}
           onChange={(event) => onChange('adjustment', event.target.value)}
-          placeholder="Exemplo: deixar mais tecnico, foco backend e observabilidade."
+          placeholder="Exemplo: deixar mais técnico, foco backend e observabilidade."
           rows={3}
         />
 
@@ -70,7 +70,7 @@ function FormUserStory({
             : isEditing
               ? hasAdjustment
                 ? 'Regenerar com ajuste'
-                : 'Gerar nova versao'
+                : 'Gerar nova versão'
               : 'Gerar User Story'}
         </button>
       </form>
@@ -79,4 +79,3 @@ function FormUserStory({
 }
 
 export default FormUserStory
-

@@ -15,7 +15,7 @@ function UserStoryResult({
     return (
       <section className="panel panel-muted">
         <h2>Resultado</h2>
-        <p>A user story gerada aparecera aqui com estrutura pronta para revisao.</p>
+        <p>A user story gerada aparecerá aqui com estrutura pronta para revisão.</p>
       </section>
     )
   }
@@ -41,10 +41,10 @@ function UserStoryResult({
         </button>
       </div>
 
-      {isLoadingSelectedStory ? <p className="result-inline-status">Carregando dados da historia...</p> : null}
+      {isLoadingSelectedStory ? <p className="result-inline-status">Carregando dados da história...</p> : null}
 
       <div className="result-section">
-        <h3>Titulo</h3>
+        <h3>Título</h3>
         {canEdit ? (
           <textarea
             rows={2}
@@ -76,7 +76,7 @@ function UserStoryResult({
       </div>
 
       <div className="result-section result-section-focus">
-        <h3>Criterios de aceitacao</h3>
+        <h3>Critérios de aceite</h3>
         {canEdit ? (
           <textarea
             rows={6}
@@ -94,7 +94,7 @@ function UserStoryResult({
 
       {result.business_rules.length > 0 ? (
         <div className="result-section result-section-focus">
-          <h3>Regras de negocio</h3>
+          <h3>Regras de negócio</h3>
           <ul className="criteria-list">
             {result.business_rules.map((rule) => (
               <li key={rule}>{rule}</li>
@@ -133,7 +133,7 @@ function UserStoryResult({
       <div className="result-actions">
         {canEdit ? (
           <button type="button" className="btn btn-ghost btn-small" onClick={onSaveEdits} disabled={isSavingEdits}>
-            {isSavingEdits ? 'Salvando edicoes...' : 'Salvar edicoes manuais'}
+            {isSavingEdits ? 'Salvando edições...' : 'Salvar edições manuais'}
           </button>
         ) : null}
         {saveMessage ? (
@@ -150,4 +150,3 @@ function UserStoryResult({
 }
 
 export default UserStoryResult
-

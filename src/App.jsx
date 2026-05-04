@@ -21,7 +21,7 @@ function RouteFallback() {
       <div className="app-route-loader__content">
         <p className="eyebrow">ProdForge</p>
         <h1>Carregando</h1>
-        <p>Aguarde enquanto o modulo desta area e preparado.</p>
+        <p>Aguarde enquanto o módulo desta área é preparado.</p>
       </div>
     </div>
   )

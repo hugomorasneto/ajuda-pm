@@ -4,14 +4,14 @@ import { useAuth } from '../hooks/useAuth'
 import { APP_NAME } from '../constants/app'
 
 const navItems = [
-  { label: 'Inicio', path: '/' },
+  { label: 'Início', path: '/' },
   { label: 'Fundamentos', path: '/fundamentos' },
-  { label: 'Scrum & Agil', path: '/scrum-agil' },
+  { label: 'Scrum & Ágil', path: '/scrum-agil' },
   { label: 'Backlog', path: '/backlog' },
   { label: 'User Stories', path: '/user-stories' },
   { label: 'Templates', path: '/templates' },
   { label: 'Ferramentas IA', path: '/tool' },
-  { label: 'Glossario', path: '/glossario' },
+  { label: 'Glossário', path: '/glossario' },
 ]
 
 function Sidebar() {
@@ -44,7 +44,7 @@ function Sidebar() {
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
           aria-expanded={isOpen}
-          aria-label="Abrir navegacao"
+          aria-label="Abrir navegação"
         >
           Menu
         </button>
@@ -55,17 +55,17 @@ function Sidebar() {
           <span className="brand-mark" />
           <div>
             <p className="brand-name">{APP_NAME}</p>
-            <p className="brand-caption">Conteudo e IA para backlog de produto</p>
+            <p className="brand-caption">Conteúdo e IA para backlog de produto</p>
           </div>
         </div>
 
         <div className="sidebar-intro-card">
           <p className="sidebar-intro-label">Workspace</p>
           <h2>Estruture backlog com mais clareza operacional.</h2>
-          <p>Conteudo, geracao assistida e historico no mesmo ambiente.</p>
+          <p>Conteúdo, geração assistida e histórico no mesmo ambiente.</p>
         </div>
 
-        <nav className="sidebar-nav" aria-label="Navegacao principal">
+        <nav className="sidebar-nav" aria-label="Navegação principal">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
@@ -116,7 +116,7 @@ function Sidebar() {
           type="button"
           className="backdrop"
           onClick={closeDrawer}
-          aria-label="Fechar navegacao"
+          aria-label="Fechar navegação"
         />
       ) : null}
     </>

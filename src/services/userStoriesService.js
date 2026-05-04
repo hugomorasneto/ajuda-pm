@@ -172,7 +172,7 @@ export async function listStoryHistoryGroups({
     if (!userId) {
       return {
         success: false,
-        error: new Error('Usuario nao autenticado.'),
+        error: new Error('Usuário não autenticado.'),
         data: [],
         totalCount: 0,
         page: 1,

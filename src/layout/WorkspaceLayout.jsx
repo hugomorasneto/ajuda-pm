@@ -128,7 +128,7 @@ function WorkspaceLayout() {
           type="button"
           className="workspace-shell__backdrop"
           onClick={closeSidebar}
-          aria-label="Fechar navegacao"
+          aria-label="Fechar navegação"
         />
       ) : null}
 

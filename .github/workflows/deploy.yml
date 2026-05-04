@@ -1,6 +1,9 @@
 name: Deploy Frontend (Hostinger FTP)
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -35,13 +38,14 @@ jobs:
           echo "npm ci falhou; executando fallback controlado com npm install"
           npm install --no-audit --no-fund
 
-      - name: Build production bundle
+      - name: Quality gate and production bundle
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-        run: npm run build
+        run: npm run quality
 
       - name: Deploy dist/ via FTP
+        if: github.event_name != 'pull_request'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
