@@ -209,7 +209,7 @@ function getBriefStage({ contextFilled, requirementsFilled, isGenerated, isSubmi
   if (isGenerated) return 'Primeira versão forjada'
   if (requirementsFilled) return 'Pronto para forjar'
   if (contextFilled) return 'Detalhar ligas'
-  return 'Inserir matéria-prima'
+  return 'Inserir insumo'
 }
 
 function BriefComposer({

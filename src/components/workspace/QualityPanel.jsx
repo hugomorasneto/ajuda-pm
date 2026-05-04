@@ -102,7 +102,7 @@ function QualityPanel({
         <div className="quality-panel__panel-copy">
           <p className="quality-panel__panel-eyebrow">Inspeção</p>
           <h2>Inspeção da peça</h2>
-          <p>Score, trincas, QA e entrega final no mesmo fluxo de inspeção.</p>
+          <p>Score, trincas e entrega final no mesmo fluxo.</p>
         </div>
 
         <div className="quality-panel__panel-actions">
@@ -132,7 +132,7 @@ function QualityPanel({
             <RailSection
               icon={<IconAlertTriangle />}
               label="Trincas"
-              description="Ambiguidades, exceções e pontos frágeis aparecem aqui."
+              description="Pontos frágeis aparecem aqui."
               placeholder
             >
               <p className="quality-panel__empty-note">
@@ -143,7 +143,7 @@ function QualityPanel({
             <RailSection
               icon={<IconClipboard />}
               label="Teste de resistência"
-              description="Cenários para validar se a story sustenta desenvolvimento e QA."
+              description="Cenários para validar dev e QA."
               placeholder
             >
               <p className="quality-panel__empty-note">
@@ -154,7 +154,7 @@ function QualityPanel({
             <RailSection
               icon={<IconDownload />}
               label="Entregar artefato"
-              description="Copie a story em Markdown, Jira ou texto."
+              description="Exporte quando a peça estiver pronta."
               placeholder
             >
               <p className="quality-panel__empty-note">
@@ -169,7 +169,7 @@ function QualityPanel({
             <RailSection
               icon={<IconAlertTriangle />}
               label="Trincas"
-              description="Pontos frágeis que ainda pedem decisão antes do refinamento."
+              description="Pontos frágeis aparecem aqui."
             >
               <GapList items={story.gaps} />
             </RailSection>
@@ -177,7 +177,7 @@ function QualityPanel({
             <RailSection
               icon={<IconClipboard />}
               label="Teste de resistência"
-              description="Cenários para validar se a story sustenta desenvolvimento e QA."
+              description="Cenários para validar dev e QA."
             >
               <QaChecklist items={story.qa_checklist} />
             </RailSection>
@@ -185,7 +185,7 @@ function QualityPanel({
             <RailSection
               icon={<IconDownload />}
               label="Entregar artefato"
-              description="Copie a story em Markdown, Jira ou texto."
+              description="Exporte quando a peça estiver pronta."
             >
               <ExportActionsBar
                 story={story}

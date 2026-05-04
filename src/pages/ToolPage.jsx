@@ -116,8 +116,8 @@ function ToolPage() {
   const showBlockingErrorState =
     !reviewStory && Boolean(workspaceError) && !showBlockingLoadingState
   const showEmptyState = !reviewStory && !showBlockingLoadingState && !showBlockingErrorState
-  const workspaceStatusLabel = isEditing ? 'Peça ativa' : 'Nova matéria-prima'
-  const workspaceStatusTitle = isEditing && activeStoryTitle ? activeStoryTitle : 'Nova story'
+  const workspaceStatusLabel = isEditing ? 'Peça atual' : 'Ação'
+  const workspaceStatusTitle = isEditing && activeStoryTitle ? activeStoryTitle : 'Nova matéria-prima'
   const showOnboarding = Boolean(
     onboardingStorageKey &&
       dismissedOnboardingKey !== onboardingStorageKey &&
