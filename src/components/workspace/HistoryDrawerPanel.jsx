@@ -40,7 +40,7 @@ function getHistoryStatus({ isLoadingRecent, isLoadingVersions, loadErrorMessage
   if (loadErrorMessage) return 'Atenção'
   if (isLoadingRecent || isLoadingVersions) return 'Atualizando'
   if (itemCount === 0) return 'Vazio'
-  return isEditing ? 'Base ativa' : 'Pronto'
+  return isEditing ? 'Peça ativa' : 'Pronto'
 }
 
 function HistoryDrawerPanel({
@@ -65,12 +65,12 @@ function HistoryDrawerPanel({
 }) {
   const safeItems = Array.isArray(items) ? items : []
   const activeItem = safeItems.find((item) => item.id === selectedId)
-  const activeTitle = activeStoryTitle || activeItem?.title || 'Nenhuma base ativa'
+  const activeTitle = activeStoryTitle || activeItem?.title || 'Nenhuma peça ativa'
   const activeSummaryNote = selectedId
-    ? 'Base carregada para revisão'
+    ? 'Peça carregada para inspeção'
     : isEditing
-      ? 'Story ativa carregada'
-      : 'Abra uma base salva quando quiser comparar'
+      ? 'Peça ativa carregada'
+      : 'Abra uma peça salva quando quiser comparar'
   const versionsCount = Array.isArray(versions) ? versions.length : 0
   const historyStatus = getHistoryStatus({
     isLoadingRecent,
@@ -87,14 +87,14 @@ function HistoryDrawerPanel({
     >
       <div className="workspace-history-panel__header">
         <div className="workspace-history-panel__copy">
-          <p className="workspace-history-panel__eyebrow">Histórico</p>
-          <h2>Stories forjadas</h2>
-          <p>Bases recentes, versões e comparação da base ativa no mesmo painel lateral.</p>
+          <p className="workspace-history-panel__eyebrow">Peças forjadas</p>
+          <h2>Peças forjadas</h2>
+          <p>Peças recentes, versões e comparação da peça ativa no mesmo painel lateral.</p>
         </div>
 
         <div className="workspace-history-panel__actions">
           <span className="workspace-history-panel__pill">
-            {safeItems.length} {safeItems.length === 1 ? 'base' : 'bases'}
+            {safeItems.length} {safeItems.length === 1 ? 'peça' : 'peças'}
           </span>
           {canCollapse ? (
             <button
@@ -112,7 +112,7 @@ function HistoryDrawerPanel({
 
       <div className="workspace-history-panel__collapsed-summary" hidden={!isCollapsed}>
         <div className="workspace-history-panel__summary-grid">
-          <SummaryCard label="Base ativa" value={activeTitle} note={activeSummaryNote} />
+          <SummaryCard label="Peça ativa" value={activeTitle} note={activeSummaryNote} />
           <SummaryCard
             label="Filtro"
             value={getFilterLabel(filterValue)}
@@ -121,12 +121,12 @@ function HistoryDrawerPanel({
           <SummaryCard
             label="Versões"
             value={versionsCount}
-            note={isEditing ? 'Timeline disponível' : 'Sem base ativa para comparar'}
+            note={isEditing ? 'Timeline disponível' : 'Sem peça ativa para comparar'}
           />
           <SummaryCard
             label="Estado"
             value={historyStatus}
-            note={loadErrorMessage || (isLoadingRecent ? 'Sincronizando stories recentes' : 'Abrir quando quiser explorar')}
+            note={loadErrorMessage || (isLoadingRecent ? 'Sincronizando peças recentes' : 'Abrir quando quiser explorar')}
           />
         </div>
       </div>

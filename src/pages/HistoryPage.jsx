@@ -22,13 +22,23 @@ const PERIOD_OPTIONS = [
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'Todos' },
-  { value: 'generated', label: 'Gerado' },
-  { value: 'reviewed', label: 'Revisado' },
+  { value: 'generated', label: 'Forjado' },
+  { value: 'reviewed', label: 'Inspecionado' },
   { value: 'approved', label: 'Aprovado' },
   { value: 'archived', label: 'Arquivado' },
 ]
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50]
+const STATUS_LABELS = {
+  generated: 'Forjado',
+  reviewed: 'Inspecionado',
+  approved: 'Aprovado',
+  archived: 'Arquivado',
+}
+
+function getStatusLabel(status) {
+  return STATUS_LABELS[status] ?? 'Forjado'
+}
 
 function buildSinceIso(period) {
   const now = new Date()
@@ -55,8 +65,8 @@ function mapStoryRowToResult(story) {
     gaps: parseTextList(story.gaps),
     qa_checklist: parseTextList(story.qa_checklist),
     notes: story.regeneration_instruction
-      ? `Ajuste aplicado: ${story.regeneration_instruction}`
-      : `Status: ${story.status ?? 'generated'}`,
+      ? `Acabamento aplicado: ${story.regeneration_instruction}`
+      : `Status: ${getStatusLabel(story.status)}`,
   }
 }
 
@@ -142,10 +152,10 @@ function HistoryPage() {
     if (typeof setTopbarStatus !== 'function') return
 
     setTopbarStatus({
-      label: 'Histórico',
-      title: selectedStory?.title || 'Stories forjadas',
+      label: 'Peças forjadas',
+      title: selectedStory?.title || 'Peças forjadas',
       pills: [
-        { text: `${totalCount} ${totalCount === 1 ? 'história' : 'histórias'}` },
+        { text: `${totalCount} ${totalCount === 1 ? 'peça' : 'peças'}` },
         { text: `${pageSize} por página` },
       ],
     })
@@ -203,7 +213,7 @@ function HistoryPage() {
         setTotalCount(0)
         setTotalPages(0)
         setLoadError(
-          'Não foi possível carregar o histórico. Verifique se a migration story-history-search.sql foi aplicada.',
+          'Não foi possível carregar as peças forjadas. Verifique se a migration story-history-search.sql foi aplicada.',
         )
       }
 
@@ -275,25 +285,25 @@ function HistoryPage() {
     <div className="history-page">
       <section className="panel history-page__hero">
         <div className="history-page__hero-copy">
-          <p className="history-page__eyebrow">Histórico</p>
-          <h1>Stories forjadas</h1>
+          <p className="history-page__eyebrow">Peças forjadas</p>
+          <h1>Peças forjadas</h1>
           <p>
-            Busque, filtre, exporte e reabra bases salvas sem poluir a área de trabalho principal.
+            Busque, filtre, entregue e reabra peças salvas sem poluir a bancada principal.
           </p>
         </div>
         <Link className="btn btn-secondary btn-small" to="/tool">
-          Nova story
+          Nova matéria-prima
         </Link>
       </section>
 
-      <section className="panel history-filters" aria-label="Filtros do histórico">
+      <section className="panel history-filters" aria-label="Filtros das peças forjadas">
         <label className="history-filter-field history-filter-field--search">
           <span>Buscar</span>
           <input
             type="search"
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="Título, contexto, requisito ou critério"
+            placeholder="Título, matéria-prima, liga ou critério"
           />
         </label>
 
@@ -335,21 +345,21 @@ function HistoryPage() {
       </section>
 
       <div className="history-layout">
-        <section className="panel history-results" aria-label="Lista de histórias">
+        <section className="panel history-results" aria-label="Lista de peças forjadas">
           <div className="history-results__header">
             <div>
               <p className="history-page__eyebrow">Resultados</p>
-              <h2>{totalCount} histórias</h2>
+              <h2>{totalCount} {totalCount === 1 ? 'peça' : 'peças'}</h2>
             </div>
             <span className="history-results__range">
               {visibleRange} de {totalCount}
             </span>
           </div>
 
-          {isLoading ? <p className="history-status">Carregando histórico...</p> : null}
+          {isLoading ? <p className="history-status">Buscando peças forjadas...</p> : null}
           {loadError ? <p className="history-status history-status-error">{loadError}</p> : null}
           {!isLoading && !loadError && items.length === 0 ? (
-            <p className="history-status">Nenhuma história encontrada para os filtros atuais.</p>
+            <p className="history-status">Nenhuma peça forjada encontrada para os filtros atuais.</p>
           ) : null}
 
           <div className="history-results__list">
@@ -367,20 +377,20 @@ function HistoryPage() {
                 >
                   <div className="history-result-card__top">
                     <h3>{item.title}</h3>
-                    <span>{item.status ?? 'generated'}</span>
+                    <span>{getStatusLabel(item.status)}</span>
                   </div>
                   {preview ? <p>{preview}</p> : null}
                   <div className="history-result-card__meta">
                     <span>{formatDateTime(item.created_at)}</span>
                     <span>{item.versions_count ?? item.version_number ?? 1} versões</span>
-                    <span>{isActive ? 'Aberta no detalhe' : 'Ver detalhe'}</span>
+                    <span>{isActive ? 'Aberta para inspeção' : 'Ver inspeção'}</span>
                   </div>
                 </button>
               )
             })}
           </div>
 
-          <div className="history-pagination" aria-label="Paginação do histórico">
+          <div className="history-pagination" aria-label="Paginação das peças forjadas">
             <button type="button" className="btn btn-ghost btn-small" onClick={() => goToPage(1)} disabled={page <= 1}>
               Início
             </button>
@@ -425,21 +435,21 @@ function HistoryPage() {
           </div>
         </section>
 
-        <aside className="history-detail" aria-label="Detalhe da história selecionada">
+        <aside className="history-detail" aria-label="Detalhe da peça selecionada">
           {selectedResult ? (
             <>
               <div className="panel history-detail__actions">
                 <div>
-                  <p className="history-page__eyebrow">Detalhe</p>
+                  <p className="history-page__eyebrow">Inspeção</p>
                   <h2>{selectedStory.title}</h2>
-                  <p>Revise, exporte ou envie esta base para a área de trabalho.</p>
+                  <p>Inspecione, entregue ou leve esta peça para a bancada.</p>
                 </div>
                 <button
                   type="button"
                   className="btn btn-primary btn-small"
                   onClick={() => navigate(`/tool?storyId=${selectedStory.id}`)}
                 >
-                  Abrir no workspace
+                  Abrir na bancada
                 </button>
               </div>
 
@@ -460,8 +470,8 @@ function HistoryPage() {
 
               <section className="panel history-detail__export">
                 <div>
-                  <p className="history-page__eyebrow">Exportar</p>
-                  <h2>Levar para o backlog</h2>
+                  <p className="history-page__eyebrow">Entregar artefato</p>
+                  <h2>Entregar no backlog</h2>
                 </div>
                 <ExportActionsBar
                   story={selectedResult}
@@ -484,9 +494,9 @@ function HistoryPage() {
             </>
           ) : (
             <section className="panel history-detail__empty">
-              <p className="history-page__eyebrow">Detalhe</p>
-              <h2>Selecione uma história</h2>
-              <p>O detalhe da base selecionada aparece aqui com versões e exportação.</p>
+              <p className="history-page__eyebrow">Inspeção</p>
+              <h2>Selecione uma peça</h2>
+              <p>A inspeção da peça selecionada aparece aqui com versões e entrega.</p>
             </section>
           )}
         </aside>

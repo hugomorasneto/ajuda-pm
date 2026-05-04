@@ -2,7 +2,7 @@ function QaChecklist({ items }) {
   const checklist = Array.isArray(items) ? items.filter(Boolean) : []
 
   if (checklist.length === 0) {
-    return <p className="quality-panel__empty-note">O checklist de QA ainda não veio preenchido para esta versão.</p>
+    return <p className="quality-panel__empty-note">O teste de resistência ainda não veio preenchido para esta versão.</p>
   }
 
   return (

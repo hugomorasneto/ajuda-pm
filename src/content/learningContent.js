@@ -2,7 +2,7 @@ import { APP_NAME, PRO_PLAN_NAME } from '../constants/app'
 
 export const learningHub = {
   eyebrow: 'Aprender',
-  title: 'Guias práticos para PMs e POs que ainda estão estruturando o próprio repertório.',
+  title: 'Guia do ferreiro PM para PMs e POs que ainda estão estruturando o próprio repertório.',
   description:
     'Aqui a proposta não é explicar Agile como teoria solta. Cada guia mostra quando o conceito importa, como aplicar no backlog e quais erros evitar no dia seguinte.',
   starterGuideSlugs: [
@@ -14,7 +14,7 @@ export const learningHub = {
   ],
   relatedProductLinks: [
     {
-      title: 'Gerar uma user story com IA',
+      title: 'Forjar uma user story com IA',
       description: `Use o ${APP_NAME} para transformar contexto solto em uma primeira versão revisável.`,
       to: '/signup',
       label: 'Criar conta grátis',
@@ -130,7 +130,7 @@ export const learningGuides = [
   {
     slug: 'user-stories-na-pratica',
     category: 'User Stories',
-    title: 'User stories na prática',
+    title: 'Stories na prática',
     excerpt:
       'Como sair de contexto solto para uma história útil, com objetivo, comportamento esperado, critérios e perguntas de refinamento.',
     readingTime: '7 min',
@@ -142,7 +142,7 @@ export const learningGuides = [
     quickSummary: [
       'Uma user story boa explica intenção e comportamento, não apenas tela ou campo.',
       'Critério de aceite ruim gera estimativa ruim e teste fraco.',
-      'Gaps explicitados cedo evitam descobertas caras no meio do desenvolvimento.',
+      'Trincas explicitadas cedo evitam descobertas caras no meio do desenvolvimento.',
     ],
     exampleScenario: {
       title: 'Exemplo real',
@@ -202,14 +202,14 @@ export const learningGuides = [
     checklist: [
       'A história explica o objetivo da mudança.',
       'Os critérios cobrem fluxo principal, erro e exceção mais relevante.',
-      'Os gaps estão explícitos, não escondidos em comentário.',
+      'As trincas estão explícitas, não escondidas em comentário.',
       'Dev e QA conseguem iniciar conversa de refinamento com base no documento.',
     ],
     nextReads: ['backlog-e-refinamento', 'discovery-leve'],
     seo: {
-      title: 'User stories na prática para PMs e POs | ProdForge',
+      title: 'Stories na prática para PMs e POs | ProdForge',
       description:
-        'Aprenda a transformar contexto solto em user stories com objetivo, critérios de aceite, gaps e checklist de refinamento.',
+        'Aprenda a transformar contexto solto em user stories com objetivo, critérios de aceite, trincas e checklist de refinamento.',
     },
   },
   {
@@ -236,7 +236,7 @@ export const learningGuides = [
       bullets: [
         'Separar ideias de itens em preparação reduz ruído.',
         'Trazer contexto mínimo antes do refinamento economiza reunião.',
-        'Marcar gaps evita que a conversa vire descoberta improvisada.',
+        'Marcar trincas evita que a conversa vire descoberta improvisada.',
       ],
       result:
         'O refinamento fica mais curto e as decisões ficam melhor documentadas.',
@@ -261,7 +261,7 @@ export const learningGuides = [
           'Se tudo é descoberto ao vivo, a reunião fica longa e rasa ao mesmo tempo.',
         ],
         bullets: [
-          'Contexto do problema.',
+          'Matéria-prima do problema.',
           'Impacto esperado.',
           'Riscos, exceções e dependências conhecidas.',
         ],
@@ -645,7 +645,7 @@ export const learningNotes = [
     title: 'IA para melhorar user stories sem terceirizar pensamento',
     tag: 'Novidade prática',
     summary:
-      'Use IA para organizar contexto, explicitar gaps e acelerar a primeira versão. Não use para decidir prioridade no seu lugar.',
+      'Use IA para organizar contexto, explicitar trincas e acelerar a primeira versão. Não use para decidir prioridade no seu lugar.',
     ctaLabel: 'Ler guia de user stories',
     targetGuideSlug: 'user-stories-na-pratica',
   },

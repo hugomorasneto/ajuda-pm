@@ -17,7 +17,7 @@ function LandingHero({ hero, isAuthenticated, sectionId }) {
           {isAuthenticated ? (
             <>
               <Link className="landing-button forge-button forge-button--ember forge-button--lg" to="/tool">
-                Abrir área de trabalho
+                Abrir bancada
               </Link>
               <a className="landing-button forge-button forge-button--metal forge-button--lg" href="#como-funciona">
                 Ver como funciona

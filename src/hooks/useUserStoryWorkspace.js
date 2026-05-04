@@ -16,6 +16,17 @@ import { useAuth } from './useAuth'
 import { trackEvent } from '../services/analyticsService'
 import { FREE_GENERATION_LIMIT } from '../constants/app'
 
+const STORY_STATUS_LABELS = {
+  generated: 'Forjado',
+  reviewed: 'Inspecionado',
+  approved: 'Aprovado',
+  archived: 'Arquivado',
+}
+
+function getStoryStatusLabel(status) {
+  return STORY_STATUS_LABELS[status] ?? 'Forjado'
+}
+
 export function parseTextList(value) {
   if (!value) return []
   return String(value)
@@ -30,7 +41,7 @@ function mapStoryRowToGeneratedResult(story) {
     objective: story.objective,
     user_story: story.user_story,
     acceptance_criteria: parseTextList(story.acceptance_criteria),
-    notes: `Status: ${story.status ?? 'generated'}`,
+    notes: `Status: ${getStoryStatusLabel(story.status)}`,
     business_rules: parseTextList(story.business_rules),
     gaps: parseTextList(story.gaps),
     qa_checklist: parseTextList(story.qa_checklist),
@@ -46,10 +57,10 @@ function mapStoryRowToGeneratedResult(story) {
 function validateForm(formValues) {
   const errors = {}
   if (!formValues.problemContext.trim()) {
-    errors.problemContext = 'Informe o contexto do problema para gerar a user story.'
+    errors.problemContext = 'Informe a matéria-prima principal antes de acionar a forja.'
   }
   if (!formValues.requirements.trim()) {
-    errors.requirements = 'Informe os requisitos para montar critérios de aceite úteis.'
+    errors.requirements = 'Informe as ligas e regras para montar critérios de aceite úteis.'
   }
   return errors
 }
@@ -181,7 +192,7 @@ export function useUserStoryWorkspace() {
     if (response.success) {
       setRecentStories(response.data ?? [])
     } else {
-      setHistoryError('Não foi possível carregar o histórico agora.')
+      setHistoryError('Não foi possível buscar as peças forjadas agora.')
     }
 
     setIsLoadingRecent(false)
@@ -344,7 +355,7 @@ export function useUserStoryWorkspace() {
     try {
       const text = buildClipboardText(sourceStory)
       await navigator.clipboard.writeText(text)
-      setCopyMessage('User story copiada para a área de transferência.')
+      setCopyMessage('Artefato copiado para a área de transferência.')
       trackEvent({
         event_name: 'user_story_copied',
         event_category: 'workspace',
@@ -413,7 +424,7 @@ export function useUserStoryWorkspace() {
     setValidationErrors(errors)
 
     if (Object.keys(errors).length > 0) {
-      setSaveMessage('Revise os campos obrigatórios antes de gerar a user story.')
+      setSaveMessage('Revise a matéria-prima e as ligas antes de acionar a forja.')
       return
     }
 
@@ -425,7 +436,7 @@ export function useUserStoryWorkspace() {
         metadata: { usage_count: usageCount, free_limit: FREE_GENERATION_LIMIT },
       })
       setSaveMessage(
-        `Limite do plano Free atingido (${FREE_GENERATION_LIMIT} gerações). Atualize para Pro para continuar.`,
+        `Limite do plano Free atingido (${FREE_GENERATION_LIMIT} forjas). Atualize para Pro para continuar.`,
       )
       return
     }
@@ -517,8 +528,8 @@ export function useUserStoryWorkspace() {
 
       const quality = generated?.generation_meta?.quality_score
       const qualityLabel =
-        Number.isFinite(quality) && quality > 0 ? ` Pontuação da revisão: ${quality}/100.` : ''
-      setSaveMessage(`User story gerada e salva com sucesso.${qualityLabel}`)
+        Number.isFinite(quality) && quality > 0 ? ` Pontuação da inspeção: ${quality}/100.` : ''
+      setSaveMessage(`Primeira versão forjada e salva com sucesso.${qualityLabel}`)
       await loadRecentStories()
       await loadVersionsByGroup(persisted.story_group_id ?? persisted.id)
       await loadUsage()
@@ -554,9 +565,9 @@ export function useUserStoryWorkspace() {
       const baseMessage =
         error instanceof Error && error.message
           ? error.message
-          : 'Não foi possível gerar a user story agora.'
-      setWorkspaceError(`${baseMessage} Seu contexto foi preservado para uma nova tentativa.`)
-      setSaveMessage(`${baseMessage} Seu contexto foi preservado para uma nova tentativa.`)
+          : 'Não foi possível gerar a story agora.'
+      setWorkspaceError(`${baseMessage} Sua matéria-prima foi preservada para uma nova tentativa.`)
+      setSaveMessage(`${baseMessage} Sua matéria-prima foi preservada para uma nova tentativa.`)
       trackEvent({
         event_name: 'user_story_generate_failed',
         event_category: 'workspace',

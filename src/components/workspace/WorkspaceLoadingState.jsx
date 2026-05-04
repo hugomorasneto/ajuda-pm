@@ -8,8 +8,8 @@ const loadingPresets = {
   },
   selection: {
     steps: [
-      { label: 'Buscando a story…', pct: 40 },
-      { label: 'Abrindo documento…', pct: 75 },
+      { label: 'Buscando peças forjadas…', pct: 40 },
+      { label: 'Abrindo artefato…', pct: 75 },
       { label: 'Sincronizando versões…', pct: 95 },
     ],
   },
@@ -19,7 +19,7 @@ function WorkspaceLoadingState({ mode = 'generate' }) {
   const preset = loadingPresets[mode] ?? loadingPresets.generate
 
   return (
-    <section className="panel workspace-state workspace-state--loading" aria-live="polite" aria-label="Carregando">
+    <section className="panel workspace-state workspace-state--loading" aria-live="polite" aria-label="Processando a forja">
       <div className="workspace-state__content">
         {/* Skeleton that mimics the real document structure */}
         <div className="workspace-state__skeleton" aria-hidden="true">

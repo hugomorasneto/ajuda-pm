@@ -17,7 +17,7 @@ const academyGuideThumbnailsBySlug = {
   },
   'user-stories-na-pratica': {
     src: 'images/prodforge/academy/user-stories-na-pratica.webp?v=20260503-final-v2',
-    alt: 'Capa do guia User stories na prática',
+    alt: 'Capa do guia Stories na prática',
   },
   'backlog-e-refinamento': {
     src: 'images/prodforge/academy/backlog-e-refinamento-sem-caos.webp?v=20260503-final-v2',

@@ -22,7 +22,7 @@ function ProtectedRoute({ children }) {
         replace
         state={{
           from: `${location.pathname}${location.search}${location.hash}`,
-          message: 'Entre para acessar sua área de trabalho.',
+          message: 'Entre para acessar sua bancada.',
         }}
       />
     )

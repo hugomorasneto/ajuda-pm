@@ -11,9 +11,9 @@ import { useAuth } from '../hooks/useAuth'
 import { useUserStoryWorkspace } from '../hooks/useUserStoryWorkspace'
 
 const TABS = [
-  { id: 'entrada', label: 'Brief' },
-  { id: 'resultado', label: 'Story' },
-  { id: 'revisao', label: 'Revisão' },
+  { id: 'entrada', label: 'Bancada' },
+  { id: 'resultado', label: 'Artefato' },
+  { id: 'revisao', label: 'Inspeção' },
 ]
 
 function hasSeenOnboarding(storageKey) {
@@ -116,8 +116,8 @@ function ToolPage() {
   const showBlockingErrorState =
     !reviewStory && Boolean(workspaceError) && !showBlockingLoadingState
   const showEmptyState = !reviewStory && !showBlockingLoadingState && !showBlockingErrorState
-  const workspaceStatusLabel = isEditing ? 'Base ativa' : 'Nova base'
-  const workspaceStatusTitle = isEditing && activeStoryTitle ? activeStoryTitle : 'Nova user story'
+  const workspaceStatusLabel = isEditing ? 'Peça ativa' : 'Nova matéria-prima'
+  const workspaceStatusTitle = isEditing && activeStoryTitle ? activeStoryTitle : 'Nova story'
   const showOnboarding = Boolean(
     onboardingStorageKey &&
       dismissedOnboardingKey !== onboardingStorageKey &&
@@ -131,14 +131,14 @@ function ToolPage() {
 
     const generationsText = isPremium
       ? 'Pro'
-      : `${remainingGenerations} ${remainingGenerations === 1 ? 'geração' : 'gerações'}`
+      : `${remainingGenerations} ${remainingGenerations === 1 ? 'forja' : 'forjas'}`
 
     setTopbarStatus({
       label: workspaceStatusLabel,
       title: workspaceStatusTitle,
       pills: [
         {
-          text: isEditing ? 'Em revisão' : 'Nova',
+          text: isEditing ? 'Em inspeção' : 'Nova peça',
           className: isEditing ? 'mode-pill-editing' : 'mode-pill-new',
         },
         {
@@ -202,7 +202,7 @@ function ToolPage() {
   return (
     <div className="tool-page story-workspace">
 
-      <nav className="workspace-tabs" aria-label="Areas do workspace">
+      <nav className="workspace-tabs" aria-label="Áreas da bancada">
         {TABS.map((tab) => (
           <button
             key={tab.id}

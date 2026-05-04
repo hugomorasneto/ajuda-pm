@@ -60,9 +60,9 @@ function Sidebar() {
         </div>
 
         <div className="sidebar-intro-card">
-          <p className="sidebar-intro-label">Workspace</p>
+          <p className="sidebar-intro-label">FORJA</p>
           <h2>Estruture backlog com mais clareza operacional.</h2>
-          <p>Conteúdo, geração assistida e histórico no mesmo ambiente.</p>
+          <p>Conteúdo, forja assistida e peças salvas no mesmo ambiente.</p>
         </div>
 
         <nav className="sidebar-nav" aria-label="Navegação principal">

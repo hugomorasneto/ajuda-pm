@@ -41,9 +41,9 @@ export function buildStoryMarkdown(story) {
     businessRules.length > 0
       ? buildSection('Regras de negócio', businessRules.map((item) => `- ${item}`).join('\n'))
       : '',
-    gaps.length > 0 ? buildSection('Gaps', gaps.map((item) => `- ${item}`).join('\n')) : '',
+    gaps.length > 0 ? buildSection('Trincas', gaps.map((item) => `- ${item}`).join('\n')) : '',
     qaChecklist.length > 0
-      ? buildSection('Checklist de QA', qaChecklist.map((item) => `- ${item}`).join('\n'))
+      ? buildSection('Teste de resistência', qaChecklist.map((item) => `- ${item}`).join('\n'))
       : '',
     story.notes ? buildSection('Notas', story.notes.trim()) : '',
   ])
@@ -68,9 +68,9 @@ export function buildStoryJiraLike(story) {
     businessRules.length > 0
       ? buildJiraSection('Regras de negócio', businessRules.map((item) => `* ${item}`).join('\n'))
       : '',
-    gaps.length > 0 ? buildJiraSection('Gaps', gaps.map((item) => `* ${item}`).join('\n')) : '',
+    gaps.length > 0 ? buildJiraSection('Trincas', gaps.map((item) => `* ${item}`).join('\n')) : '',
     qaChecklist.length > 0
-      ? buildJiraSection('Checklist de QA', qaChecklist.map((item) => `* ${item}`).join('\n'))
+      ? buildJiraSection('Teste de resistência', qaChecklist.map((item) => `* ${item}`).join('\n'))
       : '',
     story.notes ? buildJiraSection('Notas', story.notes.trim()) : '',
   ])

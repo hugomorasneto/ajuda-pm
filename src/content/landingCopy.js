@@ -9,8 +9,8 @@ export const landingCopy = {
     },
     {
       icon: 'check',
-      value: 'Critérios e gaps',
-      description: 'Aceite, pontos em aberto e QA no mesmo fluxo.',
+      value: 'Critérios e trincas',
+      description: 'Aceite, pontos frágeis e QA no mesmo fluxo.',
     },
     {
       icon: 'unlock',
@@ -22,11 +22,11 @@ export const landingCopy = {
     eyebrow: 'Feito para PMs e times de produto',
     title: 'Transforme briefings confusos em user stories claras que o time entende na primeira leitura.',
     description:
-      'A demanda entra bruta. A IA forja a estrutura com objetivo, critérios de aceite, gaps e checklist de QA prontos para revisão.',
+      'A demanda entra bruta. A IA forja a estrutura com objetivo, critérios de aceite, trincas e teste de resistência prontos para inspeção.',
     microcopy: 'Grátis para começar · Sem cartão · Resultado em 60 segundos',
     stats: [
       { value: '60 segundos', label: 'da demanda vaga a uma story pronta para revisão' },
-      { value: 'Critérios + gaps', label: 'acabamento e impurezas mapeados no mesmo fluxo' },
+      { value: 'Critérios + trincas', label: 'acabamento e pontos frágeis mapeados no mesmo fluxo' },
       { value: '100% grátis', label: 'para começar sem cartão e validar com contexto real' },
     ],
     preview: {
@@ -81,7 +81,7 @@ export const landingCopy = {
         step: '02',
         title: 'A forja trabalha',
         description:
-          'O ProdForge estrutura objetivo, story, critérios, gaps e checklist de QA no mesmo fluxo.',
+          'O ProdForge estrutura objetivo, story, critérios, trincas e teste de resistência no mesmo fluxo.',
       },
       {
         step: '03',
@@ -133,7 +133,7 @@ export const landingCopy = {
         title: 'Mais contexto para decidir',
         bullets: [
           'Organiza o problema antes de virar tarefa.',
-          'Ajuda a identificar gaps, riscos e dependências cedo.',
+          'Ajuda a identificar trincas, riscos e dependências cedo.',
         ],
       },
       {
@@ -158,7 +158,7 @@ export const landingCopy = {
     eyebrow: 'Academia ProdForge',
     title: 'Aprenda enquanto faz.',
     description:
-      'Guias práticos que explicam o conceito e te levam direto para a ferramenta, com exemplos reais de backlog.',
+      'Guia do ferreiro PM para entender o conceito e ir direto para a ferramenta, com exemplos reais de backlog.',
     footer:
       'Cada guia traz um caminho prático para você sair da teoria e aplicar no seu fluxo real de trabalho.',
   },
@@ -171,9 +171,9 @@ export const landingCopy = {
       badge: 'Grátis',
       description: 'Para validar o fluxo com contexto real e sair do texto solto.',
       items: [
-        `${FREE_GENERATION_LIMIT} gerações de user story por conta.`,
-        'Histórico por usuário.',
-        'Fluxo básico de revisão na área de trabalho.',
+        `${FREE_GENERATION_LIMIT} forjas de user story por conta.`,
+        'Peças forjadas por usuário.',
+        'Fluxo básico de inspeção na bancada.',
       ],
     },
     pro: {
@@ -181,7 +181,7 @@ export const landingCopy = {
       badge: 'Mais popular',
       description: 'Para times que precisam de mais escala, padrão e profundidade.',
       items: [
-        'Mais gerações e mais versões por fluxo.',
+        'Mais forjas e mais versões por fluxo.',
         'Comparação de versões e exportações avançadas.',
         'Padrões do time, templates e integrações futuras.',
       ],

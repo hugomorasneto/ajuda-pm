@@ -18,22 +18,22 @@ function FormUserStory({
     <section className="panel">
       <div className="panel-header panel-header-row">
         <div>
-          <h2>{isEditing ? 'Gerar nova versão' : 'Gerador de User Story'}</h2>
+          <h2>{isEditing ? 'Forjar nova versão' : 'Forja de User Story'}</h2>
           <p>
             {isEditing
-              ? `Base selecionada: ${activeStoryTitle || 'história selecionada'}. Gere uma nova versão sem sobrescrever as anteriores.`
-              : 'Descreva o cenário e gere uma versão mais contextual para priorização do backlog.'}
+              ? `Peça selecionada: ${activeStoryTitle || 'história selecionada'}. Forje uma nova versão sem sobrescrever as anteriores.`
+              : 'Descreva a matéria-prima e forje uma versão mais contextual para priorização do backlog.'}
           </p>
         </div>
         {isEditing ? (
           <button type="button" className="btn btn-ghost btn-small" onClick={onReset}>
-            Nova história
+            Nova peça
           </button>
         ) : null}
       </div>
 
       <form onSubmit={handleSubmit} className="story-form">
-        <label htmlFor="contexto">Contexto do problema</label>
+        <label htmlFor="contexto">Matéria-prima</label>
         <textarea
           id="contexto"
           value={formValues.problemContext}
@@ -45,7 +45,7 @@ function FormUserStory({
           <p className="field-error">{validationErrors.problemContext}</p>
         ) : null}
 
-        <label htmlFor="requisitos">Requisitos</label>
+        <label htmlFor="requisitos">Ligas e regras</label>
         <textarea
           id="requisitos"
           value={formValues.requirements}
@@ -55,7 +55,7 @@ function FormUserStory({
         />
         {validationErrors.requirements ? <p className="field-error">{validationErrors.requirements}</p> : null}
 
-        <label htmlFor="ajuste">Regenerar com ajuste (opcional)</label>
+        <label htmlFor="ajuste">Acabamento (opcional)</label>
         <textarea
           id="ajuste"
           value={formValues.adjustment}
@@ -66,12 +66,12 @@ function FormUserStory({
 
         <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
           {isSubmitting
-            ? 'Gerando...'
+            ? 'Aquecendo a forja...'
             : isEditing
               ? hasAdjustment
-                ? 'Regenerar com ajuste'
-                : 'Gerar nova versão'
-              : 'Gerar User Story'}
+                ? 'Refinar na forja'
+                : 'Forjar nova versão'
+              : 'Forjar primeira versão'}
         </button>
       </form>
     </section>

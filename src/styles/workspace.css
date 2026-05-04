@@ -3269,6 +3269,61 @@
   overflow: hidden;
 }
 
+.workspace-shell--forge .workspace-state--forge-visual.panel {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: #05080d;
+  box-shadow:
+    var(--forge-shadow-panel),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.workspace-shell--forge .workspace-state--forge-visual::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url('../assets/forge/forging-workspace-bg.png');
+  background-size: cover;
+  background-position: center right;
+  background-repeat: no-repeat;
+  opacity: 0.82;
+  transform: scale(1.01);
+}
+
+.workspace-shell--forge .workspace-state--forge-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(5, 8, 13, 0.97) 0%, rgba(7, 17, 28, 0.91) 42%, rgba(7, 17, 28, 0.68) 72%, rgba(5, 8, 13, 0.52) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.14), rgba(0, 0, 0, 0.34));
+}
+
+.workspace-shell--forge .workspace-state--forge-visual > * {
+  position: relative;
+  z-index: 1;
+}
+
+.workspace-shell--forge .workspace-state--forge-visual .workspace-state__content {
+  max-width: min(38rem, 100%);
+}
+
+.workspace-shell--forge .workspace-state--forge-visual .workspace-state__icon,
+.workspace-shell--forge .workspace-state--forge-visual .workspace-state__hints li,
+.workspace-shell--forge .workspace-state--forge-visual .ws-template-chip {
+  backdrop-filter: blur(14px);
+}
+
+.workspace-shell--forge .workspace-state--forge-visual .workspace-state__hints li,
+.workspace-shell--forge .workspace-state--forge-visual .ws-template-chip {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.018)),
+    rgba(5, 8, 13, 0.74);
+}
+
 .workspace-shell--forge .workspace-state__icon {
   border: 1px solid var(--forge-border-ember);
   background:
@@ -3506,6 +3561,19 @@
 @media (max-width: 767px) {
   .workspace-shell--forge .story-workspace .panel {
     padding: var(--forge-space-4);
+  }
+
+  .workspace-shell--forge .workspace-state--forge-visual::before {
+    background-position: center;
+    opacity: 0.48;
+    filter: saturate(0.88);
+    transform: scale(1.04);
+  }
+
+  .workspace-shell--forge .workspace-state--forge-visual::after {
+    background:
+      linear-gradient(180deg, rgba(5, 8, 13, 0.98) 0%, rgba(7, 17, 28, 0.94) 58%, rgba(5, 8, 13, 0.90) 100%),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.24), rgba(0, 0, 0, 0.46));
   }
 
   .workspace-shell--forge .brief-stepper {

@@ -203,7 +203,7 @@ function LearningHubPage() {
             className="landing-button landing-button--primary"
             to={user ? '/tool' : '/signup'}
           >
-            {user ? 'Abrir área de trabalho →' : 'Gerar minha primeira história →'}
+            {user ? 'Abrir bancada →' : 'Forjar minha primeira story →'}
           </Link>
         </div>
 
@@ -295,8 +295,8 @@ function LearningHubPage() {
           <span className="badge-pill badge-pill--academy">Pronto para aplicar</span>
           <h2>Aprenda e execute no mesmo lugar.</h2>
           <p>
-            Os guias estruturam o repertório. O workspace transforma o contexto em user
-            story pronta para revisão.
+            Os guias estruturam o repertório. A bancada transforma a matéria-prima em user
+            story pronta para inspeção.
           </p>
         </div>
 
@@ -305,7 +305,7 @@ function LearningHubPage() {
             className="landing-button landing-button--primary"
             to={user ? '/tool' : '/signup'}
           >
-            {user ? 'Abrir área de trabalho' : 'Gerar minha primeira história →'}
+            {user ? 'Abrir bancada' : 'Forjar minha primeira story →'}
           </Link>
           <Link className="landing-button landing-button--secondary" to="/">
             Voltar para a página inicial

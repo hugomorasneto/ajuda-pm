@@ -6,7 +6,7 @@ function WorkspaceErrorState({ message, canRetry, onRetry }) {
         <h2>Não foi possível concluir esta etapa agora.</h2>
         <p>{message}</p>
         <p className="workspace-state__note">
-          O contexto preenchido foi preservado. Revise o brief à esquerda e tente novamente quando
+          A matéria-prima preenchida foi preservada. Revise a bancada à esquerda e tente novamente quando
           estiver pronto.
         </p>
 

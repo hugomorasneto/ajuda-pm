@@ -131,15 +131,15 @@ function IconPlus() {
 }
 
 const STEPS = [
-  { id: 'context', label: 'Contexto' },
-  { id: 'requirements', label: 'Requisitos' },
-  { id: 'generate', label: 'Gerar' },
+  { id: 'context', label: 'Matéria-prima' },
+  { id: 'requirements', label: 'Ligas' },
+  { id: 'generate', label: 'Forjar' },
 ]
 
 const contextPrompts = [
-  { label: 'Problema do usuário', text: 'Problema do usuário: ' },
+  { label: 'Dor do usuário', text: 'Dor do usuário: ' },
   { label: 'Fluxo atual', text: 'Fluxo atual: ' },
-  { label: 'Impacto no negócio', text: 'Impacto no negócio: ' },
+  { label: 'Impacto no produto', text: 'Impacto no produto: ' },
 ]
 
 const requirementPrompts = [
@@ -151,20 +151,20 @@ const requirementPrompts = [
 const adjustmentPrompts = [
   { label: 'Mais objetivo', text: 'Deixe a saída mais objetiva e pronta para refinamento.' },
   { label: 'Mais técnico', text: 'Aprofunde impactos técnicos, integrações e observabilidade.' },
-  { label: 'Foco em QA', text: 'Reforce critérios de aceite, exceções e checklist de QA.' },
+  { label: 'Foco em teste', text: 'Reforce critérios de aceite, exceções e cenários de QA.' },
 ]
 
 const LOADING_STEPS = [
-  { label: 'Analisando contexto...', pct: 30 },
-  { label: 'Identificando persona...', pct: 65 },
-  { label: 'Montando critérios...', pct: 90 },
+  { label: 'Aquecendo a forja...', pct: 30 },
+  { label: 'Combinando ligas...', pct: 65 },
+  { label: 'Preparando critérios...', pct: 90 },
 ]
 
 function ComposerStepper({ contextFilled, requirementsFilled, isGenerated }) {
   const activeIndex = isGenerated ? 3 : requirementsFilled ? 2 : contextFilled ? 1 : 0
 
   return (
-    <div className="brief-stepper" aria-label="Progresso do brief">
+    <div className="brief-stepper" aria-label="Progresso da forja">
       {STEPS.map((step, index) => {
         const done = index < activeIndex
         const active = index === activeIndex
@@ -206,10 +206,10 @@ function LoadingProgress() {
 
 function getBriefStage({ contextFilled, requirementsFilled, isGenerated, isSubmitting }) {
   if (isSubmitting) return 'Forjando'
-  if (isGenerated) return 'Story pronta'
+  if (isGenerated) return 'Primeira versão forjada'
   if (requirementsFilled) return 'Pronto para forjar'
-  if (contextFilled) return 'Detalhar requisitos'
-  return 'Preencher contexto'
+  if (contextFilled) return 'Detalhar ligas'
+  return 'Inserir matéria-prima'
 }
 
 function BriefComposer({
@@ -243,12 +243,12 @@ function BriefComposer({
   }
 
   const submitLabel = isSubmitting
-    ? 'Forjando...'
+    ? 'Aquecendo a forja...'
     : isEditing
       ? hasAdjustment
-        ? 'Forjar com ajuste'
+        ? 'Refinar na forja'
         : 'Forjar nova versão'
-      : 'Forjar Story'
+      : 'Forjar primeira versão'
 
   return (
     <section
@@ -257,9 +257,9 @@ function BriefComposer({
     >
       <header className="brief-composer__panel-header">
         <div className="brief-composer__panel-copy">
-          <p className="brief-composer__eyebrow">Briefing</p>
+          <p className="brief-composer__eyebrow">Bancada</p>
           <h2>Matéria-prima da story</h2>
-          <p>Contexto, requisitos e ajuste no mesmo trilho antes da forja.</p>
+          <p>Organize o problema, as regras e o acabamento antes de acionar a forja.</p>
         </div>
 
         <div className="brief-composer__panel-actions">
@@ -276,15 +276,15 @@ function BriefComposer({
 
         {isEditing ? (
           <div className="brief-composer__active-story">
-            <span className="brief-composer__active-label">Base ativa</span>
-            <strong>{activeStoryTitle || 'User story selecionada'}</strong>
+            <span className="brief-composer__active-label">Peça ativa</span>
+            <strong>{activeStoryTitle || 'Peça selecionada'}</strong>
             <button
               type="button"
               className="btn btn-ghost btn-small brief-composer__reset-btn"
               onClick={onReset}
             >
               <IconPlus />
-              Nova
+              Nova peça
             </button>
           </div>
         ) : null}
@@ -292,22 +292,22 @@ function BriefComposer({
         <form onSubmit={handleSubmit} className="brief-composer__form">
           <ComposerSection
             icon={<IconFileText />}
-            label="Contexto"
+            label="Matéria-prima"
             error={validationErrors.problemContext}
             footer={
               <PromptChips
-                label="Sugestões para contexto"
+                label="Sugestões para matéria-prima"
                 items={contextPrompts}
                 onSelect={(value) => onApplyPrompt('problemContext', value)}
               />
             }
           >
-            <label className="sr-only" htmlFor="workspace-context">Contexto do problema</label>
+            <label className="sr-only" htmlFor="workspace-context">Matéria-prima da story</label>
             <textarea
               id="workspace-context"
               value={formValues.problemContext}
               onChange={(event) => onChange('problemContext', event.target.value)}
-              placeholder='Ex: "Usuários não conseguem recuperar senha em dispositivos mobile"'
+              placeholder="Ex: Usuários não conseguem recuperar senha pelo celular e abandonam o fluxo de login."
               rows={5}
               className={validationErrors.problemContext ? 'textarea--error' : ''}
             />
@@ -322,7 +322,7 @@ function BriefComposer({
             >
               <span className="brief-accordion__trigger-left">
                 <IconListChecks />
-                <span className="brief-accordion__label">Requisitos</span>
+                <span className="brief-accordion__label">Ligas e regras</span>
                 {validationErrors.requirements ? (
                   <span
                     className="brief-accordion__error-dot"
@@ -345,13 +345,13 @@ function BriefComposer({
                 error={validationErrors.requirements}
                 footer={
                   <PromptChips
-                    label="Sugestões para requisitos"
+                    label="Sugestões para ligas"
                     items={requirementPrompts}
                     onSelect={(value) => onApplyPrompt('requirements', value)}
                   />
                 }
               >
-                <label className="sr-only" htmlFor="workspace-requirements">Requisitos e critérios</label>
+                <label className="sr-only" htmlFor="workspace-requirements">Ligas, regras e critérios</label>
                 <textarea
                   id="workspace-requirements"
                   value={formValues.requirements}
@@ -374,7 +374,7 @@ function BriefComposer({
             >
               <span className="brief-accordion__trigger-left">
                 <IconSliders />
-                <span className="brief-accordion__label">Ajuste</span>
+                <span className="brief-accordion__label">Acabamento</span>
                 <span className="brief-accordion__optional">opcional</span>
               </span>
               <span className={`brief-accordion__chevron ${adjOpen ? 'brief-accordion__chevron--open' : ''}`}>
@@ -386,18 +386,18 @@ function BriefComposer({
               <ComposerSection
                 footer={
                   <PromptChips
-                    label="Sugestões para ajuste"
+                    label="Sugestões para acabamento"
                     items={adjustmentPrompts}
                     onSelect={(value) => onApplyPrompt('adjustment', value)}
                   />
                 }
               >
-                <label className="sr-only" htmlFor="workspace-adjustment">Ajuste para a próxima versão</label>
+                <label className="sr-only" htmlFor="workspace-adjustment">Acabamento para a próxima versão</label>
                 <textarea
                   id="workspace-adjustment"
                   value={formValues.adjustment}
                   onChange={(event) => onChange('adjustment', event.target.value)}
-                  placeholder='Ex: "Foque em critérios de aceite mais detalhados"'
+                  placeholder="Ex: Detalhe melhor os critérios de aceite e deixe o texto mais objetivo."
                   rows={3}
                   tabIndex={adjOpen ? 0 : -1}
                 />

@@ -79,7 +79,7 @@ function SignupPage() {
           <p className="auth-card__eyebrow">Cadastro gratuito</p>
           <h1 className="auth-card__title">Criar sua conta</h1>
           <p className="auth-card__description">
-            Crie sua conta para gerar, salvar versões e continuar a revisão quando quiser.
+            Crie sua conta para forjar, salvar versões e continuar a inspeção quando quiser.
           </p>
         </div>
 
@@ -149,14 +149,14 @@ function SignupPage() {
             Comece agora. Sua primeira user story em 60 segundos.
           </h2>
           <ul className="auth-side__list">
-            <li>{FREE_GENERATION_LIMIT} gerações de user story incluídas</li>
-            <li>Critérios de aceite e checklist de QA automáticos</li>
-            <li>Histórico de versões salvo por feature</li>
+            <li>{FREE_GENERATION_LIMIT} forjas de user story incluídas</li>
+            <li>Critérios de aceite e teste de resistência automáticos</li>
+            <li>Peças forjadas com versões salvas por feature</li>
             <li>Exportação em Markdown e texto simples</li>
             <li>Acesso à Academia ProdForge</li>
           </ul>
           <div className="auth-side__preview">
-            <p className="auth-side__preview-label">O que você vai gerar</p>
+            <p className="auth-side__preview-label">O que você vai forjar</p>
             <div className="auth-side__preview-card">
               <p className="auth-side__preview-story">
                 "Como <em>responsável pelo cadastro</em>, quero{' '}

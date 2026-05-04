@@ -30,13 +30,13 @@ function UserStoriesHistory({
   return (
     <section className="panel history-panel">
       <div className="panel-header panel-header-row">
-        <h2>Histórico recente</h2>
+        <h2>Peças forjadas recentes</h2>
         <div className="history-controls">
           <select
             className="history-filter"
             value={filterValue}
             onChange={(event) => onFilterChange(event.target.value)}
-            aria-label="Filtrar histórico"
+            aria-label="Filtrar peças forjadas"
           >
             <option value="today">Hoje</option>
             <option value="7d">Últimos 7 dias</option>
@@ -48,11 +48,11 @@ function UserStoriesHistory({
         </div>
       </div>
 
-      {isLoading ? <p className="history-status">Carregando user stories...</p> : null}
+      {isLoading ? <p className="history-status">Buscando peças forjadas...</p> : null}
       {loadErrorMessage ? <p className="history-status history-status-error">{loadErrorMessage}</p> : null}
 
       {!isLoading && items.length === 0 ? (
-        <p className="history-status">Nenhuma user story salva ainda.</p>
+        <p className="history-status">Nenhuma peça forjada ainda.</p>
       ) : null}
 
       <div className="history-list">

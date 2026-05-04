@@ -30,17 +30,17 @@ function VersionDiffSummary({ currentVersion, previousVersion }) {
     <section className="panel version-diff-summary">
       <div className="panel-header">
         <p className="version-diff-summary__eyebrow">Comparação</p>
-        <h2>Resumo das mudanças</h2>
+        <h2>Resumo do refino</h2>
         <p>
           {previousVersion
             ? `Diferenças entre a versão ativa e a V${previousVersion.version_number}.`
-            : 'A primeira versão da base ainda não tem comparação anterior.'}
+            : 'A primeira versão da peça ainda não tem comparação anterior.'}
         </p>
       </div>
 
       {!previousVersion || !diff ? (
         <p className="history-status">
-          Gere uma nova versão para comparar o que mudou em relação à base anterior.
+          Forje uma nova versão para comparar o que mudou em relação à peça anterior.
         </p>
       ) : (
         <div className="version-diff-summary__content">

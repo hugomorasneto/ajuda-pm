@@ -8,7 +8,7 @@ function PlaceholderPage({ title, description }) {
         <h1 className="placeholder-card__title">{title}</h1>
         <p className="placeholder-card__description">{description}</p>
         <Link to="/tool" className="placeholder-card__cta">
-          Ir para a área de trabalho
+          Ir para a bancada
         </Link>
       </div>
     </div>

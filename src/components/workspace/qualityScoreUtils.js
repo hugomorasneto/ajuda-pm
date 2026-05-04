@@ -18,15 +18,15 @@ export function getScoreMeta(score) {
   if (score >= 85) {
     return {
       label: 'Alta clareza',
-      note: 'Pronta para revisão e encaminhamento.',
+      note: 'Pronta para inspeção e encaminhamento.',
       toneClass: 'quality-score--good',
     }
   }
 
   if (score >= 70) {
     return {
-      label: 'Boa base',
-      note: 'Utilizável. Revise gaps e checklist.',
+      label: 'Boa peça',
+      note: 'Utilizável. Revise trincas e teste de resistência.',
       toneClass: 'quality-score--mid',
     }
   }

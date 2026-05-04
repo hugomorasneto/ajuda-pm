@@ -46,7 +46,7 @@ function PricingTeaser({ content, isAuthenticated }) {
           cta={
             isAuthenticated ? (
               <Link className="landing-button forge-button forge-button--metal forge-button--block" to="/tool">
-                Abrir área de trabalho
+                Abrir bancada
               </Link>
             ) : (
               <Link className="landing-button forge-button forge-button--ember forge-button--block" to="/signup">

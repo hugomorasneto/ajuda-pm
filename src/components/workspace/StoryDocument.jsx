@@ -17,16 +17,16 @@ function StoryDocument({
     return (
       <section className="panel story-document story-document--empty">
         <div className="story-document__empty">
-          <p className="story-document__eyebrow">Documento de revisão</p>
-          <h2>A user story aparece aqui com estrutura pronta para revisão.</h2>
+          <p className="story-document__eyebrow">Artefato em forja</p>
+          <h2>A primeira versão aparece aqui pronta para inspeção.</h2>
           <p>
-            Gere a primeira versão para visualizar objetivo, critérios de aceite, gaps, regras de
-            negócio e checklist de QA no mesmo documento.
+            Forje a primeira versão para visualizar objetivo, critérios de aceite, trincas, regras
+            de negócio e teste de resistência no mesmo documento.
           </p>
           <ul className="story-document__empty-list">
             <li>Objetivo e user story em formato legível para refinamento.</li>
-            <li>Critérios de aceite organizados para revisão com dev e QA.</li>
-            <li>Gaps, regras de negócio e notas no mesmo fluxo de trabalho.</li>
+            <li>Critérios de aceite organizados para inspeção com dev e QA.</li>
+            <li>Trincas, regras de negócio e notas no mesmo fluxo de trabalho.</li>
           </ul>
         </div>
       </section>
@@ -57,11 +57,11 @@ function StoryDocument({
     <section className="panel story-document">
       <header className="story-document__header">
         <div className="story-document__header-copy">
-          <p className="story-document__eyebrow">Documento estruturado</p>
+          <p className="story-document__eyebrow">Artefato em inspeção</p>
           <h2>{titleValue}</h2>
           <p>
-            Revise o resultado antes de exportar para o backlog. O documento mantém objetivo, user
-            story, critérios de aceite e pontos críticos no mesmo fluxo.
+            Inspecione o resultado antes de entregar ao backlog. O documento mantém objetivo, user
+            story, critérios de aceite e pontos frágeis no mesmo fluxo.
           </p>
         </div>
 
@@ -73,18 +73,18 @@ function StoryDocument({
               onClick={onSaveEdits}
               disabled={isSavingEdits}
             >
-              {isSavingEdits ? 'Salvando...' : 'Salvar alterações'}
+              {isSavingEdits ? 'Guardando na bancada...' : 'Salvar alterações'}
             </button>
           ) : null}
         </div>
       </header>
 
       <div className="story-document__meta">
-        <span className="story-document__meta-pill">Pronta para revisão</span>
+        <span className="story-document__meta-pill">Primeira versão forjada</span>
       </div>
 
       {isLoadingSelectedStory ? (
-        <p className="story-document__inline-status">Carregando dados da user story selecionada...</p>
+        <p className="story-document__inline-status">Buscando peça forjada selecionada...</p>
       ) : null}
 
       <div className="story-document__body">
@@ -156,7 +156,7 @@ function StoryDocument({
         ) : null}
 
         {result.gaps.length > 0 ? (
-          <StorySection eyebrow="Gaps" title="Pontos que ainda precisam de decisão">
+          <StorySection eyebrow="Trincas" title="Pontos frágeis que ainda precisam de decisão">
             <ul className="story-document__list">
               {result.gaps.map((gap) => (
                 <li key={gap}>{gap}</li>
@@ -166,7 +166,7 @@ function StoryDocument({
         ) : null}
 
         {result.qa_checklist.length > 0 ? (
-          <StorySection eyebrow="Checklist de QA" title="Cenários que merecem validação">
+          <StorySection eyebrow="Teste de resistência" title="Cenários que sustentam desenvolvimento e QA">
             <ul className="story-document__list">
               {result.qa_checklist.map((item) => (
                 <li key={item}>{item}</li>
@@ -175,7 +175,7 @@ function StoryDocument({
           </StorySection>
         ) : null}
 
-        <StorySection eyebrow="Notas" title="Contexto adicional">
+        <StorySection eyebrow="Notas" title="Observações adicionais">
           <p>{result.notes}</p>
         </StorySection>
       </div>

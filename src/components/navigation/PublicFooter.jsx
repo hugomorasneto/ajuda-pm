@@ -41,7 +41,7 @@ function PublicFooter({ isHomeRoute = false }) {
           </div>
           <p className="public-footer__brand-statement">{brandStatement}</p>
           <Link to={user ? '/tool' : '/signup'} className={footerCtaClassName}>
-            {user ? 'Abrir área de trabalho' : 'Começar grátis →'}
+            {user ? 'Abrir bancada' : 'Começar grátis →'}
           </Link>
         </div>
 

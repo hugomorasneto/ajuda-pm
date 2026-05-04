@@ -80,14 +80,14 @@ function CheckEmailPage() {
           <p className="auth-card__eyebrow">Confirme seu acesso</p>
           <h1 className="auth-card__title">Verifique seu e-mail</h1>
           <p className="auth-card__description">
-            Enviamos um link de confirmação para finalizar o cadastro e liberar sua área de trabalho.
+            Enviamos um link de confirmação para finalizar o cadastro e liberar sua bancada.
           </p>
         </div>
 
         <p className="auth-card__info" role="status">
           {maskedEmail
-            ? `E-mail enviado para ${maskedEmail}. Depois de confirmar, você volta para o fluxo de geração.`
-            : 'Abra o e-mail usado no cadastro, confirme a conta e depois entre para acessar a área de trabalho.'}
+            ? `E-mail enviado para ${maskedEmail}. Depois de confirmar, você volta para o fluxo de forja.`
+            : 'Abra o e-mail usado no cadastro, confirme a conta e depois entre para acessar a bancada.'}
         </p>
 
         {feedbackMessage ? (
@@ -123,7 +123,7 @@ function CheckEmailPage() {
             replace
             state={{
               email,
-              message: 'Depois de confirmar o e-mail, entre para acessar a área de trabalho.',
+              message: 'Depois de confirmar o e-mail, entre para acessar a bancada.',
             }}
             className="auth-card__submit auth-card__submit--secondary"
           >
@@ -136,12 +136,12 @@ function CheckEmailPage() {
         <div className="auth-side__content">
           <p className="auth-side__eyebrow">O que você libera ao entrar</p>
           <h2 className="auth-side__title">
-            Geração, histórico e revisão no mesmo fluxo.
+            Forja, peças salvas e inspeção no mesmo fluxo.
           </h2>
           <ul className="auth-side__list">
-            <li>{FREE_GENERATION_LIMIT} gerações iniciais para validar o produto.</li>
-            <li>User story com objetivo, critérios, gaps e checklist de QA.</li>
-            <li>Histórico salvo por usuário para continuar o refinamento.</li>
+            <li>{FREE_GENERATION_LIMIT} forjas iniciais para validar o produto.</li>
+            <li>User story com objetivo, critérios, trincas e teste de resistência.</li>
+            <li>Peças forjadas salvas por usuário para continuar o refinamento.</li>
             <li>Exportação rápida para levar a saída ao backlog.</li>
           </ul>
         </div>

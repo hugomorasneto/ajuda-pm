@@ -41,7 +41,7 @@ function mapGenerationHttpError(response, payload) {
   if (response.status === 400) {
     return createGenerationError(
       'INVALID_INPUT',
-      'Revise o contexto e os requisitos antes de gerar a user story.',
+      'Revise a matéria-prima e as ligas antes de acionar a forja.',
       { status: response.status, payload },
     )
   }
@@ -72,7 +72,7 @@ function mapGenerationHttpError(response, payload) {
 
   return createGenerationError(
     'GENERATION_FAILED',
-    'Não foi possível concluir a geração agora. Tente novamente em instantes.',
+    'Não foi possível gerar a story. Revise a matéria-prima e tente novamente.',
     { status: response.status, payload },
   )
 }
@@ -81,7 +81,7 @@ export function normalizeUserStoryGeneration(rawResult) {
   const safe = rawResult ?? {}
 
   const normalized = {
-    title: withFallbackString(safe.title, 'História de usuário gerada'),
+    title: withFallbackString(safe.title, 'Primeira versão forjada'),
     objective: withFallbackString(
       safe.objective,
       'Definir objetivo claro para orientar execução e validação do time.',
@@ -97,12 +97,12 @@ export function normalizeUserStoryGeneration(rawResult) {
     ]),
     notes: withFallbackString(
       safe.notes,
-      'Saída normalizada. Pronta para futura evolução da geração de conteúdo.',
+      'Primeira versão normalizada e pronta para inspeção.',
     ),
     business_rules: withFallbackArray(safe.business_rules, []),
     gaps: withFallbackArray(safe.gaps, []),
     qa_checklist: withFallbackArray(safe.qa_checklist, [
-      'Validar critérios de aceitação em cenário positivo e negativo.',
+      'Validar critérios de aceite em cenário positivo e negativo.',
       'Confirmar rastreabilidade da regra implementada.',
       'Revisar consistência do comportamento para usuário final.',
     ]),
@@ -132,7 +132,7 @@ export async function generateUserStory({ input_context, input_requirements, inp
   if (!accessToken) {
     throw createGenerationError(
       'AUTH_REQUIRED',
-      'Sua sessÃ£o expirou. Entre novamente para continuar.',
+      'Sua sessão expirou. Entre novamente para continuar.',
     )
   }
   const controller = new AbortController()

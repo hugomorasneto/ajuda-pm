@@ -20,7 +20,7 @@ function HomePage() {
   usePageMetadata({
     title: 'ProdForge | Gere user stories mais claras com IA',
     description:
-      'Transforme contexto solto em user stories com objetivo, critérios de aceite, gaps e checklist de QA. Feito para PMs e POs.',
+      'Transforme contexto solto em user stories com objetivo, critérios de aceite, trincas e teste de resistência. Feito para PMs e POs.',
     path: '/',
   })
 
@@ -66,7 +66,7 @@ function HomePage() {
           <div className="landing-final-cta__actions">
             {user ? (
               <Link className="landing-button forge-button forge-button--ember forge-button--lg" to="/tool">
-                Abrir área de trabalho
+                Abrir bancada
               </Link>
             ) : (
               <>

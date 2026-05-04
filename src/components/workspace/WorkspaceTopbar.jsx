@@ -2,8 +2,12 @@ import { Link, useLocation } from 'react-router-dom'
 
 const pageMeta = {
   '/tool': {
-    title: 'Área de trabalho',
-    description: 'Brief, story e revisão no mesmo fluxo.',
+    title: 'Bancada de trabalho',
+    description: 'Da matéria-prima à story pronta para entrega.',
+  },
+  '/historico': {
+    title: 'Peças forjadas',
+    description: 'Stories salvas, versões e artefatos prontos para inspeção.',
   },
   '/admin': {
     title: 'Painel administrativo',
@@ -24,7 +28,7 @@ function IconMenu() {
 function WorkspaceTopbar({ onOpenSidebar, topbarStatus }) {
   const location = useLocation()
   const meta = pageMeta[location.pathname] ?? {
-    title: 'Área de trabalho',
+    title: 'Bancada de trabalho',
     description: 'Ambiente interno do ProdForge.',
   }
 

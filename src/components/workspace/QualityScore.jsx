@@ -33,7 +33,7 @@ function QualityScore({ story }) {
     <section className={`quality-score ${scoreMeta.toneClass}`}>
       <div className="quality-score__header">
         <div>
-          <p className="quality-score__eyebrow">Qualidade</p>
+          <p className="quality-score__eyebrow">Qualidade da peça</p>
           <h3 className="quality-score__tone">{scoreMeta.label}</h3>
         </div>
         <strong className="quality-score__value" aria-label={`Score: ${score} de 100`}>

@@ -81,7 +81,7 @@ function RailSection({ icon, label, description, children, placeholder = false }
 
 function buildInspectionSummary(story) {
   return {
-    panelStatus: story ? 'Story pronta' : 'Aguardando story',
+    panelStatus: story ? 'Peça em inspeção' : 'Aguardando forja',
   }
 }
 
@@ -101,8 +101,8 @@ function QualityPanel({
       <div className="quality-panel__panel-header">
         <div className="quality-panel__panel-copy">
           <p className="quality-panel__panel-eyebrow">Inspeção</p>
-          <h2>Revisão e entrega</h2>
-          <p>Score, gaps, QA e exportação no mesmo trilho de revisão.</p>
+          <h2>Inspeção da peça</h2>
+          <p>Score, trincas, QA e entrega final no mesmo fluxo de inspeção.</p>
         </div>
 
         <div className="quality-panel__panel-actions">
@@ -116,7 +116,7 @@ function QualityPanel({
             <section className="quality-score quality-score--placeholder">
               <div className="quality-score__header">
                 <div>
-                  <p className="quality-score__eyebrow">Qualidade</p>
+                  <p className="quality-score__eyebrow">Qualidade da peça</p>
                   <h3 className="quality-score__tone">-</h3>
                 </div>
                 <strong className="quality-score__value">
@@ -126,39 +126,39 @@ function QualityPanel({
               <div className="quality-score__bar" aria-hidden="true">
                 <span className="quality-score__bar-fill" style={{ width: '0%' }} />
               </div>
-              <p className="quality-score__note">Disponível após a geração.</p>
+              <p className="quality-score__note">Disponível após a primeira forja.</p>
             </section>
 
             <RailSection
               icon={<IconAlertTriangle />}
-              label="Gaps"
-              description="Ambiguidades e exceções aparecem aqui."
+              label="Trincas"
+              description="Ambiguidades, exceções e pontos frágeis aparecem aqui."
               placeholder
             >
               <p className="quality-panel__empty-note">
-                O painel de gaps será preenchido depois da primeira geração.
+                As trincas da story aparecem depois da primeira forja.
               </p>
             </RailSection>
 
             <RailSection
               icon={<IconClipboard />}
-              label="QA"
-              description="Checklist de validação da story."
+              label="Teste de resistência"
+              description="Cenários para validar se a story sustenta desenvolvimento e QA."
               placeholder
             >
               <p className="quality-panel__empty-note">
-                Os cenários de validação aparecerão quando a story estiver pronta.
+                Os testes aparecem quando a peça estiver pronta para inspeção.
               </p>
             </RailSection>
 
             <RailSection
               icon={<IconDownload />}
-              label="Exportar"
-              description="Copie em Markdown, Jira ou texto."
+              label="Entregar artefato"
+              description="Copie a story em Markdown, Jira ou texto."
               placeholder
             >
               <p className="quality-panel__empty-note">
-                As ações de exportação ficam disponíveis após a geração.
+                A entrega fica disponível após a primeira forja.
               </p>
             </RailSection>
           </>
@@ -168,24 +168,24 @@ function QualityPanel({
 
             <RailSection
               icon={<IconAlertTriangle />}
-              label="Gaps"
-              description="Pontos que ainda pedem decisão antes do refinamento."
+              label="Trincas"
+              description="Pontos frágeis que ainda pedem decisão antes do refinamento."
             >
               <GapList items={story.gaps} />
             </RailSection>
 
             <RailSection
               icon={<IconClipboard />}
-              label="QA"
-              description="Checklist mínimo para validar a entrega."
+              label="Teste de resistência"
+              description="Cenários para validar se a story sustenta desenvolvimento e QA."
             >
               <QaChecklist items={story.qa_checklist} />
             </RailSection>
 
             <RailSection
               icon={<IconDownload />}
-              label="Exportar"
-              description="Leve a story para backlog, Jira ou compartilhamento rápido."
+              label="Entregar artefato"
+              description="Copie a story em Markdown, Jira ou texto."
             >
               <ExportActionsBar
                 story={story}
@@ -203,11 +203,11 @@ function QualityPanel({
               <span className="quality-panel__plan-label">{isPremium ? 'Pro' : 'Free'}</span>
               <span className="quality-panel__plan-count">
                 {isPremium
-                  ? 'Gerações ilimitadas'
+                  ? 'Forjas ilimitadas'
                   : hasReachedLimit
                   ? 'Limite atingido - Faça upgrade'
                     : `${remainingGenerations} ${
-                        remainingGenerations === 1 ? 'geração restante' : 'gerações restantes'
+                        remainingGenerations === 1 ? 'forja restante' : 'forjas restantes'
                       }`}
               </span>
             </div>

@@ -4,7 +4,7 @@ import { QUICK_TEMPLATES } from './workspaceTemplates'
 function WorkspaceEmptyState({ hasDraft, onApplyTemplate }) {
   if (hasDraft) {
     return (
-      <section className="panel workspace-state workspace-state--empty">
+      <section className="panel workspace-state workspace-state--empty workspace-state--forge-visual">
         <div className="workspace-state__content">
           <div className="workspace-state__icon" aria-hidden="true">
             <svg
@@ -23,10 +23,10 @@ function WorkspaceEmptyState({ hasDraft, onApplyTemplate }) {
           </div>
           <div className="workspace-state__copy">
             <h2>Parece que você tem algo em mente.</h2>
-            <p>Clique em <strong>Forjar Story</strong> para transformar o contexto em uma user story estruturada.</p>
+            <p>Clique em <strong>Forjar primeira versão</strong> para transformar a matéria-prima em uma user story estruturada.</p>
           </div>
           <ul className="workspace-state__hints" aria-label="Dicas">
-            <li><span className="workspace-state__hint-mark" aria-hidden="true">✦</span> Seja especifico</li>
+            <li><span className="workspace-state__hint-mark" aria-hidden="true">✦</span> Seja específico</li>
             <li><span className="workspace-state__hint-mark" aria-hidden="true">✦</span> Use exemplos reais</li>
             <li><span className="workspace-state__hint-mark" aria-hidden="true">✦</span> 1 problema por story</li>
           </ul>
@@ -36,7 +36,7 @@ function WorkspaceEmptyState({ hasDraft, onApplyTemplate }) {
   }
 
   return (
-    <section className="panel workspace-state workspace-state--empty">
+    <section className="panel workspace-state workspace-state--empty workspace-state--forge-visual">
       <div className="workspace-state__content">
         <div className="workspace-state__icon" aria-hidden="true">
           <svg
@@ -55,16 +55,15 @@ function WorkspaceEmptyState({ hasDraft, onApplyTemplate }) {
         </div>
 
         <div className="workspace-state__copy">
-          <h2>Cole seu contexto e gere a primeira versão.</h2>
+          <h2>Coloque a matéria-prima na forja.</h2>
           <p>
-            Preencha o <strong>Contexto</strong> com o problema real e os{' '}
-            <strong>Requisitos</strong> com regras e restrições - ou escolha um
-            template abaixo para começar em segundos.
+            Descreva o problema, o usuário impactado e as regras do produto. A ProdForge transforma
+            esse insumo em uma user story pronta para refino.
           </p>
         </div>
 
         <div className="ws-templates">
-          <p className="ws-templates__label">Começar com um template</p>
+          <p className="ws-templates__label">Começar com uma peça-base</p>
           <div className="ws-templates__grid">
             {QUICK_TEMPLATES.map((tpl) => (
               <button
@@ -86,14 +85,14 @@ function WorkspaceEmptyState({ hasDraft, onApplyTemplate }) {
 
         <div className="workspace-state__actions">
           <a className="btn btn-secondary btn-small" href="#workspace-context">
-            Preencher do zero
+            Começar do zero
           </a>
         </div>
 
         <div className="workspace-state__learn-link">
-          <span>Nunca escreveu uma user story?</span>
+          <span>Quer melhorar sua primeira peça?</span>
           <Link to="/aprender/user-stories-na-pratica" className="workspace-state__learn-cta">
-            Ver guia prático -&gt;
+            Ver guia do ferreiro PM -&gt;
           </Link>
         </div>
       </div>

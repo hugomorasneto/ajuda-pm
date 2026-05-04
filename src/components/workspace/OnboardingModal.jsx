@@ -3,18 +3,18 @@ import { Link } from 'react-router-dom'
 const STEPS = [
   {
     num: '01',
-    label: 'Brief',
-    description: 'Cole o contexto e os requisitos da demanda — como chegou para você.',
+    label: 'Bancada',
+    description: 'Insira a matéria-prima e as ligas da demanda, como chegaram para você.',
   },
   {
     num: '02',
-    label: 'Story',
-    description: 'Receba a user story estruturada com objetivo, critérios e gaps.',
+    label: 'Forja',
+    description: 'Receba a primeira versão estruturada com objetivo, critérios e trincas.',
   },
   {
     num: '03',
-    label: 'Revisão',
-    description: 'Revise, edite e exporte para o backlog, Jira ou Markdown.',
+    label: 'Inspeção',
+    description: 'Revise, refine e entregue o artefato para backlog, Jira ou Markdown.',
   },
 ]
 
@@ -51,10 +51,10 @@ function OnboardingModal({ onDismiss }) {
         <div className="onboarding-card__copy">
           <span className="onboarding-card__eyebrow">Bem-vindo</span>
           <h2 id="onboarding-title" className="onboarding-card__title">
-            Sua primeira user story está a 3 campos de distância.
+            Sua primeira story está a poucos campos de distância.
           </h2>
           <p className="onboarding-card__subtitle">
-            Cole o contexto, receba a story estruturada, revise e exporte.
+            Insira a matéria-prima, receba a primeira versão forjada, inspecione e entregue.
             É isso — sem template para preencher, sem framework para decorar.
           </p>
         </div>
@@ -86,14 +86,14 @@ function OnboardingModal({ onDismiss }) {
             className="onboarding-card__cta"
             onClick={onDismiss}
           >
-            Entendi, vou começar →
+            Entendi, abrir bancada →
           </button>
           <Link
             to="/aprender/user-stories-na-pratica"
             className="onboarding-card__learn-link"
             onClick={onDismiss}
           >
-            Ver guia de user stories antes →
+            Ver guia do ferreiro PM antes →
           </Link>
         </div>
 

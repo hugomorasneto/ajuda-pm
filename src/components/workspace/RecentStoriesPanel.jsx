@@ -14,20 +14,20 @@ function RecentStoriesPanel({
     <section className="panel recent-stories-panel">
       <div className="panel-header panel-header-row">
         <div className="recent-stories-panel__header-copy">
-          <p className="recent-stories-panel__eyebrow">Histórico</p>
-          <h2>Bases recentes</h2>
-          <p>Acesse stories salvas sem perder a revisão da base atual.</p>
+          <p className="recent-stories-panel__eyebrow">Peças forjadas</p>
+          <h2>Peças recentes</h2>
+          <p>Acesse stories salvas sem perder a inspeção da peça atual.</p>
         </div>
 
         <div className="history-controls">
           <span className="recent-stories-panel__count">
-            {items.length} {items.length === 1 ? 'base' : 'bases'}
+            {items.length} {items.length === 1 ? 'peça' : 'peças'}
           </span>
           <select
             className="history-filter"
             value={filterValue}
             onChange={(event) => onFilterChange(event.target.value)}
-            aria-label="Filtrar histórico recente"
+            aria-label="Filtrar peças forjadas recentes"
           >
             <option value="today">Hoje</option>
             <option value="7d">Últimos 7 dias</option>
@@ -39,12 +39,12 @@ function RecentStoriesPanel({
         </div>
       </div>
 
-      {isLoading ? <p className="history-status">Carregando user stories...</p> : null}
+      {isLoading ? <p className="history-status">Buscando peças forjadas...</p> : null}
       {loadErrorMessage ? <p className="history-status history-status-error">{loadErrorMessage}</p> : null}
 
       {!isLoading && items.length === 0 ? (
         <p className="history-status">
-          Nenhuma base salva ainda. Gere a primeira user story para iniciar o histórico.
+          Nenhuma peça forjada ainda. Forje sua primeira story para iniciar a bancada.
         </p>
       ) : null}
 
@@ -63,7 +63,7 @@ function RecentStoriesPanel({
               <div className="recent-story-card__top">
                 <p className="recent-story-card__title">{item.title}</p>
                 <span className={`recent-story-card__badge ${isActive ? 'recent-story-card__badge--active' : ''}`}>
-                  {isActive ? 'Em revisão' : `V${item.version_number ?? 1}`}
+                  {isActive ? 'Em inspeção' : `V${item.version_number ?? 1}`}
                 </span>
               </div>
 
@@ -71,7 +71,7 @@ function RecentStoriesPanel({
 
               <div className="recent-story-card__meta">
                 <span>{formatDateTime(item.created_at)}</span>
-                <span>Abrir base</span>
+                <span>Abrir peça</span>
               </div>
             </button>
           )

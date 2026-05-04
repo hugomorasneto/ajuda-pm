@@ -15,7 +15,7 @@ function UserStoryResult({
     return (
       <section className="panel panel-muted">
         <h2>Resultado</h2>
-        <p>A user story gerada aparecerá aqui com estrutura pronta para revisão.</p>
+        <p>A primeira versão forjada aparecerá aqui com estrutura pronta para inspeção.</p>
       </section>
     )
   }
@@ -26,9 +26,9 @@ function UserStoryResult({
     <section className="panel result-panel">
       <div className="panel-header panel-header-row">
         <div className="result-header-meta">
-          <h2>Resultado estruturado</h2>
+          <h2>Artefato estruturado</h2>
           <p className="result-origin">
-            Gerado por IA
+            Forjado por IA
             {result?.generation_meta?.model_used ? ` (${result.generation_meta.model_used})` : ''}
             {Number.isFinite(result?.generation_meta?.quality_score) &&
             result.generation_meta.quality_score > 0
@@ -37,11 +37,11 @@ function UserStoryResult({
           </p>
         </div>
         <button type="button" className="btn btn-secondary btn-small" onClick={onCopy} disabled={isCopying}>
-          {isCopying ? 'Copiando...' : 'Copiar User Story'}
+          {isCopying ? 'Copiando artefato...' : 'Copiar artefato'}
         </button>
       </div>
 
-      {isLoadingSelectedStory ? <p className="result-inline-status">Carregando dados da história...</p> : null}
+      {isLoadingSelectedStory ? <p className="result-inline-status">Buscando peça forjada...</p> : null}
 
       <div className="result-section">
         <h3>Título</h3>
@@ -105,7 +105,7 @@ function UserStoryResult({
 
       {result.gaps.length > 0 ? (
         <div className="result-section result-section-focus">
-          <h3>Gaps identificados</h3>
+          <h3>Trincas identificadas</h3>
           <ul className="criteria-list">
             {result.gaps.map((gap) => (
               <li key={gap}>{gap}</li>
@@ -116,7 +116,7 @@ function UserStoryResult({
 
       {result.qa_checklist.length > 0 ? (
         <div className="result-section">
-          <h3>Checklist de QA</h3>
+          <h3>Teste de resistência</h3>
           <ul className="criteria-list">
             {result.qa_checklist.map((item) => (
               <li key={item}>{item}</li>
@@ -133,7 +133,7 @@ function UserStoryResult({
       <div className="result-actions">
         {canEdit ? (
           <button type="button" className="btn btn-ghost btn-small" onClick={onSaveEdits} disabled={isSavingEdits}>
-            {isSavingEdits ? 'Salvando edições...' : 'Salvar edições manuais'}
+            {isSavingEdits ? 'Guardando na bancada...' : 'Salvar edições manuais'}
           </button>
         ) : null}
         {saveMessage ? (

@@ -98,7 +98,7 @@ function PublicHeader({ isHomeRoute = false }) {
         <div className="public-header__actions">
           {user ? (
             <Link to="/tool" className={primaryCtaClassName}>
-              Abrir área de trabalho
+              Abrir bancada
             </Link>
           ) : (
             <>
@@ -142,7 +142,7 @@ function PublicHeader({ isHomeRoute = false }) {
           <div className="public-header__mobile-actions">
             {user ? (
               <Link to="/tool" className={primaryCtaClassName}>
-                Abrir área de trabalho
+                Abrir bancada
               </Link>
             ) : (
               <>

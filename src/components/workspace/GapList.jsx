@@ -2,7 +2,7 @@ function GapList({ items }) {
   const gaps = Array.isArray(items) ? items.filter(Boolean) : []
 
   if (gaps.length === 0) {
-    return <p className="quality-panel__empty-note">Nenhum gap crítico foi identificado nesta versão.</p>
+    return <p className="quality-panel__empty-note">Nenhuma trinca crítica foi identificada nesta versão.</p>
   }
 
   return (

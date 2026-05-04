@@ -16,7 +16,7 @@ function ExportActionsBar({ story, onCopyPlain, plainCopyMessage, isCopyingPlain
     setIsCopyingMarkdown(true)
     try {
       await copyTextToClipboard(buildStoryMarkdown(story))
-      setExportMessage('Markdown copiado. Revise a formatação antes de colar no backlog.')
+      setExportMessage('Artefato em Markdown copiado. Revise a formatação antes de colar no backlog.')
     } catch (error) {
       setExportMessage('Não foi possível copiar em Markdown agora.')
       console.error('Falha ao copiar exportação em Markdown:', error)
@@ -31,7 +31,7 @@ function ExportActionsBar({ story, onCopyPlain, plainCopyMessage, isCopyingPlain
     setIsCopyingJira(true)
     try {
       await copyTextToClipboard(buildStoryJiraLike(story))
-      setExportMessage('Formato Jira copiado. Revise o texto antes de enviar para a issue.')
+      setExportMessage('Artefato para Jira copiado. Revise o texto antes de enviar para a issue.')
     } catch (error) {
       setExportMessage('Não foi possível copiar no formato Jira agora.')
       console.error('Falha ao copiar exportação em formato Jira:', error)
@@ -49,7 +49,7 @@ function ExportActionsBar({ story, onCopyPlain, plainCopyMessage, isCopyingPlain
           onClick={handleCopyMarkdown}
           disabled={!story || isCopyingMarkdown}
         >
-          {isCopyingMarkdown ? 'Copiando...' : 'Copiar em Markdown'}
+          {isCopyingMarkdown ? 'Copiando artefato...' : 'Copiar artefato em Markdown'}
         </button>
         <button
           type="button"
@@ -57,7 +57,7 @@ function ExportActionsBar({ story, onCopyPlain, plainCopyMessage, isCopyingPlain
           onClick={handleCopyJira}
           disabled={!story || isCopyingJira}
         >
-          {isCopyingJira ? 'Copiando...' : 'Copiar no formato Jira'}
+          {isCopyingJira ? 'Copiando artefato...' : 'Copiar artefato para Jira'}
         </button>
         <button
           type="button"
@@ -65,7 +65,7 @@ function ExportActionsBar({ story, onCopyPlain, plainCopyMessage, isCopyingPlain
           onClick={onCopyPlain}
           disabled={!story || isCopyingPlain}
         >
-          {isCopyingPlain ? 'Copiando...' : 'Copiar texto simples'}
+          {isCopyingPlain ? 'Copiando artefato...' : 'Copiar artefato'}
         </button>
       </div>
 
