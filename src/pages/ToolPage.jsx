@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useOutletContext, useSearchParams } from 'react-router-dom'
 import BriefComposer from '../components/workspace/BriefComposer'
-import HistoryDrawerPanel from '../components/workspace/HistoryDrawerPanel'
 import OnboardingModal from '../components/workspace/OnboardingModal'
 import QualityPanel from '../components/workspace/QualityPanel'
 import StoryDocument from '../components/workspace/StoryDocument'
@@ -17,38 +16,6 @@ const TABS = [
   { id: 'revisao', label: 'Revisao' },
 ]
 
-const DEFAULT_PANEL_PREFERENCES = Object.freeze({
-  inspection: 'auto',
-  history: 'auto',
-})
-
-const DESKTOP_COLLAPSIBLE_QUERY = '(min-width: 1280px)'
-
-function getWorkspacePanelsStorageKey(userId) {
-  return userId ? `pf_tool_panels_${userId}` : null
-}
-
-function readWorkspacePanelPreferences(userId) {
-  if (typeof window === 'undefined' || !userId) {
-    return { ...DEFAULT_PANEL_PREFERENCES }
-  }
-
-  try {
-    const rawValue = window.localStorage.getItem(getWorkspacePanelsStorageKey(userId))
-    if (!rawValue) {
-      return { ...DEFAULT_PANEL_PREFERENCES }
-    }
-
-    return {
-      ...DEFAULT_PANEL_PREFERENCES,
-      ...JSON.parse(rawValue),
-    }
-  } catch (error) {
-    console.error('Falha ao ler preferencias de paineis:', error)
-    return { ...DEFAULT_PANEL_PREFERENCES }
-  }
-}
-
 function hasSeenOnboarding(storageKey) {
   if (typeof window === 'undefined' || !storageKey) return true
 
@@ -60,25 +27,13 @@ function hasSeenOnboarding(storageKey) {
   }
 }
 
-function getMediaQueryMatch(query) {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-    return false
-  }
-
-  return window.matchMedia(query).matches
-}
-
 function ToolPage() {
   const [mobileTab, setMobileTab] = useState('entrada')
   const [dismissedOnboardingKey, setDismissedOnboardingKey] = useState(null)
-  const [canCollapseDesktopPanels, setCanCollapseDesktopPanels] = useState(() =>
-    getMediaQueryMatch(DESKTOP_COLLAPSIBLE_QUERY),
-  )
+  const [searchParams] = useSearchParams()
+  const loadedQueryStoryIdRef = useRef(null)
   const { user } = useAuth()
   const onboardingStorageKey = user ? `pf_ob_${user.id}` : null
-  const [panelPreferences, setPanelPreferences] = useState(() =>
-    readWorkspacePanelPreferences(user?.id),
-  )
 
   const {
     activeStoryTitle,
@@ -92,60 +47,21 @@ function ToolPage() {
     handleResetToCreate,
     handleSaveEdits,
     handleSelectHistory,
-    handleSelectVersion,
     handleSubmitStory,
     hasReachedLimit,
-    historyError,
-    historyFilter,
     isCopying,
     isEditing,
-    isLoadingRecent,
     isLoadingSelection,
-    isLoadingVersions,
     isPremium,
     isSavingEdits,
     isSubmitting,
-    loadRecentStories,
-    previousVersion,
-    recentStories,
     remainingGenerations,
     result,
     saveMessage,
     selectedStoryId,
-    selectedVersion,
-    setHistoryFilter,
     validationErrors,
-    versions,
     workspaceError,
   } = useUserStoryWorkspace()
-
-  useEffect(() => {
-    const storageKey = getWorkspacePanelsStorageKey(user?.id)
-    if (!storageKey || typeof window === 'undefined') return
-
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify(panelPreferences))
-    } catch (error) {
-      console.error('Falha ao salvar preferencias de paineis:', error)
-    }
-  }, [panelPreferences, user])
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
-
-    const mediaQueryList = window.matchMedia(DESKTOP_COLLAPSIBLE_QUERY)
-    const syncDesktopCollapseAvailability = (event) => {
-      setCanCollapseDesktopPanels(event.matches)
-    }
-
-    if (typeof mediaQueryList.addEventListener === 'function') {
-      mediaQueryList.addEventListener('change', syncDesktopCollapseAvailability)
-      return () => mediaQueryList.removeEventListener('change', syncDesktopCollapseAvailability)
-    }
-
-    mediaQueryList.addListener(syncDesktopCollapseAvailability)
-    return () => mediaQueryList.removeListener(syncDesktopCollapseAvailability)
-  }, [])
 
   function dismissOnboarding() {
     if (typeof window !== 'undefined' && onboardingStorageKey) {
@@ -154,12 +70,18 @@ function ToolPage() {
     }
   }
 
-  function updatePanelPreference(panelId, value) {
-    setPanelPreferences((current) => ({
-      ...current,
-      [panelId]: value,
-    }))
-  }
+  useEffect(() => {
+    const storyIdFromQuery = searchParams.get('storyId')
+    if (!storyIdFromQuery || loadedQueryStoryIdRef.current === storyIdFromQuery) return
+
+    loadedQueryStoryIdRef.current = storyIdFromQuery
+    const timerId = window.setTimeout(() => {
+      setMobileTab('resultado')
+      handleSelectHistory(storyIdFromQuery)
+    }, 0)
+
+    return () => window.clearTimeout(timerId)
+  }, [handleSelectHistory, searchParams])
 
   const reviewStory = useMemo(() => {
     if (!result) return null
@@ -178,22 +100,6 @@ function ToolPage() {
       acceptance_criteria: safeCriteria,
     }
   }, [editDraft, result])
-
-  const isInspectionCollapsed =
-    canCollapseDesktopPanels &&
-    (panelPreferences.inspection === 'collapsed' ||
-      (panelPreferences.inspection === 'auto' && !reviewStory))
-  const isHistoryCollapsed =
-    canCollapseDesktopPanels &&
-    (panelPreferences.history === 'collapsed' || panelPreferences.history === 'auto')
-
-  function toggleInspectionPanel() {
-    updatePanelPreference('inspection', isInspectionCollapsed ? 'open' : 'collapsed')
-  }
-
-  function toggleHistoryPanel() {
-    updatePanelPreference('history', isHistoryCollapsed ? 'open' : 'collapsed')
-  }
 
   function applyTemplateToBriefing(template) {
     handleFieldChange('problemContext', template.context)
@@ -279,11 +185,7 @@ function ToolPage() {
 
   const rightPanel = (
     <aside className="workspace-right-panel">
-      <div
-        className={`workspace-right-panel__review ${
-          isInspectionCollapsed ? 'workspace-right-panel__review--collapsed' : ''
-        }`}
-      >
+      <div className="workspace-right-panel__review">
         <QualityPanel
           story={reviewStory}
           isPremium={isPremium}
@@ -292,36 +194,6 @@ function ToolPage() {
           onCopyPlain={() => handleCopy(reviewStory)}
           plainCopyMessage={copyMessage}
           isCopyingPlain={isCopying}
-          isCollapsed={isInspectionCollapsed}
-          canCollapse={canCollapseDesktopPanels}
-          onToggleCollapse={toggleInspectionPanel}
-        />
-      </div>
-
-      <div
-        className={`workspace-right-panel__history ${
-          isHistoryCollapsed ? 'workspace-right-panel__history--collapsed' : ''
-        }`}
-      >
-        <HistoryDrawerPanel
-          items={recentStories}
-          selectedId={selectedStoryId}
-          isLoadingRecent={isLoadingRecent}
-          onSelectHistory={handleSelectHistory}
-          loadErrorMessage={historyError}
-          reloadRecent={loadRecentStories}
-          filterValue={historyFilter}
-          onFilterChange={setHistoryFilter}
-          isEditing={isEditing}
-          versions={versions}
-          isLoadingVersions={isLoadingVersions}
-          onSelectVersion={handleSelectVersion}
-          selectedVersion={selectedVersion}
-          previousVersion={previousVersion}
-          activeStoryTitle={activeStoryTitle}
-          isCollapsed={isHistoryCollapsed}
-          canCollapse={canCollapseDesktopPanels}
-          onToggleCollapse={toggleHistoryPanel}
         />
       </div>
     </aside>
@@ -343,13 +215,7 @@ function ToolPage() {
         ))}
       </nav>
 
-      <div
-        className={`workspace-canvas ${
-          isInspectionCollapsed ? 'workspace-canvas--inspection-collapsed' : ''
-        } ${
-          isHistoryCollapsed ? 'workspace-canvas--history-collapsed' : ''
-        }`.trim()}
-      >
+      <div className="workspace-canvas">
         <div
           className={`workspace-canvas__col workspace-canvas__col--left ${
             mobileTab === 'entrada' ? 'workspace-canvas__col--active' : ''

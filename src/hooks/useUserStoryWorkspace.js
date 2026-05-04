@@ -122,6 +122,7 @@ export function useUserStoryWorkspace() {
   const [workspaceError, setWorkspaceError] = useState('')
   const [selectedStoryId, setSelectedStoryId] = useState(null)
   const [selectedStoryGroupId, setSelectedStoryGroupId] = useState(null)
+  const [selectedStoryTitle, setSelectedStoryTitle] = useState('')
   const [selectedBaseInput, setSelectedBaseInput] = useState({ context: '', requirements: '' })
   const [versions, setVersions] = useState([])
   const [isLoadingVersions, setIsLoadingVersions] = useState(false)
@@ -136,8 +137,8 @@ export function useUserStoryWorkspace() {
 
   const activeStoryTitle = useMemo(() => {
     const selected = recentStories.find((item) => item.id === selectedStoryId)
-    return selected?.title ?? ''
-  }, [recentStories, selectedStoryId])
+    return selected?.title ?? selectedStoryTitle
+  }, [recentStories, selectedStoryId, selectedStoryTitle])
 
   const selectedVersion = useMemo(
     () => versions.find((item) => item.id === selectedStoryId) ?? null,
@@ -234,6 +235,7 @@ export function useUserStoryWorkspace() {
       adjustment: '',
     }))
     setResult(mapped)
+    setSelectedStoryTitle(story.title ?? mapped.title ?? '')
     setEditDraft({
       title: mapped.title,
       user_story: mapped.user_story,
@@ -272,6 +274,7 @@ export function useUserStoryWorkspace() {
   function handleResetToCreate() {
     setSelectedStoryId(null)
     setSelectedStoryGroupId(null)
+    setSelectedStoryTitle('')
     setSelectedBaseInput({ context: '', requirements: '' })
     setFormValues({ problemContext: '', requirements: '', adjustment: '' })
     setValidationErrors({})
@@ -506,6 +509,7 @@ export function useUserStoryWorkspace() {
       const persisted = actionResult.data[0]
       setSelectedStoryId(persisted.id)
       setSelectedStoryGroupId(persisted.story_group_id ?? persisted.id)
+      setSelectedStoryTitle(persisted.title ?? generated.title ?? '')
       setSelectedBaseInput({
         context: persisted.input_context ?? contextTrimmed,
         requirements: persisted.input_requirements ?? requirementsTrimmed,

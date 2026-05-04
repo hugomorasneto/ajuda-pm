@@ -51,7 +51,7 @@ function WorkspaceLayout() {
   const [topbarStatus, setTopbarStatus] = useState(null)
 
   const isSidebarOpen = sidebarOpenPath === location.pathname
-  const isForgeWorkspace = location.pathname === '/tool'
+  const isForgeWorkspace = location.pathname === '/tool' || location.pathname === '/historico'
   const resolvedSidebarDensity = useMemo(() => {
     const currentUserId = user?.id ?? null
     if (sidebarDensityState.userId === currentUserId) {

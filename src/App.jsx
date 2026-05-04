@@ -9,6 +9,7 @@ const HomePage = lazy(() => import('./pages/HomePage'))
 const LearningHubPage = lazy(() => import('./pages/LearningHubPage'))
 const LearningGuidePage = lazy(() => import('./pages/LearningGuidePage'))
 const ToolPage = lazy(() => import('./pages/ToolPage'))
+const HistoryPage = lazy(() => import('./pages/HistoryPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const SignupPage = lazy(() => import('./pages/SignupPage'))
 const CheckEmailPage = lazy(() => import('./pages/CheckEmailPage'))
@@ -66,6 +67,7 @@ function App() {
           }
         >
           <Route path="/tool" element={<ToolPage />} />
+          <Route path="/historico" element={<HistoryPage />} />
         </Route>
 
         <Route

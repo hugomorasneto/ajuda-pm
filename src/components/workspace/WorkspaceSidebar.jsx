@@ -26,6 +26,18 @@ function IconAdmin() {
   )
 }
 
+function IconHistory() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+      <path d="M4 5h16v14H4z" />
+      <path d="M8 9h8" />
+      <path d="M8 13h5" />
+      <path d="M6 3v4" />
+      <path d="M18 3v4" />
+    </svg>
+  )
+}
+
 function IconAcademy() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
@@ -138,12 +150,13 @@ function WorkspaceSidebar({
   const totalCount = TRAIL_SLUGS.length
   const accountInitial = user?.email?.charAt(0)?.toUpperCase() || 'P'
 
+  const baseToolNavItems = [
+    { label: 'Area de trabalho', path: '/tool', end: true, icon: <IconWorkspace /> },
+    { label: 'Historico', path: '/historico', end: true, icon: <IconHistory /> },
+  ]
   const toolNavItems = location.pathname.startsWith('/admin')
-    ? [
-        { label: 'Area de trabalho', path: '/tool', end: true, icon: <IconWorkspace /> },
-        { label: 'Admin', path: '/admin', end: false, icon: <IconAdmin /> },
-      ]
-    : [{ label: 'Area de trabalho', path: '/tool', end: true, icon: <IconWorkspace /> }]
+    ? [...baseToolNavItems, { label: 'Admin', path: '/admin', end: false, icon: <IconAdmin /> }]
+    : baseToolNavItems
 
   const academyNavItems = [
     {

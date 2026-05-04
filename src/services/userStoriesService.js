@@ -160,6 +160,80 @@ export async function listRecentStoryGroups({ limit = 10, sinceIso = null, userI
   return { success: true, data: Array.from(grouped.values()).slice(0, limit) }
 }
 
+export async function listStoryHistoryGroups({
+  userId,
+  search = '',
+  sinceIso = null,
+  status = 'all',
+  page = 1,
+  pageSize = 10,
+} = {}) {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        error: new Error('Usuario nao autenticado.'),
+        data: [],
+        totalCount: 0,
+        page: 1,
+        pageSize,
+        totalPages: 0,
+      }
+    }
+
+    const safePageSize = Math.max(1, Math.min(Number(pageSize) || 10, 50))
+    const safePage = Math.max(1, Number(page) || 1)
+    const offset = (safePage - 1) * safePageSize
+    const normalizedSearch = String(search ?? '').trim()
+    const normalizedStatus = status && status !== 'all' ? status : null
+
+    const { data, error } = await supabase.rpc('search_user_story_groups', {
+      p_user_id: userId,
+      p_search: normalizedSearch || null,
+      p_since: sinceIso,
+      p_status: normalizedStatus,
+      p_limit: safePageSize,
+      p_offset: offset,
+    })
+
+    if (error) {
+      console.error('Supabase listStoryHistoryGroups error:', error)
+      return {
+        success: false,
+        error,
+        data: [],
+        totalCount: 0,
+        page: safePage,
+        pageSize: safePageSize,
+        totalPages: 0,
+      }
+    }
+
+    const totalCount = Number(data?.[0]?.total_count ?? 0)
+    const totalPages = totalCount > 0 ? Math.ceil(totalCount / safePageSize) : 0
+
+    return {
+      success: true,
+      data: data ?? [],
+      totalCount,
+      page: safePage,
+      pageSize: safePageSize,
+      totalPages,
+    }
+  } catch (error) {
+    console.error('Unexpected listStoryHistoryGroups error:', error)
+    return {
+      success: false,
+      error,
+      data: [],
+      totalCount: 0,
+      page: Math.max(1, Number(page) || 1),
+      pageSize,
+      totalPages: 0,
+    }
+  }
+}
+
 export async function listStoryVersions({ storyGroupId, userId, limit = 20 } = {}) {
   try {
     if (!userId) {

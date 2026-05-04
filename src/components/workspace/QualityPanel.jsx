@@ -2,7 +2,6 @@ import ExportActionsBar from './ExportActionsBar'
 import GapList from './GapList'
 import QaChecklist from './QaChecklist'
 import QualityScore from './QualityScore'
-import { getResolvedQualityScore, getScoreMeta } from './qualityScoreUtils'
 
 function IconAlertTriangle() {
   return (
@@ -63,24 +62,6 @@ function IconDownload() {
   )
 }
 
-function IconChevron({ isCollapsed }) {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {isCollapsed ? <polyline points="9 18 15 12 9 6" /> : <polyline points="6 9 12 15 18 9" />}
-    </svg>
-  )
-}
-
 function RailSection({ icon, label, description, children, placeholder = false }) {
   return (
     <section
@@ -98,29 +79,8 @@ function RailSection({ icon, label, description, children, placeholder = false }
   )
 }
 
-function SummaryCard({ label, value, note, tone = 'default' }) {
-  return (
-    <div className={`quality-panel__summary-card quality-panel__summary-card--${tone}`}>
-      <span className="quality-panel__summary-label">{label}</span>
-      <strong>{value}</strong>
-      <span className="quality-panel__summary-note">{note}</span>
-    </div>
-  )
-}
-
 function buildInspectionSummary(story) {
-  const score = story ? getResolvedQualityScore(story) : null
-  const scoreMeta = score !== null ? getScoreMeta(score) : null
-  const gapsCount = Array.isArray(story?.gaps) ? story.gaps.length : 0
-  const qaCount = Array.isArray(story?.qa_checklist) ? story.qa_checklist.length : 0
-
   return {
-    score,
-    scoreMeta,
-    gapsCount,
-    qaCount,
-    qaStatus: story ? (qaCount > 0 ? 'Checklist pronto' : 'Sem checklist') : 'Pendente',
-    exportStatus: story ? 'Entrega liberada' : 'Aguardando story',
     panelStatus: story ? 'Story pronta' : 'Aguardando story',
   }
 }
@@ -133,19 +93,11 @@ function QualityPanel({
   onCopyPlain,
   plainCopyMessage,
   isCopyingPlain,
-  isCollapsed = false,
-  canCollapse = false,
-  onToggleCollapse,
 }) {
   const inspectionSummary = buildInspectionSummary(story)
 
   return (
-    <aside
-      className={`panel quality-panel ${!story ? 'quality-panel--empty' : ''} ${
-        isCollapsed ? 'quality-panel--collapsed' : ''
-      }`}
-      data-collapsed={isCollapsed ? 'true' : 'false'}
-    >
+    <aside className={`panel quality-panel ${!story ? 'quality-panel--empty' : ''}`}>
       <div className="quality-panel__panel-header">
         <div className="quality-panel__panel-copy">
           <p className="quality-panel__panel-eyebrow">Inspecao</p>
@@ -155,50 +107,10 @@ function QualityPanel({
 
         <div className="quality-panel__panel-actions">
           <span className="quality-panel__panel-pill">{inspectionSummary.panelStatus}</span>
-          {canCollapse ? (
-            <button
-              type="button"
-              className="btn btn-ghost btn-small quality-panel__collapse-btn"
-              onClick={onToggleCollapse}
-              aria-expanded={!isCollapsed}
-            >
-              <IconChevron isCollapsed={isCollapsed} />
-              {isCollapsed ? 'Expandir' : 'Recolher'}
-            </button>
-          ) : null}
         </div>
       </div>
 
-      <div className="quality-panel__collapsed-summary" hidden={!isCollapsed}>
-        <div className="quality-panel__summary-grid">
-          <SummaryCard
-            label="Score"
-            value={inspectionSummary.score !== null ? `${inspectionSummary.score}/100` : '--/100'}
-            note={inspectionSummary.scoreMeta?.label ?? 'Aguardando geracao'}
-            tone={inspectionSummary.scoreMeta?.toneClass?.replace('quality-score--', '') ?? 'idle'}
-          />
-          <SummaryCard
-            label="Gaps"
-            value={inspectionSummary.gapsCount}
-            note={inspectionSummary.gapsCount > 0 ? 'Pontos em aberto' : 'Sem gaps listados'}
-            tone={inspectionSummary.gapsCount > 0 ? 'warning' : 'ready'}
-          />
-          <SummaryCard
-            label="QA"
-            value={inspectionSummary.qaCount}
-            note={inspectionSummary.qaStatus}
-            tone={inspectionSummary.qaCount > 0 ? 'tech' : 'idle'}
-          />
-          <SummaryCard
-            label="Entrega"
-            value={story ? 'Pronta' : 'Pendente'}
-            note={inspectionSummary.exportStatus}
-            tone={story ? 'success' : 'idle'}
-          />
-        </div>
-      </div>
-
-      <div className="quality-panel__body" hidden={isCollapsed}>
+      <div className="quality-panel__body">
         {!story ? (
           <>
             <section className="quality-score quality-score--placeholder">
