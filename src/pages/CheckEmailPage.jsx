@@ -86,7 +86,7 @@ function CheckEmailPage() {
 
         <p className="auth-card__info" role="status">
           {maskedEmail
-            ? `E-mail enviado para ${maskedEmail}. Depois de confirmar, você volta para o fluxo de forja.`
+            ? `E-mail enviado para ${maskedEmail}. Depois de confirmar, você volta para a Bancada.`
             : 'Abra o e-mail usado no cadastro, confirme a conta e depois entre para acessar a bancada.'}
         </p>
 
@@ -136,13 +136,13 @@ function CheckEmailPage() {
         <div className="auth-side__content">
           <p className="auth-side__eyebrow">O que você libera ao entrar</p>
           <h2 className="auth-side__title">
-            Forja, peças salvas e inspeção no mesmo fluxo.
+            Bancada, peças salvas e inspeção no mesmo fluxo.
           </h2>
           <ul className="auth-side__list">
-            <li>{FREE_GENERATION_LIMIT} forjas iniciais para validar o produto.</li>
+            <li>{FREE_GENERATION_LIMIT} gerações iniciais para validar o produto.</li>
             <li>User story com objetivo, critérios, trincas e teste de resistência.</li>
             <li>Peças forjadas salvas por usuário para continuar o refinamento.</li>
-            <li>Exportação rápida para levar a saída ao backlog.</li>
+            <li>Cópia rápida para levar a saída ao backlog.</li>
           </ul>
         </div>
       </aside>

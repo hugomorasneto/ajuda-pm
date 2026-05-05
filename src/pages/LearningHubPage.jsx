@@ -90,7 +90,7 @@ function LearningHubPage() {
   usePageMetadata({
     title: 'Campo de Treino ProdForge | Aprenda product management na prática',
     description:
-      'Guias práticos para aprender, aplicar na Bancada e transformar contexto solto em user stories prontas para inspeção.',
+      'Guias práticos para aprender conceitos de produto e aplicar direto na Bancada, com user stories prontas para revisão.',
     path: '/aprender',
     image: ACADEMIA_IMAGE_URL,
     imageAlt: ACADEMIA_IMAGE_ALT,
@@ -105,8 +105,8 @@ function LearningHubPage() {
           <span className="badge-pill badge-pill--academy">Campo de Treino ProdForge</span>
           <h1>Campo de Treino ProdForge</h1>
           <p>
-            Guias práticos para aprender, aplicar na Bancada e transformar contexto solto em user
-            stories prontas para inspeção.
+            Guias práticos para aprender conceitos de produto e aplicar direto na Bancada,
+            com user stories prontas para revisão.
           </p>
           <div className="learning-hub-hero__actions">
             <Link className="landing-button landing-button--primary" to="/aprender/fundamentos-produto-agil">
@@ -196,14 +196,14 @@ function LearningHubPage() {
           <span className="badge-pill badge-pill--academy">Aprenda e aplique</span>
           <h2 id="learn-apply-title">Cada guia termina onde o trabalho começa.</h2>
           <p>
-            Não adianta ler sobre user stories sem escrever uma. Cada módulo tem um link
-            direto para praticar o conceito na ferramenta — com contexto real, não exercício fictício.
+            A teoria fica útil quando vira prática. Cada módulo leva você para aplicar o conceito
+            na Bancada com contexto real, não exercício fictício.
           </p>
           <Link
             className="landing-button landing-button--primary"
             to={user ? '/tool' : '/signup'}
           >
-            {user ? 'Abrir bancada →' : 'Forjar minha primeira story →'}
+            {user ? 'Aplicar na Bancada →' : 'Criar conta grátis →'}
           </Link>
         </div>
 
@@ -273,8 +273,8 @@ function LearningHubPage() {
           <span className="badge-pill badge-pill--academy">Pronto para aplicar</span>
           <h2>Aprenda e execute no mesmo lugar.</h2>
           <p>
-            Os guias estruturam o repertório. A bancada transforma a matéria-prima em user
-            story pronta para inspeção.
+            Os guias estruturam o repertório. A Bancada transforma briefing, problema e regras
+            em user story pronta para revisão.
           </p>
         </div>
 
@@ -283,7 +283,7 @@ function LearningHubPage() {
             className="landing-button landing-button--primary"
             to={user ? '/tool' : '/signup'}
           >
-            {user ? 'Abrir bancada' : 'Forjar minha primeira story →'}
+            {user ? 'Aplicar na Bancada' : 'Criar conta grátis →'}
           </Link>
           <Link className="landing-button landing-button--secondary" to="/">
             Voltar para a página inicial

@@ -199,7 +199,7 @@ function WorkspaceSidebar({
 
   const academyNavItems = [
     {
-      label: 'Guia do ferreiro PM',
+      label: 'Guias práticos',
       path: '/aprender',
       end: false,
       icon: <IconAcademy />,

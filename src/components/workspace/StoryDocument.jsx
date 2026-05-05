@@ -40,7 +40,7 @@ function StoryDocument({
     return (
       <section className="panel story-document story-document--empty">
         <div className="story-document__empty">
-          <p className="story-document__eyebrow">Artefato em forja</p>
+          <p className="story-document__eyebrow">Story ainda não gerada</p>
           <h2>A primeira versão aparece aqui pronta para inspeção.</h2>
           <p>
             Forjar gera a primeira versão estruturada da story com objetivo, critérios de aceite, trincas, regras
@@ -132,7 +132,7 @@ function StoryDocument({
       </header>
 
       <div className="story-document__meta">
-        <span className="story-document__meta-pill">Primeira versão forjada</span>
+        <span className="story-document__meta-pill">Primeira versão gerada</span>
       </div>
 
       {canRefine && isRefineOpen ? (
@@ -141,7 +141,7 @@ function StoryDocument({
             <p className="story-document__eyebrow">Refino</p>
             <h3>Refinar story</h3>
             <p>
-              Descreva o ajuste desejado. A forja usa a matéria-prima original,
+              Descreva o ajuste desejado. A IA usa a matéria-prima original,
               a versão atual e as trincas existentes como referência.
             </p>
           </div>
@@ -178,7 +178,7 @@ function StoryDocument({
               className="btn btn-primary btn-small"
               disabled={!canSubmitRefinement}
             >
-              {isRefining ? 'Refinando na forja...' : 'Refinar na forja'}
+              {isRefining ? 'Refinando story...' : 'Gerar versão refinada'}
             </button>
             <button
               type="button"

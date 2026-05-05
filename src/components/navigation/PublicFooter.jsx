@@ -12,11 +12,11 @@ const footerGuides = getLearningGuidesBySlugs([
 function PublicFooter({ isHomeRoute = false }) {
   const { user } = useAuth()
   const brandStatement = isHomeRoute
-    ? 'Transforme briefing bruto em user stories claras, revisáveis e prontas para dev, QA e negócio.'
-    : 'Para PMs e POs que querem escrever user stories mais claras, sem depender de sênior para revisar.'
+    ? 'Transforme briefing confuso em user stories claras, testáveis e prontas para Dev, QA e negócio.'
+    : 'Guias e Bancada para PMs e POs escreverem user stories mais claras.'
   const bottomCopy = isHomeRoute
-    ? `© ${new Date().getFullYear()} ${APP_NAME} · Feito para PMs e POs que precisam de stories mais claras`
-    : `© ${new Date().getFullYear()} ${APP_NAME} · Feito para PMs e POs iniciantes`
+    ? `© ${new Date().getFullYear()} ${APP_NAME} · Feito para times que precisam de stories mais claras`
+    : `© ${new Date().getFullYear()} ${APP_NAME} · Feito para PMs, POs, Devs e QA`
   const footerClassName = ['public-footer', isHomeRoute ? 'public-footer--forge-home' : '']
     .filter(Boolean)
     .join(' ')
@@ -41,7 +41,7 @@ function PublicFooter({ isHomeRoute = false }) {
           </div>
           <p className="public-footer__brand-statement">{brandStatement}</p>
           <Link to={user ? '/tool' : '/signup'} className={footerCtaClassName}>
-            {user ? 'Abrir bancada' : 'Começar grátis →'}
+            {user ? 'Abrir bancada' : 'Criar conta grátis →'}
           </Link>
         </div>
 

@@ -18,11 +18,11 @@ function FormUserStory({
     <section className="panel">
       <div className="panel-header panel-header-row">
         <div>
-          <h2>{isEditing ? 'Forjar nova versão' : 'Forja de User Story'}</h2>
+          <h2>{isEditing ? 'Gerar nova versão' : 'Bancada de user story'}</h2>
           <p>
             {isEditing
-              ? `Peça selecionada: ${activeStoryTitle || 'história selecionada'}. Forje uma nova versão sem sobrescrever as anteriores.`
-              : 'Descreva a matéria-prima e forje uma versão mais contextual para priorização do backlog.'}
+              ? `Peça selecionada: ${activeStoryTitle || 'história selecionada'}. Gere uma nova versão sem sobrescrever as anteriores.`
+              : 'Descreva a matéria-prima e gere uma versão mais contextual para priorização do backlog.'}
           </p>
         </div>
         {isEditing ? (
@@ -66,11 +66,11 @@ function FormUserStory({
 
         <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
           {isSubmitting
-            ? 'Aquecendo a forja...'
+            ? 'Gerando versão...'
             : isEditing
               ? hasAdjustment
-                ? 'Refinar na forja'
-                : 'Forjar nova versão'
+                ? 'Gerar versão refinada'
+                : 'Gerar nova versão'
               : 'Forjar primeira versão'}
         </button>
       </form>

@@ -5,12 +5,12 @@ export const landingCopy = {
     {
       icon: 'bolt',
       value: '60 segundos',
-      description: 'Da demanda vaga a uma primeira story revisável.',
+      description: 'Da demanda vaga a uma primeira versão revisável.',
     },
     {
       icon: 'check',
       value: 'Critérios e trincas',
-      description: 'Aceite, pontos frágeis e QA no mesmo fluxo.',
+      description: 'Aceite, gaps e QA no mesmo fluxo.',
     },
     {
       icon: 'unlock',
@@ -32,13 +32,13 @@ export const landingCopy = {
       'Cópia em Markdown e formato para Jira',
     ],
     stats: [
-      { value: '60 segundos', label: 'da demanda vaga a uma story pronta para revisão' },
-      { value: 'Critérios + trincas', label: 'acabamento e pontos frágeis mapeados no mesmo fluxo' },
+      { value: '60 segundos', label: 'da demanda vaga a uma primeira versão revisável' },
+      { value: 'Critérios + trincas', label: 'aceite, gaps e pontos frágeis no mesmo fluxo' },
       { value: '100% grátis', label: 'para começar sem cartão e validar com contexto real' },
     ],
     preview: {
       imageAlt:
-        'Forja tecnológica transformando briefing em user story clara na ProdForge',
+        'Interface visual transformando briefing em user story clara na ProdForge',
       problemLabel: 'Briefing bruto',
       problemTitle: 'Domínio corporativo no onboarding B2B',
       problemItems: [
@@ -46,8 +46,8 @@ export const landingCopy = {
         'Dev e QA ainda não têm regras e critérios claros para revisar o fluxo.',
       ],
       problemStatus: 'Entrada vaga',
-      transitionLabel: 'A forja trabalha',
-      furnaceTitle: 'Forjando...',
+      transitionLabel: 'A IA estrutura',
+      furnaceTitle: 'Organizando contexto...',
       furnaceBody: 'Analisando, estruturando e refinando a entrada para revisão do time.',
       storyLabel: 'Story estruturada',
       storyTitle: 'Validar domínio corporativo no onboarding B2B',
@@ -63,7 +63,7 @@ export const landingCopy = {
       qualityLabel: 'Nível de refinamento',
       qualityValue: '82%',
       readyLabel: 'Pronta',
-      gapsLabel: 'Impurezas para decidir',
+      gapsLabel: 'Gaps para decidir',
       gaps: ['Confirmar exceções para domínios parceiros.'],
       qaLabel: 'Inspeção final',
       qa: [
@@ -76,7 +76,7 @@ export const landingCopy = {
     eyebrow: 'Como funciona',
     title: 'Do briefing confuso à story pronta em 3 passos.',
     description:
-      'Uma sequência curta para organizar contexto, forjar a primeira versão e revisar antes do backlog.',
+      'Uma sequência curta para organizar contexto, gerar a primeira versão e revisar antes do backlog.',
     steps: [
       {
         step: '01',
@@ -86,9 +86,9 @@ export const landingCopy = {
       },
       {
         step: '02',
-        title: 'A forja trabalha',
+        title: 'A IA organiza',
         description:
-          'O ProdForge estrutura objetivo, story, critérios, trincas e teste de resistência no mesmo fluxo.',
+          'O ProdForge estrutura objetivo, story, critérios, trincas e checklist de validação no mesmo fluxo.',
       },
       {
         step: '03',
@@ -104,7 +104,7 @@ export const landingCopy = {
     description:
       'Veja como uma demanda solta vira uma story clara, com objetivo, comportamento esperado e critérios de aceite.',
     transition: {
-      copy: 'A IA organiza o caos em uma estrutura clara.',
+      copy: 'A IA transforma contexto solto em uma estrutura clara.',
       label: 'Transformação de demanda vaga em user story estruturada',
     },
     before: {
@@ -186,7 +186,7 @@ export const landingCopy = {
     eyebrow: 'Campo de Treino ProdForge',
     title: 'Aprenda enquanto faz.',
     description:
-      'Guia do ferreiro PM para entender o conceito e ir direto para a ferramenta, com exemplos reais de backlog.',
+      'Guias práticos para entender o conceito e aplicar direto na Bancada, com exemplos reais de backlog.',
     footer:
       'Cada guia traz um caminho prático para você sair da teoria e aplicar no seu fluxo real de trabalho.',
   },
@@ -199,9 +199,9 @@ export const landingCopy = {
       badge: 'Grátis',
       description: 'Para validar o fluxo com contexto real e sair do texto solto.',
       items: [
-        `${FREE_GENERATION_LIMIT} forjas de user story por conta.`,
-        'Peças forjadas por usuário.',
-        'Fluxo básico de inspeção na bancada.',
+        `${FREE_GENERATION_LIMIT} gerações de user story por conta.`,
+        'Histórico de peças forjadas por usuário.',
+        'Inspeção básica com score, trincas e checklist.',
       ],
     },
     pro: {
@@ -209,8 +209,8 @@ export const landingCopy = {
       badge: 'Mais popular',
       description: 'Para times que precisam de mais escala, padrão e profundidade.',
       items: [
-        'Mais forjas e mais versões por fluxo.',
-        'Comparação de versões e exportações avançadas.',
+        'Mais gerações e versões por fluxo.',
+        'Comparação de versões e formatos de cópia avançados.',
         'Padrões do time, templates e integrações futuras.',
       ],
     },
@@ -265,8 +265,8 @@ export const landingCopy = {
   },
   finalCta: {
     eyebrow: 'Pronto para começar',
-    title: 'Seu próximo sprint começa com uma história melhor.',
+    title: 'Pronto para transformar seu briefing em uma story clara?',
     description:
-      'Sua IA organiza briefing, contexto e critérios para transformar ruído em uma story clara antes do time começar a desenvolver.',
+      'Organize briefing, contexto e critérios antes do time começar a desenvolver.',
   },
 }

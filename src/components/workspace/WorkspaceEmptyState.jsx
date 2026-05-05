@@ -58,7 +58,7 @@ function WorkspaceEmptyState({ hasDraft, onApplyTemplate }) {
         </div>
 
         <div className="workspace-state__copy">
-          <h2>Coloque a matéria-prima na forja.</h2>
+          <h2>Descreva a matéria-prima da story.</h2>
           <p>
             Matéria-prima é o briefing, problema ou demanda inicial. Descreva o usuário impactado
             e as regras do produto. A ProdForge transforma
@@ -67,7 +67,7 @@ function WorkspaceEmptyState({ hasDraft, onApplyTemplate }) {
         </div>
 
         <div className="ws-templates">
-          <p className="ws-templates__label">Começar com uma peça-base</p>
+          <p className="ws-templates__label">Começar com um exemplo</p>
           <div className="ws-templates__grid">
             {QUICK_TEMPLATES.map((tpl) => (
               <button
@@ -94,9 +94,9 @@ function WorkspaceEmptyState({ hasDraft, onApplyTemplate }) {
         </div>
 
         <div className="workspace-state__learn-link">
-          <span>Quer melhorar sua primeira peça?</span>
+          <span>Quer melhorar sua primeira story?</span>
           <Link to="/aprender/user-stories-na-pratica" className="workspace-state__learn-cta">
-            Ver guia do ferreiro PM -&gt;
+            Ver guia prático -&gt;
           </Link>
         </div>
       </div>

@@ -121,7 +121,7 @@ function ScoreCriteriaDetails() {
 
 function buildInspectionSummary(story) {
   return {
-    panelStatus: story ? 'Peça em inspeção' : 'Aguardando forja',
+    panelStatus: story ? 'Peça em inspeção' : 'Aguardando primeira versão',
   }
 }
 
@@ -166,7 +166,7 @@ function QualityPanel({
               <div className="quality-score__bar" aria-hidden="true">
                 <span className="quality-score__bar-fill" style={{ width: '0%' }} />
               </div>
-              <p className="quality-score__note">Disponível após a primeira forja.</p>
+              <p className="quality-score__note">Disponível após a primeira versão.</p>
             </section>
 
             <RailSection
@@ -176,7 +176,7 @@ function QualityPanel({
               placeholder
             >
               <p className="quality-panel__empty-note">
-                As trincas da story aparecem depois da primeira forja.
+                As trincas da story aparecem depois da primeira versão.
               </p>
             </RailSection>
 
@@ -187,18 +187,18 @@ function QualityPanel({
               placeholder
             >
               <p className="quality-panel__empty-note">
-                Os testes aparecem quando a peça estiver pronta para inspeção.
+                Os testes aparecem quando a story estiver pronta para inspeção.
               </p>
             </RailSection>
 
             <RailSection
               icon={<IconDownload />}
               label="Entregar artefato"
-              description="Exporte quando a peça estiver pronta."
+              description="Copie quando a peça estiver pronta."
               placeholder
             >
               <p className="quality-panel__empty-note">
-                A entrega fica disponível após a primeira forja.
+                A entrega fica disponível após a primeira versão.
               </p>
             </RailSection>
           </>
@@ -226,7 +226,7 @@ function QualityPanel({
             <RailSection
               icon={<IconDownload />}
               label="Entregar artefato"
-              description="Exporte quando a peça estiver pronta."
+              description="Copie quando a peça estiver pronta."
             >
               <ExportActionsBar
                 story={story}
@@ -244,11 +244,11 @@ function QualityPanel({
               <span className="quality-panel__plan-label">{isPremium ? 'Pro' : 'Free'}</span>
               <span className="quality-panel__plan-count">
                 {isPremium
-                  ? 'Forjas ilimitadas'
+                  ? 'Plano Pro ativo'
                   : hasReachedLimit
                   ? 'Limite atingido - Faça upgrade'
                     : `${remainingGenerations} ${
-                        remainingGenerations === 1 ? 'forja restante' : 'forjas restantes'
+                        remainingGenerations === 1 ? 'geração restante' : 'gerações restantes'
                       }`}
               </span>
             </div>

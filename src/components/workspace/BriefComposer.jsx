@@ -155,8 +155,8 @@ const adjustmentPrompts = [
 ]
 
 const LOADING_STEPS = [
-  { label: 'Aquecendo a forja...', pct: 30 },
-  { label: 'Combinando ligas...', pct: 65 },
+  { label: 'Organizando briefing...', pct: 30 },
+  { label: 'Aplicando regras...', pct: 65 },
   { label: 'Preparando critérios...', pct: 90 },
 ]
 
@@ -164,7 +164,7 @@ function ComposerStepper({ contextFilled, requirementsFilled, isGenerated }) {
   const activeIndex = isGenerated ? 3 : requirementsFilled ? 2 : contextFilled ? 1 : 0
 
   return (
-    <div className="brief-stepper" aria-label="Progresso da forja">
+    <div className="brief-stepper" aria-label="Progresso da geração">
       {STEPS.map((step, index) => {
         const done = index < activeIndex
         const active = index === activeIndex
@@ -205,9 +205,9 @@ function LoadingProgress() {
 }
 
 function getBriefStage({ contextFilled, requirementsFilled, isGenerated, isSubmitting }) {
-  if (isSubmitting) return 'Forjando'
-  if (isGenerated) return 'Primeira versão forjada'
-  if (requirementsFilled) return 'Pronto para forjar'
+  if (isSubmitting) return 'Gerando'
+  if (isGenerated) return 'Primeira versão gerada'
+  if (requirementsFilled) return 'Pronto para gerar'
   if (contextFilled) return 'Detalhar ligas'
   return 'Inserir insumo'
 }
@@ -267,20 +267,20 @@ function BriefComposer({
   }
 
   const submitLabel = isSubmitting
-    ? 'Aquecendo a forja...'
+    ? 'Gerando versão...'
     : isEditing
       ? hasAdjustment
-        ? 'Refinar na forja'
-        : 'Forjar nova versão'
+        ? 'Gerar versão refinada'
+        : 'Gerar nova versão'
       : 'Forjar primeira versão'
   const canSubmit = isEditing ? hasAdjustment || contextFilled : contextFilled
   const submitHelpText = isSubmitting
-    ? 'A forja está gerando a versão estruturada da story.'
+    ? 'A IA está gerando a versão estruturada da story.'
     : canSubmit
       ? isEditing
-        ? 'A forja aplica o acabamento e gera uma nova versão estruturada.'
+        ? 'A IA aplica o acabamento e gera uma nova versão estruturada.'
         : 'Forjar gera a primeira versão estruturada da story.'
-      : 'Preencha a matéria-prima para acionar a forja.'
+      : 'Preencha a matéria-prima para acionar a geração.'
 
   return (
     <section

@@ -19,7 +19,7 @@ function VersionTimeline({ versions, selectedId, isLoading, onSelect }) {
       </div>
 
       {!isLoading && versions.length === 0 ? (
-        <p className="history-status">A primeira versão aparece aqui depois da primeira forja.</p>
+        <p className="history-status">A primeira versão aparece aqui depois da primeira geração.</p>
       ) : null}
 
       <div className="version-timeline__list">

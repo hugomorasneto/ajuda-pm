@@ -21,7 +21,7 @@ function HomePage() {
   usePageMetadata({
     title: 'ProdForge | Gere user stories mais claras com IA',
     description:
-      'Transforme contexto solto em user stories com objetivo, critérios de aceite, trincas e teste de resistência. Feito para PMs e POs.',
+      'Transforme briefing confuso em user stories claras, testáveis e prontas para refinamento com Dev e QA.',
     path: '/',
   })
 

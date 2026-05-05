@@ -40,7 +40,7 @@ function VersionDiffSummary({ currentVersion, previousVersion }) {
 
       {!previousVersion || !diff ? (
         <p className="history-status">
-          Forje uma nova versão para comparar o que mudou em relação à peça anterior.
+          Gere uma nova versão para comparar o que mudou em relação à peça anterior.
         </p>
       ) : (
         <div className="version-diff-summary__content">

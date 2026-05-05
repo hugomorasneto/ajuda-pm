@@ -97,7 +97,7 @@ function LoginPage() {
           <p className="auth-card__eyebrow">Acesso</p>
           <h1 className="auth-card__title">Entrar na sua conta</h1>
           <p className="auth-card__description">
-            Acesse sua bancada, as peças forjadas e as inspeções salvas.
+            Acesse a Bancada, o histórico de stories e as inspeções salvas.
           </p>
         </div>
 
@@ -177,9 +177,9 @@ function LoginPage() {
           <ul className="auth-side__list">
             <li>User story estruturada com critérios de aceite</li>
             <li>Trincas e teste de resistência no mesmo fluxo</li>
-            <li>Peças forjadas com versões por feature</li>
-            <li>Exportação em Markdown e texto simples</li>
-            <li>Guia do ferreiro PM no Campo de Treino ProdForge</li>
+            <li>Histórico de peças forjadas com versões por feature</li>
+            <li>Cópia em Markdown e formato para Jira</li>
+            <li>Guias práticos no Campo de Treino ProdForge</li>
           </ul>
           <div className="auth-side__preview">
             <p className="auth-side__preview-label">Exemplo de saída</p>

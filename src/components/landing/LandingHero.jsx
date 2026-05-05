@@ -3,6 +3,7 @@ import HeroTransformationPreview from './HeroTransformationPreview'
 
 function LandingHero({ hero, isAuthenticated, sectionId }) {
   const primaryCtaPath = isAuthenticated ? '/tool' : '/signup'
+  const primaryCtaLabel = isAuthenticated ? 'Abrir bancada' : 'Testar com um briefing'
 
   return (
     <section
@@ -17,7 +18,7 @@ function LandingHero({ hero, isAuthenticated, sectionId }) {
 
         <div className="landing-hero__actions">
           <Link className="landing-button forge-button forge-button--ember forge-button--lg" to={primaryCtaPath}>
-            Abrir bancada
+            {primaryCtaLabel}
           </Link>
           <a className="landing-button forge-button forge-button--metal forge-button--lg" href="#como-funciona">
             Ver como funciona

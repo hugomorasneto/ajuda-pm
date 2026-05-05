@@ -8,7 +8,7 @@ const STEPS = [
   },
   {
     num: '02',
-    label: 'Forja',
+    label: 'Geração',
     description: 'Receba a primeira versão estruturada com objetivo, critérios e trincas.',
   },
   {
@@ -54,8 +54,8 @@ function OnboardingModal({ onDismiss }) {
             Sua primeira story está a poucos campos de distância.
           </h2>
           <p className="onboarding-card__subtitle">
-            Insira briefing, problema ou demanda inicial, receba a primeira versão forjada, inspecione e entregue.
-            É isso — sem template para preencher, sem framework para decorar.
+            Insira briefing, problema ou demanda inicial, receba uma versão estruturada, inspecione e entregue.
+            É isso: sem template para preencher, sem framework para decorar.
           </p>
         </div>
 
@@ -93,7 +93,7 @@ function OnboardingModal({ onDismiss }) {
             className="onboarding-card__learn-link"
             onClick={onDismiss}
           >
-            Ver guia do ferreiro PM antes →
+            Ver guia prático antes →
           </Link>
         </div>
 

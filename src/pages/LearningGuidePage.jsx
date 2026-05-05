@@ -38,7 +38,7 @@ function LearningGuidePage() {
     title: guide?.seo.title ?? 'Campo de Treino ProdForge | Aprenda product management na prática',
     description:
       guide?.seo.description ??
-      'Guia do ferreiro PM para PMs e POs iniciantes sobre fundamentos, user stories, backlog, Scrum e discovery.',
+      'Guias práticos para PMs e POs iniciantes sobre fundamentos, user stories, backlog, Scrum e discovery.',
     path: metadataPath,
     type: guide ? 'article' : 'website',
     image: ACADEMIA_IMAGE_URL,
@@ -155,14 +155,14 @@ function LearningGuidePage() {
           <div className="learning-guide-aside__apply-card">
             <p className="learning-guide-aside__apply-label">Pronto para praticar?</p>
             <p className="learning-guide-aside__apply-body">
-              Aplique o que você acabou de ler. Forje uma user story com contexto real — não um exemplo fictício.
+              Aplique o que você acabou de ler. Gere uma user story com contexto real, não um exemplo fictício.
             </p>
             <div className="learning-guide-aside__apply-actions">
               <Link
                 className="landing-button landing-button--primary"
                 to={user ? '/tool' : '/signup'}
               >
-                {user ? 'Abrir bancada →' : 'Forjar minha primeira story →'}
+                {user ? 'Aplicar na Bancada →' : 'Criar conta grátis →'}
               </Link>
               {!user && (
                 <p className="learning-guide-aside__apply-microcopy">Grátis · Sem cartão de crédito</p>

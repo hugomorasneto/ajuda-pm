@@ -44,7 +44,7 @@ function RecentStoriesPanel({
 
       {!isLoading && items.length === 0 ? (
         <p className="history-status">
-          Nenhuma peça forjada ainda. Forje sua primeira story para iniciar a bancada.
+          Nenhuma peça forjada ainda. Gere sua primeira story para iniciar a Bancada.
         </p>
       ) : null}
 
