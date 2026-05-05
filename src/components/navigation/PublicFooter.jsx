@@ -58,8 +58,11 @@ function PublicFooter() {
 
           <nav className="public-footer__nav" aria-label="Institucional e legal">
             <p className="public-footer__nav-title">Institucional</p>
-            <a href="/#landing-creator-title">Por trás do ProdForge</a>
+            <Link to="/sobre">Sobre o ProdForge</Link>
             <Link to="/politica-de-privacidade">Política de Privacidade</Link>
+            <Link to="/preferencias-de-privacidade">Preferências de Privacidade</Link>
+            <Link to="/termos-de-uso">Termos de Uso</Link>
+            <Link to="/contato">Contato</Link>
             <a href={HUGO_MORAES_LINKEDIN_URL} target="_blank" rel="noopener noreferrer">
               LinkedIn de Hugo
             </a>

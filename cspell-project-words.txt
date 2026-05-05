@@ -52,6 +52,8 @@ Jira
 JSON
 LinkedIn
 lead
+leads
+malware
 Markdown
 Managers
 mobile
@@ -65,12 +67,14 @@ PM
 PMs
 PO
 POs
+premium
 ProdForge
 QA
 QAs
 React
 Ready
 Scrum
+scraping
 sprint
 squad
 stakeholder

@@ -2,14 +2,20 @@ import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import AdminRoute from './components/AdminRoute'
 import ProtectedRoute from './components/ProtectedRoute'
+import PrivacyConsentBanner from './components/privacy/PrivacyConsentBanner'
+import ScrollRestoration from './components/ScrollRestoration'
 
 const PublicLayout = lazy(() => import('./layout/PublicLayout'))
 const PublicFooterLayout = lazy(() => import('./layout/PublicFooterLayout'))
 const WorkspaceLayout = lazy(() => import('./layout/WorkspaceLayout'))
+const AboutPage = lazy(() => import('./pages/AboutPage'))
+const ContactPage = lazy(() => import('./pages/ContactPage'))
 const HomePage = lazy(() => import('./pages/HomePage'))
 const LearningHubPage = lazy(() => import('./pages/LearningHubPage'))
 const LearningGuidePage = lazy(() => import('./pages/LearningGuidePage'))
 const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'))
+const PrivacyPreferencesPage = lazy(() => import('./pages/PrivacyPreferencesPage'))
+const TermsOfUsePage = lazy(() => import('./pages/TermsOfUsePage'))
 const ToolPage = lazy(() => import('./pages/ToolPage'))
 const HistoryPage = lazy(() => import('./pages/HistoryPage'))
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage'))
@@ -63,65 +69,73 @@ function RouteFallback() {
 
 function App() {
   return (
-    <Suspense fallback={<RouteFallback />}>
-      <Routes>
-        <Route element={<PublicFooterLayout />}>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/check-email" element={<CheckEmailPage />} />
-        </Route>
+    <>
+      <ScrollRestoration />
+      <Suspense fallback={<RouteFallback />}>
+        <Routes>
+          <Route element={<PublicFooterLayout />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/check-email" element={<CheckEmailPage />} />
+          </Route>
 
-        <Route element={<PublicLayout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/aprender" element={<LearningHubPage />} />
-          <Route path="/aprender/:slug" element={<LearningGuidePage />} />
-          <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
-          <Route
-            path="/fundamentos"
-            element={<Navigate to="/aprender/fundamentos-produto-agil" replace />}
-          />
-          <Route
-            path="/scrum-agil"
-            element={<Navigate to="/aprender/scrum-para-pm-po" replace />}
-          />
-          <Route
-            path="/backlog"
-            element={<Navigate to="/aprender/backlog-e-refinamento" replace />}
-          />
-          <Route
-            path="/user-stories"
-            element={<Navigate to="/aprender/user-stories-na-pratica" replace />}
-          />
-          <Route path="/templates" element={<Navigate to="/aprender" replace />} />
-          <Route path="/glossario" element={<Navigate to="/aprender" replace />} />
-        </Route>
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/aprender" element={<LearningHubPage />} />
+            <Route path="/aprender/:slug" element={<LearningGuidePage />} />
+            <Route path="/sobre" element={<AboutPage />} />
+            <Route path="/contato" element={<ContactPage />} />
+            <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
+            <Route path="/preferencias-de-privacidade" element={<PrivacyPreferencesPage />} />
+            <Route path="/termos-de-uso" element={<TermsOfUsePage />} />
+            <Route
+              path="/fundamentos"
+              element={<Navigate to="/aprender/fundamentos-produto-agil" replace />}
+            />
+            <Route
+              path="/scrum-agil"
+              element={<Navigate to="/aprender/scrum-para-pm-po" replace />}
+            />
+            <Route
+              path="/backlog"
+              element={<Navigate to="/aprender/backlog-e-refinamento" replace />}
+            />
+            <Route
+              path="/user-stories"
+              element={<Navigate to="/aprender/user-stories-na-pratica" replace />}
+            />
+            <Route path="/templates" element={<Navigate to="/aprender" replace />} />
+            <Route path="/glossario" element={<Navigate to="/aprender" replace />} />
+          </Route>
 
-        <Route
-          element={
-            <ProtectedRoute>
-              <WorkspaceLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="/tool" element={<ToolPage />} />
-          <Route path="/historico" element={<HistoryPage />} />
-          <Route path="/projetos" element={<ProjectsPage />} />
-          <Route path="/projetos/:projectId" element={<ProjectDetailPage />} />
           <Route
-            path="/tool/admin"
             element={
-              <AdminRoute>
-                <AdminPage />
-              </AdminRoute>
+              <ProtectedRoute>
+                <WorkspaceLayout />
+              </ProtectedRoute>
             }
-          />
-        </Route>
+          >
+            <Route path="/tool" element={<ToolPage />} />
+            <Route path="/historico" element={<HistoryPage />} />
+            <Route path="/projetos" element={<ProjectsPage />} />
+            <Route path="/projetos/:projectId" element={<ProjectDetailPage />} />
+            <Route
+              path="/tool/admin"
+              element={
+                <AdminRoute>
+                  <AdminPage />
+                </AdminRoute>
+              }
+            />
+          </Route>
 
-        <Route path="/admin" element={<Navigate to="/tool/admin" replace />} />
+          <Route path="/admin" element={<Navigate to="/tool/admin" replace />} />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Suspense>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+        <PrivacyConsentBanner />
+      </Suspense>
+    </>
   )
 }
 

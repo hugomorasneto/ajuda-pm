@@ -7,7 +7,13 @@ function PublicLayout() {
   const location = useLocation()
   const isHomeRoute = location.pathname === '/'
   const isLearningRoute = location.pathname.startsWith('/aprender')
-  const isLegalRoute = location.pathname === '/politica-de-privacidade'
+  const isLegalRoute = [
+    '/sobre',
+    '/contato',
+    '/politica-de-privacidade',
+    '/preferencias-de-privacidade',
+    '/termos-de-uso',
+  ].includes(location.pathname)
   const layoutClassName = [
     'page-shell',
     'public-layout',
