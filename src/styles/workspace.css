@@ -4887,6 +4887,24 @@
   min-width: 0;
 }
 
+.history-detail__project-assignment {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 24rem;
+  margin-top: var(--space-2);
+}
+
+.history-detail__project-note,
+.history-detail__project-message {
+  margin-bottom: 0;
+  font-size: var(--text-small);
+}
+
+.history-detail__project-message {
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+
 .history-detail__actions .btn {
   flex: 0 0 auto;
 }
@@ -4939,6 +4957,10 @@
 
 .workspace-shell--forge .history-page__eyebrow {
   color: var(--forge-accent);
+}
+
+.workspace-shell--forge .history-detail__project-message {
+  color: var(--forge-text-primary);
 }
 
 .workspace-shell--forge .history-filter-field input,

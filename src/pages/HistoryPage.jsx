@@ -10,6 +10,7 @@ import {
   getUserStoryById,
   listStoryHistoryGroups,
   listStoryVersions,
+  updateUserStory,
 } from '../services/userStoriesService'
 import { listProjects } from '../services/projectsService'
 import { copyTextToClipboard } from '../utils/storyExport'
@@ -142,6 +143,8 @@ function HistoryPage() {
   const [isLoadingVersions, setIsLoadingVersions] = useState(false)
   const [copyMessage, setCopyMessage] = useState('')
   const [isCopyingPlain, setIsCopyingPlain] = useState(false)
+  const [projectAssignmentMessage, setProjectAssignmentMessage] = useState('')
+  const [isAssigningProject, setIsAssigningProject] = useState(false)
 
   const selectedResult = useMemo(() => mapStoryRowToResult(selectedStory), [selectedStory])
   const selectedVersion = useMemo(
@@ -295,6 +298,7 @@ function HistoryPage() {
     if (version) {
       setSelectedStory(version)
       setCopyMessage('')
+      setProjectAssignmentMessage('')
       return
     }
 
@@ -302,6 +306,7 @@ function HistoryPage() {
     if (response.success && response.data) {
       setSelectedStory(response.data)
       setCopyMessage('')
+      setProjectAssignmentMessage('')
     }
   }
 
@@ -355,6 +360,60 @@ function HistoryPage() {
     setPageJump('1')
   }
 
+  async function handleSelectedStoryProjectChange(value) {
+    if (!selectedStory || !userId) return
+
+    setProjectAssignmentMessage('')
+
+    if (selectedStory.user_id !== userId) {
+      setProjectAssignmentMessage(
+        'Apenas quem criou esta história pode mudar o projeto vinculado.',
+      )
+      return
+    }
+
+    const nextProjectId = value || null
+    setIsAssigningProject(true)
+    const response = await updateUserStory(
+      selectedStory.id,
+      { project_id: nextProjectId },
+      userId,
+    )
+    setIsAssigningProject(false)
+
+    if (!response.success || !response.data?.[0]) {
+      setProjectAssignmentMessage(
+        response.error?.message ?? 'Não foi possível organizar esta história agora.',
+      )
+      return
+    }
+
+    const selectedProject = projects.find((project) => project.id === nextProjectId) ?? null
+    const updatedStory = {
+      ...selectedStory,
+      ...response.data[0],
+      project_name: selectedProject?.name ?? null,
+    }
+
+    setSelectedStory(updatedStory)
+    setItems((currentItems) =>
+      currentItems.map((item) =>
+        item.id === selectedStory.id
+          ? {
+              ...item,
+              project_id: updatedStory.project_id,
+              project_name: updatedStory.project_name,
+            }
+          : item,
+      ),
+    )
+    setProjectAssignmentMessage(
+      updatedStory.project_id
+        ? 'História organizada no projeto selecionado.'
+        : 'História marcada como sem projeto.',
+    )
+  }
+
   const visibleRange = getVisibleRange({
     page,
     pageSize,
@@ -362,6 +421,7 @@ function HistoryPage() {
     itemCount: items.length,
   })
   const selectedGroupKey = selectedStory?.story_group_id ?? selectedStory?.id ?? null
+  const canAssignSelectedStoryProject = Boolean(selectedStory?.id && selectedStory.user_id === userId)
 
   return (
     <div className="history-page">
@@ -498,7 +558,10 @@ function HistoryPage() {
                   key={item.id}
                   type="button"
                   className={`history-result-card ${isActive ? 'history-result-card--active' : ''}`}
-                  onClick={() => selectStory(item)}
+                  onClick={() => {
+                    setProjectAssignmentMessage('')
+                    selectStory(item)
+                  }}
                 >
                   <div className="history-result-card__top">
                     <h3>{item.title}</h3>
@@ -573,6 +636,33 @@ function HistoryPage() {
                     Revise qualidade, gaps e próximos ajustes antes de levar esta peça para a bancada.
                     Estimativa: {getEstimationStatusLabel(selectedStory.estimation_status)}.
                   </p>
+                  <div className="history-detail__project-assignment">
+                    <label className="history-filter-field">
+                      <span>Projeto da história</span>
+                      <select
+                        value={selectedStory.project_id ?? ''}
+                        onChange={(event) => handleSelectedStoryProjectChange(event.target.value)}
+                        disabled={!canAssignSelectedStoryProject || isAssigningProject}
+                      >
+                        <option value="">Sem projeto</option>
+                        {projects.map((project) => (
+                          <option key={project.id} value={project.id}>
+                            {project.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <p className="history-detail__project-note">
+                      {canAssignSelectedStoryProject
+                        ? 'Organize peças antigas em projetos quando fizer sentido.'
+                        : 'Histórias compartilhadas ficam somente para consulta.'}
+                    </p>
+                    {projectAssignmentMessage ? (
+                      <p className="history-detail__project-message" role="status">
+                        {projectAssignmentMessage}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
                 <button
                   type="button"
