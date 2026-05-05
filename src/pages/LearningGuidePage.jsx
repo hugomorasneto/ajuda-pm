@@ -10,6 +10,7 @@ import {
   getLearningGuidesBySlugs,
   getLearningNotesForGuide,
 } from '../content/learningContent'
+import { withAcademyGuideMedia } from '../content/academyGuideMedia'
 import { useAuth } from '../hooks/useAuth'
 import { useLearningProgress } from '../hooks/useLearningProgress'
 import { ACADEMIA_IMAGE_ALT, ACADEMIA_IMAGE_URL, buildArticleJsonLd, usePageMetadata } from '../hooks/usePageMetadata'
@@ -28,6 +29,7 @@ function LearningGuidePage() {
   const { user } = useAuth()
   const { isCompleted, markCompleted, unmarkCompleted } = useLearningProgress()
   const guide = getLearningGuideBySlug(slug)
+  const guideWithMedia = guide ? withAcademyGuideMedia([guide])[0] : null
   const nextGuides = guide ? getLearningGuidesBySlugs(guide.nextReads) : []
   const relatedNotes = guide ? getLearningNotesForGuide(guide.slug) : []
   const metadataPath = guide ? `/aprender/${guide.slug}` : '/aprender'
@@ -58,7 +60,7 @@ function LearningGuidePage() {
 
   return (
     <div className="page learning-page learning-guide">
-      <LearningGuideHero guide={guide} />
+      <LearningGuideHero guide={guideWithMedia} />
 
       <div className="learning-guide__shell">
         <article className="learning-guide__article">

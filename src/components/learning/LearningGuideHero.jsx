@@ -1,8 +1,16 @@
 import { Link } from 'react-router-dom'
 
 function LearningGuideHero({ guide }) {
+  const heroStyle = guide.heroImageSrc
+    ? {
+        '--learning-guide-hero-image': `url("${guide.heroImageSrc}")`,
+        '--learning-guide-hero-position': guide.heroImagePosition,
+        '--learning-guide-hero-mobile-position': guide.heroImageMobilePosition,
+      }
+    : undefined
+
   return (
-    <header className="learning-guide-hero">
+    <header className="learning-guide-hero" style={heroStyle}>
       <div className="learning-guide-hero__top">
         <Link to="/aprender" className="learning-guide-hero__backlink">
           ← Academia ProdForge

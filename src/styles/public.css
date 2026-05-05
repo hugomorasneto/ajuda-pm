@@ -6679,11 +6679,23 @@
   min-height: clamp(320px, 40vw, 430px);
   padding: clamp(28px, 5vw, 56px);
   border-color: rgba(255, 145, 56, 0.24);
-  background:
-    linear-gradient(90deg, rgba(5, 8, 13, 0.96) 0%, rgba(7, 17, 28, 0.88) 46%, rgba(7, 17, 28, 0.58) 74%, rgba(7, 17, 28, 0.30) 100%),
-    linear-gradient(0deg, rgba(0, 0, 0, 0.42), transparent 44%),
-    url('../assets/forge/forging-workspace-bg.png') 62% center / cover no-repeat,
+  background-color: var(--forge-bg-canvas);
+  background-image:
+    linear-gradient(90deg, rgba(5, 8, 13, 0.96) 0%, rgba(7, 17, 28, 0.86) 44%, rgba(7, 17, 28, 0.52) 72%, rgba(7, 17, 28, 0.22) 100%),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.40), rgba(0, 0, 0, 0.08) 46%, rgba(0, 0, 0, 0.18) 100%),
+    var(--learning-guide-hero-image, url('../assets/forge/forging-workspace-bg.png')),
     var(--forge-gradient-panel);
+  background-position:
+    center,
+    center,
+    var(--learning-guide-hero-position, 62% center),
+    center;
+  background-size:
+    cover,
+    cover,
+    cover,
+    cover;
+  background-repeat: no-repeat;
   box-shadow:
     var(--forge-shadow-panel),
     0 0 0 1px rgba(255, 145, 56, 0.06),
@@ -7207,10 +7219,19 @@
 @media (max-width: 900px) {
   .public-layout--academy-forge .learning-guide-hero {
     min-height: 0;
-    background:
-      linear-gradient(180deg, rgba(5, 8, 13, 0.97) 0%, rgba(7, 17, 28, 0.90) 66%, rgba(7, 17, 28, 0.76) 100%),
-      url('../assets/forge/forging-workspace-bg.png') 58% center / cover no-repeat,
+    background-image:
+      linear-gradient(180deg, rgba(5, 8, 13, 0.97) 0%, rgba(7, 17, 28, 0.88) 58%, rgba(7, 17, 28, 0.70) 100%),
+      var(--learning-guide-hero-image, url('../assets/forge/forging-workspace-bg.png')),
       var(--forge-gradient-panel);
+    background-position:
+      center,
+      var(--learning-guide-hero-mobile-position, var(--learning-guide-hero-position, 58% center)),
+      center;
+    background-size:
+      cover,
+      cover,
+      cover;
+    background-repeat: no-repeat;
   }
 
   .public-layout--academy-forge .learning-guide-steps__list::before {

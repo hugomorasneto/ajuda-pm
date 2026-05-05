@@ -6,7 +6,7 @@ import {
   learningHub,
   learningNotes,
 } from '../content/learningContent'
-import { withAcademyGuideThumbnails } from '../content/academyThumbnails'
+import { withAcademyGuideMedia } from '../content/academyGuideMedia'
 import { useAuth } from '../hooks/useAuth'
 import { useLearningProgress } from '../hooks/useLearningProgress'
 import { ACADEMIA_IMAGE_ALT, ACADEMIA_IMAGE_URL, usePageMetadata } from '../hooks/usePageMetadata'
@@ -81,7 +81,7 @@ function TrailStep({ step, index, isCompleted }) {
 function LearningHubPage() {
   const { user } = useAuth()
   const { isCompleted, isLoading } = useLearningProgress()
-  const academyModules = withAcademyGuideThumbnails(getLearningGuidesBySlugs(learningHub.starterGuideSlugs))
+  const academyModules = withAcademyGuideMedia(getLearningGuidesBySlugs(learningHub.starterGuideSlugs))
 
   const completedCount = AVAILABLE_STEPS.filter((s) => isCompleted(s.slug)).length
   const totalCount = AVAILABLE_STEPS.length

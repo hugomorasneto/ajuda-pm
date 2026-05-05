@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom'
 import LearningGuideCard from '../learning/LearningGuideCard'
-import { withAcademyGuideThumbnails } from '../../content/academyThumbnails'
+import { withAcademyGuideMedia } from '../../content/academyGuideMedia'
 
 function LearningTeaser({ content, guides }) {
-  const guidesWithThumbnails = withAcademyGuideThumbnails(guides)
+  const guidesWithMedia = withAcademyGuideMedia(guides)
 
   return (
     <section className="landing-section landing-learning-teaser" id="aprender">
@@ -14,7 +14,7 @@ function LearningTeaser({ content, guides }) {
       </div>
 
       <div className="landing-learning-teaser__grid">
-        {guidesWithThumbnails.map((guide) => (
+        {guidesWithMedia.map((guide) => (
           <LearningGuideCard key={guide.slug} guide={guide} variant="landing" />
         ))}
       </div>
