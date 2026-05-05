@@ -102,7 +102,7 @@ function QualityPanel({
         <div className="quality-panel__panel-copy">
           <p className="quality-panel__panel-eyebrow">Inspeção</p>
           <h2>Inspeção da peça</h2>
-          <p>Score, trincas e entrega final no mesmo fluxo.</p>
+          <p>Revisão da qualidade, gaps e próximos ajustes no mesmo fluxo.</p>
         </div>
 
         <div className="quality-panel__panel-actions">
@@ -132,7 +132,7 @@ function QualityPanel({
             <RailSection
               icon={<IconAlertTriangle />}
               label="Trincas"
-              description="Pontos frágeis aparecem aqui."
+              description="Gaps, ambiguidades e pontos frágeis da story."
               placeholder
             >
               <p className="quality-panel__empty-note">
@@ -143,7 +143,7 @@ function QualityPanel({
             <RailSection
               icon={<IconClipboard />}
               label="Teste de resistência"
-              description="Cenários para validar dev e QA."
+              description="Checklist de QA e cenários de validação."
               placeholder
             >
               <p className="quality-panel__empty-note">
@@ -169,7 +169,7 @@ function QualityPanel({
             <RailSection
               icon={<IconAlertTriangle />}
               label="Trincas"
-              description="Pontos frágeis aparecem aqui."
+              description="Gaps, ambiguidades e pontos frágeis da story."
             >
               <GapList items={story.gaps} />
             </RailSection>
@@ -177,7 +177,7 @@ function QualityPanel({
             <RailSection
               icon={<IconClipboard />}
               label="Teste de resistência"
-              description="Cenários para validar dev e QA."
+              description="Checklist de QA e cenários de validação."
             >
               <QaChecklist items={story.qa_checklist} />
             </RailSection>

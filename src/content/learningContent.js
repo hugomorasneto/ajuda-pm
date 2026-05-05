@@ -4,7 +4,7 @@ export const learningHub = {
   eyebrow: 'Campo de Treino',
   title: 'Campo de Treino ProdForge',
   description:
-    'Treine fundamentos, pratique na bancada e transforme contexto solto em user stories prontas para inspeção.',
+    'Guias práticos para aprender, aplicar na Bancada e transformar contexto solto em user stories prontas para inspeção.',
   starterGuideSlugs: [
     'fundamentos-produto-agil',
     'user-stories-na-pratica',

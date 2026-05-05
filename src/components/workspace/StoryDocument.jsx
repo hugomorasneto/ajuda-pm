@@ -20,7 +20,7 @@ function StoryDocument({
           <p className="story-document__eyebrow">Artefato em forja</p>
           <h2>A primeira versão aparece aqui pronta para inspeção.</h2>
           <p>
-            Forje a primeira versão para visualizar objetivo, critérios de aceite, trincas, regras
+            Forjar gera a primeira versão estruturada da story com objetivo, critérios de aceite, trincas, regras
             de negócio e teste de resistência no mesmo documento.
           </p>
           <ul className="story-document__empty-list">
@@ -60,8 +60,8 @@ function StoryDocument({
           <p className="story-document__eyebrow">Artefato em inspeção</p>
           <h2>{titleValue}</h2>
           <p>
-            Inspecione o resultado antes de entregar ao backlog. O documento mantém objetivo, user
-            story, critérios de aceite e pontos frágeis no mesmo fluxo.
+            Inspecione a qualidade, os gaps e os próximos ajustes antes de entregar ao backlog.
+            O documento mantém objetivo, user story, critérios de aceite e pontos frágeis no mesmo fluxo.
           </p>
         </div>
 
@@ -157,6 +157,9 @@ function StoryDocument({
 
         {result.gaps.length > 0 ? (
           <StorySection eyebrow="Trincas" title="Pontos frágeis que ainda precisam de decisão">
+            <p className="story-document__section-note">
+              Trincas são gaps, ambiguidades e pontos frágeis da story.
+            </p>
             <ul className="story-document__list">
               {result.gaps.map((gap) => (
                 <li key={gap}>{gap}</li>
@@ -167,6 +170,9 @@ function StoryDocument({
 
         {result.qa_checklist.length > 0 ? (
           <StorySection eyebrow="Teste de resistência" title="Cenários que sustentam desenvolvimento e QA">
+            <p className="story-document__section-note">
+              Teste de resistência é o checklist de QA e cenários de validação.
+            </p>
             <ul className="story-document__list">
               {result.qa_checklist.map((item) => (
                 <li key={item}>{item}</li>

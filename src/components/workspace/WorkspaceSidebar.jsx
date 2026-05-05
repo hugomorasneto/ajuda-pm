@@ -119,6 +119,8 @@ function getTooltipProps(label, isCompact) {
 }
 
 function SidebarNavLink({ item, isCompact, onClose }) {
+  const tooltipLabel = item.description ? `${item.label}: ${item.description}` : item.label
+
   return (
     <NavLink
       to={item.path}
@@ -127,7 +129,7 @@ function SidebarNavLink({ item, isCompact, onClose }) {
       className={({ isActive }) =>
         `workspace-sidebar__link ${item.toneClass ?? ''} ${isActive ? 'workspace-sidebar__link--active' : ''}`.trim()
       }
-      {...getTooltipProps(item.label, isCompact)}
+      {...getTooltipProps(tooltipLabel, isCompact)}
     >
       <span className={`workspace-sidebar__link-marker ${item.markerClass ?? ''}`} />
       <span className="workspace-sidebar__link-icon">{item.icon}</span>
@@ -176,8 +178,20 @@ function WorkspaceSidebar({
   }, [user?.id])
 
   const baseToolNavItems = [
-    { label: 'Bancada', path: '/tool', end: true, icon: <IconWorkspace /> },
-    { label: 'Peças forjadas', path: '/historico', end: true, icon: <IconHistory /> },
+    {
+      label: 'Bancada',
+      description: 'Espaço para transformar briefing em user story.',
+      path: '/tool',
+      end: true,
+      icon: <IconWorkspace />,
+    },
+    {
+      label: 'Peças forjadas',
+      description: 'Histórico das user stories geradas.',
+      path: '/historico',
+      end: true,
+      icon: <IconHistory />,
+    },
   ]
   const toolNavItems = canSeeAdmin || isAdminPath
     ? [...baseToolNavItems, { label: 'Administração', path: '/tool/admin', end: false, icon: <IconAdmin /> }]
@@ -252,7 +266,9 @@ function WorkspaceSidebar({
       {!isCompact ? (
         <div className="workspace-sidebar__summary">
           <p className="workspace-sidebar__eyebrow">FORJA</p>
-          <p className="workspace-sidebar__summary-copy">Da matéria-prima à story pronta para entrega.</p>
+          <p className="workspace-sidebar__summary-copy">
+            Bancada para transformar briefing em user story pronta para inspeção.
+          </p>
         </div>
       ) : null}
 
@@ -265,14 +281,19 @@ function WorkspaceSidebar({
 
       <nav className="workspace-sidebar__nav" aria-label="Campo de Treino ProdForge">
         {!isCompact ? (
-          <div className="workspace-sidebar__section-header">
-            <p className="workspace-sidebar__section-label">Campo de Treino</p>
-            {completedCount > 0 ? (
-              <span className="workspace-sidebar__progress-pill">
-                {completedCount}/{totalCount}
-              </span>
-            ) : null}
-          </div>
+          <>
+            <div className="workspace-sidebar__section-header">
+              <p className="workspace-sidebar__section-label">Campo de Treino</p>
+              {completedCount > 0 ? (
+                <span className="workspace-sidebar__progress-pill">
+                  {completedCount}/{totalCount}
+                </span>
+              ) : null}
+            </div>
+            <p className="workspace-sidebar__section-description">
+              Guias práticos para aprender e aplicar na Bancada.
+            </p>
+          </>
         ) : null}
 
         {academyNavItems.map((item) => (

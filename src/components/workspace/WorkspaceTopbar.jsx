@@ -3,11 +3,11 @@ import { Link, useLocation } from 'react-router-dom'
 const pageMeta = {
   '/tool': {
     title: 'Bancada de trabalho',
-    description: 'Da matéria-prima à story pronta para entrega.',
+    description: 'Espaço para transformar briefing em user story.',
   },
   '/historico': {
     title: 'Peças forjadas',
-    description: 'Stories salvas, versões e artefatos prontos para inspeção.',
+    description: 'Histórico das user stories geradas, versões e artefatos prontos para inspeção.',
   },
   '/tool/admin': {
     title: 'Painel administrativo',

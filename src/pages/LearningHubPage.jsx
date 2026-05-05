@@ -90,7 +90,7 @@ function LearningHubPage() {
   usePageMetadata({
     title: 'Campo de Treino ProdForge | Aprenda product management na prática',
     description:
-      'Treine fundamentos, pratique na bancada e transforme contexto solto em user stories prontas para inspeção.',
+      'Guias práticos para aprender, aplicar na Bancada e transformar contexto solto em user stories prontas para inspeção.',
     path: '/aprender',
     image: ACADEMIA_IMAGE_URL,
     imageAlt: ACADEMIA_IMAGE_ALT,
@@ -105,7 +105,7 @@ function LearningHubPage() {
           <span className="badge-pill badge-pill--academy">Campo de Treino ProdForge</span>
           <h1>Campo de Treino ProdForge</h1>
           <p>
-            Treine fundamentos, pratique na bancada e transforme contexto solto em user
+            Guias práticos para aprender, aplicar na Bancada e transformar contexto solto em user
             stories prontas para inspeção.
           </p>
           <div className="learning-hub-hero__actions">

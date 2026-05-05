@@ -23,7 +23,10 @@ function WorkspaceEmptyState({ hasDraft, onApplyTemplate }) {
           </div>
           <div className="workspace-state__copy">
             <h2>Parece que você tem algo em mente.</h2>
-            <p>Clique em <strong>Forjar primeira versão</strong> para transformar a matéria-prima em uma user story estruturada.</p>
+            <p>
+              Clique em <strong>Forjar primeira versão</strong> para transformar a matéria-prima,
+              seu briefing ou demanda inicial, em uma user story estruturada.
+            </p>
           </div>
           <ul className="workspace-state__hints" aria-label="Dicas">
             <li><span className="workspace-state__hint-mark" aria-hidden="true">✦</span> Seja específico</li>
@@ -57,7 +60,8 @@ function WorkspaceEmptyState({ hasDraft, onApplyTemplate }) {
         <div className="workspace-state__copy">
           <h2>Coloque a matéria-prima na forja.</h2>
           <p>
-            Descreva o problema, o usuário impactado e as regras do produto. A ProdForge transforma
+            Matéria-prima é o briefing, problema ou demanda inicial. Descreva o usuário impactado
+            e as regras do produto. A ProdForge transforma
             esse insumo em uma user story pronta para refino.
           </p>
         </div>

@@ -288,7 +288,7 @@ function HistoryPage() {
           <p className="history-page__eyebrow">Peças forjadas</p>
           <h1>Peças forjadas</h1>
           <p>
-            Busque, filtre, entregue e reabra peças salvas sem poluir a bancada principal.
+            Histórico das user stories geradas para buscar, filtrar, entregar e reabrir sem poluir a bancada principal.
           </p>
         </div>
         <Link className="btn btn-secondary btn-small" to="/tool">
@@ -442,7 +442,7 @@ function HistoryPage() {
                 <div>
                   <p className="history-page__eyebrow">Inspeção</p>
                   <h2>{selectedStory.title}</h2>
-                  <p>Inspecione, entregue ou leve esta peça para a bancada.</p>
+                  <p>Revise qualidade, gaps e próximos ajustes antes de levar esta peça para a bancada.</p>
                 </div>
                 <button
                   type="button"
@@ -496,7 +496,7 @@ function HistoryPage() {
             <section className="panel history-detail__empty">
               <p className="history-page__eyebrow">Inspeção</p>
               <h2>Selecione uma peça</h2>
-              <p>A inspeção da peça selecionada aparece aqui com versões e entrega.</p>
+              <p>A revisão de qualidade, gaps e versões da peça selecionada aparece aqui.</p>
             </section>
           )}
         </aside>

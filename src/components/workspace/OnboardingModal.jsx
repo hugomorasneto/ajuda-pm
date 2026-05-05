@@ -4,7 +4,7 @@ const STEPS = [
   {
     num: '01',
     label: 'Bancada',
-    description: 'Insira a matéria-prima e as ligas da demanda, como chegaram para você.',
+    description: 'Transforme briefing em user story inserindo matéria-prima e ligas da demanda.',
   },
   {
     num: '02',
@@ -14,7 +14,7 @@ const STEPS = [
   {
     num: '03',
     label: 'Inspeção',
-    description: 'Revise, refine e entregue o artefato para backlog, Jira ou Markdown.',
+    description: 'Revise qualidade, gaps e próximos ajustes antes de entregar o artefato.',
   },
 ]
 
@@ -54,7 +54,7 @@ function OnboardingModal({ onDismiss }) {
             Sua primeira story está a poucos campos de distância.
           </h2>
           <p className="onboarding-card__subtitle">
-            Insira a matéria-prima, receba a primeira versão forjada, inspecione e entregue.
+            Insira briefing, problema ou demanda inicial, receba a primeira versão forjada, inspecione e entregue.
             É isso — sem template para preencher, sem framework para decorar.
           </p>
         </div>

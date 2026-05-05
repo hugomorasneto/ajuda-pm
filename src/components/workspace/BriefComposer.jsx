@@ -275,9 +275,11 @@ function BriefComposer({
       : 'Forjar primeira versão'
   const canSubmit = isEditing ? hasAdjustment || contextFilled : contextFilled
   const submitHelpText = isSubmitting
-    ? 'A forja está preparando a story.'
+    ? 'A forja está gerando a versão estruturada da story.'
     : canSubmit
-      ? 'Acione a forja quando estiver pronto.'
+      ? isEditing
+        ? 'A forja aplica o acabamento e gera uma nova versão estruturada.'
+        : 'Forjar gera a primeira versão estruturada da story.'
       : 'Preencha a matéria-prima para acionar a forja.'
 
   return (
@@ -289,7 +291,7 @@ function BriefComposer({
         <div className="brief-composer__panel-copy">
           <p className="brief-composer__eyebrow">Bancada</p>
           <h2>Matéria-prima da story</h2>
-          <p>Organize o problema, as regras e o acabamento antes de acionar a forja.</p>
+          <p>Espaço para transformar briefing, problema ou demanda inicial em user story.</p>
         </div>
 
         <div className="brief-composer__panel-actions">
@@ -327,7 +329,9 @@ function BriefComposer({
               error={validationErrors.problemContext}
               footer={
                 <div className="brief-composer__prompt-shortcuts">
-                  <p className="brief-composer__shortcut-help">Clique para inserir estes pontos:</p>
+                  <p className="brief-composer__shortcut-help">
+                    Matéria-prima: briefing, problema ou demanda inicial. Clique para inserir pontos úteis:
+                  </p>
                   <PromptChips
                     label="Atalhos para preencher a matéria-prima"
                     items={contextPrompts}
@@ -380,11 +384,16 @@ function BriefComposer({
                 <ComposerSection
                   error={validationErrors.requirements}
                   footer={
-                    <PromptChips
-                      label="Sugestões para ligas"
-                      items={requirementPrompts}
-                      onSelect={(value) => onApplyPrompt('requirements', value)}
-                    />
+                    <div className="brief-composer__prompt-shortcuts">
+                      <p className="brief-composer__shortcut-help">
+                        Ligas: regras, restrições, exceções e dependências que fortalecem a story.
+                      </p>
+                      <PromptChips
+                        label="Sugestões para ligas"
+                        items={requirementPrompts}
+                        onSelect={(value) => onApplyPrompt('requirements', value)}
+                      />
+                    </div>
                   }
                 >
                   <label className="sr-only" htmlFor="workspace-requirements">Ligas, regras e critérios</label>
@@ -421,11 +430,16 @@ function BriefComposer({
               <div className="brief-accordion__body" aria-hidden={!adjOpen}>
                 <ComposerSection
                   footer={
-                    <PromptChips
-                      label="Sugestões para acabamento"
-                      items={adjustmentPrompts}
-                      onSelect={(value) => onApplyPrompt('adjustment', value)}
-                    />
+                    <div className="brief-composer__prompt-shortcuts">
+                      <p className="brief-composer__shortcut-help">
+                        Acabamento: formato, tom e nível de detalhe da entrega.
+                      </p>
+                      <PromptChips
+                        label="Sugestões para acabamento"
+                        items={adjustmentPrompts}
+                        onSelect={(value) => onApplyPrompt('adjustment', value)}
+                      />
+                    </div>
                   }
                 >
                   <label className="sr-only" htmlFor="workspace-adjustment">Acabamento para a próxima versão</label>

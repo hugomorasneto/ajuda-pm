@@ -2157,6 +2157,13 @@
   gap: var(--space-2);
 }
 
+.workspace-sidebar__section-description {
+  margin: calc(var(--space-1) * -1) 0 var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
 .workspace-sidebar__progress-pill {
   display: inline-flex;
   align-items: center;
@@ -2584,6 +2591,7 @@
 
 .workspace-shell--forge .workspace-sidebar__brand-caption,
 .workspace-shell--forge .workspace-sidebar__summary-copy,
+.workspace-shell--forge .workspace-sidebar__section-description,
 .workspace-shell--forge .workspace-sidebar__account-email {
   color: var(--forge-text-secondary);
 }

@@ -89,7 +89,7 @@ function HistoryDrawerPanel({
         <div className="workspace-history-panel__copy">
           <p className="workspace-history-panel__eyebrow">Peças forjadas</p>
           <h2>Peças forjadas</h2>
-          <p>Peças recentes, versões e comparação da peça ativa no mesmo painel lateral.</p>
+          <p>Histórico das user stories geradas, versões e comparação da peça ativa no mesmo painel lateral.</p>
         </div>
 
         <div className="workspace-history-panel__actions">
