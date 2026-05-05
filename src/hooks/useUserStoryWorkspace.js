@@ -92,6 +92,30 @@ function buildClipboardText(result) {
   ].join('\n')
 }
 
+function formatInstructionList(title, items) {
+  if (!Array.isArray(items) || items.length === 0) return ''
+  return [
+    `${title}:`,
+    ...items.map((item, index) => `${index + 1}. ${item}`),
+  ].join('\n')
+}
+
+function buildRefinementGenerationAdjustment({ instruction, story }) {
+  return [
+    'Refine a versão atual sem descartar a matéria-prima original.',
+    `Feedback do usuário: ${instruction}`,
+    '',
+    'Versão atual para referência:',
+    story?.title ? `Título atual: ${story.title}` : '',
+    story?.objective ? `Objetivo atual: ${story.objective}` : '',
+    story?.user_story ? `User story atual: ${story.user_story}` : '',
+    formatInstructionList('Critérios de aceite atuais', story?.acceptance_criteria),
+    formatInstructionList('Trincas/gaps atuais', story?.gaps),
+    formatInstructionList('Checklist de QA atual', story?.qa_checklist),
+    'Preserve o contexto original, aplique o feedback e devolva uma nova versão completa.',
+  ].filter(Boolean).join('\n')
+}
+
 export function formatDateTime(value) {
   if (!value) return '-'
   const date = new Date(value)
@@ -415,19 +439,25 @@ export function useUserStoryWorkspace() {
     })
   }
 
-  async function handleSubmitStory() {
+  async function handleSubmitStory(options = {}) {
+    const adjustmentOverride =
+      typeof options.adjustment === 'string' ? options.adjustment : null
+    const formValuesForSubmit = adjustmentOverride === null
+      ? formValues
+      : { ...formValues, adjustment: adjustmentOverride }
+
     if (!userId) {
       setWorkspaceError('Sua sessão expirou. Entre novamente para continuar.')
       setSaveMessage('Sessão expirada. Faça login novamente.')
-      return
+      return false
     }
 
-    const errors = validateForm(formValues)
+    const errors = validateForm(formValuesForSubmit)
     setValidationErrors(errors)
 
     if (Object.keys(errors).length > 0) {
       setSaveMessage('Revise a matéria-prima e as ligas antes de acionar a forja.')
-      return
+      return false
     }
 
     if (hasReachedLimit) {
@@ -440,7 +470,7 @@ export function useUserStoryWorkspace() {
       setSaveMessage(
         `Limite do plano Free atingido (${FREE_GENERATION_LIMIT} forjas). Atualize para Pro para continuar.`,
       )
-      return
+      return false
     }
 
     setIsSubmitting(true)
@@ -448,9 +478,12 @@ export function useUserStoryWorkspace() {
     setCopyMessage('')
     setWorkspaceError('')
 
-    const contextTrimmed = formValues.problemContext.trim()
-    const requirementsTrimmed = formValues.requirements.trim()
-    const adjustmentTrimmed = formValues.adjustment.trim()
+    const contextTrimmed = formValuesForSubmit.problemContext.trim()
+    const requirementsTrimmed = formValuesForSubmit.requirements.trim()
+    const adjustmentTrimmed = formValuesForSubmit.adjustment.trim()
+    const generationAdjustment = typeof options.generationAdjustment === 'string' && options.generationAdjustment.trim()
+      ? options.generationAdjustment.trim()
+      : adjustmentTrimmed
     const isSameBaseInput =
       selectedBaseInput.context === contextTrimmed &&
       selectedBaseInput.requirements === requirementsTrimmed
@@ -475,7 +508,7 @@ export function useUserStoryWorkspace() {
       const generated = await generateUserStory({
         input_context: contextTrimmed,
         input_requirements: requirementsTrimmed,
-        input_adjustment: adjustmentTrimmed,
+        input_adjustment: generationAdjustment,
       })
       setResult(generated)
       setEditDraft({
@@ -516,7 +549,7 @@ export function useUserStoryWorkspace() {
           page_path: '/tool',
           metadata: { stage: 'persist', error_message: errorMessage },
         })
-        return
+        return false
       }
 
       const persisted = actionResult.data[0]
@@ -531,7 +564,11 @@ export function useUserStoryWorkspace() {
       const quality = generated?.generation_meta?.quality_score
       const qualityLabel =
         Number.isFinite(quality) && quality > 0 ? ` Pontuação da inspeção: ${quality}/100.` : ''
-      setSaveMessage(`Primeira versão forjada e salva com sucesso.${qualityLabel}`)
+      setSaveMessage(
+        shouldUseCurrentGroup
+          ? `Story refinada e salva como nova versão.${qualityLabel}`
+          : `Primeira versão forjada e salva com sucesso.${qualityLabel}`,
+      )
       await loadRecentStories()
       await loadVersionsByGroup(persisted.story_group_id ?? persisted.id)
       await loadUsage()
@@ -562,6 +599,8 @@ export function useUserStoryWorkspace() {
           },
         })
       }
+
+      return true
     } catch (error) {
       console.error('Falha ao gerar user story com IA:', error)
       const baseMessage =
@@ -580,9 +619,44 @@ export function useUserStoryWorkspace() {
           error_message: error instanceof Error ? error.message : 'unknown_error',
         },
       })
+      return false
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  async function handleRefineStory(instruction) {
+    const adjustment = String(instruction ?? '').trim()
+    if (!adjustment) {
+      setSaveMessage('Informe o ajuste desejado antes de refinar na forja.')
+      return false
+    }
+
+    if (!result) {
+      setSaveMessage('Gere uma story antes de acionar o refino.')
+      return false
+    }
+
+    const currentStory = {
+      ...result,
+      title: editDraft.title?.trim() || result.title,
+      user_story: editDraft.user_story?.trim() || result.user_story,
+      acceptance_criteria: editDraft.acceptance_criteria?.length > 0
+        ? editDraft.acceptance_criteria
+        : result.acceptance_criteria,
+    }
+    const generationAdjustment = buildRefinementGenerationAdjustment({
+      instruction: adjustment,
+      story: currentStory,
+    })
+
+    setFormValues((prev) => ({ ...prev, adjustment }))
+    const refined = await handleSubmitStory({ adjustment, generationAdjustment })
+    if (refined) {
+      setFormValues((prev) => ({ ...prev, adjustment: '' }))
+    }
+
+    return refined
   }
 
   return {
@@ -595,6 +669,7 @@ export function useUserStoryWorkspace() {
     handleEditDraftChange,
     handleFieldChange,
     handlePromptChipApply,
+    handleRefineStory,
     handleResetToCreate,
     handleSaveEdits,
     handleSelectHistory,

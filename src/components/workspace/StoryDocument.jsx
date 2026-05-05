@@ -1,6 +1,25 @@
 import { useState } from 'react'
 import StorySection from './StorySection'
 
+const REFINEMENT_SHORTCUTS = [
+  {
+    label: 'Melhorar critérios',
+    text: 'Deixe os critérios de aceite mais objetivos, observáveis e testáveis.',
+  },
+  {
+    label: 'Simplificar linguagem',
+    text: 'Simplifique a linguagem sem perder clareza para produto, dev e QA.',
+  },
+  {
+    label: 'Adicionar cenários de QA',
+    text: 'Inclua cenários de QA relevantes, cobrindo caminho principal, erro e exceções.',
+  },
+  {
+    label: 'Mapear exceções',
+    text: 'Mapeie exceções, restrições e dependências que ainda precisam ficar explícitas.',
+  },
+]
+
 function StoryDocument({
   result,
   saveMessage,
@@ -10,8 +29,12 @@ function StoryDocument({
   onSaveEdits,
   isSavingEdits,
   canEdit,
+  onRefineStory,
+  isRefining = false,
 }) {
   const [editingField, setEditingField] = useState(null)
+  const [isRefineOpen, setIsRefineOpen] = useState(false)
+  const [refinementText, setRefinementText] = useState('')
 
   if (!result) {
     return (
@@ -53,6 +76,23 @@ function StoryDocument({
     )
   }
 
+  async function handleRefinementSubmit(event) {
+    event.preventDefault()
+    const refined = await onRefineStory?.(refinementText)
+    if (refined) {
+      setRefinementText('')
+      setIsRefineOpen(false)
+    }
+  }
+
+  function handleShortcutSelect(text) {
+    setRefinementText(text)
+    setIsRefineOpen(true)
+  }
+
+  const canRefine = canEdit && typeof onRefineStory === 'function'
+  const canSubmitRefinement = refinementText.trim().length > 0 && !isRefining
+
   return (
     <section className="panel story-document">
       <header className="story-document__header">
@@ -66,12 +106,24 @@ function StoryDocument({
         </div>
 
         <div className="story-document__header-actions">
-          {canEdit ? (
+          {canRefine ? (
             <button
               type="button"
               className="btn btn-primary btn-small"
+              onClick={() => setIsRefineOpen((current) => !current)}
+              aria-expanded={isRefineOpen}
+              disabled={isRefining}
+            >
+              Refinar story
+            </button>
+          ) : null}
+
+          {canEdit ? (
+            <button
+              type="button"
+              className="btn btn-secondary btn-small"
               onClick={onSaveEdits}
-              disabled={isSavingEdits}
+              disabled={isSavingEdits || isRefining}
             >
               {isSavingEdits ? 'Guardando na bancada...' : 'Salvar alterações'}
             </button>
@@ -82,6 +134,63 @@ function StoryDocument({
       <div className="story-document__meta">
         <span className="story-document__meta-pill">Primeira versão forjada</span>
       </div>
+
+      {canRefine && isRefineOpen ? (
+        <form className="story-document__refine-panel" onSubmit={handleRefinementSubmit}>
+          <div className="story-document__refine-copy">
+            <p className="story-document__eyebrow">Refino</p>
+            <h3>Refinar story</h3>
+            <p>
+              Descreva o ajuste desejado. A forja usa a matéria-prima original,
+              a versão atual e as trincas existentes como referência.
+            </p>
+          </div>
+
+          <label className="sr-only" htmlFor="story-refinement-feedback">
+            Ajuste desejado para refinar a story
+          </label>
+          <textarea
+            id="story-refinement-feedback"
+            value={refinementText}
+            onChange={(event) => setRefinementText(event.target.value)}
+            placeholder="Ex: deixe os critérios mais objetivos, inclua exceções do fluxo mobile ou simplifique a linguagem."
+            rows={4}
+            disabled={isRefining}
+          />
+
+          <div className="story-document__refine-shortcuts" aria-label="Atalhos de refino">
+            {REFINEMENT_SHORTCUTS.map((shortcut) => (
+              <button
+                key={shortcut.label}
+                type="button"
+                className="story-document__refine-chip"
+                onClick={() => handleShortcutSelect(shortcut.text)}
+                disabled={isRefining}
+              >
+                {shortcut.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="story-document__refine-actions">
+            <button
+              type="submit"
+              className="btn btn-primary btn-small"
+              disabled={!canSubmitRefinement}
+            >
+              {isRefining ? 'Refinando na forja...' : 'Refinar na forja'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-small"
+              onClick={() => setIsRefineOpen(false)}
+              disabled={isRefining}
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      ) : null}
 
       {isLoadingSelectedStory ? (
         <p className="story-document__inline-status">Buscando peça forjada selecionada...</p>

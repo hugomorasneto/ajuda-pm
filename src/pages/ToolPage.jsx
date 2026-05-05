@@ -44,6 +44,7 @@ function ToolPage() {
     handleEditDraftChange,
     handleFieldChange,
     handlePromptChipApply,
+    handleRefineStory,
     handleResetToCreate,
     handleSaveEdits,
     handleSelectHistory,
@@ -180,6 +181,8 @@ function ToolPage() {
       onSaveEdits={handleSaveEdits}
       isSavingEdits={isSavingEdits}
       canEdit={isEditing}
+      onRefineStory={handleRefineStory}
+      isRefining={isSubmitting}
     />
   )
 

@@ -505,6 +505,57 @@
   color: var(--color-accent-strong);
   font-size: var(--text-small); font-weight: 600;
 }
+.story-document__refine-panel {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-canvas-muted);
+}
+.story-document__refine-copy {
+  display: grid;
+  gap: var(--space-2);
+}
+.story-document__refine-copy h3,
+.story-document__refine-copy p {
+  margin: 0;
+}
+.story-document__refine-copy h3 {
+  color: var(--color-text-primary);
+  font-size: var(--text-body);
+}
+.story-document__refine-copy p:last-child {
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.55;
+}
+.story-document__refine-shortcuts,
+.story-document__refine-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.story-document__refine-chip {
+  min-height: 30px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+.story-document__refine-chip:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-canvas-muted);
+}
+.story-document__refine-chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
 .story-document__inline-status,
 .story-workspace .result-inline-status,
 .story-workspace .copy-message,
@@ -3354,6 +3405,37 @@
   border: 1px solid var(--forge-success);
   background: var(--forge-success-soft);
   color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .story-document__refine-panel {
+  border-color: var(--forge-border);
+  background:
+    linear-gradient(135deg, var(--forge-ember-soft), transparent 42%),
+    var(--forge-surface-inset);
+  box-shadow: var(--forge-shadow-soft);
+}
+
+.workspace-shell--forge .story-document__refine-copy h3 {
+  color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .story-document__refine-copy p:last-child {
+  color: var(--forge-text-secondary);
+}
+
+.workspace-shell--forge .story-document__refine-chip {
+  border-color: var(--forge-border);
+  background: var(--forge-surface-2);
+  color: var(--forge-text-secondary);
+}
+
+.workspace-shell--forge .story-document__refine-chip:hover:not(:disabled) {
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(90deg, var(--forge-ember-soft), transparent),
+    var(--forge-surface-2);
+  color: var(--forge-text-primary);
+  box-shadow: var(--forge-glow-ember-sm);
 }
 
 .workspace-shell--forge .story-section {
