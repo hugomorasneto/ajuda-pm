@@ -25,6 +25,7 @@ daily
 Daily
 dev
 devs
+Devs
 discovery
 e-mail
 e-mails
@@ -57,6 +58,7 @@ PO
 POs
 ProdForge
 QA
+QAs
 React
 Scrum
 sprint

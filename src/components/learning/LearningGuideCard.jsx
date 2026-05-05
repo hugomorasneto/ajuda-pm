@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom'
 function LearningGuideCard({ guide, variant = 'default', isCompleted = false }) {
   const [isThumbnailUnavailable, setIsThumbnailUnavailable] = useState(false)
   const [thumbnailAttemptIndex, setThumbnailAttemptIndex] = useState(0)
-  const hasLandingThumbnail = variant === 'landing' && Boolean(guide.thumbnailSrc)
-  const thumbnailSrcCandidates = hasLandingThumbnail
+  const hasThumbnail = Boolean(guide.thumbnailSrc)
+  const thumbnailSrcCandidates = hasThumbnail
     ? guide.thumbnailSrcCandidates?.filter(Boolean) ?? [guide.thumbnailSrc]
     : []
   const activeThumbnailSrc = thumbnailSrcCandidates[thumbnailAttemptIndex] ?? guide.thumbnailSrc
@@ -23,7 +23,7 @@ function LearningGuideCard({ guide, variant = 'default', isCompleted = false }) 
 
   return (
     <article className={`learning-card learning-card--${variant}${isCompleted ? ' learning-card--completed' : ''}`}>
-      {hasLandingThumbnail ? (
+      {hasThumbnail ? (
         <div className="learning-card__media">
           {isThumbnailUnavailable ? (
             <div

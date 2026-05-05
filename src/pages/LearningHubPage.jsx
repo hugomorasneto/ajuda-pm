@@ -3,10 +3,10 @@ import LearningGuideCard from '../components/learning/LearningGuideCard'
 import {
   getLearningGuideBySlug,
   getLearningGuidesBySlugs,
-  learningGuides,
   learningHub,
   learningNotes,
 } from '../content/learningContent'
+import { withAcademyGuideThumbnails } from '../content/academyThumbnails'
 import { useAuth } from '../hooks/useAuth'
 import { useLearningProgress } from '../hooks/useLearningProgress'
 import { ACADEMIA_IMAGE_ALT, ACADEMIA_IMAGE_URL, usePageMetadata } from '../hooks/usePageMetadata'
@@ -81,7 +81,7 @@ function TrailStep({ step, index, isCompleted }) {
 function LearningHubPage() {
   const { user } = useAuth()
   const { isCompleted, isLoading } = useLearningProgress()
-  const starterGuides = getLearningGuidesBySlugs(learningHub.starterGuideSlugs)
+  const academyModules = withAcademyGuideThumbnails(getLearningGuidesBySlugs(learningHub.starterGuideSlugs))
 
   const completedCount = AVAILABLE_STEPS.filter((s) => isCompleted(s.slug)).length
   const totalCount = AVAILABLE_STEPS.length
@@ -112,8 +112,8 @@ function LearningHubPage() {
             <Link className="landing-button landing-button--primary" to="/aprender/fundamentos-produto-agil">
               Começar trilha →
             </Link>
-            <a className="landing-button landing-button--secondary" href="#guias">
-              Ver todos os guias
+            <a className="landing-button landing-button--secondary" href="#modulos">
+              Ver módulos
             </a>
           </div>
           <p className="learning-hub-hero__microcopy">5 módulos · Nível iniciante · Grátis para começar</p>
@@ -167,19 +167,19 @@ function LearningHubPage() {
         </div>
       </section>
 
-      {/* ── Módulos disponíveis ── */}
-      <section className="learning-section">
+      {/* ── Aprenda enquanto faz ── */}
+      <section className="learning-section" id="modulos">
         <div className="learning-section__intro">
-          <span className="badge-pill">Módulos disponíveis</span>
-          <h2>Por onde um PM iniciante costuma ganhar mais clareza</h2>
+          <span className="badge-pill">Aprenda enquanto faz</span>
+          <h2>Módulos da Academia ProdForge para praticar no backlog real</h2>
           <p>
-            Leia na ordem se você está montando base agora. Pule por tema se já estiver
-            vivendo a dor no backlog.
+            Leia na ordem se você está montando base agora. Pule por tema se já estiver vivendo a dor
+            de estruturar stories, refinar backlog ou alinhar stakeholders.
           </p>
         </div>
 
         <div className="learning-guide-grid learning-guide-grid--featured">
-          {starterGuides.map((guide) => (
+          {academyModules.map((guide) => (
             <LearningGuideCard
               key={guide.slug}
               guide={guide}
@@ -235,28 +235,6 @@ function LearningHubPage() {
               </ol>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ── Todos os guias ── */}
-      <section className="learning-section" id="guias">
-        <div className="learning-section__intro">
-          <span className="badge-pill">Guias principais</span>
-          <h2>Leituras para sair da teoria e voltar para o trabalho real</h2>
-          <p>
-            Escritos para situações típicas de quem está começando a estruturar produto
-            em contexto ágil.
-          </p>
-        </div>
-
-        <div className="learning-guide-grid">
-          {learningGuides.map((guide) => (
-            <LearningGuideCard
-              key={guide.slug}
-              guide={guide}
-              isCompleted={isCompleted(guide.slug)}
-            />
-          ))}
         </div>
       </section>
 

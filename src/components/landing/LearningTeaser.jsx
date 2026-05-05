@@ -1,53 +1,9 @@
 import { Link } from 'react-router-dom'
 import LearningGuideCard from '../learning/LearningGuideCard'
-
-function buildPublicAssetCandidates(path) {
-  const normalizedPath = path.replace(/^\/+/, '')
-  const basePath = import.meta.env.BASE_URL.endsWith('/')
-    ? import.meta.env.BASE_URL
-    : `${import.meta.env.BASE_URL}/`
-
-  return [...new Set([`/${normalizedPath}`, `${basePath}${normalizedPath}`])]
-}
-
-const academyGuideThumbnailsBySlug = {
-  'fundamentos-produto-agil': {
-    src: 'images/prodforge/academy/fundamentos-produto-agil-pm-po-iniciante.webp?v=20260503-final-v2',
-    alt: 'Capa do guia Fundamentos de produto ágil para PM/PO iniciante',
-  },
-  'user-stories-na-pratica': {
-    src: 'images/prodforge/academy/user-stories-na-pratica.webp?v=20260503-final-v2',
-    alt: 'Capa do guia Stories na prática',
-  },
-  'backlog-e-refinamento': {
-    src: 'images/prodforge/academy/backlog-e-refinamento-sem-caos.webp?v=20260503-final-v2',
-    alt: 'Capa do guia Backlog e refinamento sem caos',
-  },
-  'refinamento-e-criterios': {
-    src: 'images/prodforge/academy/como-fazer-refinamento-sem-desperdicio.webp?v=20260503-final-v2',
-    alt: 'Capa do guia Como fazer refinamento sem desperdício',
-  },
-  'alinhamento-com-stakeholders': {
-    src: 'images/prodforge/academy/alinhamento-com-stakeholders-sem-virar-telefone-sem-fio.webp?v=20260503-final-v2',
-    alt: 'Capa do guia Alinhamento com stakeholders sem virar telefone sem fio',
-  },
-}
+import { withAcademyGuideThumbnails } from '../../content/academyThumbnails'
 
 function LearningTeaser({ content, guides }) {
-  const guidesWithThumbnails = guides.map((guide) => {
-    const thumbnail = academyGuideThumbnailsBySlug[guide.slug]
-
-    if (!thumbnail) {
-      return guide
-    }
-
-    return {
-      ...guide,
-      thumbnailSrc: buildPublicAssetCandidates(thumbnail.src)[0],
-      thumbnailSrcCandidates: buildPublicAssetCandidates(thumbnail.src),
-      thumbnailAlt: thumbnail.alt,
-    }
-  })
+  const guidesWithThumbnails = withAcademyGuideThumbnails(guides)
 
   return (
     <section className="landing-section landing-learning-teaser" id="aprender">

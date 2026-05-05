@@ -20,9 +20,9 @@ export const landingCopy = {
   ],
   hero: {
     eyebrow: 'Feito para PMs e times de produto',
-    title: 'Transforme briefings confusos em user stories claras que o time entende na primeira leitura.',
+    title: 'Transforme briefing confuso em story clara.',
     description:
-      'A demanda entra bruta. A IA forja a estrutura com objetivo, critérios de aceite, trincas e teste de resistência prontos para inspeção.',
+      'A IA organiza contexto, objetivo, critérios e riscos para PMs, Devs e QAs trabalharem com menos ruído.',
     microcopy: 'Grátis para começar · Sem cartão · Resultado em 60 segundos',
     stats: [
       { value: '60 segundos', label: 'da demanda vaga a uma story pronta para revisão' },
@@ -31,7 +31,7 @@ export const landingCopy = {
     ],
     preview: {
       imageAlt:
-        'Mockup do ProdForge mostrando briefing bruto entrando na forja e saindo como user story estruturada.',
+        'Forja tecnológica transformando briefing em user story clara na ProdForge',
       problemLabel: 'Briefing bruto',
       problemTitle: 'Domínio corporativo no onboarding B2B',
       problemItems: [

@@ -5900,6 +5900,156 @@
 }
 
 /* ============================================================
+   HOME FORGE - HERO VERTICAL ART
+   ============================================================ */
+
+.public-layout--home-forge .landing-hero {
+  align-items: stretch;
+}
+
+.public-layout--home-forge .landing-hero__copy {
+  align-self: center;
+  max-width: 39rem;
+}
+
+.public-layout--home-forge .landing-hero__copy h1 {
+  max-width: 13.6ch;
+  font-size: clamp(2.55rem, 4.1vw, 4.2rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+.public-layout--home-forge .landing-hero__description {
+  max-width: 34rem;
+}
+
+.public-layout--home-forge .hero-transformation-preview {
+  align-self: stretch;
+  display: grid;
+}
+
+.public-layout--home-forge .hero-transformation-preview__frame {
+  display: grid;
+  height: 100%;
+  min-height: clamp(520px, 55vw, 720px);
+  padding: clamp(10px, 1.2vw, 16px);
+  border-color: rgba(255, 255, 255, 0.12);
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at 48% 54%, rgba(255, 122, 26, 0.18) 0%, transparent 32%),
+    radial-gradient(circle at 78% 18%, rgba(77, 163, 255, 0.11) 0%, transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.012) 100%),
+    var(--forge-gradient-panel);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.045),
+    0 28px 70px rgba(0, 0, 0, 0.46),
+    0 0 34px rgba(255, 122, 26, 0.12);
+}
+
+.public-layout--home-forge .hero-transformation-preview__media {
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: 4 / 5;
+  border-color: rgba(255, 255, 255, 0.13);
+  border-radius: 26px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.public-layout--home-forge .hero-transformation-preview__image {
+  object-fit: cover;
+  object-position: center center;
+  animation: none;
+  filter: saturate(1.04) contrast(1.03) drop-shadow(0 18px 34px rgba(0, 0, 0, 0.46));
+  will-change: auto;
+}
+
+.public-layout--home-forge .hero-art-frame::before {
+  inset: -12px;
+  opacity: 0.34;
+}
+
+.public-layout--home-forge .hero-art-frame::after {
+  opacity: 0.16;
+}
+
+@media (min-width: 980px) {
+  .public-layout--home-forge .landing-hero {
+    grid-template-columns: minmax(0, 0.45fr) minmax(0, 0.55fr);
+    min-height: clamp(620px, calc(100vh - 112px), 760px);
+  }
+}
+
+@media (max-width: 979px) {
+  .public-layout--home-forge .hero-transformation-preview__frame {
+    min-height: 0;
+  }
+
+  .public-layout--home-forge .hero-transformation-preview__media {
+    aspect-ratio: 4 / 5;
+  }
+}
+
+@media (max-width: 640px) {
+  .public-layout--home-forge .landing-hero {
+    box-sizing: border-box;
+    gap: var(--space-5);
+    width: 100%;
+    max-width: 100%;
+    padding: var(--space-4);
+  }
+
+  .public-layout--home-forge .landing-hero__copy,
+  .public-layout--home-forge .hero-transformation-preview {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .public-layout--home-forge .landing-hero__copy h1 {
+    max-width: 100%;
+    font-size: clamp(2.15rem, 9.2vw, 2.65rem);
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+  }
+
+  .public-layout--home-forge .landing-hero__description {
+    font-size: 0.98rem;
+    line-height: 1.62;
+  }
+
+  .public-layout--home-forge .hero-transformation-preview__frame {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: var(--space-2);
+    border-radius: 26px;
+  }
+
+  .public-layout--home-forge .hero-transformation-preview__media {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    border-radius: 20px;
+  }
+
+  .public-layout--home-forge .landing-hero__actions,
+  .public-layout--home-forge .landing-hero__actions .forge-button {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .public-layout--home-forge .landing-hero__actions .forge-button {
+    box-sizing: border-box;
+    padding-inline: var(--space-4);
+    white-space: normal;
+  }
+}
+
+/* ============================================================
    LANDING PERSONA CARDS
    ============================================================ */
 
@@ -6180,6 +6330,342 @@
 .public-layout--academy-forge .landing-button {
   min-width: max-content;
   white-space: nowrap;
+}
+
+.public-layout--academy-forge .learning-page.learning-hub {
+  gap: clamp(28px, 4vw, 48px);
+  min-width: 0;
+}
+
+.public-layout--academy-forge .learning-hub-hero,
+.public-layout--academy-forge .learning-path-section,
+.public-layout--academy-forge .learn-apply-block,
+.public-layout--academy-forge .learning-final-cta {
+  position: relative;
+  overflow: hidden;
+  border-color: var(--forge-border);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.014)),
+    rgba(11, 16, 22, 0.86);
+  color: var(--forge-text-secondary);
+  box-shadow: var(--forge-shadow-panel);
+}
+
+.public-layout--academy-forge .learning-hub-hero {
+  isolation: isolate;
+  min-height: clamp(300px, 36vw, 410px);
+  padding: clamp(28px, 5vw, 56px);
+  border-color: rgba(255, 145, 56, 0.24);
+  background:
+    linear-gradient(90deg, rgba(5, 8, 13, 0.96) 0%, rgba(7, 17, 28, 0.88) 48%, rgba(7, 17, 28, 0.58) 74%, rgba(7, 17, 28, 0.34) 100%),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.46), transparent 42%),
+    url('../assets/forge/forging-workspace-bg.png') 62% center / cover no-repeat,
+    var(--forge-gradient-panel);
+  box-shadow:
+    var(--forge-shadow-panel),
+    0 0 0 1px rgba(255, 145, 56, 0.06),
+    0 30px 90px rgba(0, 0, 0, 0.34);
+}
+
+.public-layout--academy-forge .learning-hub-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 17% 16%, rgba(255, 145, 56, 0.20), transparent 22rem),
+    radial-gradient(circle at 82% 20%, rgba(77, 163, 255, 0.14), transparent 26rem);
+}
+
+.public-layout--academy-forge .learning-hub-hero__copy {
+  max-width: 45rem;
+  gap: var(--forge-space-4);
+}
+
+.public-layout--academy-forge .learning-hub-hero__copy h1,
+.public-layout--academy-forge .learning-section__intro h2,
+.public-layout--academy-forge .learn-apply-block__copy h2,
+.public-layout--academy-forge .learning-final-cta__copy h2 {
+  color: var(--forge-text-primary);
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+.public-layout--academy-forge .learning-hub-hero__copy h1 {
+  font-size: clamp(2.15rem, 5vw, 4rem);
+  line-height: 1;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.42);
+}
+
+.public-layout--academy-forge .learning-hub-hero__copy > p:last-child,
+.public-layout--academy-forge .learning-section__intro p:last-child,
+.public-layout--academy-forge .learn-apply-block__copy p,
+.public-layout--academy-forge .learning-final-cta__copy > p:last-child {
+  color: var(--forge-text-secondary);
+}
+
+.public-layout--academy-forge .learning-hub-hero__microcopy {
+  color: var(--forge-text-muted);
+}
+
+.public-layout--academy-forge .learning-path-section,
+.public-layout--academy-forge .learn-apply-block,
+.public-layout--academy-forge .learning-final-cta {
+  padding: clamp(22px, 3vw, 34px);
+}
+
+.public-layout--academy-forge .learning-path-section::before,
+.public-layout--academy-forge .learn-apply-block::before,
+.public-layout--academy-forge .learning-final-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--forge-ember-hover), var(--forge-tech), transparent);
+  opacity: 0.72;
+}
+
+.public-layout--academy-forge .learning-path-step__connector {
+  background: var(--forge-border-strong);
+}
+
+.public-layout--academy-forge .learning-path-step {
+  min-width: 112px;
+  padding-inline: var(--forge-space-2);
+}
+
+.public-layout--academy-forge .learning-path-step--active .learning-path-step__connector {
+  background: linear-gradient(90deg, var(--forge-ember-hover), var(--forge-tech));
+}
+
+.public-layout--academy-forge .learning-path-step--active .learning-path-step__dot {
+  background: var(--forge-gradient-cta-ember);
+  color: var(--forge-text-primary);
+  box-shadow: 0 0 18px rgba(255, 145, 56, 0.20);
+}
+
+.public-layout--academy-forge .learning-path-step--completed .learning-path-step__dot {
+  background: var(--forge-success-soft);
+  color: #bdf4da;
+}
+
+.public-layout--academy-forge .learning-path-step__num {
+  color: var(--forge-text-muted);
+}
+
+.public-layout--academy-forge .learning-path-step--active .learning-path-step__num,
+.public-layout--academy-forge .learning-path-step--active a.learning-path-step__title {
+  color: var(--forge-text-primary);
+}
+
+.public-layout--academy-forge .learning-path-step__title {
+  max-width: 100%;
+  color: var(--forge-text-secondary);
+  overflow-wrap: break-word;
+}
+
+.public-layout--academy-forge .learning-trail-progress {
+  border-color: var(--forge-border);
+  background: rgba(5, 8, 13, 0.46);
+}
+
+.public-layout--academy-forge .learning-trail-progress__label,
+.public-layout--academy-forge .learning-trail-progress__fraction {
+  color: var(--forge-text-secondary);
+}
+
+.public-layout--academy-forge .learning-guide-grid--featured {
+  align-items: stretch;
+}
+
+.public-layout--academy-forge .learning-card--featured {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: var(--forge-space-4);
+  min-width: 0;
+  height: 100%;
+  padding: 0 0 var(--forge-space-5);
+  border-color: var(--forge-border);
+  border-radius: var(--forge-radius-md);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.038), rgba(255, 255, 255, 0.012)),
+    rgba(11, 16, 22, 0.88);
+  color: var(--forge-text-secondary);
+  box-shadow: var(--forge-shadow-panel);
+}
+
+.public-layout--academy-forge .learning-card--featured:hover {
+  border-color: var(--forge-border-tech);
+  box-shadow: var(--forge-shadow-floating), 0 0 18px rgba(77, 163, 255, 0.10);
+  transform: translateY(-1px);
+}
+
+.public-layout--academy-forge .learning-card--featured .learning-card__media {
+  aspect-ratio: 16 / 9;
+  border-radius: var(--forge-radius-md) var(--forge-radius-md) 0 0;
+  border-bottom: 1px solid var(--forge-border-subtle);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 122, 26, 0.24) 0%, transparent 36%),
+    radial-gradient(circle at 82% 20%, rgba(77, 163, 255, 0.18) 0%, transparent 34%),
+    linear-gradient(180deg, var(--forge-bg-charcoal) 0%, var(--forge-bg-canvas) 100%);
+}
+
+.public-layout--academy-forge .learning-card--featured .learning-card__media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(5, 8, 13, 0.04) 0%, rgba(5, 8, 13, 0.30) 100%),
+    radial-gradient(circle at 18% 12%, rgba(255, 177, 74, 0.12), transparent 38%);
+}
+
+.public-layout--academy-forge .learning-card--featured .learning-card__image {
+  object-fit: cover;
+  object-position: center;
+}
+
+.public-layout--academy-forge .learning-card--featured .learning-card__image-fallback {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 122, 26, 0.28) 0%, transparent 36%),
+    radial-gradient(circle at 82% 20%, rgba(77, 163, 255, 0.22) 0%, transparent 34%),
+    linear-gradient(180deg, var(--forge-bg-charcoal) 0%, var(--forge-bg-canvas) 100%);
+}
+
+.public-layout--academy-forge .learning-card--featured .learning-card__meta,
+.public-layout--academy-forge .learning-card--featured .learning-card__body,
+.public-layout--academy-forge .learning-card--featured .learning-card__footer {
+  min-width: 0;
+  padding-left: var(--forge-space-5);
+  padding-right: var(--forge-space-5);
+}
+
+.public-layout--academy-forge .learning-card--featured .learning-card__meta {
+  padding-top: var(--forge-space-5);
+  color: #c7e1ff;
+}
+
+.public-layout--academy-forge .learning-card--featured .learning-card__body h3 {
+  color: var(--forge-text-primary);
+  font-size: clamp(1.12rem, 1.3vw, 1.28rem);
+  line-height: 1.24;
+  letter-spacing: 0;
+  overflow-wrap: break-word;
+}
+
+.public-layout--academy-forge .learning-card--featured .learning-card__body p {
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.66;
+}
+
+.public-layout--academy-forge .learning-card--featured .learning-card__footer {
+  flex-wrap: wrap;
+  align-self: end;
+  border-top-color: var(--forge-border-subtle);
+}
+
+.public-layout--academy-forge .learning-card--featured .learning-card__level {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 var(--forge-space-3);
+  border: 1px solid var(--forge-border-ember);
+  border-radius: 999px;
+  background: var(--forge-ember-soft);
+  color: #ffd0a8;
+  font-size: var(--text-label);
+  text-transform: uppercase;
+}
+
+.public-layout--academy-forge .learning-card--featured .learning-card__actions {
+  flex-wrap: wrap;
+  row-gap: var(--forge-space-2);
+}
+
+.public-layout--academy-forge .learning-card--featured .learning-card__action-read {
+  color: var(--forge-tech-hover);
+}
+
+.public-layout--academy-forge .learning-card--featured .learning-card__action-practice {
+  color: #ffd0a8;
+}
+
+.public-layout--academy-forge .learning-card--featured .learning-card__action-practice:hover {
+  color: var(--forge-ember-hover);
+}
+
+.public-layout--academy-forge .learn-apply-block {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 145, 56, 0.14), transparent 18rem),
+    linear-gradient(150deg, rgba(255, 122, 26, 0.09), rgba(77, 163, 255, 0.07)),
+    rgba(11, 16, 22, 0.86);
+}
+
+.public-layout--academy-forge .learn-apply-block__panel {
+  min-width: 0;
+  border-color: var(--forge-border);
+  background: rgba(5, 8, 13, 0.44);
+}
+
+.public-layout--academy-forge .learn-apply-block__panel--output {
+  border-color: var(--forge-border-ember);
+  background: rgba(5, 8, 13, 0.70);
+}
+
+.public-layout--academy-forge .learn-apply-block__panel-label,
+.public-layout--academy-forge .learn-apply-block__criteria p {
+  color: var(--forge-tech-hover);
+}
+
+.public-layout--academy-forge .learn-apply-block__panel-text,
+.public-layout--academy-forge .learn-apply-block__criteria ol {
+  color: var(--forge-text-secondary);
+}
+
+.public-layout--academy-forge .learn-apply-block__panel-example {
+  border-left-color: var(--forge-ember-hover);
+  background: rgba(255, 122, 26, 0.10);
+  color: var(--forge-text-primary);
+}
+
+.public-layout--academy-forge .quick-note-item {
+  flex-wrap: wrap;
+  min-width: 0;
+  border-color: var(--forge-border);
+  background: rgba(11, 16, 22, 0.86);
+}
+
+.public-layout--academy-forge .quick-note-item:hover {
+  border-color: var(--forge-border-tech);
+  background: rgba(77, 163, 255, 0.10);
+}
+
+.public-layout--academy-forge .quick-note-item__tag {
+  border-color: var(--forge-border-tech);
+  background: var(--forge-tech-soft);
+  color: #c7e1ff;
+}
+
+.public-layout--academy-forge .quick-note-item__title {
+  min-width: min(100%, 18rem);
+  color: var(--forge-text-primary);
+}
+
+.public-layout--academy-forge .quick-note-item__link {
+  color: var(--forge-ember-hover);
+}
+
+.public-layout--academy-forge .learning-final-cta {
+  border-color: var(--forge-border-ember);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 145, 56, 0.16), transparent 20rem),
+    linear-gradient(150deg, rgba(255, 122, 26, 0.10), rgba(77, 163, 255, 0.08)),
+    var(--forge-gradient-panel);
 }
 
 .public-layout--academy-forge .learning-page.learning-guide {
