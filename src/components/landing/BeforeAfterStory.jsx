@@ -9,9 +9,11 @@ function BeforeAfterStory({ content }) {
 
       <div className="landing-before-after__grid">
         <article className="landing-before-after__panel landing-before-after__panel--before forge-panel forge-panel--warning">
-          <span className="landing-before-after__badge landing-before-after__badge--before">
-            {content.before.label}
-          </span>
+          <div className="landing-before-after__panel-header">
+            <span className="landing-before-after__badge landing-before-after__badge--before">
+              {content.before.label}
+            </span>
+          </div>
           <h3>{content.before.title}</h3>
           <p className="landing-before-after__raw">{content.before.story}</p>
           <ul>
@@ -21,16 +23,28 @@ function BeforeAfterStory({ content }) {
           </ul>
         </article>
 
-        <div className="landing-before-after__transition" aria-hidden="true">
-          <span className="landing-before-after__transition-line" />
-          <span className="landing-before-after__transition-head" />
+        <div className="landing-before-after__transition" aria-label={content.transition.label}>
+          <div className="landing-before-after__transition-arrow" aria-hidden="true">
+            <span className="landing-before-after__transition-line" />
+            <span className="landing-before-after__transition-head" />
+          </div>
+          <p>{content.transition.copy}</p>
         </div>
 
         <article className="landing-before-after__panel landing-before-after__panel--after forge-panel forge-panel--active-tech">
-          <span className="landing-before-after__badge landing-before-after__badge--after">
-            {content.after.label}
-          </span>
+          <div className="landing-before-after__panel-header">
+            <span className="landing-before-after__badge landing-before-after__badge--after">
+              {content.after.label}
+            </span>
+            <span className="landing-before-after__status">{content.after.statusLabel}</span>
+          </div>
           <h3>{content.after.title}</h3>
+
+          <ul className="landing-before-after__indicators" aria-label="Indicadores da story estruturada">
+            {content.after.indicators.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
 
           <div className="landing-before-after__section">
             <strong>Objetivo</strong>

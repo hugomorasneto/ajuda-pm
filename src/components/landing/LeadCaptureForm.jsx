@@ -123,39 +123,49 @@ function LeadCaptureForm({ content }) {
       </div>
 
       <form className="landing-lead-capture__form" onSubmit={handleSubmit} noValidate>
-        <label htmlFor="lead-name">Nome</label>
-        <input
-          id="lead-name"
-          type="text"
-          placeholder="Seu nome"
-          value={formValues.name}
-          onChange={(event) => updateField('name', event.target.value)}
-          aria-invalid={Boolean(errors.name)}
-          aria-describedby={errors.name ? 'lead-name-error' : undefined}
-          disabled={isSubmitting}
-        />
-        {errors.name ? (
-          <p id="lead-name-error" className="landing-lead-capture__field-error" role="alert">
-            {errors.name}
-          </p>
-        ) : null}
+        <div className="landing-lead-capture__form-header">
+          <span className="landing-lead-capture__form-badge">Plano Pro</span>
+          <h3>{content.formTitle}</h3>
+          <p>{content.formDescription}</p>
+        </div>
 
-        <label htmlFor="lead-email">E-mail</label>
-        <input
-          id="lead-email"
-          type="email"
-          placeholder="seu.email@empresa.com"
-          value={formValues.email}
-          onChange={(event) => updateField('email', event.target.value)}
-          aria-invalid={Boolean(errors.email)}
-          aria-describedby={errors.email ? 'lead-email-error' : undefined}
-          disabled={isSubmitting}
-        />
-        {errors.email ? (
-          <p id="lead-email-error" className="landing-lead-capture__field-error" role="alert">
-            {errors.email}
-          </p>
-        ) : null}
+        <div className="landing-lead-capture__field">
+          <label htmlFor="lead-name">Nome</label>
+          <input
+            id="lead-name"
+            type="text"
+            placeholder="Seu nome"
+            value={formValues.name}
+            onChange={(event) => updateField('name', event.target.value)}
+            aria-invalid={Boolean(errors.name)}
+            aria-describedby={errors.name ? 'lead-name-error' : undefined}
+            disabled={isSubmitting}
+          />
+          {errors.name ? (
+            <p id="lead-name-error" className="landing-lead-capture__field-error" role="alert">
+              {errors.name}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="landing-lead-capture__field">
+          <label htmlFor="lead-email">E-mail</label>
+          <input
+            id="lead-email"
+            type="email"
+            placeholder="seu.email@empresa.com"
+            value={formValues.email}
+            onChange={(event) => updateField('email', event.target.value)}
+            aria-invalid={Boolean(errors.email)}
+            aria-describedby={errors.email ? 'lead-email-error' : undefined}
+            disabled={isSubmitting}
+          />
+          {errors.email ? (
+            <p id="lead-email-error" className="landing-lead-capture__field-error" role="alert">
+              {errors.email}
+            </p>
+          ) : null}
+        </div>
 
         {feedbackMessage ? (
           <p
@@ -172,7 +182,7 @@ function LeadCaptureForm({ content }) {
           className="landing-button forge-button forge-button--ember forge-button--block forge-button--lg"
           disabled={isSubmitting}
         >
-          {isSubmitting ? 'Registrando...' : isSubmitted ? 'Interesse registrado' : 'Avisar quando abrir'}
+          {isSubmitting ? 'Registrando...' : isSubmitted ? 'Interesse registrado' : content.buttonLabel}
         </button>
 
         <p className="landing-lead-capture__note">{content.note}</p>

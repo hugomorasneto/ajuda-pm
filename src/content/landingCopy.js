@@ -95,7 +95,11 @@ export const landingCopy = {
     eyebrow: 'Antes e depois',
     title: 'Menos ruído. Mais clareza. Entregas melhores.',
     description:
-      'Transforme uma solicitação imprecisa em uma base clara para decidir, construir e testar.',
+      'Veja como uma demanda solta vira uma story clara, com objetivo, comportamento esperado e critérios de aceite.',
+    transition: {
+      copy: 'A IA organiza o caos em uma estrutura clara.',
+      label: 'Transformação de demanda vaga em user story estruturada',
+    },
     before: {
       label: 'Antes',
       title: 'Demanda vaga',
@@ -108,7 +112,9 @@ export const landingCopy = {
     },
     after: {
       label: 'Depois',
+      statusLabel: 'Pronto para refinamento',
       title: 'User story estruturada',
+      indicators: ['Objetivo claro', 'User story', 'Critérios de aceite', 'Gaps identificados'],
       objective:
         'Reduzir cadastros inconsistentes e dar previsibilidade ao time operacional no onboarding B2B.',
       story:
@@ -204,15 +210,19 @@ export const landingCopy = {
   },
   leadCapture: {
     eyebrow: `Interesse no plano ${PRO_PLAN_NAME}`,
-    title: 'Cadastre seu interesse para acompanhar a evolução do produto.',
+    title: `Quer testar o plano ${PRO_PLAN_NAME}?`,
     description:
-      `Cadastre-se para acompanhar novidades do plano ${PRO_PLAN_NAME}, exportações avançadas e evoluções do ${APP_NAME}.`,
-    note: 'Zero spam. Apenas avisos importantes sobre o produto.',
+      'Construído para PMs e POs que querem sair do briefing solto e chegar em stories claras, revisáveis e prontas para o time.',
+    formTitle: 'Entre na lista de interesse',
+    formDescription:
+      `Cadastre seu e-mail para receber novidades do plano ${PRO_PLAN_NAME}, expansão de integrações e convites de acesso antecipado.`,
+    buttonLabel: 'Avise quando abrir',
+    note: 'Sem spam. Apenas novidades relevantes sobre o produto.',
   },
   finalCta: {
     eyebrow: 'Pronto para começar',
     title: 'Seu próximo sprint começa com uma história melhor.',
     description:
-      'Stories mal escritas geram dúvidas, retrabalho e atrasos. O ProdForge estrutura o contexto para que seu time foque no que importa: construir soluções incríveis.',
+      'Sua IA organiza briefing, contexto e critérios para transformar ruído em uma story clara antes do time começar a desenvolver.',
   },
 }

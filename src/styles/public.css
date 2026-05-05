@@ -6218,6 +6218,1089 @@
 }
 
 /* ============================================================
+   HOME FORGE - CONTRAST POLISH
+   ============================================================ */
+
+.public-layout--home-forge .landing-section__eyebrow,
+.public-layout--home-forge .landing-hero__eyebrow {
+  color: #ffbd82;
+  text-shadow: 0 0 18px rgba(255, 122, 26, 0.18);
+}
+
+.public-layout--home-forge .landing-section__intro p,
+.public-layout--home-forge .landing-final-cta__copy p,
+.public-layout--home-forge .landing-hero__description,
+.public-layout--home-forge .landing-workflow__item p,
+.public-layout--home-forge .landing-benefits__description,
+.public-layout--home-forge .landing-before-after__panel p,
+.public-layout--home-forge .landing-pricing__description,
+.public-layout--home-forge .landing-pricing__card-header p:last-child,
+.public-layout--home-forge .landing-lead-capture__copy p {
+  color: #d3dbe6;
+}
+
+.public-layout--home-forge .landing-hero__description {
+  color: #d7e0ea;
+}
+
+.public-layout--home-forge .landing-hero__microcopy,
+.public-layout--home-forge .landing-lead-capture__note {
+  color: #ffad66;
+  font-weight: 600;
+}
+
+.public-layout--home-forge .context-strip__label,
+.public-layout--home-forge .landing-workflow__item p,
+.public-layout--home-forge .landing-benefits__list,
+.public-layout--home-forge .landing-benefits__list li,
+.public-layout--home-forge .landing-pricing__list,
+.public-layout--home-forge .landing-pricing__list li {
+  color: #cbd5e1;
+}
+
+.public-layout--home-forge .context-strip__value,
+.public-layout--home-forge .landing-workflow__item h3,
+.public-layout--home-forge .landing-benefits__body h3,
+.public-layout--home-forge .landing-pricing__name,
+.public-layout--home-forge .landing-lead-capture__copy h2,
+.public-layout--home-forge .landing-lead-capture__form label {
+  color: #f8fafc;
+}
+
+.public-layout--home-forge .context-strip__icon,
+.public-layout--home-forge .landing-workflow__index {
+  color: #ffe1c2;
+}
+
+.public-layout--home-forge .landing-workflow__index {
+  border-color: rgba(255, 145, 56, 0.38);
+  background: rgba(255, 122, 26, 0.18);
+  box-shadow: 0 0 18px rgba(255, 122, 26, 0.12);
+}
+
+.public-layout--home-forge .landing-benefits__media .landing-benefits__role {
+  background: rgba(5, 8, 13, 0.84);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(14px);
+}
+
+.public-layout--home-forge .landing-benefits__item--pm .landing-benefits__role {
+  color: #ffd3ad;
+}
+
+.public-layout--home-forge .landing-benefits__item--dev .landing-benefits__role {
+  color: #c7e1ff;
+}
+
+.public-layout--home-forge .landing-benefits__item--qa .landing-benefits__role {
+  color: #bdf4da;
+}
+
+.public-layout--home-forge .landing-benefits__list li::before {
+  color: #ffbd82;
+}
+
+.public-layout--home-forge .learning-card--landing .learning-card__meta {
+  gap: var(--space-2);
+}
+
+.public-layout--home-forge .learning-card--landing .learning-card__meta span,
+.public-layout--home-forge .learning-card--landing .learning-card__level {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 26px;
+  padding: 0 var(--space-3);
+  border: 1px solid rgba(77, 163, 255, 0.26);
+  border-radius: 999px;
+  background: rgba(77, 163, 255, 0.11);
+  color: #d6ebff;
+  font-weight: 700;
+}
+
+.public-layout--home-forge .learning-card--landing .learning-card__level {
+  border-color: rgba(255, 145, 56, 0.34);
+  background: rgba(255, 122, 26, 0.13);
+  color: #ffd0a8;
+}
+
+.public-layout--home-forge .learning-card--landing .learning-card__body p,
+.public-layout--home-forge .landing-learning-teaser__footer p {
+  color: #cbd5e1;
+}
+
+.public-layout--home-forge .learning-card--landing .learning-card__action-read,
+.public-layout--home-forge .learning-card--landing .learning-card__action-practice {
+  font-weight: 800;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.public-layout--home-forge .learning-card--landing .learning-card__action-read {
+  color: #9fd0ff;
+}
+
+.public-layout--home-forge .learning-card--landing .learning-card__action-read:hover,
+.public-layout--home-forge .learning-card--landing .learning-card__action-read:focus-visible {
+  color: #c7e1ff;
+}
+
+.public-layout--home-forge .learning-card--landing .learning-card__action-practice {
+  color: #ffbd82;
+}
+
+.public-layout--home-forge .learning-card--landing .learning-card__action-practice:hover,
+.public-layout--home-forge .learning-card--landing .learning-card__action-practice:focus-visible {
+  color: #ffd7b3;
+}
+
+.public-layout--home-forge .landing-hero__actions .forge-button--metal,
+.public-layout--home-forge .landing-learning-teaser__footer .forge-button--metal {
+  color: #e5edf6;
+  border-color: rgba(226, 232, 240, 0.20);
+}
+
+.public-layout--home-forge .public-header__menu-button {
+  border-color: rgba(226, 232, 240, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
+    var(--forge-surface-2);
+  color: #f8fafc;
+}
+
+.public-layout--home-forge .public-header--forge-home .public-header__link {
+  color: #b8c4d2;
+}
+
+.public-layout--home-forge .landing-pricing__card--free {
+  opacity: 1;
+}
+
+.public-layout--home-forge .landing-pricing__badge {
+  color: #d8e2ee;
+}
+
+.public-layout--home-forge .landing-pricing__badge--featured {
+  color: #9fd0ff;
+}
+
+.public-layout--home-forge .public-footer--forge-home {
+  border-top-color: rgba(226, 232, 240, 0.12);
+}
+
+.public-layout--home-forge .public-footer--forge-home .public-footer__brand-statement {
+  color: #cbd5e1;
+}
+
+.public-layout--home-forge .public-footer--forge-home .public-footer__nav-title,
+.public-layout--home-forge .public-footer--forge-home .public-brand__name {
+  color: #f8fafc;
+}
+
+.public-layout--home-forge .public-footer--forge-home .public-footer__nav a {
+  color: #b8c4d2;
+  font-weight: 600;
+}
+
+.public-layout--home-forge .public-footer--forge-home .public-footer__nav a:hover,
+.public-layout--home-forge .public-footer--forge-home .public-footer__nav a:focus-visible {
+  color: #f8fafc;
+}
+
+.public-layout--home-forge .public-footer--forge-home .public-footer__bottom p {
+  color: #aebccc;
+}
+
+@media (max-width: 640px) {
+  .public-layout--home-forge .landing-hero__microcopy,
+  .public-layout--home-forge .landing-learning-teaser__footer p,
+  .public-layout--home-forge .public-footer--forge-home .public-footer__nav a {
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+}
+
+/* ============================================================
+   HOME FORGE - IMAGE HIERARCHY
+   ============================================================ */
+
+.public-layout--home-forge .hero-transformation-preview__frame {
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 30px 76px rgba(0, 0, 0, 0.5),
+    0 0 42px rgba(255, 122, 26, 0.16);
+}
+
+.public-layout--home-forge .hero-transformation-preview__media {
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 0 34px rgba(255, 122, 26, 0.13);
+}
+
+.public-layout--home-forge .hero-transformation-preview__image {
+  filter: saturate(1.08) contrast(1.05) brightness(1.02) drop-shadow(0 18px 34px rgba(0, 0, 0, 0.46));
+}
+
+.public-layout--home-forge .hero-art-frame::before {
+  opacity: 0.38;
+}
+
+.public-layout--home-forge .hero-art-frame::after {
+  opacity: 0.18;
+}
+
+.public-layout--home-forge .landing-benefits__media {
+  box-shadow: inset 0 -28px 46px rgba(5, 8, 13, 0.32);
+}
+
+.public-layout--home-forge .landing-benefits__media::after {
+  background:
+    linear-gradient(180deg, rgba(5, 8, 13, 0.12) 0%, rgba(5, 8, 13, 0.5) 72%, rgba(5, 8, 13, 0.78) 100%),
+    radial-gradient(circle at 18% 12%, rgba(255, 177, 74, 0.12), transparent 36%),
+    radial-gradient(circle at 82% 18%, rgba(77, 163, 255, 0.1), transparent 34%);
+}
+
+.public-layout--home-forge .landing-benefits__image {
+  filter: saturate(0.92) contrast(0.98) brightness(0.9);
+}
+
+.public-layout--home-forge .landing-benefits__item:hover {
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.38),
+    0 0 0 1px rgba(255, 145, 56, 0.16);
+}
+
+.public-layout--home-forge .landing-benefits__item:hover .landing-benefits__image {
+  transform: scale(1.025);
+  filter: saturate(1.02) contrast(1.01) brightness(0.98);
+}
+
+.public-layout--home-forge .learning-card--landing {
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.34),
+    0 0 0 1px rgba(255, 255, 255, 0.025);
+}
+
+.public-layout--home-forge .learning-card--landing:hover {
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.32),
+    0 0 0 1px rgba(77, 163, 255, 0.16);
+}
+
+.public-layout--home-forge .learning-card--landing .learning-card__media {
+  position: relative;
+  overflow: hidden;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+  background: var(--forge-surface-inset);
+}
+
+.public-layout--home-forge .learning-card--landing .learning-card__media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(5, 8, 13, 0.2) 0%, rgba(5, 8, 13, 0.42) 64%, rgba(5, 8, 13, 0.7) 100%),
+    radial-gradient(circle at 50% 0%, rgba(255, 122, 26, 0.08), transparent 44%);
+}
+
+.public-layout--home-forge .learning-card--landing .learning-card__image {
+  transform: scale(1.01);
+  filter: saturate(0.76) contrast(0.94) brightness(0.78);
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+.public-layout--home-forge .learning-card--landing:hover .learning-card__image {
+  transform: scale(1.025);
+  filter: saturate(0.86) contrast(0.97) brightness(0.86);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-layout--home-forge .learning-card--landing .learning-card__image {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* ============================================================
+   HOME FORGE - BEFORE AFTER VALUE
+   ============================================================ */
+
+.public-layout--home-forge .landing-before-after {
+  position: relative;
+}
+
+.public-layout--home-forge .landing-before-after::before {
+  content: '';
+  position: absolute;
+  inset: clamp(48px, 7vw, 88px) -24px -20px;
+  border-radius: 34px;
+  background:
+    radial-gradient(ellipse at 67% 48%, rgba(77, 163, 255, 0.11) 0%, transparent 44%),
+    radial-gradient(ellipse at 38% 54%, rgba(255, 122, 26, 0.08) 0%, transparent 42%);
+  pointer-events: none;
+}
+
+.public-layout--home-forge .landing-before-after > * {
+  position: relative;
+  z-index: 1;
+}
+
+.public-layout--home-forge .landing-before-after .landing-section__intro p:last-child {
+  max-width: 48rem;
+  color: #d7e0ea;
+}
+
+.public-layout--home-forge .landing-before-after__grid {
+  gap: clamp(20px, 2.8vw, 34px);
+}
+
+.public-layout--home-forge .landing-before-after__panel {
+  isolation: isolate;
+  align-content: start;
+  min-height: auto;
+}
+
+.public-layout--home-forge .landing-before-after__panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.public-layout--home-forge .landing-before-after__panel-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  justify-content: space-between;
+}
+
+.public-layout--home-forge .landing-before-after__panel--before {
+  border-color: rgba(255, 177, 74, 0.22);
+  background:
+    linear-gradient(180deg, rgba(255, 177, 74, 0.065) 0%, rgba(255, 177, 74, 0.015) 42%, transparent 100%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.008)),
+    rgba(9, 13, 20, 0.9);
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.public-layout--home-forge .landing-before-after__panel--before::before {
+  background: linear-gradient(90deg, rgba(255, 177, 74, 0.12) 0%, rgba(255, 177, 74, 0.58) 50%, rgba(255, 177, 74, 0.12) 100%);
+}
+
+.public-layout--home-forge .landing-before-after__panel--before h3,
+.public-layout--home-forge .landing-before-after__raw {
+  color: #f2f6fb;
+}
+
+.public-layout--home-forge .landing-before-after__panel--before li {
+  border-color: rgba(255, 177, 74, 0.18);
+  background: rgba(255, 177, 74, 0.045);
+  color: #cbd5e1;
+}
+
+.public-layout--home-forge .landing-before-after__panel--after {
+  border-color: rgba(125, 193, 255, 0.5);
+  background:
+    radial-gradient(circle at 86% 8%, rgba(255, 177, 74, 0.14) 0%, transparent 32%),
+    radial-gradient(circle at 12% 18%, rgba(77, 163, 255, 0.19) 0%, transparent 36%),
+    linear-gradient(180deg, rgba(77, 163, 255, 0.115) 0%, rgba(255, 122, 26, 0.035) 46%, rgba(255, 255, 255, 0.018) 100%),
+    rgba(8, 13, 21, 0.96);
+  box-shadow:
+    0 24px 58px rgba(0, 0, 0, 0.46),
+    0 0 0 1px rgba(77, 163, 255, 0.18),
+    0 0 42px rgba(77, 163, 255, 0.14),
+    0 0 34px rgba(255, 122, 26, 0.08);
+}
+
+.public-layout--home-forge .landing-before-after__panel--after::before {
+  background: linear-gradient(90deg, rgba(255, 177, 74, 0.3) 0%, rgba(77, 163, 255, 0.88) 52%, rgba(255, 122, 26, 0.32) 100%);
+  opacity: 0.95;
+}
+
+.public-layout--home-forge .landing-before-after__panel--after::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent 44%);
+  pointer-events: none;
+}
+
+.public-layout--home-forge .landing-before-after__badge {
+  min-height: 30px;
+  letter-spacing: 0.08em;
+}
+
+.public-layout--home-forge .landing-before-after__badge--after {
+  border-color: rgba(125, 193, 255, 0.52);
+  background: rgba(77, 163, 255, 0.16);
+  color: #c7e1ff;
+}
+
+.public-layout--home-forge .landing-before-after__status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  width: fit-content;
+  padding: 0 var(--space-3);
+  border: 1px solid rgba(255, 177, 74, 0.38);
+  border-radius: 999px;
+  background: rgba(255, 122, 26, 0.13);
+  color: #ffd0a8;
+  font-size: var(--text-label);
+  font-weight: 800;
+  line-height: 1.2;
+  box-shadow: 0 0 18px rgba(255, 122, 26, 0.11);
+}
+
+.public-layout--home-forge .landing-before-after__indicators {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.public-layout--home-forge .landing-before-after__indicators li {
+  min-width: 0;
+  padding: var(--space-2) var(--space-3) var(--space-2) calc(var(--space-5) + 8px);
+  border-color: rgba(77, 163, 255, 0.22);
+  background: rgba(77, 163, 255, 0.08);
+  color: #d6ebff;
+  font-size: var(--text-label);
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.public-layout--home-forge .landing-before-after__indicators li::before {
+  content: '✓';
+  top: 0.55rem;
+  color: #7dd3fc;
+  text-shadow: 0 0 12px rgba(77, 163, 255, 0.42);
+}
+
+.public-layout--home-forge .landing-before-after__panel--after .landing-before-after__section {
+  border-color: rgba(125, 193, 255, 0.18);
+  background: rgba(6, 13, 24, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.public-layout--home-forge .landing-before-after__panel--after .landing-before-after__section strong {
+  color: #f8fafc;
+}
+
+.public-layout--home-forge .landing-before-after__panel--after .landing-before-after__section p,
+.public-layout--home-forge .landing-before-after__panel--after .landing-before-after__section li {
+  color: #d7e0ea;
+}
+
+.public-layout--home-forge .landing-before-after__panel--after .landing-before-after__section li {
+  padding-left: calc(var(--space-5) + 8px);
+  border-color: rgba(77, 163, 255, 0.2);
+  background: rgba(77, 163, 255, 0.07);
+}
+
+.public-layout--home-forge .landing-before-after__note {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid rgba(255, 177, 74, 0.24);
+  border-radius: var(--forge-radius-sm);
+  background: rgba(255, 122, 26, 0.075);
+  color: #ffe1c2;
+}
+
+.public-layout--home-forge .landing-before-after__score {
+  border-color: rgba(125, 193, 255, 0.34);
+  background:
+    linear-gradient(180deg, rgba(77, 163, 255, 0.12), rgba(77, 163, 255, 0.055)),
+    rgba(5, 8, 13, 0.54);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 0 24px rgba(77, 163, 255, 0.1);
+}
+
+.public-layout--home-forge .landing-before-after__score span {
+  color: #b8c4d2;
+}
+
+.public-layout--home-forge .landing-before-after__score strong {
+  color: #f8fafc;
+}
+
+.public-layout--home-forge .landing-before-after__transition {
+  flex-direction: column;
+  width: clamp(112px, 9vw, 144px);
+  gap: var(--space-3);
+  color: #ffd0a8;
+}
+
+.public-layout--home-forge .landing-before-after__transition-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 14px rgba(255, 122, 26, 0.32));
+}
+
+.public-layout--home-forge .landing-before-after__transition-line {
+  width: clamp(76px, 6vw, 96px);
+  height: 3px;
+  background: linear-gradient(90deg, rgba(255, 177, 74, 0.35) 0%, rgba(255, 122, 26, 0.88) 42%, rgba(77, 163, 255, 0.92) 100%);
+  box-shadow: 0 0 18px rgba(77, 163, 255, 0.2);
+}
+
+.public-layout--home-forge .landing-before-after__transition-head {
+  width: 14px;
+  height: 14px;
+  border-color: #7dc1ff;
+}
+
+.public-layout--home-forge .landing-before-after__transition p {
+  max-width: 10rem;
+  margin: 0;
+  color: #d7e0ea;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.42;
+  text-align: center;
+}
+
+@media (min-width: 960px) {
+  .public-layout--home-forge .landing-before-after__panel--after {
+    transform: translateY(-6px);
+  }
+}
+
+@media (max-width: 959px) {
+  .public-layout--home-forge .landing-before-after__transition {
+    width: 100%;
+    min-height: 92px;
+  }
+
+  .public-layout--home-forge .landing-before-after__transition-arrow {
+    flex-direction: column;
+  }
+
+  .public-layout--home-forge .landing-before-after__transition-line {
+    width: 3px;
+    height: 42px;
+    background: linear-gradient(180deg, rgba(255, 177, 74, 0.35) 0%, rgba(255, 122, 26, 0.86) 45%, rgba(77, 163, 255, 0.9) 100%);
+  }
+
+  .public-layout--home-forge .landing-before-after__transition-head {
+    margin-top: -2px;
+    transform: rotate(135deg);
+  }
+
+  .public-layout--home-forge .landing-before-after__transition p {
+    max-width: min(22rem, 100%);
+  }
+}
+
+@media (max-width: 520px) {
+  .public-layout--home-forge .landing-before-after__panel-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .public-layout--home-forge .landing-before-after__indicators {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   HOME FORGE - PRO INTEREST
+   ============================================================ */
+
+.public-layout--home-forge .landing-lead-capture {
+  position: relative;
+  align-items: center;
+  gap: clamp(24px, 4vw, 48px);
+}
+
+.public-layout--home-forge .landing-lead-capture::before {
+  content: '';
+  position: absolute;
+  inset: clamp(20px, 4vw, 40px) 0 -18px;
+  border-radius: 32px;
+  background:
+    radial-gradient(ellipse at 74% 50%, rgba(77, 163, 255, 0.1) 0%, transparent 44%),
+    radial-gradient(ellipse at 36% 58%, rgba(255, 122, 26, 0.07) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+.public-layout--home-forge .landing-lead-capture > * {
+  position: relative;
+  z-index: 1;
+}
+
+.public-layout--home-forge .landing-lead-capture__copy {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 38rem;
+}
+
+.public-layout--home-forge .landing-lead-capture__copy h2 {
+  max-width: 18ch;
+  color: #f8fafc;
+}
+
+.public-layout--home-forge .landing-lead-capture__copy p:last-child {
+  max-width: 34rem;
+  color: #d7e0ea;
+  font-size: clamp(1rem, 1.35vw, 1.12rem);
+  line-height: 1.72;
+}
+
+.public-layout--home-forge .landing-lead-capture__form {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  gap: var(--space-4);
+  padding: clamp(26px, 3.2vw, 38px);
+  border-color: rgba(125, 193, 255, 0.32);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 88% 8%, rgba(255, 177, 74, 0.12) 0%, transparent 30%),
+    radial-gradient(circle at 8% 12%, rgba(77, 163, 255, 0.16) 0%, transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.065) 0%, rgba(255, 255, 255, 0.018) 100%),
+    rgba(8, 13, 21, 0.92);
+  box-shadow:
+    0 24px 58px rgba(0, 0, 0, 0.46),
+    0 0 0 1px rgba(77, 163, 255, 0.1),
+    0 0 34px rgba(77, 163, 255, 0.1),
+    0 0 28px rgba(255, 122, 26, 0.07);
+  backdrop-filter: blur(16px);
+}
+
+.public-layout--home-forge .landing-lead-capture__form::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 0;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(255, 122, 26, 0.42) 0%, rgba(77, 163, 255, 0.86) 52%, rgba(255, 177, 74, 0.38) 100%);
+}
+
+.public-layout--home-forge .landing-lead-capture__form::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.055), transparent 44%);
+  pointer-events: none;
+}
+
+.public-layout--home-forge .landing-lead-capture__form > * {
+  position: relative;
+  z-index: 1;
+}
+
+.public-layout--home-forge .landing-lead-capture__form-header {
+  display: grid;
+  gap: var(--space-2);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.1);
+}
+
+.public-layout--home-forge .landing-lead-capture__form-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 28px;
+  padding: 0 var(--space-3);
+  border: 1px solid rgba(255, 177, 74, 0.34);
+  border-radius: 999px;
+  background: rgba(255, 122, 26, 0.12);
+  color: #ffd0a8;
+  font-size: var(--text-label);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.public-layout--home-forge .landing-lead-capture__form-header h3 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: clamp(1.28rem, 1.8vw, 1.55rem);
+  line-height: 1.18;
+  letter-spacing: 0;
+}
+
+.public-layout--home-forge .landing-lead-capture__form-header p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: var(--text-body);
+  line-height: 1.62;
+}
+
+.public-layout--home-forge .landing-lead-capture__field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.public-layout--home-forge .landing-lead-capture__field label {
+  color: #f8fafc;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.public-layout--home-forge .landing-lead-capture__form input {
+  min-height: 56px;
+  padding: 0 var(--space-4);
+  border-color: rgba(226, 232, 240, 0.14);
+  border-radius: 14px;
+  background: rgba(3, 7, 13, 0.68);
+  color: #f8fafc;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.public-layout--home-forge .landing-lead-capture__form input::placeholder {
+  color: #8fa0b4;
+}
+
+.public-layout--home-forge .landing-lead-capture__form input:focus {
+  border-color: rgba(125, 193, 255, 0.7);
+  background: rgba(5, 11, 20, 0.86);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 0 0 3px rgba(77, 163, 255, 0.18),
+    0 0 22px rgba(255, 122, 26, 0.1);
+  outline: none;
+}
+
+.public-layout--home-forge .landing-lead-capture__form input[aria-invalid='true'] {
+  border-color: rgba(255, 107, 99, 0.58);
+  box-shadow: 0 0 0 3px rgba(255, 107, 99, 0.12);
+}
+
+.public-layout--home-forge .landing-lead-capture__field-error {
+  margin: 0;
+  color: #ffd2cf;
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.public-layout--home-forge .landing-lead-capture__feedback {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: 14px;
+  font-size: var(--text-small);
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.public-layout--home-forge .landing-lead-capture__feedback--success {
+  border-color: rgba(52, 211, 153, 0.32);
+  background: rgba(19, 78, 74, 0.32);
+  color: #c6f8e3;
+}
+
+.public-layout--home-forge .landing-lead-capture__feedback--info {
+  border-color: rgba(125, 193, 255, 0.32);
+  background: rgba(77, 163, 255, 0.12);
+  color: #d6ebff;
+}
+
+.public-layout--home-forge .landing-lead-capture__feedback--error {
+  border-color: rgba(255, 107, 99, 0.34);
+  background: rgba(255, 107, 99, 0.12);
+  color: #ffd2cf;
+}
+
+.public-layout--home-forge .landing-lead-capture__form .forge-button--ember {
+  margin-top: var(--space-1);
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.34),
+    0 0 28px rgba(255, 122, 26, 0.26);
+}
+
+.public-layout--home-forge .landing-lead-capture__form .forge-button--ember:hover,
+.public-layout--home-forge .landing-lead-capture__form .forge-button--ember:focus-visible {
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.42),
+    0 0 36px rgba(255, 122, 26, 0.34);
+}
+
+.public-layout--home-forge .landing-lead-capture__note {
+  color: #b8c4d2;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .public-layout--home-forge .landing-lead-capture {
+    align-items: stretch;
+    gap: var(--space-5);
+  }
+
+  .public-layout--home-forge .landing-lead-capture__copy h2 {
+    max-width: 100%;
+  }
+
+  .public-layout--home-forge .landing-lead-capture__form {
+    padding: var(--space-5);
+    border-radius: 22px;
+  }
+}
+
+/* ============================================================
+   HOME FORGE - FINAL CTA
+   ============================================================ */
+
+.public-layout--home-forge .landing-final-cta {
+  position: relative;
+}
+
+.public-layout--home-forge .landing-final-cta::before {
+  content: '';
+  position: absolute;
+  inset: 16px -18px -28px;
+  border-radius: 34px;
+  background:
+    radial-gradient(ellipse at 76% 52%, rgba(255, 122, 26, 0.13) 0%, transparent 46%),
+    radial-gradient(ellipse at 24% 60%, rgba(77, 163, 255, 0.07) 0%, transparent 42%);
+  pointer-events: none;
+}
+
+.public-layout--home-forge .landing-final-cta__content {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: auto;
+  padding: clamp(34px, 5vw, 58px);
+  border: 1px solid rgba(255, 177, 74, 0.28);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 84% 22%, rgba(255, 177, 74, 0.15) 0%, transparent 28%),
+    radial-gradient(circle at 15% 18%, rgba(77, 163, 255, 0.1) 0%, transparent 30%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.052) 0%, rgba(255, 255, 255, 0.012) 45%, rgba(255, 122, 26, 0.035) 100%),
+    linear-gradient(180deg, #111820 0%, #080c13 100%);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.48),
+    0 0 0 1px rgba(255, 122, 26, 0.08),
+    0 0 42px rgba(255, 122, 26, 0.13);
+}
+
+.public-layout--home-forge .landing-final-cta__content::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 0;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(77, 163, 255, 0.24) 0%, rgba(255, 122, 26, 0.78) 52%, rgba(255, 177, 74, 0.36) 100%);
+}
+
+.public-layout--home-forge .landing-final-cta__content::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  display: block;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+  background-size: 38px 38px;
+  mask-image: linear-gradient(135deg, rgba(0, 0, 0, 0.32), transparent 68%);
+  pointer-events: none;
+}
+
+.public-layout--home-forge .landing-final-cta__copy,
+.public-layout--home-forge .landing-final-cta__actions {
+  position: relative;
+  z-index: 1;
+}
+
+.public-layout--home-forge .landing-final-cta__copy {
+  max-width: 48rem;
+}
+
+.public-layout--home-forge .landing-final-cta__copy h2 {
+  max-width: 15ch;
+  color: #f8fafc;
+  font-size: clamp(2.25rem, 4.4vw, 4rem);
+  line-height: 1;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+.public-layout--home-forge .landing-final-cta__copy p:last-child {
+  max-width: 43rem;
+  color: #d7e0ea;
+  font-size: clamp(1rem, 1.32vw, 1.12rem);
+  line-height: 1.72;
+}
+
+.public-layout--home-forge .landing-final-cta__actions {
+  align-items: center;
+}
+
+.public-layout--home-forge .landing-final-cta__actions .forge-button--ember {
+  min-height: 58px;
+  padding-inline: var(--space-8);
+  font-size: 1.05rem;
+  font-weight: 800;
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.38),
+    0 0 34px rgba(255, 122, 26, 0.32);
+}
+
+.public-layout--home-forge .landing-final-cta__actions .forge-button--ember:hover,
+.public-layout--home-forge .landing-final-cta__actions .forge-button--ember:focus-visible {
+  transform: translateY(-2px);
+  box-shadow:
+    0 18px 36px rgba(0, 0, 0, 0.46),
+    0 0 44px rgba(255, 122, 26, 0.42);
+}
+
+.public-layout--home-forge .landing-final-cta__actions .forge-button--metal {
+  min-height: 58px;
+  border-color: rgba(226, 232, 240, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.022)),
+    rgba(8, 13, 21, 0.72);
+  color: #e5edf6;
+}
+
+.public-layout--home-forge .landing-final-cta__actions .forge-button--metal:hover,
+.public-layout--home-forge .landing-final-cta__actions .forge-button--metal:focus-visible {
+  border-color: rgba(125, 193, 255, 0.34);
+  color: #f8fafc;
+  box-shadow: 0 0 24px rgba(77, 163, 255, 0.12);
+}
+
+@media (min-width: 960px) {
+  .public-layout--home-forge .landing-final-cta__content {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .public-layout--home-forge .landing-final-cta__actions {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 640px) {
+  .public-layout--home-forge .landing-final-cta__content {
+    padding: var(--space-6);
+    border-radius: 24px;
+  }
+
+  .public-layout--home-forge .landing-final-cta__copy h2 {
+    max-width: 100%;
+    font-size: clamp(2rem, 9vw, 2.7rem);
+  }
+
+  .public-layout--home-forge .landing-final-cta__actions {
+    width: 100%;
+  }
+
+  .public-layout--home-forge .landing-final-cta__actions .forge-button {
+    width: 100%;
+    min-height: 54px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-layout--home-forge .landing-final-cta__actions .forge-button {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* ============================================================
+   HOME FORGE - FINAL POLISH
+   ============================================================ */
+
+.public-layout--home-forge .landing-page {
+  gap: clamp(72px, 7vw, 112px);
+}
+
+.public-layout--home-forge .context-strip,
+.public-layout--home-forge .landing-workflow__item,
+.public-layout--home-forge .landing-before-after,
+.public-layout--home-forge .landing-pricing,
+.public-layout--home-forge .landing-lead-capture,
+.public-layout--home-forge .landing-final-cta {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.public-layout--home-forge .landing-benefits__media,
+.public-layout--home-forge .learning-card--landing .learning-card__media {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(255, 122, 26, 0.12) 0%, transparent 38%),
+    radial-gradient(circle at 82% 18%, rgba(77, 163, 255, 0.1) 0%, transparent 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.026) 0%, rgba(255, 255, 255, 0.008) 100%),
+    var(--forge-surface-inset);
+}
+
+.public-layout--home-forge .learning-card--landing {
+  height: 100%;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+}
+
+.public-layout--home-forge .learning-card--landing .learning-card__footer {
+  align-self: end;
+}
+
+.public-layout--home-forge .landing-pricing__card {
+  height: 100%;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.public-layout--home-forge .landing-pricing__list {
+  align-self: start;
+}
+
+.public-layout--home-forge .landing-before-after__transition-arrow {
+  min-width: calc(clamp(76px, 6vw, 96px) + 18px);
+}
+
+.public-layout--home-forge .landing-pricing__card .forge-button,
+.public-layout--home-forge .landing-learning-teaser__footer .forge-button {
+  min-height: 46px;
+}
+
+.public-layout--home-forge .landing-benefits__item,
+.public-layout--home-forge .learning-card--landing,
+.public-layout--home-forge .landing-pricing__card,
+.public-layout--home-forge .landing-lead-capture__form,
+.public-layout--home-forge .landing-final-cta__content {
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .public-layout--home-forge .landing-page {
+    gap: 72px;
+  }
+
+  .public-layout--home-forge .context-strip {
+    margin-top: var(--space-2);
+  }
+
+  .public-layout--home-forge .landing-before-after__transition-arrow {
+    min-width: 18px;
+  }
+
+  .public-layout--home-forge .landing-pricing__card .forge-button,
+  .public-layout--home-forge .landing-learning-teaser__footer .forge-button {
+    min-height: 50px;
+  }
+}
+
+/* ============================================================
    ACADEMIA PROD FORGE - DARK PREMIUM
    ============================================================ */
 
