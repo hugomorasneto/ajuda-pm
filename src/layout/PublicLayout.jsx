@@ -22,7 +22,7 @@ function PublicLayout() {
       <main className="public-layout__main">
         <Outlet />
       </main>
-      <PublicFooter isHomeRoute={isHomeRoute} />
+      <PublicFooter />
     </div>
   )
 }

@@ -10,6 +10,10 @@ const pageMeta = {
     title: 'Peças forjadas',
     description: 'Histórico das user stories geradas, versões e artefatos prontos para inspeção.',
   },
+  '/projetos': {
+    title: 'Projetos',
+    description: 'Organize histórias por jornada quando fizer sentido.',
+  },
   '/tool/admin': {
     title: 'Painel administrativo',
     description: 'Acompanhe a operação e os principais indicadores do produto.',
@@ -28,10 +32,13 @@ function IconMenu() {
 
 function WorkspaceTopbar({ onOpenSidebar, topbarStatus }) {
   const location = useLocation()
-  const meta = pageMeta[location.pathname] ?? {
-    title: 'Bancada de trabalho',
-    description: 'Ambiente interno do ProdForge.',
-  }
+  const meta = pageMeta[location.pathname] ??
+    (location.pathname.startsWith('/projetos/')
+      ? pageMeta['/projetos']
+      : {
+          title: 'Bancada de trabalho',
+          description: 'Ambiente interno do ProdForge.',
+        })
 
   const hasStatus = Boolean(topbarStatus)
 

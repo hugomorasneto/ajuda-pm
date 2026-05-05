@@ -12,6 +12,7 @@ brief
 Brief
 briefing
 briefings
+Builder
 call
 card
 checklist
@@ -59,7 +60,6 @@ onboarding
 planning
 Planning
 PM
-PMM
 PMs
 PO
 POs

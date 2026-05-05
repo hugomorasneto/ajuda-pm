@@ -4,12 +4,15 @@ import AdminRoute from './components/AdminRoute'
 import ProtectedRoute from './components/ProtectedRoute'
 
 const PublicLayout = lazy(() => import('./layout/PublicLayout'))
+const PublicFooterLayout = lazy(() => import('./layout/PublicFooterLayout'))
 const WorkspaceLayout = lazy(() => import('./layout/WorkspaceLayout'))
 const HomePage = lazy(() => import('./pages/HomePage'))
 const LearningHubPage = lazy(() => import('./pages/LearningHubPage'))
 const LearningGuidePage = lazy(() => import('./pages/LearningGuidePage'))
 const ToolPage = lazy(() => import('./pages/ToolPage'))
 const HistoryPage = lazy(() => import('./pages/HistoryPage'))
+const ProjectsPage = lazy(() => import('./pages/ProjectsPage'))
+const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const SignupPage = lazy(() => import('./pages/SignupPage'))
 const CheckEmailPage = lazy(() => import('./pages/CheckEmailPage'))
@@ -61,9 +64,11 @@ function App() {
   return (
     <Suspense fallback={<RouteFallback />}>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/check-email" element={<CheckEmailPage />} />
+        <Route element={<PublicFooterLayout />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/check-email" element={<CheckEmailPage />} />
+        </Route>
 
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
@@ -98,6 +103,8 @@ function App() {
         >
           <Route path="/tool" element={<ToolPage />} />
           <Route path="/historico" element={<HistoryPage />} />
+          <Route path="/projetos" element={<ProjectsPage />} />
+          <Route path="/projetos/:projectId" element={<ProjectDetailPage />} />
           <Route
             path="/tool/admin"
             element={

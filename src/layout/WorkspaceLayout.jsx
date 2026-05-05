@@ -10,7 +10,10 @@ function WorkspaceLayout() {
   const [topbarStatus, setTopbarStatus] = useState(null)
 
   const isSidebarOpen = sidebarOpenPath === location.pathname
-  const isForgeWorkspace = location.pathname === '/tool' || location.pathname === '/historico'
+  const isForgeWorkspace =
+    location.pathname === '/tool' ||
+    location.pathname === '/historico' ||
+    location.pathname.startsWith('/projetos')
 
   function openSidebar() {
     setSidebarOpenPath(location.pathname)

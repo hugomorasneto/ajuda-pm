@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabaseClient'
 
 const baseStoryColumns =
-  'id, user_id, story_group_id, version_number, previous_version_id, regeneration_instruction, title, created_at, input_context, input_requirements, objective, user_story, acceptance_criteria, business_rules, gaps, qa_checklist, status'
+  'id, user_id, project_id, estimation_status, story_group_id, version_number, previous_version_id, regeneration_instruction, title, created_at, input_context, input_requirements, objective, user_story, acceptance_criteria, business_rules, gaps, qa_checklist, status'
 
 function getClientUuid() {
   try {
@@ -108,6 +108,8 @@ export async function listRecentUserStories({
   sinceIso = null,
   offset = 0,
   userId,
+  projectFilter = 'all',
+  projectId = null,
 } = {}) {
   try {
     if (!userId) {
@@ -125,6 +127,12 @@ export async function listRecentUserStories({
       query = query.gte('created_at', sinceIso)
     }
 
+    if (projectFilter === 'none') {
+      query = query.is('project_id', null)
+    } else if (projectFilter === 'project' && projectId) {
+      query = query.eq('project_id', projectId)
+    }
+
     const { data, error } = await query
 
     if (error) {
@@ -139,12 +147,20 @@ export async function listRecentUserStories({
   }
 }
 
-export async function listRecentStoryGroups({ limit = 10, sinceIso = null, userId } = {}) {
+export async function listRecentStoryGroups({
+  limit = 10,
+  sinceIso = null,
+  userId,
+  projectFilter = 'all',
+  projectId = null,
+} = {}) {
   const response = await listRecentUserStories({
     limit: Math.max(50, limit * 4),
     sinceIso,
     offset: 0,
     userId,
+    projectFilter,
+    projectId,
   })
 
   if (!response.success) return response
@@ -165,6 +181,8 @@ export async function listStoryHistoryGroups({
   search = '',
   sinceIso = null,
   status = 'all',
+  projectFilter = 'all',
+  projectId = null,
   page = 1,
   pageSize = 10,
 } = {}) {
@@ -186,6 +204,9 @@ export async function listStoryHistoryGroups({
     const offset = (safePage - 1) * safePageSize
     const normalizedSearch = String(search ?? '').trim()
     const normalizedStatus = status && status !== 'all' ? status : null
+    const normalizedProjectFilter = ['all', 'none', 'project'].includes(projectFilter)
+      ? projectFilter
+      : 'all'
 
     const { data, error } = await supabase.rpc('search_user_story_groups', {
       p_user_id: userId,
@@ -194,6 +215,8 @@ export async function listStoryHistoryGroups({
       p_status: normalizedStatus,
       p_limit: safePageSize,
       p_offset: offset,
+      p_project_filter: normalizedProjectFilter,
+      p_project_id: normalizedProjectFilter === 'project' ? projectId : null,
     })
 
     if (error) {

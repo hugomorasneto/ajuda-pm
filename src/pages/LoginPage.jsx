@@ -170,7 +170,7 @@ function LoginPage() {
       {/* Side panel — value prop */}
       <aside className="auth-side">
         <div className="auth-side__content">
-          <p className="auth-side__eyebrow">Para PMs e POs iniciantes</p>
+          <p className="auth-side__eyebrow">Para times de produto</p>
           <h2 className="auth-side__title">
             Escreva user stories que devs entendem na primeira leitura.
           </h2>

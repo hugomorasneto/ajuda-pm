@@ -157,6 +157,7 @@ export function useUserStoryWorkspace() {
   const [workspaceError, setWorkspaceError] = useState('')
   const [selectedStoryId, setSelectedStoryId] = useState(null)
   const [selectedStoryGroupId, setSelectedStoryGroupId] = useState(null)
+  const [selectedStoryProjectId, setSelectedStoryProjectId] = useState(null)
   const [selectedStoryTitle, setSelectedStoryTitle] = useState('')
   const [selectedBaseInput, setSelectedBaseInput] = useState({ context: '', requirements: '' })
   const [versions, setVersions] = useState([])
@@ -271,6 +272,7 @@ export function useUserStoryWorkspace() {
     }))
     setResult(mapped)
     setSelectedStoryTitle(story.title ?? mapped.title ?? '')
+    setSelectedStoryProjectId(story.project_id ?? null)
     setEditDraft({
       title: mapped.title,
       user_story: mapped.user_story,
@@ -311,6 +313,7 @@ export function useUserStoryWorkspace() {
   function handleResetToCreate() {
     setSelectedStoryId(null)
     setSelectedStoryGroupId(null)
+    setSelectedStoryProjectId(null)
     setSelectedStoryTitle('')
     setSelectedBaseInput({ context: '', requirements: '' })
     setFormValues({ problemContext: '', requirements: '', adjustment: '' })
@@ -342,6 +345,7 @@ export function useUserStoryWorkspace() {
     const story = response.data
     setSelectedStoryId(story.id)
     setSelectedStoryGroupId(story.story_group_id ?? story.id)
+    setSelectedStoryProjectId(story.project_id ?? null)
     fillScreenWithStory(story)
     setIsLoadingSelection(false)
   }
@@ -364,6 +368,7 @@ export function useUserStoryWorkspace() {
     const story = response.data
     setSelectedStoryId(story.id)
     setSelectedStoryGroupId(story.story_group_id ?? story.id)
+    setSelectedStoryProjectId(story.project_id ?? null)
     setSelectedBaseInput({
       context: story.input_context ?? '',
       requirements: story.input_requirements ?? '',
@@ -528,6 +533,9 @@ export function useUserStoryWorkspace() {
         gaps: toNullableText(generated.gaps),
         qa_checklist: toNullableText(generated.qa_checklist),
         status: 'generated',
+        project_id: shouldUseCurrentGroup
+          ? selectedStoryProjectId
+          : options.projectId || null,
         regeneration_instruction: adjustmentTrimmed || null,
         created_at: new Date().toISOString(),
       }
@@ -555,6 +563,7 @@ export function useUserStoryWorkspace() {
       const persisted = actionResult.data[0]
       setSelectedStoryId(persisted.id)
       setSelectedStoryGroupId(persisted.story_group_id ?? persisted.id)
+      setSelectedStoryProjectId(persisted.project_id ?? null)
       setSelectedStoryTitle(persisted.title ?? generated.title ?? '')
       setSelectedBaseInput({
         context: persisted.input_context ?? contextTrimmed,
@@ -659,6 +668,42 @@ export function useUserStoryWorkspace() {
     return refined
   }
 
+  async function handleAssignSelectedStoryToProject(projectId) {
+    if (!userId || !selectedStoryId) return false
+
+    setIsSavingEdits(true)
+    const response = await updateUserStory(
+      selectedStoryId,
+      { project_id: projectId || null },
+      userId,
+    )
+    setIsSavingEdits(false)
+
+    if (!response.success || !response.data?.[0]) {
+      const errorMessage = response.error?.message ?? 'Erro desconhecido ao organizar a história.'
+      setSaveMessage(`Erro ao organizar a história: ${errorMessage}`)
+      return false
+    }
+
+    fillScreenWithStory(response.data[0])
+    setSelectedStoryProjectId(response.data[0].project_id ?? null)
+    setSaveMessage(
+      response.data[0].project_id
+        ? 'História organizada no projeto selecionado.'
+        : 'História mantida como peça avulsa.',
+    )
+    await loadRecentStories()
+
+    trackEvent({
+      event_name: 'user_story_project_assigned',
+      event_category: 'workspace',
+      page_path: '/tool',
+      metadata: { story_id: selectedStoryId, project_id: response.data[0].project_id ?? null },
+    })
+
+    return true
+  }
+
   return {
     activeStoryTitle,
     copyMessage,
@@ -671,6 +716,7 @@ export function useUserStoryWorkspace() {
     handlePromptChipApply,
     handleRefineStory,
     handleResetToCreate,
+    handleAssignSelectedStoryToProject,
     handleSaveEdits,
     handleSelectHistory,
     handleSelectVersion,
@@ -693,6 +739,7 @@ export function useUserStoryWorkspace() {
     result,
     saveMessage,
     selectedStoryId,
+    selectedStoryProjectId,
     selectedVersion,
     setHistoryFilter,
     usageCount,

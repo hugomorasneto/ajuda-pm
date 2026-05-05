@@ -68,7 +68,7 @@ function HomePage() {
           <div className="landing-creator__copy">
             <h2 id="landing-creator-title">Por trás do ProdForge</h2>
             <p>
-              O ProdForge foi criado por Hugo Moraes Neto, Product Manager / PMM, para transformar briefings
+              O ProdForge foi criado por Hugo Moraes Neto, Product Manager & Builder, para transformar briefings
               confusos em histórias mais claras, acionáveis e úteis para times de produto, design, engenharia e
               QA.
             </p>

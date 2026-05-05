@@ -7378,15 +7378,15 @@
 
 .public-layout--home-forge .landing-creator__card {
   display: grid;
-  gap: var(--space-5);
+  gap: var(--space-6);
   width: min(100%, 920px);
-  padding: clamp(22px, 3vw, 30px);
-  border: 1px solid rgba(77, 163, 255, 0.18);
+  padding: clamp(24px, 3.2vw, 34px);
+  border: 1px solid rgba(77, 163, 255, 0.22);
   border-radius: var(--forge-radius-md);
   background:
     radial-gradient(circle at 92% 0%, rgba(77, 163, 255, 0.12), transparent 34%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012)),
-    rgba(11, 16, 22, 0.78);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.016)),
+    rgba(11, 16, 22, 0.84);
   box-shadow:
     var(--forge-shadow-soft),
     0 0 28px rgba(77, 163, 255, 0.08);
@@ -7411,21 +7411,22 @@
   max-width: 47rem;
   margin: 0;
   color: var(--forge-text-secondary);
-  font-size: var(--text-body);
-  line-height: 1.7;
+  font-size: clamp(0.98rem, 1.12vw, 1.04rem);
+  line-height: 1.72;
 }
 
 .public-layout--home-forge .landing-creator__copy .landing-creator__support {
-  color: var(--forge-text-muted);
-  font-size: var(--text-small);
+  color: #aebccc;
+  font-size: 0.9rem;
 }
 
 .public-layout--home-forge .landing-creator__cta {
   width: fit-content;
-  min-height: 42px;
+  min-height: 44px;
   gap: var(--space-2);
   white-space: normal;
   text-align: center;
+  font-weight: 700;
 }
 
 .public-footer__bottom-inner {
@@ -7462,8 +7463,16 @@
   outline-offset: 3px;
 }
 
-.public-layout--home-forge .public-footer--forge-home .public-footer__bottom-inner {
-  width: min(calc(100% - 32px), 1180px);
+.public-footer-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color-scheme: dark;
+  background: var(--forge-bg-canvas);
+}
+
+.public-footer-layout__main {
+  flex: 1 0 auto;
 }
 
 @media (min-width: 760px) {
@@ -7481,10 +7490,6 @@
   .public-layout--home-forge .landing-creator__cta {
     width: 100%;
     min-height: 50px;
-  }
-
-  .public-layout--home-forge .public-footer--forge-home .public-footer__bottom-inner {
-    width: min(calc(100% - 24px), 1180px);
   }
 }
 
@@ -8765,5 +8770,111 @@
 
   .landing-faq__answer {
     padding: 0 var(--space-4) var(--space-4);
+  }
+}
+
+/* ============================================================
+   FOOTER PÚBLICO PADRÃO
+   ============================================================ */
+
+.public-layout .public-footer--forge-home,
+.public-footer-layout .public-footer--forge-home {
+  border-top-color: rgba(226, 232, 240, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.015) 0%, transparent 100%),
+    linear-gradient(180deg, var(--forge-bg-charcoal) 0%, var(--forge-bg-canvas) 100%);
+}
+
+.public-layout .public-footer--forge-home .public-footer__inner,
+.public-footer-layout .public-footer--forge-home .public-footer__inner {
+  width: min(calc(100% - 32px), 1180px);
+  padding-top: clamp(40px, 6vw, 64px);
+  padding-bottom: var(--space-8);
+  border-top: 0;
+}
+
+.public-layout .public-footer--forge-home .brand-logo--footer,
+.public-footer-layout .public-footer--forge-home .brand-logo--footer {
+  height: 40px;
+}
+
+.public-layout .public-footer--forge-home .public-footer__brand-statement,
+.public-footer-layout .public-footer--forge-home .public-footer__brand-statement {
+  max-width: 28rem;
+  color: #cbd5e1;
+}
+
+.public-layout .public-footer--forge-home .public-footer__nav-title,
+.public-footer-layout .public-footer--forge-home .public-footer__nav-title {
+  color: #f8fafc;
+}
+
+.public-layout .public-footer--forge-home .public-footer__nav a,
+.public-footer-layout .public-footer--forge-home .public-footer__nav a {
+  color: #b8c4d2;
+  font-weight: 600;
+}
+
+.public-layout .public-footer--forge-home .public-footer__nav a:hover,
+.public-layout .public-footer--forge-home .public-footer__nav a:focus-visible,
+.public-footer-layout .public-footer--forge-home .public-footer__nav a:hover,
+.public-footer-layout .public-footer--forge-home .public-footer__nav a:focus-visible {
+  color: #f8fafc;
+}
+
+.public-layout .public-footer--forge-home .public-footer__bottom,
+.public-footer-layout .public-footer--forge-home .public-footer__bottom {
+  border-top-color: var(--forge-border-subtle);
+}
+
+.public-layout .public-footer--forge-home .public-footer__bottom p,
+.public-footer-layout .public-footer--forge-home .public-footer__bottom p {
+  color: #aebccc;
+}
+
+.public-layout .public-footer--forge-home .public-footer__bottom-inner,
+.public-footer-layout .public-footer--forge-home .public-footer__bottom-inner {
+  width: min(calc(100% - 32px), 1180px);
+}
+
+.public-layout .public-footer--forge-home .public-footer__brand,
+.public-layout .public-footer--forge-home .public-footer__links,
+.public-footer-layout .public-footer--forge-home .public-footer__brand,
+.public-footer-layout .public-footer--forge-home .public-footer__links {
+  min-width: 0;
+}
+
+.public-layout .public-footer--forge-home .public-footer__cta.forge-button,
+.public-footer-layout .public-footer--forge-home .public-footer__cta.forge-button {
+  width: fit-content;
+}
+
+@media (min-width: 900px) {
+  .public-layout .public-footer--forge-home .public-footer__inner,
+  .public-footer-layout .public-footer--forge-home .public-footer__inner {
+    grid-template-columns: minmax(320px, 0.8fr) minmax(0, 1.45fr);
+    gap: clamp(40px, 5vw, 72px);
+    align-items: start;
+  }
+
+  .public-layout .public-footer--forge-home .public-footer__links,
+  .public-footer-layout .public-footer--forge-home .public-footer__links {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(28px, 4vw, 52px);
+  }
+}
+
+@media (max-width: 640px) {
+  .public-layout .public-footer--forge-home .public-footer__inner,
+  .public-footer-layout .public-footer--forge-home .public-footer__inner,
+  .public-layout .public-footer--forge-home .public-footer__bottom-inner,
+  .public-footer-layout .public-footer--forge-home .public-footer__bottom-inner {
+    width: min(calc(100% - 24px), 1180px);
+  }
+
+  .public-layout .public-footer--forge-home .public-footer__nav a,
+  .public-footer-layout .public-footer--forge-home .public-footer__nav a {
+    font-size: 0.9rem;
+    line-height: 1.55;
   }
 }

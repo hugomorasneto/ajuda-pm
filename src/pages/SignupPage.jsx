@@ -129,7 +129,7 @@ function SignupPage() {
             {isSubmitting ? 'Criando conta…' : 'Criar conta grátis'}
           </button>
 
-          <p className="auth-card__terms">
+          <p className="auth-card__terms" id="uso-de-dados">
             Ao criar conta, você concorda com o uso dos dados para melhorar o produto.
           </p>
         </form>

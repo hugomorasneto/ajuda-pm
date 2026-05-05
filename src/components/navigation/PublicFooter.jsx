@@ -9,21 +9,13 @@ const footerGuides = getLearningGuidesBySlugs([
   'backlog-e-refinamento',
 ])
 
-function PublicFooter({ isHomeRoute = false }) {
+function PublicFooter() {
   const { user } = useAuth()
-  const brandStatement = isHomeRoute
-    ? 'Transforme briefing confuso em user stories claras, testáveis e prontas para Dev, QA e negócio.'
-    : 'Guias e Bancada para PMs e POs escreverem user stories mais claras.'
-  const bottomCopy = isHomeRoute
-    ? `© ${new Date().getFullYear()} ${APP_NAME} · Feito para times que precisam de stories mais claras`
-    : `© ${new Date().getFullYear()} ${APP_NAME} · Feito para PMs, POs, Devs e QA`
-  const footerClassName = ['public-footer', isHomeRoute ? 'public-footer--forge-home' : '']
-    .filter(Boolean)
-    .join(' ')
-  const footerCtaClassName = [
-    'public-footer__cta',
-    isHomeRoute ? 'forge-button forge-button--metal forge-button--sm' : '',
-  ]
+  const brandStatement =
+    'Transforme briefing confuso em user stories claras, testáveis e prontas para Dev, QA e negócio.'
+  const bottomCopy = `© ${new Date().getFullYear()} ${APP_NAME} · Feito para times que precisam de stories mais claras`
+  const footerClassName = 'public-footer public-footer--forge-home'
+  const footerCtaClassName = ['public-footer__cta', 'forge-button forge-button--metal forge-button--sm']
     .filter(Boolean)
     .join(' ')
 
@@ -48,9 +40,9 @@ function PublicFooter({ isHomeRoute = false }) {
         <div className="public-footer__links">
           <nav className="public-footer__nav" aria-label="Produto">
             <p className="public-footer__nav-title">Produto</p>
-            {isHomeRoute ? <a href="/#produto">Produto</a> : null}
+            <a href="/#produto">Produto</a>
             <a href="/#como-funciona">Como funciona</a>
-            <a href="/#antes-depois">{isHomeRoute ? 'Antes e depois' : 'Ver exemplo'}</a>
+            <a href="/#antes-depois">Antes e depois</a>
             <a href="/#planos">Planos</a>
           </nav>
 
@@ -63,21 +55,28 @@ function PublicFooter({ isHomeRoute = false }) {
             ))}
             <Link to="/aprender">Ver todos os guias →</Link>
           </nav>
+
+          <nav className="public-footer__nav" aria-label="Institucional e legal">
+            <p className="public-footer__nav-title">Institucional</p>
+            <a href="/#landing-creator-title">Por trás do ProdForge</a>
+            <a href="/signup#uso-de-dados">Uso de dados</a>
+            <a href={HUGO_MORAES_LINKEDIN_URL} target="_blank" rel="noopener noreferrer">
+              LinkedIn de Hugo
+            </a>
+          </nav>
         </div>
       </div>
 
       <div className="public-footer__bottom">
         <div className="public-footer__bottom-inner">
           <p>{bottomCopy}</p>
-          {isHomeRoute ? (
-            <p className="public-footer__signature">
-              Desenvolvido por{' '}
-              <a href={HUGO_MORAES_LINKEDIN_URL} target="_blank" rel="noopener noreferrer">
-                Hugo Moraes Neto
-              </a>
-              , Product Manager / PMM, como parte da Tech Tupã — tecnologia com raízes.
-            </p>
-          ) : null}
+          <p className="public-footer__signature">
+            Desenvolvido por{' '}
+            <a href={HUGO_MORAES_LINKEDIN_URL} target="_blank" rel="noopener noreferrer">
+              Hugo Moraes Neto
+            </a>
+            , Product Manager & Builder, como parte da Tech Tupã — tecnologia com raízes.
+          </p>
         </div>
       </div>
     </footer>

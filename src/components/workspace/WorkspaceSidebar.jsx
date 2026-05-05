@@ -40,6 +40,16 @@ function IconHistory() {
   )
 }
 
+function IconProjects() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+      <path d="M4 5h6l2 2h8v12H4z" />
+      <path d="M8 12h8" />
+      <path d="M8 15.5h5" />
+    </svg>
+  )
+}
+
 function IconAcademy() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
@@ -142,6 +152,13 @@ function WorkspaceSidebar({ isOpen, onClose }) {
       path: '/historico',
       end: true,
       icon: <IconHistory />,
+    },
+    {
+      label: 'Projetos',
+      description: 'Organize histórias por jornada quando fizer sentido.',
+      path: '/projetos',
+      end: true,
+      icon: <IconProjects />,
     },
   ]
   const toolNavItems = canSeeAdmin || isAdminPath

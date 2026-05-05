@@ -11,6 +11,7 @@ import {
   listStoryHistoryGroups,
   listStoryVersions,
 } from '../services/userStoriesService'
+import { listProjects } from '../services/projectsService'
 import { copyTextToClipboard } from '../utils/storyExport'
 
 const PERIOD_OPTIONS = [
@@ -35,6 +36,12 @@ const STATUS_LABELS = {
   approved: 'Aprovado',
   archived: 'Arquivado',
 }
+
+const PROJECT_FILTER_OPTIONS = [
+  { value: 'all', label: 'Todas' },
+  { value: 'none', label: 'Sem projeto' },
+  { value: 'project', label: 'Por projeto' },
+]
 
 function getStatusLabel(status) {
   return STATUS_LABELS[status] ?? 'Forjado'
@@ -99,6 +106,9 @@ function HistoryPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [period, setPeriod] = useState('7d')
   const [status, setStatus] = useState('all')
+  const [projectFilter, setProjectFilter] = useState('all')
+  const [selectedProjectId, setSelectedProjectId] = useState('')
+  const [projects, setProjects] = useState([])
   const [pageSize, setPageSize] = useState(10)
   const [page, setPage] = useState(1)
   const [pageJump, setPageJump] = useState('1')
@@ -164,6 +174,27 @@ function HistoryPage() {
   }, [setTopbarStatus, selectedStory, totalCount, pageSize])
 
   useEffect(() => {
+    let active = true
+
+    async function loadProjects() {
+      if (!userId) return
+
+      const response = await listProjects({ userId })
+      if (!active) return
+
+      if (response.success) {
+        setProjects(response.data ?? [])
+      }
+    }
+
+    loadProjects()
+
+    return () => {
+      active = false
+    }
+  }, [userId])
+
+  useEffect(() => {
     const timerId = window.setTimeout(() => {
       setDebouncedSearch(searchInput.trim())
       setPage(1)
@@ -185,6 +216,8 @@ function HistoryPage() {
         search: debouncedSearch,
         sinceIso: buildSinceIso(period),
         status,
+        projectFilter,
+        projectId: projectFilter === 'project' ? selectedProjectId : null,
         page,
         pageSize,
       })
@@ -221,7 +254,17 @@ function HistoryPage() {
     }
 
     loadHistory()
-  }, [debouncedSearch, page, pageSize, period, selectStory, status, userId])
+  }, [
+    debouncedSearch,
+    page,
+    pageSize,
+    period,
+    projectFilter,
+    selectedProjectId,
+    selectStory,
+    status,
+    userId,
+  ])
 
   async function handleSelectVersion(storyId) {
     if (!userId) return
@@ -271,6 +314,23 @@ function HistoryPage() {
   function handlePageJump(event) {
     event.preventDefault()
     goToPage(Number(pageJump) || 1)
+  }
+
+  function handleProjectFilterChange(value) {
+    setProjectFilter(value)
+    if (value !== 'project') {
+      setSelectedProjectId('')
+    } else if (!selectedProjectId && projects[0]?.id) {
+      setSelectedProjectId(projects[0].id)
+    }
+    setPage(1)
+    setPageJump('1')
+  }
+
+  function handleSelectedProjectChange(value) {
+    setSelectedProjectId(value)
+    setPage(1)
+    setPageJump('1')
   }
 
   const visibleRange = getVisibleRange({
@@ -330,6 +390,35 @@ function HistoryPage() {
         </label>
 
         <label className="history-filter-field">
+          <span>Projeto</span>
+          <select value={projectFilter} onChange={(event) => handleProjectFilterChange(event.target.value)}>
+            {PROJECT_FILTER_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {projectFilter === 'project' ? (
+          <label className="history-filter-field">
+            <span>Escolher projeto</span>
+            <select
+              value={selectedProjectId}
+              onChange={(event) => handleSelectedProjectChange(event.target.value)}
+              disabled={projects.length === 0}
+            >
+              {projects.length === 0 ? <option value="">Nenhum projeto</option> : null}
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+
+        <label className="history-filter-field">
           <span>Por página</span>
           <select
             value={pageSize}
@@ -382,6 +471,7 @@ function HistoryPage() {
                   {preview ? <p>{preview}</p> : null}
                   <div className="history-result-card__meta">
                     <span>{formatDateTime(item.created_at)}</span>
+                    <span>{item.project_name || 'Sem projeto'}</span>
                     <span>{item.versions_count ?? item.version_number ?? 1} versões</span>
                     <span>{isActive ? 'Aberta para inspeção' : 'Ver inspeção'}</span>
                   </div>
