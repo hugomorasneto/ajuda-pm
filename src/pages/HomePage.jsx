@@ -9,6 +9,7 @@ import LeadCaptureForm from '../components/landing/LeadCaptureForm'
 import LearningTeaser from '../components/landing/LearningTeaser'
 import PricingTeaser from '../components/landing/PricingTeaser'
 import WorkflowSteps from '../components/landing/WorkflowSteps'
+import { HUGO_MORAES_LINKEDIN_URL } from '../constants/app'
 import { getLearningGuidesBySlugs, learningHub } from '../content/learningContent'
 import { landingCopy } from '../content/landingCopy'
 import { useAuth } from '../hooks/useAuth'
@@ -19,9 +20,14 @@ function HomePage() {
   const featuredGuides = getLearningGuidesBySlugs(learningHub.starterGuideSlugs)
 
   usePageMetadata({
-    title: 'ProdForge | Gere user stories mais claras com IA',
+    title: 'ProdForge | Workspace IA para Product Managers',
     description:
-      'Transforme briefing confuso em user stories claras, testáveis e prontas para refinamento com Dev e QA.',
+      'Transforme contexto solto em user stories claras, critérios de aceite, briefing expandido e materiais prontos para desenvolvimento com IA.',
+    ogTitle: 'ProdForge | Workspace IA para Product Managers',
+    ogDescription:
+      'Crie user stories, critérios de aceite, briefings e materiais para desenvolvimento em segundos com IA.',
+    twitterTitle: 'ProdForge | Workspace IA para Product Managers',
+    twitterDescription: 'Transforme ideias soltas em histórias de usuário prontas para dev, QA e produto.',
     path: '/',
   })
 
@@ -56,6 +62,32 @@ function HomePage() {
       <PricingTeaser content={landingCopy.pricing} isAuthenticated={Boolean(user)} />
       <LeadCaptureForm content={landingCopy.leadCapture} />
       <LandingFaq content={landingCopy.faq} />
+
+      <section className="landing-section landing-creator" aria-labelledby="landing-creator-title">
+        <div className="landing-creator__card">
+          <div className="landing-creator__copy">
+            <h2 id="landing-creator-title">Por trás do ProdForge</h2>
+            <p>
+              O ProdForge foi criado por Hugo Moraes Neto, Product Manager / PMM, para transformar briefings
+              confusos em histórias mais claras, acionáveis e úteis para times de produto, design, engenharia e
+              QA.
+            </p>
+            <p className="landing-creator__support">
+              Uma iniciativa da Tech Tupã, marca focada em automação, agentes de IA e produtos digitais.
+            </p>
+          </div>
+
+          <a
+            className="landing-button forge-button forge-button--metal forge-button--sm landing-creator__cta"
+            href={HUGO_MORAES_LINKEDIN_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Conectar no LinkedIn
+            <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </section>
 
       <section className="landing-section landing-final-cta">
         <div className="landing-final-cta__content">

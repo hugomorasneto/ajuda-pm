@@ -2,9 +2,9 @@ import { useEffect } from 'react'
 import { APP_NAME } from '../constants/app'
 
 const SITE_URL = 'https://prodforge.techtupa.com.br'
-const DEFAULT_IMAGE_URL = `${SITE_URL}/og-prodforge.png`
+const DEFAULT_IMAGE_URL = `${SITE_URL}/og-prodforge-v2.png`
 const DEFAULT_IMAGE_ALT =
-  'ProdForge — Escreva user stories que devs entendem na primeira leitura. Para PMs e POs iniciantes.'
+  'ProdForge — workspace IA para transformar contexto solto em user stories e materiais de desenvolvimento.'
 
 export const ACADEMIA_IMAGE_URL = `${SITE_URL}/og-academia.png`
 export const ACADEMIA_IMAGE_ALT =
@@ -62,6 +62,11 @@ export function usePageMetadata({
   type = 'website',
   image = DEFAULT_IMAGE_URL,
   imageAlt = DEFAULT_IMAGE_ALT,
+  ogTitle = title,
+  ogDescription = description,
+  twitterCard = 'summary_large_image',
+  twitterTitle = title,
+  twitterDescription = description,
   jsonLd = null,
 }) {
   useEffect(() => {
@@ -74,8 +79,8 @@ export function usePageMetadata({
 
     upsertMeta('meta[property="og:site_name"]', 'property', 'og:site_name', APP_NAME)
     upsertMeta('meta[property="og:locale"]', 'property', 'og:locale', 'pt_BR')
-    upsertMeta('meta[property="og:title"]', 'property', 'og:title', title)
-    upsertMeta('meta[property="og:description"]', 'property', 'og:description', description)
+    upsertMeta('meta[property="og:title"]', 'property', 'og:title', ogTitle)
+    upsertMeta('meta[property="og:description"]', 'property', 'og:description', ogDescription)
     upsertMeta('meta[property="og:type"]', 'property', 'og:type', type)
     upsertMeta('meta[property="og:url"]', 'property', 'og:url', url)
     upsertMeta('meta[property="og:image"]', 'property', 'og:image', image)
@@ -84,14 +89,27 @@ export function usePageMetadata({
     upsertMeta('meta[property="og:image:height"]', 'property', 'og:image:height', '630')
     upsertMeta('meta[property="og:image:alt"]', 'property', 'og:image:alt', imageAlt)
 
-    upsertMeta('meta[name="twitter:card"]', 'name', 'twitter:card', 'summary_large_image')
-    upsertMeta('meta[name="twitter:title"]', 'name', 'twitter:title', title)
-    upsertMeta('meta[name="twitter:description"]', 'name', 'twitter:description', description)
+    upsertMeta('meta[name="twitter:card"]', 'name', 'twitter:card', twitterCard)
+    upsertMeta('meta[name="twitter:title"]', 'name', 'twitter:title', twitterTitle)
+    upsertMeta('meta[name="twitter:description"]', 'name', 'twitter:description', twitterDescription)
     upsertMeta('meta[name="twitter:image"]', 'name', 'twitter:image', image)
     upsertMeta('meta[name="twitter:image:alt"]', 'name', 'twitter:image:alt', imageAlt)
 
     upsertStructuredData(jsonLd)
-  }, [description, image, imageAlt, jsonLd, path, title, type])
+  }, [
+    description,
+    image,
+    imageAlt,
+    jsonLd,
+    ogDescription,
+    ogTitle,
+    path,
+    title,
+    twitterCard,
+    twitterDescription,
+    twitterTitle,
+    type,
+  ])
 }
 
 export function buildArticleJsonLd({ title, description, path, excerpt, publishedTime }) {

@@ -117,8 +117,8 @@ function ToolPage() {
   const showBlockingErrorState =
     !reviewStory && Boolean(workspaceError) && !showBlockingLoadingState
   const showEmptyState = !reviewStory && !showBlockingLoadingState && !showBlockingErrorState
-  const workspaceStatusLabel = isEditing ? 'Peça atual' : 'Ação'
-  const workspaceStatusTitle = isEditing && activeStoryTitle ? activeStoryTitle : 'Nova matéria-prima'
+  const workspaceStatusLabel = isEditing ? 'Peça atual' : 'Nova peça'
+  const workspaceStatusTitle = isEditing && activeStoryTitle ? activeStoryTitle : 'Em preparo'
   const showOnboarding = Boolean(
     onboardingStorageKey &&
       dismissedOnboardingKey !== onboardingStorageKey &&
@@ -139,8 +139,8 @@ function ToolPage() {
       title: workspaceStatusTitle,
       pills: [
         {
-          text: isEditing ? 'Em inspeção' : 'Nova peça',
-          className: isEditing ? 'mode-pill-editing' : 'mode-pill-new',
+          text: isEditing ? 'Em inspeção' : 'Ainda não forjada',
+          className: isEditing ? 'mode-pill-editing' : '',
         },
         {
           text: generationsText,

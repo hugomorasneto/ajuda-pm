@@ -131,7 +131,7 @@ function IconPlus() {
 }
 
 const STEPS = [
-  { id: 'context', label: 'Matéria-prima' },
+  { id: 'context', label: 'Matéria' },
   { id: 'requirements', label: 'Ligas' },
   { id: 'generate', label: 'Forjar' },
 ]

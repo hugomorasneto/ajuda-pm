@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import { BRAND_MARK_SRC } from '../../constants/app'
 
 const pageMeta = {
   '/tool': {
@@ -47,6 +48,13 @@ function WorkspaceTopbar({ onOpenSidebar, topbarStatus }) {
             <IconMenu />
             <span>Menu</span>
           </button>
+
+          <img
+            src={BRAND_MARK_SRC}
+            alt=""
+            className="workspace-topbar__brand-mark"
+            aria-hidden="true"
+          />
 
           <div className="workspace-topbar__copy">
             <p className="workspace-topbar__eyebrow">ProdForge</p>

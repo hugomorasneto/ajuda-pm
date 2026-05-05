@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC } from '../../constants/app'
+import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC, HUGO_MORAES_LINKEDIN_URL } from '../../constants/app'
 import { getLearningGuidesBySlugs } from '../../content/learningContent'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -67,7 +67,18 @@ function PublicFooter({ isHomeRoute = false }) {
       </div>
 
       <div className="public-footer__bottom">
-        <p>{bottomCopy}</p>
+        <div className="public-footer__bottom-inner">
+          <p>{bottomCopy}</p>
+          {isHomeRoute ? (
+            <p className="public-footer__signature">
+              Desenvolvido por{' '}
+              <a href={HUGO_MORAES_LINKEDIN_URL} target="_blank" rel="noopener noreferrer">
+                Hugo Moraes Neto
+              </a>
+              , Product Manager / PMM, como parte da Tech Tupã — tecnologia com raízes.
+            </p>
+          ) : null}
+        </div>
       </div>
     </footer>
   )

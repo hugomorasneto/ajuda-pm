@@ -7369,6 +7369,126 @@
 }
 
 /* ============================================================
+   HOME FORGE - AUTORIA DISCRETA
+   ============================================================ */
+
+.public-layout--home-forge .landing-creator {
+  justify-items: center;
+}
+
+.public-layout--home-forge .landing-creator__card {
+  display: grid;
+  gap: var(--space-5);
+  width: min(100%, 920px);
+  padding: clamp(22px, 3vw, 30px);
+  border: 1px solid rgba(77, 163, 255, 0.18);
+  border-radius: var(--forge-radius-md);
+  background:
+    radial-gradient(circle at 92% 0%, rgba(77, 163, 255, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012)),
+    rgba(11, 16, 22, 0.78);
+  box-shadow:
+    var(--forge-shadow-soft),
+    0 0 28px rgba(77, 163, 255, 0.08);
+  backdrop-filter: blur(16px);
+}
+
+.public-layout--home-forge .landing-creator__copy {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.public-layout--home-forge .landing-creator__copy h2 {
+  margin: 0;
+  color: var(--forge-text-primary);
+  font-size: clamp(1.15rem, 1.8vw, 1.45rem);
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.public-layout--home-forge .landing-creator__copy p {
+  max-width: 47rem;
+  margin: 0;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-body);
+  line-height: 1.7;
+}
+
+.public-layout--home-forge .landing-creator__copy .landing-creator__support {
+  color: var(--forge-text-muted);
+  font-size: var(--text-small);
+}
+
+.public-layout--home-forge .landing-creator__cta {
+  width: fit-content;
+  min-height: 42px;
+  gap: var(--space-2);
+  white-space: normal;
+  text-align: center;
+}
+
+.public-footer__bottom-inner {
+  width: min(calc(100% - 32px), var(--container-public));
+  margin: 0 auto;
+  padding: var(--space-4) 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.public-footer__bottom .public-footer__bottom-inner p,
+.public-layout--home-forge .public-footer--forge-home .public-footer__bottom .public-footer__bottom-inner p,
+.public-layout--academy-forge .public-footer__bottom .public-footer__bottom-inner p {
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
+.public-footer__signature {
+  max-width: 58rem;
+  line-height: 1.6;
+}
+
+.public-footer__signature a {
+  color: #9fd0ff;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.public-footer__signature a:hover,
+.public-footer__signature a:focus-visible {
+  color: #c7e1ff;
+  outline-offset: 3px;
+}
+
+.public-layout--home-forge .public-footer--forge-home .public-footer__bottom-inner {
+  width: min(calc(100% - 32px), 1180px);
+}
+
+@media (min-width: 760px) {
+  .public-layout--home-forge .landing-creator__card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .public-layout--home-forge .landing-creator__card {
+    padding: var(--space-5);
+  }
+
+  .public-layout--home-forge .landing-creator__cta {
+    width: 100%;
+    min-height: 50px;
+  }
+
+  .public-layout--home-forge .public-footer--forge-home .public-footer__bottom-inner {
+    width: min(calc(100% - 24px), 1180px);
+  }
+}
+
+/* ============================================================
    ACADEMIA PROD FORGE - DARK PREMIUM
    ============================================================ */
 

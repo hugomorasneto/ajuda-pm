@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC, BRAND_MARK_SRC } from '../../constants/app'
+import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC } from '../../constants/app'
 import { useAuth } from '../../hooks/useAuth'
 import { useLearningProgress } from '../../hooks/useLearningProgress'
 import { getUserProfile } from '../../services/userProfilesService'
@@ -49,16 +49,6 @@ function IconAcademy() {
   )
 }
 
-function IconGuide() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
-      <path d="M6 4.5h11a2 2 0 0 1 2 2V19l-4-2-4 2-4-2-4 2V6.5a2 2 0 0 1 2-2h1Z" />
-      <path d="M8 8h7" />
-      <path d="M8 11.5h5" />
-    </svg>
-  )
-}
-
 function IconStoryGuide() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
@@ -70,30 +60,11 @@ function IconStoryGuide() {
   )
 }
 
-function IconPanelToggle({ isCompact }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
-      <path d="M4 5.5h16v13H4z" />
-      <path d={isCompact ? 'M9 5.5v13' : 'M15 5.5v13'} />
-      {isCompact ? <path d="m13 12 3-3v6l-3-3Z" /> : <path d="m11 12-3-3v6l3-3Z" />}
-    </svg>
-  )
-}
-
 function IconClose() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
       <path d="M6 6l12 12" />
       <path d="M18 6 6 18" />
-    </svg>
-  )
-}
-
-function IconUser() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
-      <circle cx="12" cy="8" r="3.25" />
-      <path d="M5.5 19a6.5 6.5 0 0 1 13 0" />
     </svg>
   )
 }
@@ -108,19 +79,7 @@ function IconSignOut() {
   )
 }
 
-function getTooltipProps(label, isCompact) {
-  if (!isCompact) return {}
-
-  return {
-    'aria-label': label,
-    'data-tooltip': label,
-    title: label,
-  }
-}
-
-function SidebarNavLink({ item, isCompact, onClose }) {
-  const tooltipLabel = item.description ? `${item.label}: ${item.description}` : item.label
-
+function SidebarNavLink({ item, onClose }) {
   return (
     <NavLink
       to={item.path}
@@ -129,22 +88,15 @@ function SidebarNavLink({ item, isCompact, onClose }) {
       className={({ isActive }) =>
         `workspace-sidebar__link ${item.toneClass ?? ''} ${isActive ? 'workspace-sidebar__link--active' : ''}`.trim()
       }
-      {...getTooltipProps(tooltipLabel, isCompact)}
     >
       <span className={`workspace-sidebar__link-marker ${item.markerClass ?? ''}`} />
       <span className="workspace-sidebar__link-icon">{item.icon}</span>
-      {!isCompact ? <span className="workspace-sidebar__link-label">{item.label}</span> : null}
+      <span className="workspace-sidebar__link-label">{item.label}</span>
     </NavLink>
   )
 }
 
-function WorkspaceSidebar({
-  isOpen,
-  onClose,
-  isCompact = false,
-  canToggleDensity = false,
-  onToggleDensity,
-}) {
+function WorkspaceSidebar({ isOpen, onClose }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
@@ -153,7 +105,6 @@ function WorkspaceSidebar({
 
   const completedCount = TRAIL_SLUGS.filter((slug) => completedSlugs.has(slug)).length
   const totalCount = TRAIL_SLUGS.length
-  const accountInitial = user?.email?.charAt(0)?.toUpperCase() || 'P'
   const isAdminPath = location.pathname.startsWith('/tool/admin')
 
   useEffect(() => {
@@ -226,21 +177,16 @@ function WorkspaceSidebar({
   }
 
   return (
-    <aside
-      className={`workspace-sidebar ${isOpen ? 'workspace-sidebar--open' : ''} ${
-        isCompact ? 'workspace-sidebar--compact' : ''
-      }`}
-    >
+    <aside className={`workspace-sidebar ${isOpen ? 'workspace-sidebar--open' : ''}`}>
       <div className="workspace-sidebar__header">
         <Link
           to="/tool"
           className="brand-logo workspace-sidebar__brand"
           onClick={onClose}
           aria-label={APP_NAME}
-          {...getTooltipProps(APP_NAME, isCompact)}
         >
           <img
-            src={isCompact ? BRAND_MARK_SRC : BRAND_LOGO_HORIZONTAL_SRC}
+            src={BRAND_LOGO_HORIZONTAL_SRC}
             alt={APP_NAME}
             className="brand-logo__image brand-logo--sidebar"
           />
@@ -255,112 +201,52 @@ function WorkspaceSidebar({
           >
             <IconClose />
           </button>
-
-          {canToggleDensity ? (
-            <button
-              type="button"
-              className="workspace-sidebar__density-toggle"
-              onClick={onToggleDensity}
-              aria-label={isCompact ? 'Expandir menu lateral' : 'Compactar menu lateral'}
-              title={isCompact ? 'Expandir menu lateral' : 'Compactar menu lateral'}
-              data-tooltip={isCompact ? 'Expandir menu lateral' : 'Compactar menu lateral'}
-            >
-              <IconPanelToggle isCompact={isCompact} />
-              {!isCompact ? <span>Compactar</span> : null}
-            </button>
-          ) : null}
         </div>
       </div>
 
-      {!isCompact ? (
-        <div className="workspace-sidebar__summary">
-          <p className="workspace-sidebar__eyebrow">FORJA</p>
-          <p className="workspace-sidebar__summary-copy">
-            Bancada para transformar briefing em user story pronta para inspeção.
-          </p>
-        </div>
-      ) : null}
+      <div className="workspace-sidebar__summary">
+        <p className="workspace-sidebar__eyebrow">FORJA</p>
+        <p className="workspace-sidebar__summary-copy">
+          Bancada para transformar briefing em user story pronta para inspeção.
+        </p>
+      </div>
 
       <nav className="workspace-sidebar__nav" aria-label="Navegação da bancada">
-        {!isCompact ? <p className="workspace-sidebar__section-label">Ferramentas</p> : null}
+        <p className="workspace-sidebar__section-label">Ferramentas</p>
         {toolNavItems.map((item) => (
-          <SidebarNavLink key={item.path} item={item} isCompact={isCompact} onClose={onClose} />
+          <SidebarNavLink key={item.path} item={item} onClose={onClose} />
         ))}
       </nav>
 
       <nav className="workspace-sidebar__nav" aria-label="Campo de Treino ProdForge">
-        {!isCompact ? (
-          <>
-            <div className="workspace-sidebar__section-header">
-              <p className="workspace-sidebar__section-label">Campo de Treino</p>
-              {completedCount > 0 ? (
-                <span className="workspace-sidebar__progress-pill">
-                  {completedCount}/{totalCount}
-                </span>
-              ) : null}
-            </div>
-            <p className="workspace-sidebar__section-description">
-              Guias práticos para aprender e aplicar na Bancada.
-            </p>
-          </>
-        ) : null}
+        <div className="workspace-sidebar__section-header">
+          <p className="workspace-sidebar__section-label">Campo de Treino</p>
+          {completedCount > 0 ? (
+            <span className="workspace-sidebar__progress-pill">
+              {completedCount}/{totalCount}
+            </span>
+          ) : null}
+        </div>
+        <p className="workspace-sidebar__section-description">
+          Guias práticos para aprender e aplicar na Bancada.
+        </p>
 
         {academyNavItems.map((item) => (
-          <SidebarNavLink key={item.path} item={item} isCompact={isCompact} onClose={onClose} />
+          <SidebarNavLink key={item.path} item={item} onClose={onClose} />
         ))}
       </nav>
 
       <div className="workspace-sidebar__footer">
         {user ? (
-          isCompact ? (
-            <div className="workspace-sidebar__account workspace-sidebar__account--compact">
-              <div
-                className="workspace-sidebar__account-badge"
-                {...getTooltipProps(`Conta ativa: ${user.email}`, true)}
-              >
-                <IconUser />
-                <span>{accountInitial}</span>
-              </div>
-
-              <button
-                type="button"
-                className="workspace-sidebar__signout workspace-sidebar__signout--compact"
-                onClick={handleSignOut}
-                {...getTooltipProps('Sair da conta', true)}
-              >
-                <IconSignOut />
-              </button>
+          <div className="workspace-sidebar__account">
+            <div className="workspace-sidebar__account-meta">
+              <p className="workspace-sidebar__account-label">Conta ativa</p>
+              <p className="workspace-sidebar__account-email">{user.email}</p>
             </div>
-          ) : (
-            <div className="workspace-sidebar__account">
-              <div className="workspace-sidebar__account-meta">
-                <p className="workspace-sidebar__account-label">Conta ativa</p>
-                <p className="workspace-sidebar__account-email">{user.email}</p>
-              </div>
-              <button type="button" className="workspace-sidebar__signout" onClick={handleSignOut}>
-                <IconSignOut />
-                <span>Sair</span>
-              </button>
-            </div>
-          )
-        ) : isCompact ? (
-          <div className="workspace-sidebar__account workspace-sidebar__account--compact">
-            <Link
-              to="/login"
-              className="workspace-sidebar__compact-link"
-              onClick={onClose}
-              {...getTooltipProps('Entrar', true)}
-            >
-              <IconUser />
-            </Link>
-            <Link
-              to="/signup"
-              className="workspace-sidebar__compact-link"
-              onClick={onClose}
-              {...getTooltipProps('Criar conta', true)}
-            >
-              <IconGuide />
-            </Link>
+            <button type="button" className="workspace-sidebar__signout" onClick={handleSignOut}>
+              <IconSignOut />
+              <span>Sair</span>
+            </button>
           </div>
         ) : (
           <div className="workspace-sidebar__account workspace-sidebar__account--guest">
