@@ -7,18 +7,20 @@ function PublicLayout() {
   const location = useLocation()
   const isHomeRoute = location.pathname === '/'
   const isLearningRoute = location.pathname.startsWith('/aprender')
+  const isLegalRoute = location.pathname === '/politica-de-privacidade'
   const layoutClassName = [
     'page-shell',
     'public-layout',
     isHomeRoute ? 'public-layout--home-forge theme-forge' : '',
     isLearningRoute ? 'public-layout--academy-forge theme-forge' : '',
+    isLegalRoute ? 'public-layout--legal-forge theme-forge' : '',
   ]
     .filter(Boolean)
     .join(' ')
 
   return (
     <div className={layoutClassName}>
-      <PublicHeader isHomeRoute={isHomeRoute} isLearningRoute={isLearningRoute} />
+      <PublicHeader isHomeRoute={isHomeRoute} isLearningRoute={isLearningRoute} isLegalRoute={isLegalRoute} />
       <main className="public-layout__main">
         <Outlet />
       </main>

@@ -103,6 +103,33 @@ export async function updateUserStory(id, data, userId) {
   }
 }
 
+export async function updateUserStoryEstimationStatus({ storyId, estimationStatus, userId }) {
+  try {
+    if (!userId) {
+      return { success: false, error: new Error('Usuário não autenticado.'), data: null }
+    }
+
+    if (!storyId) {
+      return { success: false, error: new Error('História não informada.'), data: null }
+    }
+
+    const { data, error } = await supabase.rpc('update_user_story_estimation_status', {
+      p_story_id: storyId,
+      p_estimation_status: estimationStatus,
+    })
+
+    if (error) {
+      console.error('Supabase updateUserStoryEstimationStatus error:', error)
+      return { success: false, error, data: null }
+    }
+
+    return { success: true, data: data?.[0] ?? null }
+  } catch (error) {
+    console.error('Unexpected updateUserStoryEstimationStatus error:', error)
+    return { success: false, error, data: null }
+  }
+}
+
 export async function listRecentUserStories({
   limit = 10,
   sinceIso = null,
@@ -181,6 +208,7 @@ export async function listStoryHistoryGroups({
   search = '',
   sinceIso = null,
   status = 'all',
+  estimationStatus = 'all',
   projectFilter = 'all',
   projectId = null,
   page = 1,
@@ -204,6 +232,8 @@ export async function listStoryHistoryGroups({
     const offset = (safePage - 1) * safePageSize
     const normalizedSearch = String(search ?? '').trim()
     const normalizedStatus = status && status !== 'all' ? status : null
+    const normalizedEstimationStatus =
+      estimationStatus && estimationStatus !== 'all' ? estimationStatus : null
     const normalizedProjectFilter = ['all', 'none', 'project'].includes(projectFilter)
       ? projectFilter
       : 'all'
@@ -213,6 +243,7 @@ export async function listStoryHistoryGroups({
       p_search: normalizedSearch || null,
       p_since: sinceIso,
       p_status: normalizedStatus,
+      p_estimation_status: normalizedEstimationStatus,
       p_limit: safePageSize,
       p_offset: offset,
       p_project_filter: normalizedProjectFilter,

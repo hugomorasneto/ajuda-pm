@@ -8774,6 +8774,519 @@
 }
 
 /* ============================================================
+   PÁGINA LEGAL — POLÍTICA DE PRIVACIDADE
+   ============================================================ */
+
+.public-layout--legal-forge {
+  overflow-x: clip;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(255, 122, 26, 0.15), transparent 30rem),
+    radial-gradient(circle at 86% 8%, rgba(77, 163, 255, 0.13), transparent 32rem),
+    linear-gradient(180deg, #05080d 0%, var(--forge-bg-canvas) 44%, #070a0f 100%);
+  color: var(--forge-text-secondary);
+}
+
+.public-layout--legal-forge .public-layout__main {
+  position: relative;
+  z-index: 1;
+  width: min(calc(100% - 32px), 1180px);
+  padding-top: clamp(28px, 4vw, 52px);
+  padding-bottom: clamp(64px, 8vw, 112px);
+}
+
+.public-layout--legal-forge .public-layout__main::before {
+  content: '';
+  position: absolute;
+  inset: -56px -8vw auto;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 145, 56, 0.42), rgba(77, 163, 255, 0.32), transparent);
+  box-shadow: 0 0 24px rgba(255, 145, 56, 0.14);
+}
+
+.public-layout--legal-forge .public-header--forge-home {
+  border-bottom-color: rgba(255, 122, 26, 0.14);
+  background:
+    linear-gradient(180deg, rgba(10, 12, 15, 0.94) 0%, rgba(15, 18, 22, 0.9) 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04),
+    0 4px 24px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(18px);
+}
+
+.public-layout--legal-forge .public-header--forge-home .public-header__inner {
+  min-height: 72px;
+  padding-top: var(--forge-space-4);
+  padding-bottom: var(--forge-space-4);
+}
+
+.public-layout--legal-forge .public-header--forge-home .brand-logo {
+  position: relative;
+  width: 178px;
+  height: 44px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.public-layout--legal-forge .public-header--forge-home .brand-logo__image.brand-logo--header {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 220px;
+  max-width: none;
+  height: 220px;
+  transform: translate(-50%, -50%);
+}
+
+.public-layout--legal-forge .brand-logo--header,
+.public-layout--legal-forge .brand-logo--footer {
+  filter: drop-shadow(0 0 18px rgba(255, 145, 56, 0.12));
+}
+
+.public-layout--legal-forge .public-header__link,
+.public-layout--legal-forge .public-header__mobile-link,
+.public-layout--legal-forge .public-footer__nav a {
+  color: var(--forge-text-secondary);
+}
+
+.public-layout--legal-forge .public-header__link:hover,
+.public-layout--legal-forge .public-header__link:focus-visible,
+.public-layout--legal-forge .public-header__mobile-link:hover,
+.public-layout--legal-forge .public-header__mobile-link:focus-visible,
+.public-layout--legal-forge .public-header__link--active,
+.public-layout--legal-forge .public-footer__nav a:hover,
+.public-layout--legal-forge .public-footer__nav a:focus-visible {
+  color: var(--forge-text-primary);
+}
+
+.public-layout--legal-forge .public-header__link--active::after {
+  background: linear-gradient(90deg, var(--forge-ember-hover), var(--forge-tech));
+  box-shadow: 0 0 12px rgba(255, 145, 56, 0.22);
+}
+
+.public-layout--legal-forge .public-header__mobile-panel {
+  border-color: var(--forge-border);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), transparent),
+    rgba(11, 13, 16, 0.96);
+  box-shadow: var(--forge-shadow-panel);
+}
+
+.public-layout--legal-forge .public-header__mobile-link--active {
+  background: var(--forge-ember-soft);
+  color: var(--forge-text-primary);
+}
+
+.public-layout--legal-forge .public-header__menu-button,
+.public-layout--legal-forge .public-header__cta {
+  border-color: var(--forge-border);
+  background: var(--forge-gradient-metal);
+  color: var(--forge-text-primary);
+  box-shadow: var(--forge-shadow-soft);
+}
+
+.public-layout--legal-forge .public-header__cta--primary {
+  border-color: var(--forge-border-ember);
+  background: var(--forge-gradient-cta-ember);
+  box-shadow: var(--forge-shadow-soft), 0 0 22px rgba(255, 145, 56, 0.18);
+}
+
+.public-layout--legal-forge .public-header__cta--primary:hover {
+  border-color: rgba(255, 145, 56, 0.46);
+  background: linear-gradient(135deg, #ffa14e 0%, var(--forge-ember-hover) 36%, var(--forge-ember-active) 100%);
+  box-shadow: var(--forge-shadow-soft), 0 0 28px rgba(255, 145, 56, 0.24);
+}
+
+.public-layout--legal-forge .public-header__cta--secondary {
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(135deg, rgba(77, 163, 255, 0.14), rgba(77, 163, 255, 0.04)),
+    var(--forge-gradient-metal);
+}
+
+.privacy-policy-page {
+  display: grid;
+  gap: clamp(28px, 4vw, 48px);
+  max-width: 1180px;
+  color: var(--forge-text-secondary);
+}
+
+.privacy-policy-page__eyebrow {
+  width: fit-content;
+  margin: 0;
+}
+
+.privacy-policy-hero {
+  position: relative;
+  display: grid;
+  gap: clamp(24px, 4vw, 42px);
+  overflow: hidden;
+  isolation: isolate;
+  padding: clamp(24px, 4vw, 44px);
+  border-color: rgba(255, 145, 56, 0.24);
+  background:
+    radial-gradient(circle at 14% 12%, rgba(255, 122, 26, 0.17), transparent 24rem),
+    radial-gradient(circle at 92% 10%, rgba(77, 163, 255, 0.15), transparent 26rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.048), rgba(255, 255, 255, 0.014)),
+    rgba(11, 16, 22, 0.9);
+  box-shadow: var(--forge-shadow-floating);
+}
+
+.privacy-policy-hero::before {
+  content: '';
+  position: absolute;
+  inset: auto clamp(20px, 4vw, 44px) 0;
+  height: 2px;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(255, 122, 26, 0), rgba(255, 145, 56, 0.76), rgba(77, 163, 255, 0.46), rgba(77, 163, 255, 0));
+  box-shadow: 0 0 18px rgba(255, 145, 56, 0.22);
+}
+
+.privacy-policy-hero__copy {
+  display: grid;
+  gap: var(--forge-space-4);
+  min-width: 0;
+}
+
+.privacy-policy-hero h1 {
+  max-width: 12ch;
+  color: var(--forge-text-primary);
+  font-size: clamp(2.35rem, 7vw, 4.45rem);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.privacy-policy-hero__copy > p {
+  max-width: 48rem;
+  margin: 0;
+  color: var(--forge-text-secondary);
+  font-size: clamp(1rem, 1.6vw, 1.08rem);
+  line-height: 1.75;
+}
+
+.privacy-policy-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--forge-space-3);
+  align-items: center;
+}
+
+.privacy-policy-hero__summary {
+  display: grid;
+  gap: var(--forge-space-3);
+  min-width: 0;
+  align-content: start;
+  padding-top: var(--forge-space-5);
+  border-top: 1px solid var(--forge-border-subtle);
+}
+
+.privacy-policy-hero__summary-label,
+.privacy-policy-toc__title {
+  margin: 0;
+  color: var(--forge-ember-hover);
+  font-size: var(--text-label);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.privacy-policy-hero__summary-date {
+  margin: 0;
+  color: var(--forge-text-primary);
+  font-size: clamp(1.35rem, 2vw, 1.75rem);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.privacy-policy-hero__summary ul {
+  display: grid;
+  gap: var(--forge-space-3);
+  margin: var(--forge-space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.privacy-policy-hero__summary li {
+  position: relative;
+  min-width: 0;
+  padding-left: var(--forge-space-5);
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.55;
+}
+
+.privacy-policy-hero__summary li::before {
+  content: '';
+  position: absolute;
+  top: 0.55rem;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--forge-ember-hover);
+  box-shadow: 0 0 14px var(--forge-amber-glow);
+}
+
+.privacy-policy-hero__summary li:nth-child(even)::before {
+  background: var(--forge-tech);
+  box-shadow: 0 0 14px var(--forge-tech-glow);
+}
+
+.privacy-policy-content {
+  display: grid;
+  gap: clamp(22px, 3vw, 34px);
+  align-items: start;
+}
+
+.privacy-policy-toc {
+  display: grid;
+  gap: var(--forge-space-4);
+  padding: var(--forge-space-4);
+  border: 1px solid var(--forge-border);
+  border-radius: var(--forge-radius-md);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 34%),
+    rgba(11, 16, 22, 0.84);
+  box-shadow: var(--forge-shadow-soft);
+}
+
+.privacy-policy-toc nav {
+  display: grid;
+  gap: var(--forge-space-2);
+}
+
+.privacy-policy-toc a {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--forge-space-3);
+  align-items: center;
+  min-height: 36px;
+  padding: 0 var(--forge-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--forge-radius-sm);
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  font-weight: 650;
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+.privacy-policy-toc a:hover,
+.privacy-policy-toc a:focus-visible {
+  border-color: var(--forge-border-tech);
+  background: var(--forge-tech-soft);
+  color: var(--forge-text-primary);
+}
+
+.privacy-policy-toc a span {
+  color: var(--forge-tech-hover);
+  font-size: var(--text-label);
+  font-weight: 800;
+}
+
+.privacy-policy-sections {
+  display: grid;
+  gap: var(--forge-space-4);
+  min-width: 0;
+}
+
+.privacy-policy-intro,
+.privacy-policy-section {
+  min-width: 0;
+  border-color: var(--forge-border);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 34%),
+    var(--forge-gradient-panel);
+  box-shadow: var(--forge-shadow-panel);
+}
+
+.privacy-policy-intro {
+  margin: 0;
+  padding: clamp(18px, 3vw, 24px);
+  border: 1px solid rgba(77, 163, 255, 0.24);
+  border-radius: var(--forge-radius-md);
+  color: var(--forge-text-secondary);
+  font-size: var(--text-body);
+  line-height: 1.75;
+}
+
+.privacy-policy-section {
+  scroll-margin-top: 110px;
+  display: grid;
+  gap: var(--forge-space-4);
+  padding: clamp(20px, 3vw, 28px);
+}
+
+.privacy-policy-section__header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--forge-space-3);
+  align-items: center;
+}
+
+.privacy-policy-section__index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--forge-border-ember);
+  border-radius: 999px;
+  background: var(--forge-ember-soft);
+  color: #ffd0a8;
+  font-size: var(--text-label);
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: var(--forge-glow-ember-sm);
+}
+
+.privacy-policy-section h2 {
+  margin: 0;
+  color: var(--forge-text-primary);
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+  line-height: 1.18;
+  letter-spacing: 0;
+}
+
+.privacy-policy-section__body {
+  display: grid;
+  gap: var(--forge-space-3);
+  min-width: 0;
+}
+
+.privacy-policy-section__body p {
+  margin: 0;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-body);
+  line-height: 1.78;
+}
+
+.privacy-policy-section__body ul {
+  display: grid;
+  gap: var(--forge-space-2);
+  margin: var(--forge-space-1) 0 0;
+  padding-left: 1.25rem;
+  color: var(--forge-text-secondary);
+}
+
+.privacy-policy-section__body li {
+  padding-left: var(--forge-space-1);
+  line-height: 1.68;
+}
+
+.privacy-policy-section__body li::marker {
+  color: var(--forge-ember-hover);
+}
+
+.privacy-policy-section__note {
+  margin-top: var(--forge-space-2) !important;
+  padding: var(--forge-space-4);
+  border: 1px solid rgba(255, 177, 74, 0.26);
+  border-left: 3px solid var(--forge-warning);
+  border-radius: var(--forge-radius-sm);
+  background:
+    linear-gradient(90deg, var(--forge-warning-soft), transparent 82%),
+    rgba(255, 255, 255, 0.025);
+  color: #ffe0b4 !important;
+}
+
+.privacy-policy-section__contact a {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 38px;
+  align-items: center;
+  padding: 0 var(--forge-space-3);
+  border: 1px solid var(--forge-border-tech);
+  border-radius: var(--forge-radius-sm);
+  background: var(--forge-tech-soft);
+  color: #c7e1ff;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.privacy-policy-section__contact a:hover,
+.privacy-policy-section__contact a:focus-visible {
+  color: var(--forge-text-primary);
+  box-shadow: var(--forge-glow-tech-sm);
+}
+
+@media (min-width: 900px) {
+  .public-layout--legal-forge .public-header--forge-home .brand-logo {
+    width: 210px;
+    height: 44px;
+  }
+
+  .public-layout--legal-forge .public-header--forge-home .brand-logo__image.brand-logo--header {
+    width: 258px;
+    height: 258px;
+    filter: drop-shadow(0 0 10px rgba(255, 122, 26, 0.16));
+  }
+
+  .privacy-policy-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.42fr);
+    align-items: end;
+  }
+
+  .privacy-policy-hero__summary {
+    padding-top: 0;
+    padding-left: var(--forge-space-6);
+    border-top: 0;
+    border-left: 1px solid var(--forge-border-subtle);
+  }
+
+  .privacy-policy-content {
+    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  }
+
+  .privacy-policy-toc {
+    position: sticky;
+    top: 98px;
+  }
+}
+
+@media (min-width: 1120px) {
+  .public-layout--legal-forge .public-header--forge-home .brand-logo {
+    width: 236px;
+    height: 48px;
+  }
+
+  .public-layout--legal-forge .public-header--forge-home .brand-logo__image.brand-logo--header {
+    width: 292px;
+    height: 292px;
+  }
+}
+
+@media (max-width: 767px) {
+  .public-layout--legal-forge .public-layout__main {
+    width: min(calc(100% - 24px), 1180px);
+  }
+
+  .privacy-policy-hero,
+  .privacy-policy-section {
+    padding: var(--forge-space-4);
+  }
+
+  .privacy-policy-hero h1 {
+    font-size: clamp(2rem, 12vw, 3rem);
+  }
+
+  .privacy-policy-hero__actions .forge-button {
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .privacy-policy-toc a {
+    min-height: 40px;
+  }
+}
+
+/* ============================================================
    FOOTER PÚBLICO PADRÃO
    ============================================================ */
 

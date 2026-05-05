@@ -6,8 +6,12 @@ import {
   checkCanManageProject,
   getProjectById,
   listProjectMembers,
+  updateProject,
 } from '../services/projectsService'
-import { listStoryHistoryGroups } from '../services/userStoriesService'
+import {
+  listStoryHistoryGroups,
+  updateUserStoryEstimationStatus,
+} from '../services/userStoriesService'
 import {
   addTeamMemberByEmail,
   createTeam,
@@ -40,6 +44,13 @@ const ESTIMATION_STATUS_LABELS = {
   ready_for_estimation: 'Pronta para estimar',
   estimated: 'Estimada',
 }
+
+const ESTIMATION_STATUS_OPTIONS = [
+  { value: 'created', label: 'Criada' },
+  { value: 'refining', label: 'Em refinamento' },
+  { value: 'ready_for_estimation', label: 'Pronta para estimar' },
+  { value: 'estimated', label: 'Estimada' },
+]
 
 function formatProjectDateTime(value) {
   if (!value) return '-'
@@ -174,14 +185,21 @@ function ProjectDetailPage() {
   const [projectMembers, setProjectMembers] = useState([])
   const [projectStories, setProjectStories] = useState([])
   const [projectStoryCount, setProjectStoryCount] = useState(0)
+  const [projectNameDraft, setProjectNameDraft] = useState('')
+  const [projectDescriptionDraft, setProjectDescriptionDraft] = useState('')
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [memberEmail, setMemberEmail] = useState('')
   const [memberRole, setMemberRole] = useState('member')
   const [isLoading, setIsLoading] = useState(false)
+  const [isEditingProject, setIsEditingProject] = useState(false)
+  const [isSavingProject, setIsSavingProject] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [isAddingProjectMember, setIsAddingProjectMember] = useState(false)
+  const [updatingStoryStatusId, setUpdatingStoryStatusId] = useState(null)
   const [canManageProjectMembers, setCanManageProjectMembers] = useState(false)
+  const [projectMessage, setProjectMessage] = useState('')
+  const [storyStatusMessage, setStoryStatusMessage] = useState('')
   const [message, setMessage] = useState('')
   const [memberMessage, setMemberMessage] = useState('')
   const [notFound, setNotFound] = useState(false)
@@ -221,6 +239,8 @@ function ProjectDetailPage() {
 
     if (projectResponse.success && projectResponse.data) {
       setProject(projectResponse.data)
+      setProjectNameDraft(projectResponse.data.name ?? '')
+      setProjectDescriptionDraft(projectResponse.data.description ?? '')
       setNotFound(false)
     } else {
       setNotFound(true)
@@ -302,6 +322,78 @@ function ProjectDetailPage() {
     await loadProject()
   }
 
+  async function handleUpdateProject(event) {
+    event.preventDefault()
+    setProjectMessage('')
+
+    if (!canManageProjectMembers) {
+      setProjectMessage('Apenas responsáveis e administradores podem editar este projeto.')
+      return
+    }
+
+    setIsSavingProject(true)
+    const response = await updateProject({
+      projectId,
+      name: projectNameDraft,
+      description: projectDescriptionDraft,
+      userId,
+    })
+    setIsSavingProject(false)
+
+    if (!response.success || !response.data) {
+      setProjectMessage(response.error?.message ?? 'Não foi possível atualizar o projeto agora.')
+      return
+    }
+
+    setProject(response.data)
+    setProjectNameDraft(response.data.name ?? '')
+    setProjectDescriptionDraft(response.data.description ?? '')
+    setIsEditingProject(false)
+    setProjectMessage('Projeto atualizado.')
+  }
+
+  function handleCancelProjectEdit() {
+    setProjectNameDraft(project?.name ?? '')
+    setProjectDescriptionDraft(project?.description ?? '')
+    setProjectMessage('')
+    setIsEditingProject(false)
+  }
+
+  async function handleUpdateStoryEstimationStatus(story, estimationStatus) {
+    if (!story || story.estimation_status === estimationStatus) return
+    setStoryStatusMessage('')
+
+    const canUpdateStoryStatus = canManageProjectMembers || story.user_id === userId
+    if (!canUpdateStoryStatus) {
+      setStoryStatusMessage(
+        'Apenas quem criou a história ou responsáveis do projeto podem alterar o status de estimativa.',
+      )
+      return
+    }
+
+    setUpdatingStoryStatusId(story.id)
+    const response = await updateUserStoryEstimationStatus({
+      storyId: story.id,
+      estimationStatus,
+      userId,
+    })
+    setUpdatingStoryStatusId(null)
+
+    if (!response.success || !response.data) {
+      setStoryStatusMessage(response.error?.message ?? 'Não foi possível atualizar o status agora.')
+      return
+    }
+
+    setProjectStories((current) =>
+      current.map((item) =>
+        item.id === story.id
+          ? { ...item, estimation_status: response.data.estimation_status ?? estimationStatus }
+          : item,
+      ),
+    )
+    setStoryStatusMessage('Status de estimativa atualizado.')
+  }
+
   async function handleAddProjectMember(event) {
     event.preventDefault()
     setMemberMessage('')
@@ -349,10 +441,72 @@ function ProjectDetailPage() {
           <Link className="btn btn-secondary btn-small" to="/projetos">
             Voltar para projetos
           </Link>
+          {canManageProjectMembers ? (
+            <button
+              type="button"
+              className="btn btn-secondary btn-small"
+              onClick={() => setIsEditingProject((current) => !current)}
+              disabled={isSavingProject}
+            >
+              {isEditingProject ? 'Fechar edição' : 'Editar projeto'}
+            </button>
+          ) : null}
           <Link className="btn btn-primary btn-small" to={`/tool?projectId=${projectId}`}>
             Abrir Bancada
           </Link>
         </div>
+      </section>
+
+      <section className="panel project-detail-page__settings" aria-label="Dados do projeto">
+        <div className="projects-page__section-header">
+          <div>
+            <p className="projects-page__eyebrow">Dados do projeto</p>
+            <h2>Contexto de organização</h2>
+            <p>{project?.description || 'Sem descrição cadastrada.'}</p>
+          </div>
+        </div>
+
+        {isEditingProject ? (
+          <form className="project-detail-page__edit-form" onSubmit={handleUpdateProject}>
+            <label className="projects-page__field">
+              <span>Nome do projeto</span>
+              <input
+                type="text"
+                value={projectNameDraft}
+                onChange={(event) => setProjectNameDraft(event.target.value)}
+                placeholder="Ex.: Onboarding de clientes"
+                disabled={isSavingProject}
+              />
+            </label>
+
+            <label className="projects-page__field">
+              <span>Descrição opcional</span>
+              <textarea
+                value={projectDescriptionDraft}
+                onChange={(event) => setProjectDescriptionDraft(event.target.value)}
+                placeholder="Explique a jornada, squad ou objetivo do projeto."
+                rows={4}
+                disabled={isSavingProject}
+              />
+            </label>
+
+            <div className="project-detail-page__edit-actions">
+              <button type="submit" className="btn btn-primary btn-small" disabled={isSavingProject}>
+                {isSavingProject ? 'Salvando...' : 'Salvar projeto'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-small"
+                onClick={handleCancelProjectEdit}
+                disabled={isSavingProject}
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        ) : null}
+
+        {projectMessage ? <p className="projects-page__message">{projectMessage}</p> : null}
       </section>
 
       <section className="panel project-detail-page__stories" aria-label="Histórias vinculadas ao projeto">
@@ -374,23 +528,48 @@ function ProjectDetailPage() {
             <p>Abra a Bancada com este projeto selecionado ou organize uma peça avulsa quando fizer sentido.</p>
           </div>
         ) : null}
+        {storyStatusMessage ? <p className="projects-page__message">{storyStatusMessage}</p> : null}
 
         <div className="project-detail-page__story-list">
-          {projectStories.map((story) => (
-            <article key={story.id} className="project-detail-page__story">
-              <div>
-                <h3>{story.title}</h3>
-                <p>{story.input_context || story.user_story || 'Sem descrição.'}</p>
-              </div>
-              <div className="project-detail-page__story-meta">
-                <span>{formatProjectDateTime(story.created_at)}</span>
-                <span>{getEstimationStatusLabel(story.estimation_status)}</span>
-                <Link className="btn btn-secondary btn-small" to={`/tool?storyId=${story.id}`}>
-                  Abrir na Bancada
-                </Link>
-              </div>
-            </article>
-          ))}
+          {projectStories.map((story) => {
+            const canUpdateStoryStatus = canManageProjectMembers || story.user_id === userId
+            const isUpdatingStoryStatus = updatingStoryStatusId === story.id
+
+            return (
+              <article key={story.id} className="project-detail-page__story">
+                <div>
+                  <h3>{story.title}</h3>
+                  <p>{story.input_context || story.user_story || 'Sem descrição.'}</p>
+                </div>
+                <div className="project-detail-page__story-meta">
+                  <span>{formatProjectDateTime(story.created_at)}</span>
+                  {canUpdateStoryStatus ? (
+                    <label className="project-detail-page__story-status">
+                      <span>Status de estimativa</span>
+                      <select
+                        value={story.estimation_status ?? 'created'}
+                        onChange={(event) =>
+                          handleUpdateStoryEstimationStatus(story, event.target.value)
+                        }
+                        disabled={isUpdatingStoryStatus}
+                      >
+                        {ESTIMATION_STATUS_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : (
+                    <span>{getEstimationStatusLabel(story.estimation_status)}</span>
+                  )}
+                  <Link className="btn btn-secondary btn-small" to={`/tool?storyId=${story.id}`}>
+                    Abrir na Bancada
+                  </Link>
+                </div>
+              </article>
+            )
+          })}
         </div>
       </section>
 

@@ -5,6 +5,7 @@ alter table if exists public.leads enable row level security;
 
 revoke all on table public.leads from anon, authenticated;
 grant insert on table public.leads to anon, authenticated;
+grant select on table public.leads to authenticated;
 
 drop policy if exists "leads_insert_public" on public.leads;
 create policy "leads_insert_public"

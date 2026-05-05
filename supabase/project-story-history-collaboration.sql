@@ -1,11 +1,23 @@
 -- ProdForge - Let project members read project story history through the project filter.
 -- Standalone and unfiltered history remain scoped to the authenticated user's own stories.
 
+drop function if exists public.search_user_story_groups(
+  uuid,
+  text,
+  timestamptz,
+  text,
+  integer,
+  integer,
+  text,
+  uuid
+);
+
 create or replace function public.search_user_story_groups(
   p_user_id uuid,
   p_search text default null,
   p_since timestamptz default null,
   p_status text default null,
+  p_estimation_status text default null,
   p_limit integer default 10,
   p_offset integer default 0,
   p_project_filter text default 'all',
@@ -55,6 +67,11 @@ as $$
       )
       and (p_since is null or us.created_at >= p_since)
       and (p_status is null or p_status = 'all' or us.status = p_status)
+      and (
+        p_estimation_status is null
+        or p_estimation_status = 'all'
+        or us.estimation_status = p_estimation_status
+      )
       and (
         coalesce(nullif(trim(p_project_filter), ''), 'all') = 'all'
         or (p_project_filter = 'none' and us.project_id is null)
@@ -116,6 +133,7 @@ grant execute on function public.search_user_story_groups(
   uuid,
   text,
   timestamptz,
+  text,
   text,
   integer,
   integer,

@@ -5672,6 +5672,7 @@
 }
 
 .project-context-panel__form,
+.project-detail-page__edit-form,
 .projects-page__form {
   display: grid;
   gap: var(--space-4);
@@ -5724,6 +5725,7 @@
 }
 
 .project-detail-page__actions,
+.project-detail-page__edit-actions,
 .project-detail-page__member-form,
 .project-detail-page__member,
 .project-detail-team__header,
@@ -5733,6 +5735,14 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-3);
+}
+
+.project-detail-page__edit-form {
+  margin-top: var(--space-4);
+}
+
+.project-detail-page__edit-actions {
+  justify-content: flex-start;
 }
 
 .project-detail-page__teams,
@@ -5811,6 +5821,28 @@
   font-size: var(--text-small);
 }
 
+.project-detail-page__story-status {
+  display: grid;
+  justify-items: end;
+  gap: var(--space-1);
+}
+
+.project-detail-page__story-status span {
+  color: var(--forge-text-muted);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.project-detail-page__story-status select {
+  border: 1px solid var(--forge-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  color: var(--forge-text-primary);
+  background: var(--forge-surface-inset);
+  font: inherit;
+  font-size: var(--text-small);
+}
+
 .project-detail-team {
   border: 1px solid var(--forge-border);
   border-radius: var(--radius-md);
@@ -5862,6 +5894,7 @@
   .project-context-panel__form-actions,
   .projects-page__hero,
   .projects-page__item,
+  .project-detail-page__edit-actions,
   .project-detail-page__member-form,
   .project-detail-page__member,
   .project-detail-page__story,

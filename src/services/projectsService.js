@@ -89,6 +89,40 @@ export async function getProjectById({ projectId, userId }) {
   }
 }
 
+export async function updateProject({ projectId, name, description = '', userId }) {
+  try {
+    if (!userId) {
+      return { success: false, error: new Error('UsuÃ¡rio nÃ£o autenticado.'), data: null }
+    }
+
+    if (!projectId) {
+      return { success: false, error: new Error('Projeto nÃ£o informado.'), data: null }
+    }
+
+    const payload = normalizeProjectPayload({ name, description })
+    if (!payload.name) {
+      return { success: false, error: new Error('Informe um nome para o projeto.'), data: null }
+    }
+
+    const { data, error } = await supabase
+      .from('projects')
+      .update(payload)
+      .eq('id', projectId)
+      .select(projectColumns)
+      .single()
+
+    if (error) {
+      console.error('Supabase updateProject error:', error)
+      return { success: false, error, data: null }
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Unexpected updateProject error:', error)
+    return { success: false, error, data: null }
+  }
+}
+
 export async function checkCanManageProject({ projectId, userId }) {
   try {
     if (!userId) {

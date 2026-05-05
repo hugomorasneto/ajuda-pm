@@ -4,7 +4,7 @@ import { APP_NAME } from '../constants/app'
 const SITE_URL = 'https://prodforge.techtupa.com.br'
 const DEFAULT_IMAGE_URL = `${SITE_URL}/og-prodforge-workspace.png`
 const DEFAULT_IMAGE_ALT =
-  'Captura da Bancada do ProdForge com menu lateral, briefing, artefato e inspeção da user story.'
+  'Imagem do ProdForge com captura real da Bancada e chamada para transformar briefing em user story clara.'
 
 export const ACADEMIA_IMAGE_URL = `${SITE_URL}/og-academia.png`
 export const ACADEMIA_IMAGE_ALT =

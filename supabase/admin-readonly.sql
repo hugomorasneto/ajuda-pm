@@ -29,6 +29,12 @@ alter table if exists public.user_stories enable row level security;
 alter table if exists public.learning_progress enable row level security;
 alter table if exists public.tracking_events enable row level security;
 
+grant select on table public.leads to authenticated;
+grant select on table public.profiles to authenticated;
+grant select on table public.user_stories to authenticated;
+grant select on table public.learning_progress to authenticated;
+grant select on table public.tracking_events to authenticated;
+
 drop policy if exists "leads_select_admin" on public.leads;
 create policy "leads_select_admin"
 on public.leads

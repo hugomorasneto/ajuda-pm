@@ -42,12 +42,12 @@ function PublicNavLink({ item, pathname, mobile = false, onNavigate }) {
   )
 }
 
-function PublicHeader({ isHomeRoute = false, isLearningRoute = false }) {
+function PublicHeader({ isHomeRoute = false, isLearningRoute = false, isLegalRoute = false }) {
   const location = useLocation()
   const { user } = useAuth()
   const [menuOpenPath, setMenuOpenPath] = useState(null)
   const isMenuOpen = menuOpenPath === location.pathname
-  const isForgeHeader = isHomeRoute || isLearningRoute
+  const isForgeHeader = isHomeRoute || isLearningRoute || isLegalRoute
   const navItems = publicNavItems
   const headerClassName = ['public-header', isForgeHeader ? 'public-header--forge-home' : '']
     .filter(Boolean)

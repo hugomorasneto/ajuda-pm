@@ -1,14 +1,5 @@
--- ProdForge - Project-aware user story history search.
--- Keeps project filtering optional so standalone stories remain first-class.
-
-drop function if exists public.search_user_story_groups(
-  uuid,
-  text,
-  timestamptz,
-  text,
-  integer,
-  integer
-);
+-- ProdForge - Add estimation status filtering to user story history.
+-- Keeps standalone and project-aware history behavior unchanged.
 
 drop function if exists public.search_user_story_groups(
   uuid,

@@ -9,6 +9,7 @@ const WorkspaceLayout = lazy(() => import('./layout/WorkspaceLayout'))
 const HomePage = lazy(() => import('./pages/HomePage'))
 const LearningHubPage = lazy(() => import('./pages/LearningHubPage'))
 const LearningGuidePage = lazy(() => import('./pages/LearningGuidePage'))
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'))
 const ToolPage = lazy(() => import('./pages/ToolPage'))
 const HistoryPage = lazy(() => import('./pages/HistoryPage'))
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage'))
@@ -74,6 +75,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/aprender" element={<LearningHubPage />} />
           <Route path="/aprender/:slug" element={<LearningGuidePage />} />
+          <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
           <Route
             path="/fundamentos"
             element={<Navigate to="/aprender/fundamentos-produto-agil" replace />}

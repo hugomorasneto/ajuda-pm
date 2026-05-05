@@ -20,6 +20,8 @@ checkbox
 checkout
 checkpoint
 Checkpoints
+Cookies
+cookies
 CTA
 CTAs
 daily

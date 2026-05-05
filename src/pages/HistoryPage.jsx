@@ -37,6 +37,21 @@ const STATUS_LABELS = {
   archived: 'Arquivado',
 }
 
+const ESTIMATION_STATUS_OPTIONS = [
+  { value: 'all', label: 'Todos' },
+  { value: 'created', label: 'Criada' },
+  { value: 'refining', label: 'Em refinamento' },
+  { value: 'ready_for_estimation', label: 'Pronta para estimar' },
+  { value: 'estimated', label: 'Estimada' },
+]
+
+const ESTIMATION_STATUS_LABELS = {
+  created: 'Criada',
+  refining: 'Em refinamento',
+  ready_for_estimation: 'Pronta para estimar',
+  estimated: 'Estimada',
+}
+
 const PROJECT_FILTER_OPTIONS = [
   { value: 'all', label: 'Todas' },
   { value: 'none', label: 'Sem projeto' },
@@ -45,6 +60,10 @@ const PROJECT_FILTER_OPTIONS = [
 
 function getStatusLabel(status) {
   return STATUS_LABELS[status] ?? 'Forjado'
+}
+
+function getEstimationStatusLabel(status) {
+  return ESTIMATION_STATUS_LABELS[status] ?? 'Criada'
 }
 
 function buildSinceIso(period) {
@@ -106,6 +125,7 @@ function HistoryPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [period, setPeriod] = useState('7d')
   const [status, setStatus] = useState('all')
+  const [estimationStatus, setEstimationStatus] = useState('all')
   const [projectFilter, setProjectFilter] = useState('all')
   const [selectedProjectId, setSelectedProjectId] = useState('')
   const [projects, setProjects] = useState([])
@@ -216,6 +236,7 @@ function HistoryPage() {
         search: debouncedSearch,
         sinceIso: buildSinceIso(period),
         status,
+        estimationStatus,
         projectFilter,
         projectId: projectFilter === 'project' ? selectedProjectId : null,
         page,
@@ -256,6 +277,7 @@ function HistoryPage() {
     loadHistory()
   }, [
     debouncedSearch,
+    estimationStatus,
     page,
     pageSize,
     period,
@@ -390,6 +412,20 @@ function HistoryPage() {
         </label>
 
         <label className="history-filter-field">
+          <span>Estimativa</span>
+          <select
+            value={estimationStatus}
+            onChange={(event) => resetPageWith(setEstimationStatus, event.target.value)}
+          >
+            {ESTIMATION_STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="history-filter-field">
           <span>Projeto</span>
           <select value={projectFilter} onChange={(event) => handleProjectFilterChange(event.target.value)}>
             {PROJECT_FILTER_OPTIONS.map((option) => (
@@ -472,6 +508,7 @@ function HistoryPage() {
                   <div className="history-result-card__meta">
                     <span>{formatDateTime(item.created_at)}</span>
                     <span>{item.project_name || 'Sem projeto'}</span>
+                    <span>{getEstimationStatusLabel(item.estimation_status)}</span>
                     <span>{item.versions_count ?? item.version_number ?? 1} versões</span>
                     <span>{isActive ? 'Aberta para inspeção' : 'Ver inspeção'}</span>
                   </div>
@@ -532,7 +569,10 @@ function HistoryPage() {
                 <div>
                   <p className="history-page__eyebrow">Inspeção</p>
                   <h2>{selectedStory.title}</h2>
-                  <p>Revise qualidade, gaps e próximos ajustes antes de levar esta peça para a bancada.</p>
+                  <p>
+                    Revise qualidade, gaps e próximos ajustes antes de levar esta peça para a bancada.
+                    Estimativa: {getEstimationStatusLabel(selectedStory.estimation_status)}.
+                  </p>
                 </div>
                 <button
                   type="button"
