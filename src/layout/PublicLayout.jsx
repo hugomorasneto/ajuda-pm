@@ -10,6 +10,7 @@ function PublicLayout() {
   const isLegalRoute = [
     '/sobre',
     '/contato',
+    '/faq',
     '/politica-de-privacidade',
     '/preferencias-de-privacidade',
     '/termos-de-uso',

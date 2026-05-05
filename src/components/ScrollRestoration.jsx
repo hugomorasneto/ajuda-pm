@@ -21,7 +21,7 @@ function getHashElement(hash) {
 
 function scrollToTop() {
   try {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
   } catch {
     window.scrollTo(0, 0)
   }
@@ -29,14 +29,14 @@ function scrollToTop() {
 
 function scrollToElement(element) {
   try {
-    element.scrollIntoView({ block: 'start', inline: 'nearest', behavior: 'instant' })
+    element.scrollIntoView({ block: 'start', inline: 'nearest', behavior: 'auto' })
   } catch {
     element.scrollIntoView()
   }
 }
 
 function ScrollRestoration() {
-  const { pathname, hash } = useLocation()
+  const { pathname, search, hash } = useLocation()
 
   useEffect(() => {
     if (!('scrollRestoration' in window.history)) return undefined
@@ -79,7 +79,7 @@ function ScrollRestoration() {
     return () => {
       window.cancelAnimationFrame(frameId)
     }
-  }, [pathname, hash])
+  }, [pathname, search, hash])
 
   return null
 }

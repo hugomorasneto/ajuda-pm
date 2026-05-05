@@ -60,9 +60,9 @@ function PricingTeaser({ content, isAuthenticated }) {
           plan={content.pro}
           variant="pro"
           cta={
-            <a className="landing-button forge-button forge-button--tech forge-button--block" href="#lead-capture-title">
+            <Link className="landing-button forge-button forge-button--tech forge-button--block" to="/#lead-capture-title">
               Receber novidades do Pro
-            </a>
+            </Link>
           }
         />
       </div>

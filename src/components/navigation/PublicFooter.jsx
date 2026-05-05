@@ -40,10 +40,10 @@ function PublicFooter() {
         <div className="public-footer__links">
           <nav className="public-footer__nav" aria-label="Produto">
             <p className="public-footer__nav-title">Produto</p>
-            <a href="/#produto">Produto</a>
-            <a href="/#como-funciona">Como funciona</a>
-            <a href="/#antes-depois">Antes e depois</a>
-            <a href="/#planos">Planos</a>
+            <Link to="/#produto">Produto</Link>
+            <Link to="/#como-funciona">Como funciona</Link>
+            <Link to="/#antes-depois">Antes e depois</Link>
+            <Link to="/#planos">Planos</Link>
           </nav>
 
           <nav className="public-footer__nav" aria-label="Campo de Treino">
@@ -58,7 +58,8 @@ function PublicFooter() {
 
           <nav className="public-footer__nav" aria-label="Institucional e legal">
             <p className="public-footer__nav-title">Institucional</p>
-            <Link to="/sobre">Sobre o ProdForge</Link>
+            <Link to="/sobre">Sobre</Link>
+            <Link to="/faq">FAQ</Link>
             <Link to="/politica-de-privacidade">Política de Privacidade</Link>
             <Link to="/preferencias-de-privacidade">Preferências de Privacidade</Link>
             <Link to="/termos-de-uso">Termos de Uso</Link>

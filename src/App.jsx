@@ -10,6 +10,7 @@ const PublicFooterLayout = lazy(() => import('./layout/PublicFooterLayout'))
 const WorkspaceLayout = lazy(() => import('./layout/WorkspaceLayout'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const ContactPage = lazy(() => import('./pages/ContactPage'))
+const FaqPage = lazy(() => import('./pages/FaqPage'))
 const HomePage = lazy(() => import('./pages/HomePage'))
 const LearningHubPage = lazy(() => import('./pages/LearningHubPage'))
 const LearningGuidePage = lazy(() => import('./pages/LearningGuidePage'))
@@ -85,6 +86,7 @@ function App() {
             <Route path="/aprender/:slug" element={<LearningGuidePage />} />
             <Route path="/sobre" element={<AboutPage />} />
             <Route path="/contato" element={<ContactPage />} />
+            <Route path="/faq" element={<FaqPage />} />
             <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
             <Route path="/preferencias-de-privacidade" element={<PrivacyPreferencesPage />} />
             <Route path="/termos-de-uso" element={<TermsOfUsePage />} />

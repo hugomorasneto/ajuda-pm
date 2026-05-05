@@ -20,9 +20,9 @@ function LandingHero({ hero, isAuthenticated, sectionId }) {
           <Link className="landing-button forge-button forge-button--ember forge-button--lg" to={primaryCtaPath}>
             {primaryCtaLabel}
           </Link>
-          <a className="landing-button forge-button forge-button--metal forge-button--lg" href="#como-funciona">
+          <Link className="landing-button forge-button forge-button--metal forge-button--lg" to="/#como-funciona">
             Ver como funciona
-          </a>
+          </Link>
         </div>
 
         {hero.microcopy ? <p className="landing-hero__microcopy">{hero.microcopy}</p> : null}

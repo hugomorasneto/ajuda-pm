@@ -4,10 +4,10 @@ import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC } from '../../constants/app'
 import { useAuth } from '../../hooks/useAuth'
 
 const publicNavItems = [
-  { label: 'Produto', href: '/#produto', activeOn: ['/'] },
-  { label: 'Como funciona', href: '/#como-funciona' },
+  { label: 'Produto', to: '/#produto', activeOn: ['/'] },
+  { label: 'Como funciona', to: '/#como-funciona' },
   { label: 'Campo de Treino', to: '/aprender', activeOn: ['/aprender'] },
-  { label: 'Planos', href: '/#planos' },
+  { label: 'Planos', to: '/#planos' },
 ]
 
 function isItemActive(item, pathname) {
