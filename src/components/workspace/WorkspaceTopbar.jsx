@@ -15,8 +15,8 @@ const pageMeta = {
     description: 'Organize histórias por jornada quando fizer sentido.',
   },
   '/tool/admin': {
-    title: 'Painel administrativo',
-    description: 'Acompanhe a operação e os principais indicadores do produto.',
+    title: 'Administração da Forja',
+    description: 'Acompanhe operação, aquisição e uso do ProdForge.',
   },
 }
 

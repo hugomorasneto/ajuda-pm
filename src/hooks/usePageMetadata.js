@@ -2,9 +2,9 @@ import { useEffect } from 'react'
 import { APP_NAME } from '../constants/app'
 
 const SITE_URL = 'https://prodforge.techtupa.com.br'
-const DEFAULT_IMAGE_URL = `${SITE_URL}/og-prodforge-v2.png`
+const DEFAULT_IMAGE_URL = `${SITE_URL}/og-prodforge-workspace.png`
 const DEFAULT_IMAGE_ALT =
-  'ProdForge — workspace IA para transformar contexto solto em user stories e materiais de desenvolvimento.'
+  'Captura da Bancada do ProdForge com menu lateral, briefing, artefato e inspeção da user story.'
 
 export const ACADEMIA_IMAGE_URL = `${SITE_URL}/og-academia.png`
 export const ACADEMIA_IMAGE_ALT =

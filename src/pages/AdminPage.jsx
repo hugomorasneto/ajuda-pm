@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import { APP_NAME } from '../constants/app'
 import { fetchAdminDashboard } from '../services/adminDashboardService'
 import '../styles/pages.css'
@@ -14,7 +15,7 @@ const adminTabs = [
   { id: 'leads', label: 'Interessados' },
   { id: 'users', label: 'Usuários' },
   { id: 'usage', label: 'Uso' },
-  { id: 'stories', label: 'Histórias' },
+  { id: 'stories', label: 'Peças' },
   { id: 'learning', label: 'Aprendizado' },
 ]
 
@@ -66,8 +67,8 @@ function formatRole(role) {
 
 function formatStoryStatus(status) {
   const statusLabels = {
-    generated: 'Gerada',
-    reviewed: 'Revisada',
+    generated: 'Forjada',
+    reviewed: 'Inspecionada',
     approved: 'Aprovada',
     archived: 'Arquivada',
   }
@@ -75,12 +76,15 @@ function formatStoryStatus(status) {
   return statusLabels[status] ?? status ?? emptyDash
 }
 
-function MetricCard({ label, value, note }) {
+function MetricCard({ label, value, note, tone = 'neutral' }) {
   return (
-    <article className="admin-metric-card">
-      <p className="admin-metric-card__label">{label}</p>
-      <p className="admin-metric-card__value">{value}</p>
-      {note ? <p className="admin-metric-card__note">{note}</p> : null}
+    <article className={`admin-metric-card admin-metric-card--${tone}`}>
+      <span className="admin-metric-card__signal" aria-hidden="true" />
+      <div>
+        <p className="admin-metric-card__label">{label}</p>
+        <p className="admin-metric-card__value">{value}</p>
+        {note ? <p className="admin-metric-card__note">{note}</p> : null}
+      </div>
     </article>
   )
 }
@@ -100,8 +104,10 @@ function AdminTabs({ activeTab, onChange }) {
       {adminTabs.map((tab) => (
         <button
           key={tab.id}
+          id={`admin-tab-${tab.id}`}
           type="button"
           role="tab"
+          aria-controls={`admin-panel-${tab.id}`}
           aria-selected={activeTab === tab.id}
           className={`admin-tabs__button ${activeTab === tab.id ? 'admin-tabs__button--active' : ''}`}
           onClick={() => onChange(tab.id)}
@@ -208,16 +214,19 @@ function OverviewTab({ dashboard, periodLabel }) {
       label: 'Interessados totais',
       value: formatNumber(overview.totalLeads),
       note: `${formatNumber(overview.periodLeads)} no período`,
+      tone: 'tech',
     },
     {
       label: 'Usuários totais',
       value: formatNumber(overview.totalUsers),
       note: `${formatNumber(overview.periodUsers)} novos no período`,
+      tone: 'success',
     },
     {
-      label: 'Histórias geradas',
+      label: 'Peças forjadas',
       value: formatNumber(overview.totalStories),
       note: `${formatNumber(overview.periodStories)} no período`,
+      tone: 'ember',
     },
     {
       label: 'Usuários ativos',
@@ -228,16 +237,19 @@ function OverviewTab({ dashboard, periodLabel }) {
       label: 'Conclusões de guias',
       value: formatNumber(overview.totalLearningCompletions),
       note: `${formatNumber(overview.periodLearningCompletions)} no período`,
+      tone: 'tech',
     },
     {
       label: 'Gerações com sucesso',
       value: formatNumber(overview.generationSuccess),
       note: periodLabel,
+      tone: 'success',
     },
     {
       label: 'Falhas de geração',
       value: formatNumber(overview.generationFailures),
       note: `Taxa de falha: ${formatPercent(overview.failureRate)}`,
+      tone: 'danger',
     },
     {
       label: 'Eventos registrados',
@@ -334,10 +346,26 @@ function UsageTab({ usage }) {
       <section className="admin-metrics-section">
         <p className="admin-section-label">Uso da ferramenta</p>
         <div className="admin-metrics-grid">
-          <MetricCard label="Gerações com sucesso" value={formatNumber(usage.operational.total_generate_success)} />
-          <MetricCard label="Falhas de geração" value={formatNumber(usage.operational.total_generate_failed)} />
-          <MetricCard label="Taxa de falha" value={formatPercent(usage.operational.generation_failure_rate)} />
-          <MetricCard label="Atingiram limite Free" value={formatNumber(usage.operational.users_reached_free_limit)} />
+          <MetricCard
+            label="Gerações com sucesso"
+            value={formatNumber(usage.operational.total_generate_success)}
+            tone="success"
+          />
+          <MetricCard
+            label="Falhas de geração"
+            value={formatNumber(usage.operational.total_generate_failed)}
+            tone="danger"
+          />
+          <MetricCard
+            label="Taxa de falha"
+            value={formatPercent(usage.operational.generation_failure_rate)}
+            tone="warning"
+          />
+          <MetricCard
+            label="Atingiram limite Free"
+            value={formatNumber(usage.operational.users_reached_free_limit)}
+            tone="tech"
+          />
           <MetricCard
             label="Workspace sem geração"
             value={formatPercent(usage.operational.tool_without_generation_rate)}
@@ -439,7 +467,7 @@ function StoryDetail({ story, onClose }) {
   ]
 
   return (
-    <section className="admin-story-detail" aria-label="Detalhe da história selecionada">
+    <section className="admin-story-detail" aria-label="Detalhe da peça selecionada">
       <div className="admin-story-detail__header">
         <div>
           <p className="admin-section-label">Detalhe somente leitura</p>
@@ -471,18 +499,18 @@ function StoriesTab({ data, search, selectedStory, onSearchChange, onPageChange,
       <AdminSectionToolbar>
         <SearchField
           id="admin-stories-search"
-          label="Buscar histórias"
+          label="Buscar peças"
           placeholder="Título, contexto ou conteúdo"
           value={search}
           onChange={onSearchChange}
         />
       </AdminSectionToolbar>
       <DataTable
-        title="Histórias recentes"
+        title="Peças recentes"
         description="Conteúdo completo disponível apenas no detalhe somente leitura."
         columns={['Título', 'Usuário', 'Status', 'Versão', 'Criada em', 'Detalhe']}
         rows={data.rows}
-        emptyMessage="Nenhuma história encontrada."
+        emptyMessage="Nenhuma peça encontrada."
         renderRow={(story) => (
           <tr key={story.id}>
             <td>{story.title}</td>
@@ -554,6 +582,7 @@ function LearningTab({ data, search, onSearchChange, onPageChange }) {
 }
 
 function AdminPage() {
+  const { setTopbarStatus } = useOutletContext() ?? {}
   const [period, setPeriod] = useState('7d')
   const [activeTab, setActiveTab] = useState('overview')
   const [search, setSearch] = useState({
@@ -616,6 +645,26 @@ function AdminPage() {
     [period],
   )
 
+  const activeTabLabel = useMemo(
+    () => adminTabs.find((tab) => tab.id === activeTab)?.label ?? 'Visão geral',
+    [activeTab],
+  )
+
+  useEffect(() => {
+    if (typeof setTopbarStatus !== 'function') return
+
+    setTopbarStatus({
+      label: 'Administração',
+      title: activeTabLabel,
+      pills: [
+        { text: periodLabel },
+        { text: 'Somente leitura' },
+      ],
+    })
+
+    return () => setTopbarStatus(null)
+  }, [activeTabLabel, periodLabel, setTopbarStatus])
+
   const selectedStory = useMemo(() => {
     if (!selectedStoryId || !dashboard?.stories?.rows) return null
     return dashboard.stories.rows.find((story) => story.id === selectedStoryId) ?? null
@@ -634,16 +683,19 @@ function AdminPage() {
     <div className="admin-page">
       <header className="admin-page__header">
         <div className="admin-page__header-copy">
-          <p className="admin-page__eyebrow">Administração</p>
-          <h1 className="admin-page__title">Painel de produto — {APP_NAME}</h1>
+          <div className="admin-page__kicker-row">
+            <p className="admin-page__eyebrow">Administração</p>
+            <span className="admin-page__status-pill">Somente leitura</span>
+          </div>
+          <h1 className="admin-page__title">Sala de controle da Forja</h1>
           <p className="admin-page__description">
-            Operação, aquisição, uso da ferramenta e aprendizado em uma visão somente leitura.
+            Operação, aquisição, uso da ferramenta e aprendizado do {APP_NAME} em uma visão de produto.
           </p>
         </div>
 
-        <div className="admin-page__filter">
+        <div className="admin-page__filter" aria-label="Filtro do painel administrativo">
           <label className="admin-page__filter-label" htmlFor="period-select">
-            Período
+            Período analisado
           </label>
           <select
             id="period-select"
@@ -666,7 +718,12 @@ function AdminPage() {
       {error && !isLoading ? <StateCard tone="error">{error}</StateCard> : null}
 
       {!isLoading && !error && dashboard ? (
-        <div className="admin-tab-panel">
+        <div
+          id={`admin-panel-${activeTab}`}
+          className="admin-tab-panel"
+          role="tabpanel"
+          aria-labelledby={`admin-tab-${activeTab}`}
+        >
           {activeTab === 'overview' ? <OverviewTab dashboard={dashboard} periodLabel={periodLabel} /> : null}
           {activeTab === 'leads' ? (
             <LeadsTab

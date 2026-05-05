@@ -157,6 +157,7 @@ export function useUserStoryWorkspace() {
   const [workspaceError, setWorkspaceError] = useState('')
   const [selectedStoryId, setSelectedStoryId] = useState(null)
   const [selectedStoryGroupId, setSelectedStoryGroupId] = useState(null)
+  const [selectedStoryOwnerId, setSelectedStoryOwnerId] = useState(null)
   const [selectedStoryProjectId, setSelectedStoryProjectId] = useState(null)
   const [selectedStoryTitle, setSelectedStoryTitle] = useState('')
   const [selectedBaseInput, setSelectedBaseInput] = useState({ context: '', requirements: '' })
@@ -167,6 +168,7 @@ export function useUserStoryWorkspace() {
   const [userPlan, setUserPlan] = useState('free')
 
   const isEditing = Boolean(selectedStoryId)
+  const canEditSelectedStory = Boolean(isEditing && selectedStoryOwnerId === userId)
   const isPremium = userPlan === 'premium'
   const remainingGenerations = Math.max(0, FREE_GENERATION_LIMIT - usageCount)
   const hasReachedLimit = !isPremium && usageCount >= FREE_GENERATION_LIMIT
@@ -272,6 +274,7 @@ export function useUserStoryWorkspace() {
     }))
     setResult(mapped)
     setSelectedStoryTitle(story.title ?? mapped.title ?? '')
+    setSelectedStoryOwnerId(story.user_id ?? null)
     setSelectedStoryProjectId(story.project_id ?? null)
     setEditDraft({
       title: mapped.title,
@@ -313,6 +316,7 @@ export function useUserStoryWorkspace() {
   function handleResetToCreate() {
     setSelectedStoryId(null)
     setSelectedStoryGroupId(null)
+    setSelectedStoryOwnerId(null)
     setSelectedStoryProjectId(null)
     setSelectedStoryTitle('')
     setSelectedBaseInput({ context: '', requirements: '' })
@@ -345,6 +349,7 @@ export function useUserStoryWorkspace() {
     const story = response.data
     setSelectedStoryId(story.id)
     setSelectedStoryGroupId(story.story_group_id ?? story.id)
+    setSelectedStoryOwnerId(story.user_id ?? null)
     setSelectedStoryProjectId(story.project_id ?? null)
     fillScreenWithStory(story)
     setIsLoadingSelection(false)
@@ -368,6 +373,7 @@ export function useUserStoryWorkspace() {
     const story = response.data
     setSelectedStoryId(story.id)
     setSelectedStoryGroupId(story.story_group_id ?? story.id)
+    setSelectedStoryOwnerId(story.user_id ?? null)
     setSelectedStoryProjectId(story.project_id ?? null)
     setSelectedBaseInput({
       context: story.input_context ?? '',
@@ -403,6 +409,10 @@ export function useUserStoryWorkspace() {
 
   async function handleSaveEdits() {
     if (!userId || !selectedStoryId || !result) return
+    if (!canEditSelectedStory) {
+      setSaveMessage('Apenas quem criou esta história pode salvar alterações nela.')
+      return
+    }
 
     const safeTitle = editDraft.title.trim()
     const safeUserStory = editDraft.user_story.trim()
@@ -492,7 +502,7 @@ export function useUserStoryWorkspace() {
     const isSameBaseInput =
       selectedBaseInput.context === contextTrimmed &&
       selectedBaseInput.requirements === requirementsTrimmed
-    const shouldUseCurrentGroup = isEditing && isSameBaseInput
+    const shouldUseCurrentGroup = isEditing && isSameBaseInput && canEditSelectedStory
 
     try {
       trackEvent({
@@ -563,6 +573,7 @@ export function useUserStoryWorkspace() {
       const persisted = actionResult.data[0]
       setSelectedStoryId(persisted.id)
       setSelectedStoryGroupId(persisted.story_group_id ?? persisted.id)
+      setSelectedStoryOwnerId(persisted.user_id ?? userId)
       setSelectedStoryProjectId(persisted.project_id ?? null)
       setSelectedStoryTitle(persisted.title ?? generated.title ?? '')
       setSelectedBaseInput({
@@ -646,6 +657,11 @@ export function useUserStoryWorkspace() {
       return false
     }
 
+    if (!canEditSelectedStory) {
+      setSaveMessage('Apenas quem criou esta história pode gerar uma versão refinada dela.')
+      return false
+    }
+
     const currentStory = {
       ...result,
       title: editDraft.title?.trim() || result.title,
@@ -710,6 +726,7 @@ export function useUserStoryWorkspace() {
     editDraft,
     formValues,
     freeGenerationLimit: FREE_GENERATION_LIMIT,
+    canEditSelectedStory,
     handleCopy,
     handleEditDraftChange,
     handleFieldChange,

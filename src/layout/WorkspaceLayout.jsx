@@ -12,6 +12,7 @@ function WorkspaceLayout() {
   const isSidebarOpen = sidebarOpenPath === location.pathname
   const isForgeWorkspace =
     location.pathname === '/tool' ||
+    location.pathname === '/tool/admin' ||
     location.pathname === '/historico' ||
     location.pathname.startsWith('/projetos')
 

@@ -6,18 +6,23 @@ function ProjectContextPanel({
   selectedProjectName = '',
   onSelectProject,
   onCreateProject,
+  onAssignToSelectedProject,
   onForgeStandalone,
   isCreating = false,
   isLoading = false,
+  isAssigning = false,
   isSubmitting = false,
   hasGeneratedStory = false,
   canAssignGeneratedStory = false,
+  canAssignToSelectedProject = false,
   actionMessage = '',
 }) {
   const [isCreatingProject, setIsCreatingProject] = useState(false)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const isStandalone = !selectedProjectId
+  const canOfferGeneratedStoryOrganization =
+    hasGeneratedStory && isStandalone && canAssignGeneratedStory
 
   async function handleCreateProject(event) {
     event.preventDefault()
@@ -77,18 +82,28 @@ function ProjectContextPanel({
               Forjar sem projeto
             </button>
           ) : null}
+          {canAssignToSelectedProject ? (
+            <button
+              type="button"
+              className="btn btn-secondary btn-small"
+              onClick={onAssignToSelectedProject}
+              disabled={isAssigning || isSubmitting}
+            >
+              {isAssigning ? 'Organizando...' : 'Organizar neste projeto'}
+            </button>
+          ) : null}
           <button
             type="button"
             className="btn btn-ghost btn-small"
             onClick={() => setIsCreatingProject((current) => !current)}
             disabled={isSubmitting}
           >
-            {hasGeneratedStory && isStandalone ? 'Organizar em projeto' : 'Novo projeto'}
+            {canOfferGeneratedStoryOrganization ? 'Organizar em projeto' : 'Novo projeto'}
           </button>
         </div>
       </div>
 
-      {hasGeneratedStory && isStandalone ? (
+      {canOfferGeneratedStoryOrganization ? (
         <p className="project-context-panel__hint">
           Quer organizar essa história em um projeto? Crie um projeto agora ou siga com a peça avulsa.
         </p>

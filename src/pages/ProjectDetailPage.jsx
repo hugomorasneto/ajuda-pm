@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useOutletContext, useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { getProjectById } from '../services/projectsService'
+import {
+  addProjectMemberByEmail,
+  checkCanManageProject,
+  getProjectById,
+  listProjectMembers,
+} from '../services/projectsService'
+import { listStoryHistoryGroups } from '../services/userStoriesService'
 import {
   addTeamMemberByEmail,
   createTeam,
@@ -15,11 +21,41 @@ const TEAM_MEMBER_ROLES = [
   { value: 'viewer', label: 'Visualizador' },
 ]
 
+const PROJECT_MEMBER_ROLES = [
+  { value: 'member', label: 'Membro' },
+  { value: 'admin', label: 'Admin' },
+  { value: 'viewer', label: 'Visualizador' },
+]
+
 const ROLE_LABELS = {
   owner: 'Owner',
   admin: 'Admin',
   member: 'Membro',
   viewer: 'Visualizador',
+}
+
+const ESTIMATION_STATUS_LABELS = {
+  created: 'Criada',
+  refining: 'Em refinamento',
+  ready_for_estimation: 'Pronta para estimar',
+  estimated: 'Estimada',
+}
+
+function formatProjectDateTime(value) {
+  if (!value) return '-'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '-'
+
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+
+function getEstimationStatusLabel(status) {
+  return ESTIMATION_STATUS_LABELS[status] ?? 'Criada'
 }
 
 function TeamMembersPanel({ team, userId }) {
@@ -135,26 +171,52 @@ function ProjectDetailPage() {
   const { setTopbarStatus } = useOutletContext() ?? {}
   const [project, setProject] = useState(null)
   const [teams, setTeams] = useState([])
+  const [projectMembers, setProjectMembers] = useState([])
+  const [projectStories, setProjectStories] = useState([])
+  const [projectStoryCount, setProjectStoryCount] = useState(0)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [memberEmail, setMemberEmail] = useState('')
+  const [memberRole, setMemberRole] = useState('member')
   const [isLoading, setIsLoading] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
+  const [isAddingProjectMember, setIsAddingProjectMember] = useState(false)
+  const [canManageProjectMembers, setCanManageProjectMembers] = useState(false)
   const [message, setMessage] = useState('')
+  const [memberMessage, setMemberMessage] = useState('')
   const [notFound, setNotFound] = useState(false)
 
   const teamsLabel = useMemo(
     () => `${teams.length} ${teams.length === 1 ? 'time' : 'times'}`,
     [teams.length],
   )
+  const storiesLabel = useMemo(
+    () => `${projectStoryCount} ${projectStoryCount === 1 ? 'história' : 'histórias'}`,
+    [projectStoryCount],
+  )
+  const membersLabel = useMemo(
+    () => `${projectMembers.length} ${projectMembers.length === 1 ? 'membro' : 'membros'}`,
+    [projectMembers.length],
+  )
 
   const loadProject = useCallback(async () => {
     if (!projectId || !userId) return
 
     setIsLoading(true)
-    const [projectResponse, teamsResponse] = await Promise.all([
-      getProjectById({ projectId, userId }),
-      listTeamsByProject({ projectId, userId }),
-    ])
+    const [projectResponse, teamsResponse, storiesResponse, membersResponse, manageResponse] =
+      await Promise.all([
+        getProjectById({ projectId, userId }),
+        listTeamsByProject({ projectId, userId }),
+        listStoryHistoryGroups({
+          userId,
+          projectFilter: 'project',
+          projectId,
+          page: 1,
+          pageSize: 6,
+        }),
+        listProjectMembers({ projectId, userId }),
+        checkCanManageProject({ projectId, userId }),
+      ])
     setIsLoading(false)
 
     if (projectResponse.success && projectResponse.data) {
@@ -167,6 +229,22 @@ function ProjectDetailPage() {
     if (teamsResponse.success) {
       setTeams(teamsResponse.data ?? [])
     }
+
+    if (storiesResponse.success) {
+      setProjectStories(storiesResponse.data ?? [])
+      setProjectStoryCount(storiesResponse.totalCount ?? 0)
+    } else {
+      setProjectStories([])
+      setProjectStoryCount(0)
+    }
+
+    if (membersResponse.success) {
+      setProjectMembers(membersResponse.data ?? [])
+    } else {
+      setProjectMembers([])
+    }
+
+    setCanManageProjectMembers(manageResponse.success ? Boolean(manageResponse.data) : false)
   }, [projectId, userId])
 
   useEffect(() => {
@@ -184,17 +262,25 @@ function ProjectDetailPage() {
       label: 'Projeto',
       title: project?.name ?? 'Projeto',
       pills: [
+        { text: storiesLabel },
+        { text: membersLabel },
         { text: teamsLabel },
         { text: 'Times avançados' },
       ],
     })
 
     return () => setTopbarStatus(null)
-  }, [project?.name, setTopbarStatus, teamsLabel])
+  }, [membersLabel, project?.name, setTopbarStatus, storiesLabel, teamsLabel])
 
   async function handleCreateTeam(event) {
     event.preventDefault()
     setMessage('')
+
+    if (!canManageProjectMembers) {
+      setMessage('Apenas responsáveis e administradores podem criar times neste projeto.')
+      return
+    }
+
     setIsCreating(true)
 
     const response = await createTeam({
@@ -216,6 +302,35 @@ function ProjectDetailPage() {
     await loadProject()
   }
 
+  async function handleAddProjectMember(event) {
+    event.preventDefault()
+    setMemberMessage('')
+
+    if (!canManageProjectMembers) {
+      setMemberMessage('Apenas responsáveis e administradores podem adicionar membros ao projeto.')
+      return
+    }
+
+    setIsAddingProjectMember(true)
+    const response = await addProjectMemberByEmail({
+      projectId,
+      email: memberEmail,
+      role: memberRole,
+      userId,
+    })
+    setIsAddingProjectMember(false)
+
+    if (!response.success) {
+      setMemberMessage(response.error?.message ?? 'Não foi possível adicionar o membro agora.')
+      return
+    }
+
+    setMemberEmail('')
+    setMemberRole('member')
+    setMemberMessage('Membro adicionado ao projeto.')
+    await loadProject()
+  }
+
   if (notFound) {
     return <Navigate to="/projetos" replace />
   }
@@ -234,9 +349,110 @@ function ProjectDetailPage() {
           <Link className="btn btn-secondary btn-small" to="/projetos">
             Voltar para projetos
           </Link>
-          <Link className="btn btn-primary btn-small" to="/tool">
+          <Link className="btn btn-primary btn-small" to={`/tool?projectId=${projectId}`}>
             Abrir Bancada
           </Link>
+        </div>
+      </section>
+
+      <section className="panel project-detail-page__stories" aria-label="Histórias vinculadas ao projeto">
+        <div className="projects-page__section-header">
+          <div>
+            <p className="projects-page__eyebrow">Histórias do projeto</p>
+            <h2>{storiesLabel}</h2>
+            <p>Últimas peças forjadas com este projeto como contexto.</p>
+          </div>
+          <Link className="btn btn-primary btn-small" to={`/tool?projectId=${projectId}`}>
+            Forjar neste projeto
+          </Link>
+        </div>
+
+        {isLoading ? <p className="projects-page__state">Carregando histórias...</p> : null}
+        {!isLoading && projectStories.length === 0 ? (
+          <div className="projects-page__empty">
+            <h3>Nenhuma história vinculada ainda</h3>
+            <p>Abra a Bancada com este projeto selecionado ou organize uma peça avulsa quando fizer sentido.</p>
+          </div>
+        ) : null}
+
+        <div className="project-detail-page__story-list">
+          {projectStories.map((story) => (
+            <article key={story.id} className="project-detail-page__story">
+              <div>
+                <h3>{story.title}</h3>
+                <p>{story.input_context || story.user_story || 'Sem descrição.'}</p>
+              </div>
+              <div className="project-detail-page__story-meta">
+                <span>{formatProjectDateTime(story.created_at)}</span>
+                <span>{getEstimationStatusLabel(story.estimation_status)}</span>
+                <Link className="btn btn-secondary btn-small" to={`/tool?storyId=${story.id}`}>
+                  Abrir na Bancada
+                </Link>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="panel project-detail-page__members" aria-label="Membros do projeto">
+        <div className="projects-page__section-header">
+          <div>
+            <p className="projects-page__eyebrow">Membros do projeto</p>
+            <h2>{membersLabel}</h2>
+            <p>Pessoas com acesso ao contexto, histórias vinculadas e times deste projeto.</p>
+          </div>
+        </div>
+
+        {canManageProjectMembers ? (
+          <form className="project-detail-page__member-form" onSubmit={handleAddProjectMember}>
+            <label className="projects-page__field">
+              <span>E-mail cadastrado</span>
+              <input
+                type="email"
+                value={memberEmail}
+                onChange={(event) => setMemberEmail(event.target.value)}
+                placeholder="pessoa@empresa.com"
+                disabled={isAddingProjectMember || isLoading}
+              />
+            </label>
+            <label className="projects-page__field">
+              <span>Papel</span>
+              <select
+                value={memberRole}
+                onChange={(event) => setMemberRole(event.target.value)}
+                disabled={isAddingProjectMember || isLoading}
+              >
+                {PROJECT_MEMBER_ROLES.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="submit"
+              className="btn btn-secondary btn-small"
+              disabled={isAddingProjectMember || isLoading}
+            >
+              {isAddingProjectMember ? 'Adicionando...' : 'Adicionar membro'}
+            </button>
+          </form>
+        ) : (
+          <p className="projects-page__state">
+            Você pode consultar os membros. Apenas responsáveis e administradores adicionam novas pessoas.
+          </p>
+        )}
+
+        {memberMessage ? <p className="projects-page__message">{memberMessage}</p> : null}
+        {isLoading ? <p className="projects-page__state">Carregando membros...</p> : null}
+
+        <div className="project-detail-page__member-list">
+          {projectMembers.map((member) => (
+            <div key={member.user_id} className="project-detail-page__member">
+              <span>{member.email}</span>
+              <strong>{ROLE_LABELS[member.role] ?? member.role}</strong>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -244,7 +460,10 @@ function ProjectDetailPage() {
         <section className="panel projects-page__form-card" aria-label="Criar time no projeto">
           <p className="projects-page__eyebrow">Camada colaborativa</p>
           <h2>Criar time</h2>
-          <p>Use times quando o projeto precisar reunir pessoas para colaboração futura.</p>
+          <p>
+            Use times quando o projeto precisar reunir pessoas para colaboração futura.
+            Apenas responsáveis e administradores criam times.
+          </p>
 
           <form className="projects-page__form" onSubmit={handleCreateTeam}>
             <label className="projects-page__field">
@@ -254,7 +473,7 @@ function ProjectDetailPage() {
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 placeholder="Ex.: Guilda de Checkout"
-                disabled={isCreating || isLoading}
+                disabled={isCreating || isLoading || !canManageProjectMembers}
               />
             </label>
 
@@ -265,11 +484,15 @@ function ProjectDetailPage() {
                 onChange={(event) => setDescription(event.target.value)}
                 placeholder="Descreva responsabilidade, squad ou frente de trabalho."
                 rows={4}
-                disabled={isCreating || isLoading}
+                disabled={isCreating || isLoading || !canManageProjectMembers}
               />
             </label>
 
-            <button type="submit" className="btn btn-primary" disabled={isCreating || isLoading}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={isCreating || isLoading || !canManageProjectMembers}
+            >
               {isCreating ? 'Criando time...' : 'Criar time'}
             </button>
           </form>

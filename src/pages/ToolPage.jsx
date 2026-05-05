@@ -33,6 +33,7 @@ function ToolPage() {
   const [mobileTab, setMobileTab] = useState('entrada')
   const [dismissedOnboardingKey, setDismissedOnboardingKey] = useState(null)
   const [searchParams] = useSearchParams()
+  const projectIdFromQuery = searchParams.get('projectId')
   const loadedQueryStoryIdRef = useRef(null)
   const { user } = useAuth()
   const userId = user?.id ?? null
@@ -45,6 +46,7 @@ function ToolPage() {
 
   const {
     activeStoryTitle,
+    canEditSelectedStory,
     copyMessage,
     editDraft,
     formValues,
@@ -102,6 +104,18 @@ function ToolPage() {
 
     return () => clearTimeout(timerId)
   }, [selectedStoryId, selectedStoryProjectId])
+
+  useEffect(() => {
+    if (!projectIdFromQuery || projects.length === 0 || selectedStoryId) return
+    if (!projects.some((project) => project.id === projectIdFromQuery)) return
+    if (selectedProjectId === projectIdFromQuery) return
+
+    const timerId = setTimeout(() => {
+      setSelectedProjectId(projectIdFromQuery)
+    }, 0)
+
+    return () => clearTimeout(timerId)
+  }, [projectIdFromQuery, projects, selectedProjectId, selectedStoryId])
 
   function dismissOnboarding() {
     if (typeof window !== 'undefined' && onboardingStorageKey) {
@@ -190,6 +204,20 @@ function ToolPage() {
     return handleSubmitStory({ projectId: selectedProjectId || null })
   }
 
+  async function handleAssignToSelectedProject() {
+    if (!selectedProjectId) return false
+
+    setProjectActionMessage('')
+    const assigned = await handleAssignSelectedStoryToProject(selectedProjectId)
+    setProjectActionMessage(
+      assigned
+        ? 'História organizada no projeto selecionado.'
+        : 'Não foi possível organizar a história agora.',
+    )
+
+    return assigned
+  }
+
   const hasDraft = Boolean(
     formValues.problemContext.trim() ||
       formValues.requirements.trim() ||
@@ -253,11 +281,11 @@ function ToolPage() {
   const documentCanvas = showBlockingLoadingState ? (
     <WorkspaceLoadingState mode={isLoadingSelection ? 'selection' : 'generate'} />
   ) : showBlockingErrorState ? (
-    <WorkspaceErrorState
-      message={workspaceError}
-      canRetry={Boolean(formValues.problemContext.trim() && formValues.requirements.trim())}
-      onRetry={handleSubmitStory}
-    />
+      <WorkspaceErrorState
+        message={workspaceError}
+        canRetry={Boolean(formValues.problemContext.trim() && formValues.requirements.trim())}
+        onRetry={handleSubmitWithProject}
+      />
   ) : showEmptyState ? (
     <WorkspaceEmptyState hasDraft={hasDraft} onApplyTemplate={applyTemplateToBriefing} />
   ) : (
@@ -270,7 +298,7 @@ function ToolPage() {
       onEditDraftChange={handleEditDraftChange}
       onSaveEdits={handleSaveEdits}
       isSavingEdits={isSavingEdits}
-      canEdit={isEditing}
+      canEdit={canEditSelectedStory}
       onRefineStory={handleRefineStory}
       isRefining={isSubmitting}
     />
@@ -320,12 +348,23 @@ function ToolPage() {
             selectedProjectName={selectedProjectName}
             onSelectProject={handleProjectSelect}
             onCreateProject={handleCreateProject}
+            onAssignToSelectedProject={handleAssignToSelectedProject}
             onForgeStandalone={handleSubmitWithProject}
             isCreating={isCreatingProject}
+            isAssigning={isSavingEdits}
             isLoading={isLoadingProjects}
             isSubmitting={isSubmitting}
             hasGeneratedStory={Boolean(result)}
-            canAssignGeneratedStory={Boolean(result && selectedStoryId && !selectedStoryProjectId)}
+            canAssignGeneratedStory={Boolean(
+              result && selectedStoryId && !selectedStoryProjectId && canEditSelectedStory,
+            )}
+            canAssignToSelectedProject={Boolean(
+              result &&
+                selectedStoryId &&
+                canEditSelectedStory &&
+                selectedProjectId &&
+                selectedProjectId !== selectedStoryProjectId,
+            )}
             actionMessage={projectActionMessage}
           />
           <BriefComposer
@@ -336,7 +375,7 @@ function ToolPage() {
             onSubmit={handleSubmitWithProject}
             onReset={handleResetToCreate}
             isSubmitting={isSubmitting}
-            isEditing={isEditing}
+            isEditing={isEditing && canEditSelectedStory}
             isGenerated={Boolean(result)}
             activeStoryTitle={activeStoryTitle}
             hasAdjustment={Boolean(formValues.adjustment.trim())}

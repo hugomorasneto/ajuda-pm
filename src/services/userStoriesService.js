@@ -269,7 +269,6 @@ export async function listStoryVersions({ storyGroupId, userId, limit = 20 } = {
     const { data, error } = await supabase
       .from('user_stories')
       .select(baseStoryColumns)
-      .eq('user_id', userId)
       .eq('story_group_id', storyGroupId)
       .order('version_number', { ascending: false })
       .limit(limit)
@@ -296,7 +295,6 @@ export async function getUserStoryById(id, userId) {
       .from('user_stories')
       .select(baseStoryColumns)
       .eq('id', id)
-      .eq('user_id', userId)
       .single()
 
     if (error) {

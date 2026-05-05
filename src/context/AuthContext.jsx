@@ -2,7 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { AuthContext } from './authContextValue'
 
-const EAGER_AUTH_PATH_PREFIXES = ['/login', '/signup', '/check-email', '/tool', '/admin']
+const EAGER_AUTH_PATH_PREFIXES = [
+  '/login',
+  '/signup',
+  '/check-email',
+  '/tool',
+  '/historico',
+  '/projetos',
+  '/admin',
+]
 const IDLE_BOOTSTRAP_DELAY_MS = 1200
 
 function requiresImmediateAuthBootstrap(pathname) {

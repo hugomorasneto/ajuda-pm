@@ -22,12 +22,12 @@ function HomePage() {
   usePageMetadata({
     title: 'ProdForge | Workspace IA para Product Managers',
     description:
-      'Transforme contexto solto em user stories claras, critérios de aceite, briefing expandido e materiais prontos para desenvolvimento com IA.',
+      'Transforme briefings confusos em user stories claras, completas e prontas para dev, QA e produto.',
     ogTitle: 'ProdForge | Workspace IA para Product Managers',
     ogDescription:
-      'Crie user stories, critérios de aceite, briefings e materiais para desenvolvimento em segundos com IA.',
+      'Transforme briefings confusos em user stories claras, completas e prontas para dev, QA e produto.',
     twitterTitle: 'ProdForge | Workspace IA para Product Managers',
-    twitterDescription: 'Transforme ideias soltas em histórias de usuário prontas para dev, QA e produto.',
+    twitterDescription: 'Transforme briefings confusos em user stories claras, completas e prontas para dev, QA e produto.',
     path: '/',
   })
 

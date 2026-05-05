@@ -935,6 +935,13 @@
   gap: var(--space-1);
 }
 
+.admin-page__kicker-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
 .admin-page__eyebrow {
   font-size: var(--text-label);
   font-weight: 700;
@@ -942,6 +949,21 @@
   text-transform: uppercase;
   color: var(--color-accent);
   margin: 0;
+}
+
+.admin-page__status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
+  border-radius: 999px;
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  font-size: var(--text-label);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .admin-page__title {
@@ -1144,14 +1166,50 @@
 }
 
 .admin-metric-card {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  align-items: flex-start;
+  gap: var(--space-3);
   padding: var(--space-4) var(--space-5);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   transition: border-color 0.15s;
+}
+
+.admin-metric-card > div {
+  min-width: 0;
+}
+
+.admin-metric-card__signal {
+  width: 8px;
+  height: 8px;
+  margin-top: 7px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--admin-metric-accent, var(--color-accent));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--admin-metric-accent, var(--color-accent)) 12%, transparent);
+}
+
+.admin-metric-card--ember,
+.admin-metric-card--neutral {
+  --admin-metric-accent: var(--color-accent);
+}
+
+.admin-metric-card--tech {
+  --admin-metric-accent: #2563eb;
+}
+
+.admin-metric-card--success {
+  --admin-metric-accent: var(--color-success);
+}
+
+.admin-metric-card--warning {
+  --admin-metric-accent: var(--color-warning);
+}
+
+.admin-metric-card--danger {
+  --admin-metric-accent: var(--color-error);
 }
 
 .admin-metric-card:hover {
@@ -1421,5 +1479,360 @@
   .admin-tabs {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ============================================================
+   ADMIN PAGE — FORGE THEME
+   ============================================================ */
+
+.workspace-shell--forge .admin-page {
+  width: min(100%, 1360px);
+  max-width: 1360px;
+  gap: var(--forge-space-5);
+  color: var(--forge-text-secondary);
+}
+
+.workspace-shell--forge .admin-page__header {
+  position: relative;
+  align-items: center;
+  padding: var(--forge-space-5);
+  overflow: hidden;
+  border: 1px solid var(--forge-border);
+  border-radius: var(--forge-radius-md);
+  background:
+    linear-gradient(135deg, rgba(255,122,26,0.11), transparent 34%),
+    linear-gradient(90deg, transparent 0%, rgba(77,163,255,0.08) 100%),
+    var(--forge-gradient-panel);
+  box-shadow: var(--forge-shadow-panel);
+}
+
+.workspace-shell--forge .admin-page__header::after {
+  content: '';
+  position: absolute;
+  inset: auto var(--forge-space-5) 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(255,122,26,0.68), rgba(77,163,255,0.44), transparent);
+  opacity: 0.82;
+}
+
+.workspace-shell--forge .admin-page__header-copy,
+.workspace-shell--forge .admin-page__filter {
+  position: relative;
+  z-index: 1;
+}
+
+.workspace-shell--forge .admin-page__header-copy {
+  gap: var(--forge-space-2);
+  max-width: 48rem;
+}
+
+.workspace-shell--forge .admin-page__eyebrow,
+.workspace-shell--forge .admin-section-label {
+  color: var(--forge-ember-hover);
+}
+
+.workspace-shell--forge .admin-page__status-pill {
+  border-color: var(--forge-border-tech);
+  background: var(--forge-tech-soft);
+  color: #C7E1FF;
+  box-shadow: var(--forge-glow-tech-sm);
+}
+
+.workspace-shell--forge .admin-page__title,
+.workspace-shell--forge .admin-table-section__title,
+.workspace-shell--forge .admin-story-detail__header h2,
+.workspace-shell--forge .admin-story-detail__block h3,
+.workspace-shell--forge .admin-metric-card__value,
+.workspace-shell--forge .admin-percent-bar,
+.workspace-shell--forge .admin-inline-note strong {
+  color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .admin-page__title {
+  font-size: clamp(1.3rem, 2.3vw, 2rem);
+  letter-spacing: 0;
+}
+
+.workspace-shell--forge .admin-page__description,
+.workspace-shell--forge .admin-table-section__desc,
+.workspace-shell--forge .admin-metric-card__label,
+.workspace-shell--forge .admin-metric-card__note,
+.workspace-shell--forge .admin-pagination p,
+.workspace-shell--forge .admin-inline-note,
+.workspace-shell--forge .admin-story-detail__header p:last-child,
+.workspace-shell--forge .admin-story-detail__block p,
+.workspace-shell--forge .admin-table__empty {
+  color: var(--forge-text-secondary) !important;
+}
+
+.workspace-shell--forge .admin-page__filter {
+  align-items: stretch;
+  padding: var(--forge-space-3);
+  border: 1px solid var(--forge-border);
+  border-radius: var(--forge-radius-sm);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.035), transparent),
+    var(--forge-surface-inset);
+  box-shadow: var(--forge-shadow-soft);
+}
+
+.workspace-shell--forge .admin-page__filter-label,
+.workspace-shell--forge .admin-search span {
+  color: var(--forge-text-muted);
+}
+
+.workspace-shell--forge .admin-page__filter-select,
+.workspace-shell--forge .admin-search input {
+  min-height: 40px;
+  border-color: var(--forge-border);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.025), transparent),
+    var(--forge-surface-inset);
+  color: var(--forge-text-primary);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.workspace-shell--forge .admin-search input::placeholder {
+  color: var(--forge-placeholder);
+}
+
+.workspace-shell--forge .admin-search input:focus,
+.workspace-shell--forge .admin-page__filter-select:focus {
+  border-color: var(--forge-border-tech);
+  outline: 2px solid transparent;
+  box-shadow:
+    0 0 0 1px var(--forge-focus-ring-offset),
+    0 0 0 4px var(--forge-focus-ring),
+    inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.workspace-shell--forge .admin-tabs {
+  gap: var(--forge-space-2);
+  padding: var(--forge-space-2);
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  border-color: var(--forge-border);
+  background: var(--forge-surface-inset);
+  box-shadow: var(--forge-shadow-soft);
+  scrollbar-width: thin;
+  scrollbar-color: var(--forge-border-strong) transparent;
+}
+
+.workspace-shell--forge .admin-tabs__button,
+.workspace-shell--forge .admin-button {
+  flex: 0 0 auto;
+  border-color: var(--forge-border);
+  background: var(--forge-gradient-metal);
+  color: var(--forge-text-primary);
+  box-shadow: var(--forge-shadow-soft);
+}
+
+.workspace-shell--forge .admin-tabs__button:hover,
+.workspace-shell--forge .admin-button:hover:not(:disabled) {
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(90deg, var(--forge-tech-soft), transparent),
+    var(--forge-surface-2);
+  color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .admin-tabs__button--active {
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(90deg, var(--forge-ember-soft), transparent),
+    var(--forge-surface-2);
+  color: var(--forge-text-primary);
+  box-shadow: var(--forge-glow-ember-sm), var(--forge-shadow-soft);
+}
+
+.workspace-shell--forge .admin-tabs__button:focus-visible,
+.workspace-shell--forge .admin-button:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow:
+    var(--forge-shadow-soft),
+    0 0 0 1px var(--forge-focus-ring-offset),
+    0 0 0 4px var(--forge-focus-ring);
+}
+
+.workspace-shell--forge .admin-tab-panel {
+  gap: var(--forge-space-5);
+}
+
+.workspace-shell--forge .admin-metrics-grid {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.workspace-shell--forge .admin-metric-card {
+  min-height: 126px;
+  border-color: var(--forge-border);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.045), transparent 44%),
+    var(--forge-gradient-panel);
+  box-shadow: var(--forge-shadow-soft);
+}
+
+.workspace-shell--forge .admin-metric-card:hover {
+  border-color: var(--forge-border-strong);
+  box-shadow: var(--forge-shadow-panel);
+}
+
+.workspace-shell--forge .admin-metric-card--ember,
+.workspace-shell--forge .admin-metric-card--neutral {
+  --admin-metric-accent: var(--forge-ember-hover);
+}
+
+.workspace-shell--forge .admin-metric-card--tech {
+  --admin-metric-accent: var(--forge-tech-hover);
+}
+
+.workspace-shell--forge .admin-metric-card--success {
+  --admin-metric-accent: var(--forge-success);
+}
+
+.workspace-shell--forge .admin-metric-card--warning {
+  --admin-metric-accent: var(--forge-warning);
+}
+
+.workspace-shell--forge .admin-metric-card--danger {
+  --admin-metric-accent: var(--forge-error);
+}
+
+.workspace-shell--forge .admin-metric-card__signal {
+  box-shadow: 0 0 16px color-mix(in srgb, var(--admin-metric-accent) 34%, transparent);
+}
+
+.workspace-shell--forge .admin-metric-card__value {
+  font-size: clamp(1.55rem, 2.3vw, 2.05rem);
+  letter-spacing: 0;
+}
+
+.workspace-shell--forge .admin-table-section,
+.workspace-shell--forge .admin-pagination,
+.workspace-shell--forge .admin-story-detail,
+.workspace-shell--forge .admin-inline-note {
+  border-color: var(--forge-border);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.035), transparent 36%),
+    var(--forge-gradient-panel);
+  box-shadow: var(--forge-shadow-soft);
+}
+
+.workspace-shell--forge .admin-table-section {
+  border-radius: var(--forge-radius-md);
+}
+
+.workspace-shell--forge .admin-table-section__header,
+.workspace-shell--forge .admin-story-detail__header {
+  border-color: var(--forge-border);
+  background:
+    linear-gradient(90deg, rgba(255,122,26,0.08), transparent 48%),
+    var(--forge-surface-inset);
+}
+
+.workspace-shell--forge .admin-table thead tr {
+  background: var(--forge-surface-inset);
+}
+
+.workspace-shell--forge .admin-table th {
+  border-color: var(--forge-border);
+  color: var(--forge-text-muted);
+}
+
+.workspace-shell--forge .admin-table td {
+  border-color: var(--forge-border-subtle);
+  color: var(--forge-text-secondary);
+}
+
+.workspace-shell--forge .admin-table tbody tr:hover td {
+  background: rgba(255,255,255,0.035);
+  color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .admin-event-code,
+.workspace-shell--forge .admin-badge {
+  border: 1px solid var(--forge-border);
+  background: var(--forge-surface-inset);
+  color: var(--forge-text-secondary);
+}
+
+.workspace-shell--forge .admin-badge--strong {
+  border-color: var(--forge-border-ember);
+  background: var(--forge-ember-soft);
+  color: #FFD0A8;
+}
+
+.workspace-shell--forge .admin-percent-bar {
+  color: var(--forge-tech-hover);
+}
+
+.workspace-shell--forge .admin-inline-note {
+  border-top: 0;
+  background:
+    linear-gradient(90deg, var(--forge-tech-soft), transparent),
+    var(--forge-surface-inset);
+}
+
+.workspace-shell--forge .admin-story-detail {
+  box-shadow: var(--forge-shadow-panel);
+}
+
+.workspace-shell--forge .admin-story-detail__block {
+  border-color: var(--forge-border);
+  background: var(--forge-surface-inset);
+}
+
+.workspace-shell--forge .admin-state-card {
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(90deg, var(--forge-tech-soft), transparent),
+    var(--forge-surface-inset);
+  color: var(--forge-text-secondary);
+  box-shadow: var(--forge-glow-tech-sm), var(--forge-shadow-soft);
+}
+
+.workspace-shell--forge .admin-state-card--error {
+  border-color: rgba(255,107,99,0.36);
+  background:
+    linear-gradient(90deg, var(--forge-error-soft), transparent),
+    var(--forge-surface-inset);
+  color: #FFC7C3;
+  box-shadow: var(--forge-shadow-soft);
+}
+
+.workspace-shell--forge .admin-state-card__spinner {
+  border-color: var(--forge-border);
+  border-top-color: var(--forge-tech-hover);
+}
+
+.workspace-shell--forge .auth-loading-page .panel {
+  border: 1px solid var(--forge-border);
+  background: var(--forge-gradient-panel);
+  color: var(--forge-text-primary);
+  box-shadow: var(--forge-shadow-panel);
+}
+
+@media (max-width: 767px) {
+  .workspace-shell--forge .admin-page {
+    padding: var(--forge-space-4) var(--forge-space-3) var(--space-8);
+  }
+
+  .workspace-shell--forge .admin-page__header {
+    align-items: stretch;
+    padding: var(--forge-space-4);
+  }
+
+  .workspace-shell--forge .admin-tabs {
+    display: flex;
+  }
+
+  .workspace-shell--forge .admin-tabs__button {
+    width: auto;
+    min-width: 132px;
+  }
+
+  .workspace-shell--forge .admin-table-section__header {
+    padding: var(--forge-space-4);
   }
 }

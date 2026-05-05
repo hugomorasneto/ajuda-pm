@@ -5652,6 +5652,7 @@
 .project-context-panel__field select,
 .project-context-panel__field textarea,
 .projects-page__field input,
+.projects-page__field select,
 .projects-page__field textarea {
   width: 100%;
   border: 1px solid var(--forge-border);
@@ -5723,6 +5724,8 @@
 }
 
 .project-detail-page__actions,
+.project-detail-page__member-form,
+.project-detail-page__member,
 .project-detail-team__header,
 .project-detail-team__member-form,
 .project-detail-team__member {
@@ -5733,9 +5736,79 @@
 }
 
 .project-detail-page__teams,
+.project-detail-page__member-list,
+.project-detail-page__story-list,
 .project-detail-team__members {
   display: grid;
   gap: var(--space-3);
+}
+
+.project-detail-page__member-form {
+  margin-top: var(--space-4);
+  align-items: end;
+}
+
+.project-detail-page__member-form .projects-page__field {
+  flex: 1 1 180px;
+}
+
+.project-detail-page__member-list {
+  margin-top: var(--space-3);
+}
+
+.project-detail-page__member {
+  align-items: center;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  color: var(--forge-text-secondary);
+  background: rgba(255,255,255,0.02);
+}
+
+.project-detail-page__member strong {
+  flex: 0 0 auto;
+  color: var(--forge-tech);
+  font-size: var(--text-small);
+  font-weight: 800;
+}
+
+.project-detail-page__story-list {
+  margin-top: var(--space-4);
+}
+
+.project-detail-page__story {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border: 1px solid var(--forge-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background: var(--forge-surface-inset);
+}
+
+.project-detail-page__story h3 {
+  margin: 0;
+}
+
+.project-detail-page__story p {
+  display: -webkit-box;
+  margin-top: var(--space-2);
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.project-detail-page__story-meta {
+  display: grid;
+  justify-items: end;
+  gap: var(--space-2);
+  flex: 0 0 auto;
+}
+
+.project-detail-page__story-meta span {
+  color: var(--forge-text-muted);
+  font-size: var(--text-small);
 }
 
 .project-detail-team {
@@ -5789,6 +5862,9 @@
   .project-context-panel__form-actions,
   .projects-page__hero,
   .projects-page__item,
+  .project-detail-page__member-form,
+  .project-detail-page__member,
+  .project-detail-page__story,
   .project-detail-page__actions,
   .project-detail-team__member-form,
   .project-detail-team__member {
@@ -5796,6 +5872,7 @@
     align-items: stretch;
   }
 
+  .project-detail-page__story-meta,
   .projects-page__item-actions {
     justify-items: stretch;
   }
