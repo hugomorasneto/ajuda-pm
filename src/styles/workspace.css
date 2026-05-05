@@ -1490,6 +1490,91 @@
   color: var(--color-warning);
 }
 
+.quality-score-explainer {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-canvas-muted);
+}
+
+.quality-score-explainer__summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-1) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  list-style: none;
+}
+
+.quality-score-explainer__summary::-webkit-details-marker {
+  display: none;
+}
+
+.quality-score-explainer__summary::after {
+  content: '+';
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  align-self: center;
+  justify-self: end;
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.quality-score-explainer[open] .quality-score-explainer__summary::after {
+  content: '-';
+}
+
+.quality-score-explainer__summary:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.quality-score-explainer__eyebrow {
+  color: var(--color-accent);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.quality-score-explainer__summary strong {
+  color: var(--color-text-primary);
+  font-size: var(--text-small);
+}
+
+.quality-score-explainer__body {
+  display: grid;
+  gap: var(--space-3);
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.quality-score-explainer__body p,
+.quality-score-explainer__note {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.55;
+}
+
+.quality-score-explainer__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quality-score-explainer__list li {
+  min-height: 24px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  font-size: var(--text-small);
+  line-height: 22px;
+}
+
 /* â”€â”€ QualityScore: denominator + eyebrow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .quality-score__eyebrow {
   margin: 0;
@@ -3474,6 +3559,33 @@
 
 .workspace-shell--forge .quality-panel__section {
   border-top-color: var(--forge-border);
+}
+
+.workspace-shell--forge .quality-score-explainer {
+  border-color: var(--forge-border);
+  background:
+    linear-gradient(135deg, var(--forge-border-subtle), transparent 42%),
+    var(--forge-surface-inset);
+}
+
+.workspace-shell--forge .quality-score-explainer__eyebrow {
+  color: var(--forge-ember-hover);
+}
+
+.workspace-shell--forge .quality-score-explainer__summary strong {
+  color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .quality-score-explainer__summary::after,
+.workspace-shell--forge .quality-score-explainer__body p,
+.workspace-shell--forge .quality-score-explainer__note {
+  color: var(--forge-text-muted);
+}
+
+.workspace-shell--forge .quality-score-explainer__list li {
+  border-color: var(--forge-border);
+  background: var(--forge-surface-2);
+  color: var(--forge-text-secondary);
 }
 
 .workspace-shell--forge .quality-panel__section-icon {

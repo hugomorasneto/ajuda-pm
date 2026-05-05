@@ -79,6 +79,46 @@ function RailSection({ icon, label, description, children, placeholder = false }
   )
 }
 
+const scoreCriteria = [
+  'Clareza',
+  'Valor',
+  'User story estruturada',
+  'Critérios de aceite',
+  'Testabilidade',
+  'Exceções e regras',
+  'Gaps e trincas',
+  'Prontidão para refinamento',
+]
+
+function ScoreCriteriaDetails() {
+  return (
+    <details className="quality-score-explainer">
+      <summary className="quality-score-explainer__summary">
+        <span className="quality-score-explainer__eyebrow">Critérios avaliados</span>
+        <strong>Como este score é calculado?</strong>
+      </summary>
+
+      <div className="quality-score-explainer__body">
+        <p>
+          A nota considera sinais estruturais da story, como objetivo, formato da user story,
+          critérios de aceite observáveis e checklist de QA. Ela serve como apoio ao refinamento,
+          não como julgamento absoluto.
+        </p>
+
+        <ul className="quality-score-explainer__list" aria-label="Critérios avaliados no score">
+          {scoreCriteria.map((criterion) => (
+            <li key={criterion}>{criterion}</li>
+          ))}
+        </ul>
+
+        <p className="quality-score-explainer__note">
+          Referências: INVEST, Definition of Ready básica e QA/checklist de validação.
+        </p>
+      </div>
+    </details>
+  )
+}
+
 function buildInspectionSummary(story) {
   return {
     panelStatus: story ? 'Peça em inspeção' : 'Aguardando forja',
@@ -165,6 +205,7 @@ function QualityPanel({
         ) : (
           <>
             <QualityScore story={story} />
+            <ScoreCriteriaDetails />
 
             <RailSection
               icon={<IconAlertTriangle />}

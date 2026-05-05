@@ -43,6 +43,7 @@ hotmail
 Hotmail
 iOS
 IA
+INVEST
 Jira
 JSON
 lead
@@ -60,6 +61,7 @@ ProdForge
 QA
 QAs
 React
+Ready
 Scrum
 sprint
 squad
