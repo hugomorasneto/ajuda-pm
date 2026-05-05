@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import ComposerSection from './ComposerSection'
 import PromptChips from './PromptChips'
 
@@ -225,6 +225,7 @@ function BriefComposer({
   activeStoryTitle,
   hasAdjustment,
 }) {
+  const contextTextareaRef = useRef(null)
   const [reqOpen, setReqOpen] = useState(Boolean(formValues.requirements?.trim()))
   const [adjOpen, setAdjOpen] = useState(Boolean(formValues.adjustment?.trim()))
 
@@ -242,6 +243,29 @@ function BriefComposer({
     await onSubmit()
   }
 
+  function focusContextTextarea() {
+    const focusTextarea = () => {
+      const textarea = contextTextareaRef.current
+      if (!textarea) return
+
+      const endPosition = textarea.value.length
+      textarea.focus()
+      textarea.setSelectionRange(endPosition, endPosition)
+    }
+
+    if (typeof window !== 'undefined') {
+      window.requestAnimationFrame(focusTextarea)
+      return
+    }
+
+    focusTextarea()
+  }
+
+  function handleContextPromptSelect(value) {
+    onApplyPrompt('problemContext', value)
+    focusContextTextarea()
+  }
+
   const submitLabel = isSubmitting
     ? 'Aquecendo a forja...'
     : isEditing
@@ -249,6 +273,12 @@ function BriefComposer({
         ? 'Refinar na forja'
         : 'Forjar nova versão'
       : 'Forjar primeira versão'
+  const canSubmit = isEditing ? hasAdjustment || contextFilled : contextFilled
+  const submitHelpText = isSubmitting
+    ? 'A forja está preparando a story.'
+    : canSubmit
+      ? 'Acione a forja quando estiver pronto.'
+      : 'Preencha a matéria-prima para acionar a forja.'
 
   return (
     <section
@@ -290,128 +320,137 @@ function BriefComposer({
         ) : null}
 
         <form onSubmit={handleSubmit} className="brief-composer__form">
-          <ComposerSection
-            icon={<IconFileText />}
-            label="Matéria-prima"
-            error={validationErrors.problemContext}
-            footer={
-              <PromptChips
-                label="Sugestões para matéria-prima"
-                items={contextPrompts}
-                onSelect={(value) => onApplyPrompt('problemContext', value)}
+          <div className="brief-composer__fields">
+            <ComposerSection
+              icon={<IconFileText />}
+              label="Matéria-prima"
+              error={validationErrors.problemContext}
+              footer={
+                <div className="brief-composer__prompt-shortcuts">
+                  <p className="brief-composer__shortcut-help">Clique para inserir estes pontos:</p>
+                  <PromptChips
+                    label="Atalhos para preencher a matéria-prima"
+                    items={contextPrompts}
+                    onSelect={handleContextPromptSelect}
+                    itemActionLabel="Inserir ponto na matéria-prima"
+                  />
+                </div>
+              }
+            >
+              <label className="sr-only" htmlFor="workspace-context">Matéria-prima da story</label>
+              <textarea
+                id="workspace-context"
+                ref={contextTextareaRef}
+                value={formValues.problemContext}
+                onChange={(event) => onChange('problemContext', event.target.value)}
+                placeholder="Ex: Usuários esquecem a senha, tentam recuperar pelo celular e abandonam o login quando o e-mail não chega."
+                rows={5}
+                className={validationErrors.problemContext ? 'textarea--error' : ''}
               />
-            }
-          >
-            <label className="sr-only" htmlFor="workspace-context">Matéria-prima da story</label>
-            <textarea
-              id="workspace-context"
-              value={formValues.problemContext}
-              onChange={(event) => onChange('problemContext', event.target.value)}
-              placeholder="Ex: Usuários não conseguem recuperar senha pelo celular e abandonam o fluxo de login."
-              rows={5}
-              className={validationErrors.problemContext ? 'textarea--error' : ''}
-            />
-          </ComposerSection>
+            </ComposerSection>
 
-          <div className={`brief-accordion ${reqOpen ? 'brief-accordion--open' : ''}`}>
-            <button
-              type="button"
-              className="brief-accordion__trigger"
-              onClick={() => setReqOpen((value) => !value)}
-              aria-expanded={reqOpen}
-            >
-              <span className="brief-accordion__trigger-left">
-                <IconListChecks />
-                <span className="brief-accordion__label">Ligas e regras</span>
-                {validationErrors.requirements ? (
-                  <span
-                    className="brief-accordion__error-dot"
-                    aria-label="Campo obrigatório com erro"
-                  />
-                ) : null}
-                {requirementsFilled && !reqOpen ? (
-                  <span className="brief-accordion__preview" aria-hidden="true">
-                    {formValues.requirements.slice(0, 32)}...
-                  </span>
-                ) : null}
-              </span>
-              <span className={`brief-accordion__chevron ${reqOpen ? 'brief-accordion__chevron--open' : ''}`}>
-                <IconChevronDown />
-              </span>
-            </button>
-
-            <div className="brief-accordion__body" aria-hidden={!reqOpen}>
-              <ComposerSection
-                error={validationErrors.requirements}
-                footer={
-                  <PromptChips
-                    label="Sugestões para ligas"
-                    items={requirementPrompts}
-                    onSelect={(value) => onApplyPrompt('requirements', value)}
-                  />
-                }
+            <div className={`brief-accordion ${reqOpen ? 'brief-accordion--open' : ''}`}>
+              <button
+                type="button"
+                className="brief-accordion__trigger"
+                onClick={() => setReqOpen((value) => !value)}
+                aria-expanded={reqOpen}
               >
-                <label className="sr-only" htmlFor="workspace-requirements">Ligas, regras e critérios</label>
-                <textarea
-                  id="workspace-requirements"
-                  value={formValues.requirements}
-                  onChange={(event) => onChange('requirements', event.target.value)}
-                  placeholder='Ex: "Fluxo por e-mail, link expira em 24h, compatível com iOS e Android"'
-                  rows={4}
-                  tabIndex={reqOpen ? 0 : -1}
-                  className={validationErrors.requirements ? 'textarea--error' : ''}
-                />
-              </ComposerSection>
+                <span className="brief-accordion__trigger-left">
+                  <IconListChecks />
+                  <span className="brief-accordion__label">Ligas e regras</span>
+                  {validationErrors.requirements ? (
+                    <span
+                      className="brief-accordion__error-dot"
+                      aria-label="Campo obrigatório com erro"
+                    />
+                  ) : null}
+                  {requirementsFilled && !reqOpen ? (
+                    <span className="brief-accordion__preview" aria-hidden="true">
+                      {formValues.requirements.slice(0, 32)}...
+                    </span>
+                  ) : null}
+                </span>
+                <span className={`brief-accordion__chevron ${reqOpen ? 'brief-accordion__chevron--open' : ''}`}>
+                  <IconChevronDown />
+                </span>
+              </button>
+
+              <div className="brief-accordion__body" aria-hidden={!reqOpen}>
+                <ComposerSection
+                  error={validationErrors.requirements}
+                  footer={
+                    <PromptChips
+                      label="Sugestões para ligas"
+                      items={requirementPrompts}
+                      onSelect={(value) => onApplyPrompt('requirements', value)}
+                    />
+                  }
+                >
+                  <label className="sr-only" htmlFor="workspace-requirements">Ligas, regras e critérios</label>
+                  <textarea
+                    id="workspace-requirements"
+                    value={formValues.requirements}
+                    onChange={(event) => onChange('requirements', event.target.value)}
+                    placeholder='Ex: "Fluxo por e-mail, link expira em 24h, compatível com iOS e Android"'
+                    rows={4}
+                    tabIndex={reqOpen ? 0 : -1}
+                    className={validationErrors.requirements ? 'textarea--error' : ''}
+                  />
+                </ComposerSection>
+              </div>
             </div>
-          </div>
 
-          <div className={`brief-accordion ${adjOpen ? 'brief-accordion--open' : ''}`}>
-            <button
-              type="button"
-              className="brief-accordion__trigger brief-accordion__trigger--muted"
-              onClick={() => setAdjOpen((value) => !value)}
-              aria-expanded={adjOpen}
-            >
-              <span className="brief-accordion__trigger-left">
-                <IconSliders />
-                <span className="brief-accordion__label">Acabamento</span>
-                <span className="brief-accordion__optional">opcional</span>
-              </span>
-              <span className={`brief-accordion__chevron ${adjOpen ? 'brief-accordion__chevron--open' : ''}`}>
-                <IconChevronDown />
-              </span>
-            </button>
-
-            <div className="brief-accordion__body" aria-hidden={!adjOpen}>
-              <ComposerSection
-                footer={
-                  <PromptChips
-                    label="Sugestões para acabamento"
-                    items={adjustmentPrompts}
-                    onSelect={(value) => onApplyPrompt('adjustment', value)}
-                  />
-                }
+            <div className={`brief-accordion ${adjOpen ? 'brief-accordion--open' : ''}`}>
+              <button
+                type="button"
+                className="brief-accordion__trigger brief-accordion__trigger--muted"
+                onClick={() => setAdjOpen((value) => !value)}
+                aria-expanded={adjOpen}
               >
-                <label className="sr-only" htmlFor="workspace-adjustment">Acabamento para a próxima versão</label>
-                <textarea
-                  id="workspace-adjustment"
-                  value={formValues.adjustment}
-                  onChange={(event) => onChange('adjustment', event.target.value)}
-                  placeholder="Ex: Detalhe melhor os critérios de aceite e deixe o texto mais objetivo."
-                  rows={3}
-                  tabIndex={adjOpen ? 0 : -1}
-                />
-              </ComposerSection>
+                <span className="brief-accordion__trigger-left">
+                  <IconSliders />
+                  <span className="brief-accordion__label">Acabamento</span>
+                  <span className="brief-accordion__optional">opcional</span>
+                </span>
+                <span className={`brief-accordion__chevron ${adjOpen ? 'brief-accordion__chevron--open' : ''}`}>
+                  <IconChevronDown />
+                </span>
+              </button>
+
+              <div className="brief-accordion__body" aria-hidden={!adjOpen}>
+                <ComposerSection
+                  footer={
+                    <PromptChips
+                      label="Sugestões para acabamento"
+                      items={adjustmentPrompts}
+                      onSelect={(value) => onApplyPrompt('adjustment', value)}
+                    />
+                  }
+                >
+                  <label className="sr-only" htmlFor="workspace-adjustment">Acabamento para a próxima versão</label>
+                  <textarea
+                    id="workspace-adjustment"
+                    value={formValues.adjustment}
+                    onChange={(event) => onChange('adjustment', event.target.value)}
+                    placeholder="Ex: Detalhe melhor os critérios de aceite e deixe o texto mais objetivo."
+                    rows={3}
+                    tabIndex={adjOpen ? 0 : -1}
+                  />
+                </ComposerSection>
+              </div>
             </div>
           </div>
 
           <div className="brief-composer__footer">
             {isSubmitting ? <LoadingProgress /> : null}
 
+            <p className="brief-composer__footer-copy">{submitHelpText}</p>
+
             <button
               type="submit"
               className="btn btn-primary btn-full brief-composer__submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !canSubmit}
             >
               <IconSparkles />
               {submitLabel}

@@ -264,8 +264,10 @@ export function useUserStoryWorkspace() {
   function handlePromptChipApply(field, snippet) {
     setFormValues((prev) => {
       const current = prev[field] ?? ''
-      if (current.includes(snippet)) return prev
-      const nextValue = current.trim() ? `${current.trim()}\n${snippet}` : snippet
+      if (current.includes(snippet.trim())) return prev
+      const hasContent = current.trim().length > 0
+      const separator = hasContent && !current.endsWith('\n') ? '\n' : ''
+      const nextValue = hasContent ? `${current}${separator}${snippet}` : snippet
       return { ...prev, [field]: nextValue }
     })
     if (validationErrors[field]) {
