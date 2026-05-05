@@ -98,17 +98,17 @@ function App() {
         >
           <Route path="/tool" element={<ToolPage />} />
           <Route path="/historico" element={<HistoryPage />} />
+          <Route
+            path="/tool/admin"
+            element={
+              <AdminRoute>
+                <AdminPage />
+              </AdminRoute>
+            }
+          />
         </Route>
 
-        <Route
-          element={
-            <AdminRoute>
-              <WorkspaceLayout />
-            </AdminRoute>
-          }
-        >
-          <Route path="/admin" element={<AdminPage />} />
-        </Route>
+        <Route path="/admin" element={<Navigate to="/tool/admin" replace />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

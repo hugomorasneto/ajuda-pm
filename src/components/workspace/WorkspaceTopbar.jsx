@@ -9,7 +9,7 @@ const pageMeta = {
     title: 'Peças forjadas',
     description: 'Stories salvas, versões e artefatos prontos para inspeção.',
   },
-  '/admin': {
+  '/tool/admin': {
     title: 'Painel administrativo',
     description: 'Acompanhe a operação e os principais indicadores do produto.',
   },

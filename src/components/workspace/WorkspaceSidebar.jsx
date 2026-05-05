@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC, BRAND_MARK_SRC } from '../../constants/app'
 import { useAuth } from '../../hooks/useAuth'
 import { useLearningProgress } from '../../hooks/useLearningProgress'
+import { getUserProfile } from '../../services/userProfilesService'
 
 const TRAIL_SLUGS = ['fundamentos-produto-agil', 'user-stories-na-pratica', 'backlog-e-refinamento']
 
@@ -145,17 +147,40 @@ function WorkspaceSidebar({
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
   const { completedSlugs } = useLearningProgress()
+  const [canSeeAdmin, setCanSeeAdmin] = useState(false)
 
   const completedCount = TRAIL_SLUGS.filter((slug) => completedSlugs.has(slug)).length
   const totalCount = TRAIL_SLUGS.length
   const accountInitial = user?.email?.charAt(0)?.toUpperCase() || 'P'
+  const isAdminPath = location.pathname.startsWith('/tool/admin')
+
+  useEffect(() => {
+    let active = true
+
+    async function loadAdminAccess() {
+      if (!user?.id) {
+        if (active) setCanSeeAdmin(false)
+        return
+      }
+
+      const profile = await getUserProfile(user.id)
+      if (!active) return
+      setCanSeeAdmin(profile.success && profile.data?.role === 'admin')
+    }
+
+    loadAdminAccess()
+
+    return () => {
+      active = false
+    }
+  }, [user?.id])
 
   const baseToolNavItems = [
     { label: 'Bancada', path: '/tool', end: true, icon: <IconWorkspace /> },
     { label: 'Peças forjadas', path: '/historico', end: true, icon: <IconHistory /> },
   ]
-  const toolNavItems = location.pathname.startsWith('/admin')
-    ? [...baseToolNavItems, { label: 'Administração', path: '/admin', end: false, icon: <IconAdmin /> }]
+  const toolNavItems = canSeeAdmin || isAdminPath
+    ? [...baseToolNavItems, { label: 'Administração', path: '/tool/admin', end: false, icon: <IconAdmin /> }]
     : baseToolNavItems
 
   const academyNavItems = [
