@@ -13,7 +13,7 @@ function LearningGuideHero({ guide }) {
     <header className="learning-guide-hero" style={heroStyle}>
       <div className="learning-guide-hero__top">
         <Link to="/aprender" className="learning-guide-hero__backlink">
-          ← Academia ProdForge
+          ← Campo de Treino ProdForge
         </Link>
         <div className="learning-guide-hero__chips" aria-label="Metadados do guia">
           <span className="learning-guide-hero__chip">{guide.category}</span>
@@ -23,7 +23,7 @@ function LearningGuideHero({ guide }) {
       </div>
 
       <div className="learning-guide-hero__copy">
-        <span className="badge-pill badge-pill--academy">Academia ProdForge</span>
+        <span className="badge-pill badge-pill--academy">Campo de Treino ProdForge</span>
         <h1>{guide.title}</h1>
         <p>{guide.excerpt}</p>
       </div>

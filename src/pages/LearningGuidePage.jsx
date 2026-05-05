@@ -35,7 +35,7 @@ function LearningGuidePage() {
   const metadataPath = guide ? `/aprender/${guide.slug}` : '/aprender'
 
   usePageMetadata({
-    title: guide?.seo.title ?? 'Academia ProdForge | Aprenda product management na prática',
+    title: guide?.seo.title ?? 'Campo de Treino ProdForge | Aprenda product management na prática',
     description:
       guide?.seo.description ??
       'Guia do ferreiro PM para PMs e POs iniciantes sobre fundamentos, user stories, backlog, Scrum e discovery.',

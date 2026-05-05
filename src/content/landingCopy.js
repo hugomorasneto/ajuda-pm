@@ -176,7 +176,7 @@ export const landingCopy = {
     ],
   },
   learningTeaser: {
-    eyebrow: 'Academia ProdForge',
+    eyebrow: 'Campo de Treino ProdForge',
     title: 'Aprenda enquanto faz.',
     description:
       'Guia do ferreiro PM para entender o conceito e ir direto para a ferramenta, com exemplos reais de backlog.',

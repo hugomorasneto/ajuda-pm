@@ -88,9 +88,9 @@ function LearningHubPage() {
   const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0
 
   usePageMetadata({
-    title: 'Academia ProdForge | Aprenda product management na prática',
+    title: 'Campo de Treino ProdForge | Aprenda product management na prática',
     description:
-      'Trilha prática para PMs e POs iniciantes aprenderem fundamentos, user stories e backlog — e aplicarem imediatamente na ferramenta.',
+      'Treine fundamentos, pratique na bancada e transforme contexto solto em user stories prontas para inspeção.',
     path: '/aprender',
     image: ACADEMIA_IMAGE_URL,
     imageAlt: ACADEMIA_IMAGE_ALT,
@@ -102,11 +102,11 @@ function LearningHubPage() {
       {/* ── Hero ── */}
       <section className="learning-hub-hero">
         <div className="learning-hub-hero__copy">
-          <span className="badge-pill badge-pill--academy">Academia ProdForge</span>
-          <h1>De iniciante a PM que entrega com clareza.</h1>
+          <span className="badge-pill badge-pill--academy">Campo de Treino ProdForge</span>
+          <h1>Campo de Treino ProdForge</h1>
           <p>
-            5 módulos práticos. Cada um termina com um exercício real na ferramenta.
-            Aprenda o conceito — aplique imediatamente.
+            Treine fundamentos, pratique na bancada e transforme contexto solto em user
+            stories prontas para inspeção.
           </p>
           <div className="learning-hub-hero__actions">
             <Link className="landing-button landing-button--primary" to="/aprender/fundamentos-produto-agil">
@@ -171,7 +171,7 @@ function LearningHubPage() {
       <section className="learning-section" id="modulos">
         <div className="learning-section__intro">
           <span className="badge-pill">Aprenda enquanto faz</span>
-          <h2>Módulos da Academia ProdForge para praticar no backlog real</h2>
+          <h2>Módulos do Campo de Treino ProdForge para praticar no backlog real</h2>
           <p>
             Leia na ordem se você está montando base agora. Pule por tema se já estiver vivendo a dor
             de estruturar stories, refinar backlog ou alinhar stakeholders.

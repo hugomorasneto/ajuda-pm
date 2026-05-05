@@ -54,8 +54,8 @@ function PublicFooter({ isHomeRoute = false }) {
             <a href="/#planos">Planos</a>
           </nav>
 
-          <nav className="public-footer__nav" aria-label="Aprender">
-            <p className="public-footer__nav-title">Academia</p>
+          <nav className="public-footer__nav" aria-label="Campo de Treino">
+            <p className="public-footer__nav-title">Campo de Treino</p>
             {footerGuides.map((guide) => (
               <Link key={guide.slug} to={`/aprender/${guide.slug}`}>
                 {guide.title}

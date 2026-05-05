@@ -1,10 +1,10 @@
 import { APP_NAME, PRO_PLAN_NAME } from '../constants/app'
 
 export const learningHub = {
-  eyebrow: 'Aprender',
-  title: 'Guia do ferreiro PM para PMs e POs que ainda estão estruturando o próprio repertório.',
+  eyebrow: 'Campo de Treino',
+  title: 'Campo de Treino ProdForge',
   description:
-    'Aqui a proposta não é explicar Agile como teoria solta. Cada guia mostra quando o conceito importa, como aplicar no backlog e quais erros evitar no dia seguinte.',
+    'Treine fundamentos, pratique na bancada e transforme contexto solto em user stories prontas para inspeção.',
   starterGuideSlugs: [
     'fundamentos-produto-agil',
     'user-stories-na-pratica',

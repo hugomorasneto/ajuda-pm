@@ -18,7 +18,7 @@ function PublicLayout() {
 
   return (
     <div className={layoutClassName}>
-      <PublicHeader isHomeRoute={isHomeRoute} />
+      <PublicHeader isHomeRoute={isHomeRoute} isLearningRoute={isLearningRoute} />
       <main className="public-layout__main">
         <Outlet />
       </main>

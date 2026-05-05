@@ -8,7 +8,7 @@ const DEFAULT_IMAGE_ALT =
 
 export const ACADEMIA_IMAGE_URL = `${SITE_URL}/og-academia.png`
 export const ACADEMIA_IMAGE_ALT =
-  'Academia ProdForge — Trilha prática de product management para PMs e POs iniciantes.'
+  'Campo de Treino ProdForge — Trilha prática de product management para PMs e POs iniciantes.'
 
 function upsertMeta(selector, attributeName, attributeValue, content) {
   let element = document.head.querySelector(selector)
@@ -102,7 +102,7 @@ export function buildArticleJsonLd({ title, description, path, excerpt, publishe
     '@type': 'Article',
     headline: title,
     description,
-    articleSection: 'Aprender',
+    articleSection: 'Campo de Treino',
     inLanguage: 'pt-BR',
     mainEntityOfPage: url,
     url,

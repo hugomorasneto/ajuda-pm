@@ -153,7 +153,7 @@ function SignupPage() {
             <li>Critérios de aceite e teste de resistência automáticos</li>
             <li>Peças forjadas com versões salvas por feature</li>
             <li>Exportação em Markdown e texto simples</li>
-            <li>Acesso à Academia ProdForge</li>
+            <li>Acesso ao Campo de Treino ProdForge</li>
           </ul>
           <div className="auth-side__preview">
             <p className="auth-side__preview-label">O que você vai forjar</p>

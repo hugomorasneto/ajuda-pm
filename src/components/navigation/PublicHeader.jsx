@@ -3,17 +3,10 @@ import { Link, useLocation } from 'react-router-dom'
 import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC } from '../../constants/app'
 import { useAuth } from '../../hooks/useAuth'
 
-const forgeHomeNavItems = [
+const publicNavItems = [
   { label: 'Produto', href: '/#produto', activeOn: ['/'] },
   { label: 'Como funciona', href: '/#como-funciona' },
-  { label: 'Academia', to: '/aprender', activeOn: ['/aprender'] },
-  { label: 'Planos', href: '/#planos' },
-]
-
-const legacyPublicNavItems = [
-  { label: 'Aprender', to: '/aprender', activeOn: ['/aprender'] },
-  { label: 'Como funciona', href: '/#como-funciona' },
-  { label: 'Exemplo', href: '/#antes-depois' },
+  { label: 'Campo de Treino', to: '/aprender', activeOn: ['/aprender'] },
   { label: 'Planos', href: '/#planos' },
 ]
 
@@ -22,7 +15,9 @@ function isItemActive(item, pathname) {
     return false
   }
 
-  return item.activeOn.some((activePath) => pathname.startsWith(activePath))
+  return item.activeOn.some((activePath) =>
+    activePath === '/' ? pathname === '/' : pathname.startsWith(activePath)
+  )
 }
 
 function PublicNavLink({ item, pathname, mobile = false, onNavigate }) {
@@ -47,32 +42,33 @@ function PublicNavLink({ item, pathname, mobile = false, onNavigate }) {
   )
 }
 
-function PublicHeader({ isHomeRoute = false }) {
+function PublicHeader({ isHomeRoute = false, isLearningRoute = false }) {
   const location = useLocation()
   const { user } = useAuth()
   const [menuOpenPath, setMenuOpenPath] = useState(null)
   const isMenuOpen = menuOpenPath === location.pathname
-  const navItems = isHomeRoute ? forgeHomeNavItems : legacyPublicNavItems
-  const headerClassName = ['public-header', isHomeRoute ? 'public-header--forge-home' : '']
+  const isForgeHeader = isHomeRoute || isLearningRoute
+  const navItems = publicNavItems
+  const headerClassName = ['public-header', isForgeHeader ? 'public-header--forge-home' : '']
     .filter(Boolean)
     .join(' ')
   const primaryCtaClassName = [
     'public-header__cta',
     'public-header__cta--primary',
-    isHomeRoute ? 'forge-button forge-button--ember forge-button--sm' : '',
+    isForgeHeader ? 'forge-button forge-button--ember forge-button--sm' : '',
   ]
     .filter(Boolean)
     .join(' ')
   const secondaryCtaClassName = [
     'public-header__cta',
     'public-header__cta--secondary',
-    isHomeRoute ? 'forge-button forge-button--ghost forge-button--sm' : '',
+    isForgeHeader ? 'forge-button forge-button--ghost forge-button--sm' : '',
   ]
     .filter(Boolean)
     .join(' ')
   const menuButtonClassName = [
     'public-header__menu-button',
-    isHomeRoute ? 'forge-button forge-button--ghost forge-button--sm' : '',
+    isForgeHeader ? 'forge-button forge-button--ghost forge-button--sm' : '',
   ]
     .filter(Boolean)
     .join(' ')

@@ -179,7 +179,7 @@ function LoginPage() {
             <li>Trincas e teste de resistência no mesmo fluxo</li>
             <li>Peças forjadas com versões por feature</li>
             <li>Exportação em Markdown e texto simples</li>
-            <li>Guia do ferreiro PM na Academia ProdForge</li>
+            <li>Guia do ferreiro PM no Campo de Treino ProdForge</li>
           </ul>
           <div className="auth-side__preview">
             <p className="auth-side__preview-label">Exemplo de saída</p>

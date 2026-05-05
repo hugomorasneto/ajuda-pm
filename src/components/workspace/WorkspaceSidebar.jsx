@@ -263,10 +263,10 @@ function WorkspaceSidebar({
         ))}
       </nav>
 
-      <nav className="workspace-sidebar__nav" aria-label="Academia ProdForge">
+      <nav className="workspace-sidebar__nav" aria-label="Campo de Treino ProdForge">
         {!isCompact ? (
           <div className="workspace-sidebar__section-header">
-            <p className="workspace-sidebar__section-label">Academia</p>
+            <p className="workspace-sidebar__section-label">Campo de Treino</p>
             {completedCount > 0 ? (
               <span className="workspace-sidebar__progress-pill">
                 {completedCount}/{totalCount}

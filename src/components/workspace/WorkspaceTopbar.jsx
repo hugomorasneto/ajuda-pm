@@ -71,7 +71,7 @@ function WorkspaceTopbar({ onOpenSidebar, topbarStatus }) {
 
         <div className="workspace-topbar__actions">
           <Link to="/aprender" className="workspace-topbar__link workspace-topbar__link--academy">
-            Academia
+            Campo de Treino
           </Link>
           <Link to="/" className="workspace-topbar__link">
             Site

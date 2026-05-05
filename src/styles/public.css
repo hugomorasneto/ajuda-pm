@@ -2106,7 +2106,8 @@
   color: var(--forge-button-color, var(--forge-text-primary));
 }
 
-.public-layout--home-forge .public-header--forge-home {
+.public-layout--home-forge .public-header--forge-home,
+.public-layout--academy-forge .public-header--forge-home {
   border-bottom: 1px solid var(--forge-border-subtle);
   background: color-mix(in srgb, var(--forge-bg-canvas) 82%, transparent);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
@@ -5550,7 +5551,8 @@
 }
 
 /* Logo: enquadramento do asset horizontal no header */
-.public-layout--home-forge .public-header--forge-home .brand-logo {
+.public-layout--home-forge .public-header--forge-home .brand-logo,
+.public-layout--academy-forge .public-header--forge-home .brand-logo {
   position: relative;
   width: 178px;
   height: 44px;
@@ -5558,7 +5560,8 @@
   border-radius: 8px;
 }
 
-.public-layout--home-forge .public-header--forge-home .brand-logo__image.brand-logo--header {
+.public-layout--home-forge .public-header--forge-home .brand-logo__image.brand-logo--header,
+.public-layout--academy-forge .public-header--forge-home .brand-logo__image.brand-logo--header {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -5569,12 +5572,14 @@
 }
 
 @media (min-width: 900px) {
-  .public-layout--home-forge .public-header--forge-home .brand-logo {
+  .public-layout--home-forge .public-header--forge-home .brand-logo,
+  .public-layout--academy-forge .public-header--forge-home .brand-logo {
     width: 210px;
     height: 44px;
   }
 
-  .public-layout--home-forge .public-header--forge-home .brand-logo__image.brand-logo--header {
+  .public-layout--home-forge .public-header--forge-home .brand-logo__image.brand-logo--header,
+  .public-layout--academy-forge .public-header--forge-home .brand-logo__image.brand-logo--header {
     width: 258px;
     height: 258px;
     filter: drop-shadow(0 0 10px rgba(255, 122, 26, 0.16));
@@ -5582,26 +5587,31 @@
 }
 
 @media (min-width: 1120px) {
-  .public-layout--home-forge .public-header--forge-home .brand-logo {
+  .public-layout--home-forge .public-header--forge-home .brand-logo,
+  .public-layout--academy-forge .public-header--forge-home .brand-logo {
     width: 236px;
     height: 48px;
   }
 
-  .public-layout--home-forge .public-header--forge-home .brand-logo__image.brand-logo--header {
+  .public-layout--home-forge .public-header--forge-home .brand-logo__image.brand-logo--header,
+  .public-layout--academy-forge .public-header--forge-home .brand-logo__image.brand-logo--header {
     width: 292px;
     height: 292px;
   }
 }
 
 /* Nav links: refinamento tipográfico */
-.public-layout--home-forge .public-header--forge-home .public-header__link {
+.public-layout--home-forge .public-header--forge-home .public-header__link,
+.public-layout--academy-forge .public-header--forge-home .public-header__link {
   color: rgba(255, 255, 255, 0.65);
   letter-spacing: 0.02em;
   transition: color 0.18s;
 }
 
 .public-layout--home-forge .public-header--forge-home .public-header__link:hover,
-.public-layout--home-forge .public-header--forge-home .public-header__link--active {
+.public-layout--home-forge .public-header--forge-home .public-header__link--active,
+.public-layout--academy-forge .public-header--forge-home .public-header__link:hover,
+.public-layout--academy-forge .public-header--forge-home .public-header__link--active {
   color: rgba(255, 255, 255, 0.96);
 }
 
@@ -7354,15 +7364,17 @@
 }
 
 .public-layout--academy-forge .public-header {
-  border-bottom-color: var(--forge-border);
+  border-bottom-color: rgba(255, 122, 26, 0.14);
   background:
-    linear-gradient(90deg, rgba(255, 122, 26, 0.10), transparent 34%),
-    rgba(5, 8, 13, 0.88);
-  box-shadow: var(--forge-shadow-soft);
+    linear-gradient(180deg, rgba(10, 12, 15, 0.94) 0%, rgba(15, 18, 22, 0.9) 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04),
+    0 4px 24px rgba(0, 0, 0, 0.32);
   backdrop-filter: blur(18px);
 }
 
 .public-layout--academy-forge .public-header__inner {
+  min-height: 74px;
   padding-top: var(--forge-space-4);
   padding-bottom: var(--forge-space-4);
 }

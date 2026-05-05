@@ -31,7 +31,7 @@ function LearningGuideCard({ guide, variant = 'default', isCompleted = false }) 
               role="img"
               aria-label={guide.thumbnailAlt ?? `Capa do guia ${guide.title}`}
             >
-              <span className="learning-card__image-badge">Academia ProdForge</span>
+              <span className="learning-card__image-badge">Campo de Treino ProdForge</span>
               <strong>{guide.category}</strong>
             </div>
           ) : (
