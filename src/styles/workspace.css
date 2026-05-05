@@ -363,7 +363,7 @@
 }
 .story-workspace .btn-ghost:hover:not(:disabled),
 .story-workspace .btn-secondary:hover:not(:disabled) { background: var(--color-canvas-muted); }
-.story-workspace .btn-small { min-height: 32px; padding: 0 var(--space-3); font-size: var(--text-small); }
+.story-workspace .btn-small { min-height: 36px; padding: 0 var(--space-3); font-size: var(--text-small); }
 
 /* --- Inputs / Textareas --- */
 .story-workspace textarea,
@@ -448,7 +448,7 @@
 /* PromptChips */
 .prompt-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .prompt-chip {
-  min-height: 28px; padding: 0 var(--space-3);
+  min-height: 36px; padding: 0 var(--space-3);
   border-radius: var(--radius-xs);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
@@ -537,7 +537,7 @@
   gap: var(--space-2);
 }
 .story-document__refine-chip {
-  min-height: 30px;
+  min-height: 36px;
   padding: 0 var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xs);
@@ -1122,7 +1122,7 @@
   border: 2px solid var(--color-border-strong);
   background: var(--color-surface);
   color: var(--color-text-muted);
-  font-size: 10px;
+  font-size: 0.6875rem;
   font-weight: 700;
   flex-shrink: 0;
   transition: border-color 0.2s, background 0.2s, color 0.2s;
@@ -2277,6 +2277,9 @@
 }
 
 .workspace-state__learn-cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
   color: var(--color-accent);
   font-weight: 600;
   font-size: var(--text-small);
@@ -2500,8 +2503,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
   background: transparent;
@@ -2642,7 +2645,10 @@
 }
 
 .onboarding-card__learn-link {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
   text-align: center;
   color: var(--color-text-secondary);
   font-size: var(--text-small);
@@ -5246,7 +5252,7 @@
 }
 
 .workspace-shell--forge .prompt-chip {
-  min-height: 32px;
+  min-height: 36px;
   padding: var(--forge-space-2) var(--forge-space-3);
   line-height: 1.2;
 }
@@ -5398,12 +5404,19 @@
   }
 
   .workspace-shell--forge .brief-stepper {
-    grid-template-columns: repeat(3, minmax(7rem, 1fr));
-    overflow-x: auto;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    overflow-x: visible;
   }
 
   .workspace-shell--forge .brief-stepper__step {
-    min-width: 7rem;
+    min-width: 0;
+    padding: var(--forge-space-2);
+  }
+
+  .workspace-shell--forge .brief-stepper__label {
+    min-width: 0;
+    max-width: 100%;
+    font-size: 0.72rem;
   }
 
   .workspace-shell--forge .prompt-chip {
@@ -5422,8 +5435,8 @@
   }
 
   .workspace-shell--forge .brief-stepper {
-    margin-right: calc(var(--forge-space-4) * -1);
-    padding-right: var(--forge-space-4);
+    margin-right: 0;
+    padding-right: 0;
   }
 
   .workspace-shell--forge .brief-composer__panel-pill,

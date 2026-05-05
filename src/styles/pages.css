@@ -248,6 +248,11 @@
 }
 
 .auth-card__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-xs);
   color: var(--color-accent);
   font-weight: 600;
   text-decoration: none;

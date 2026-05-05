@@ -247,6 +247,15 @@ function WorkspaceSidebar({
         </Link>
 
         <div className="workspace-sidebar__header-actions">
+          <button
+            type="button"
+            className="workspace-sidebar__close"
+            onClick={onClose}
+            aria-label="Fechar navegação"
+          >
+            <IconClose />
+          </button>
+
           {canToggleDensity ? (
             <button
               type="button"

@@ -364,7 +364,7 @@
 }
 
 .btn-small {
-  min-height: 32px;
+  min-height: 36px;
   padding: 0 var(--space-3);
   font-size: var(--text-small);
 }
