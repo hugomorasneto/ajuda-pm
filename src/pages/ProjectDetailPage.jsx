@@ -52,6 +52,11 @@ const ESTIMATION_STATUS_OPTIONS = [
   { value: 'estimated', label: 'Estimada' },
 ]
 
+const STORY_ESTIMATION_FILTER_OPTIONS = [
+  { value: 'all', label: 'Todas' },
+  ...ESTIMATION_STATUS_OPTIONS,
+]
+
 function formatProjectDateTime(value) {
   if (!value) return '-'
   const date = new Date(value)
@@ -185,6 +190,8 @@ function ProjectDetailPage() {
   const [projectMembers, setProjectMembers] = useState([])
   const [projectStories, setProjectStories] = useState([])
   const [projectStoryCount, setProjectStoryCount] = useState(0)
+  const [projectStoryFilteredCount, setProjectStoryFilteredCount] = useState(0)
+  const [storyEstimationFilter, setStoryEstimationFilter] = useState('all')
   const [projectNameDraft, setProjectNameDraft] = useState('')
   const [projectDescriptionDraft, setProjectDescriptionDraft] = useState('')
   const [name, setName] = useState('')
@@ -192,6 +199,7 @@ function ProjectDetailPage() {
   const [memberEmail, setMemberEmail] = useState('')
   const [memberRole, setMemberRole] = useState('member')
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingStories, setIsLoadingStories] = useState(false)
   const [isEditingProject, setIsEditingProject] = useState(false)
   const [isSavingProject, setIsSavingProject] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
@@ -216,22 +224,74 @@ function ProjectDetailPage() {
     () => `${projectMembers.length} ${projectMembers.length === 1 ? 'membro' : 'membros'}`,
     [projectMembers.length],
   )
+  const filteredStoriesLabel = useMemo(
+    () =>
+      `${projectStoryFilteredCount} ${
+        projectStoryFilteredCount === 1 ? 'história encontrada' : 'histórias encontradas'
+      }`,
+    [projectStoryFilteredCount],
+  )
+  const currentStoryFilterLabel = useMemo(
+    () =>
+      STORY_ESTIMATION_FILTER_OPTIONS.find((option) => option.value === storyEstimationFilter)
+        ?.label ?? 'Todas',
+    [storyEstimationFilter],
+  )
+  const hasNoProjectStories = !isLoadingStories && projectStoryCount === 0
+  const hasProjectStories = projectStoryCount > 0
+  const hasNoStoriesForFilter =
+    !isLoadingStories && projectStoryCount > 0 && projectStories.length === 0
+  const shouldShowStoryLimitNotice = projectStoryFilteredCount > projectStories.length
+
+  const loadProjectStories = useCallback(async () => {
+    if (!projectId || !userId) return
+
+    setIsLoadingStories(true)
+    const storiesPromise = listStoryHistoryGroups({
+      userId,
+      projectFilter: 'project',
+      projectId,
+      estimationStatus: storyEstimationFilter,
+      page: 1,
+      pageSize: 50,
+    })
+    const totalsPromise =
+      storyEstimationFilter === 'all'
+        ? storiesPromise
+        : listStoryHistoryGroups({
+            userId,
+            projectFilter: 'project',
+            projectId,
+            page: 1,
+            pageSize: 1,
+          })
+
+    const [storiesResponse, totalsResponse] = await Promise.all([storiesPromise, totalsPromise])
+    setIsLoadingStories(false)
+
+    if (storiesResponse.success) {
+      setProjectStories(storiesResponse.data ?? [])
+      setProjectStoryFilteredCount(storiesResponse.totalCount ?? 0)
+    } else {
+      setProjectStories([])
+      setProjectStoryFilteredCount(0)
+    }
+
+    if (totalsResponse.success) {
+      setProjectStoryCount(totalsResponse.totalCount ?? 0)
+    } else if (storyEstimationFilter === 'all') {
+      setProjectStoryCount(0)
+    }
+  }, [projectId, storyEstimationFilter, userId])
 
   const loadProject = useCallback(async () => {
     if (!projectId || !userId) return
 
     setIsLoading(true)
-    const [projectResponse, teamsResponse, storiesResponse, membersResponse, manageResponse] =
+    const [projectResponse, teamsResponse, membersResponse, manageResponse] =
       await Promise.all([
         getProjectById({ projectId, userId }),
         listTeamsByProject({ projectId, userId }),
-        listStoryHistoryGroups({
-          userId,
-          projectFilter: 'project',
-          projectId,
-          page: 1,
-          pageSize: 6,
-        }),
         listProjectMembers({ projectId, userId }),
         checkCanManageProject({ projectId, userId }),
       ])
@@ -250,14 +310,6 @@ function ProjectDetailPage() {
       setTeams(teamsResponse.data ?? [])
     }
 
-    if (storiesResponse.success) {
-      setProjectStories(storiesResponse.data ?? [])
-      setProjectStoryCount(storiesResponse.totalCount ?? 0)
-    } else {
-      setProjectStories([])
-      setProjectStoryCount(0)
-    }
-
     if (membersResponse.success) {
       setProjectMembers(membersResponse.data ?? [])
     } else {
@@ -274,6 +326,14 @@ function ProjectDetailPage() {
 
     return () => clearTimeout(timerId)
   }, [loadProject])
+
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      loadProjectStories()
+    }, 0)
+
+    return () => clearTimeout(timerId)
+  }, [loadProjectStories])
 
   useEffect(() => {
     if (typeof setTopbarStatus !== 'function') return
@@ -392,6 +452,7 @@ function ProjectDetailPage() {
       ),
     )
     setStoryStatusMessage('Status de estimativa atualizado.')
+    await loadProjectStories()
   }
 
   async function handleAddProjectMember(event) {
@@ -514,21 +575,53 @@ function ProjectDetailPage() {
           <div>
             <p className="projects-page__eyebrow">Histórias do projeto</p>
             <h2>{storiesLabel}</h2>
-            <p>Últimas peças forjadas com este projeto como contexto.</p>
+            <p>Histórias vinculadas a este projeto, organizadas por status de estimativa.</p>
+            {hasProjectStories ? (
+              <p className="project-detail-page__story-filter-summary">
+                {storyEstimationFilter === 'all'
+                  ? filteredStoriesLabel
+                  : `${filteredStoriesLabel} em ${currentStoryFilterLabel}.`}
+              </p>
+            ) : null}
           </div>
-          <Link className="btn btn-primary btn-small" to={`/tool?projectId=${projectId}`}>
-            Forjar neste projeto
-          </Link>
+          <div className="project-detail-page__story-actions">
+            <label className="project-detail-page__story-filter">
+              <span>Filtrar status</span>
+              <select
+                value={storyEstimationFilter}
+                onChange={(event) => setStoryEstimationFilter(event.target.value)}
+                disabled={isLoadingStories}
+              >
+                {STORY_ESTIMATION_FILTER_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <Link className="btn btn-primary btn-small" to={`/tool?projectId=${projectId}`}>
+              Forjar neste projeto
+            </Link>
+          </div>
         </div>
 
-        {isLoading ? <p className="projects-page__state">Carregando histórias...</p> : null}
-        {!isLoading && projectStories.length === 0 ? (
+        {isLoadingStories ? <p className="projects-page__state">Carregando histórias...</p> : null}
+        {hasNoProjectStories ? (
           <div className="projects-page__empty">
             <h3>Nenhuma história vinculada ainda</h3>
             <p>Abra a Bancada com este projeto selecionado ou organize uma peça avulsa quando fizer sentido.</p>
           </div>
         ) : null}
+        {hasNoStoriesForFilter ? (
+          <div className="projects-page__empty">
+            <h3>Nenhuma história neste filtro</h3>
+            <p>Troque o status selecionado para ver outras peças vinculadas a este projeto.</p>
+          </div>
+        ) : null}
         {storyStatusMessage ? <p className="projects-page__message">{storyStatusMessage}</p> : null}
+        {shouldShowStoryLimitNotice ? (
+          <p className="projects-page__state">Mostrando as 50 histórias mais recentes deste filtro.</p>
+        ) : null}
 
         <div className="project-detail-page__story-list">
           {projectStories.map((story) => {
