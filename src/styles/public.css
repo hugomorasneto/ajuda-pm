@@ -5549,15 +5549,47 @@
     0 4px 24px rgba(0, 0, 0, 0.32);
 }
 
-/* Logo: maior e com presença sutil */
-.public-layout--home-forge .brand-logo--header {
+/* Logo: enquadramento do asset horizontal no header */
+.public-layout--home-forge .public-header--forge-home .brand-logo {
+  position: relative;
+  width: 178px;
   height: 44px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.public-layout--home-forge .public-header--forge-home .brand-logo__image.brand-logo--header {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 220px;
+  max-width: none;
+  height: 220px;
+  transform: translate(-50%, -50%);
 }
 
 @media (min-width: 900px) {
-  .public-layout--home-forge .brand-logo--header {
-    height: 56px;
+  .public-layout--home-forge .public-header--forge-home .brand-logo {
+    width: 210px;
+    height: 44px;
+  }
+
+  .public-layout--home-forge .public-header--forge-home .brand-logo__image.brand-logo--header {
+    width: 258px;
+    height: 258px;
     filter: drop-shadow(0 0 10px rgba(255, 122, 26, 0.16));
+  }
+}
+
+@media (min-width: 1120px) {
+  .public-layout--home-forge .public-header--forge-home .brand-logo {
+    width: 236px;
+    height: 48px;
+  }
+
+  .public-layout--home-forge .public-header--forge-home .brand-logo__image.brand-logo--header {
+    width: 292px;
+    height: 292px;
   }
 }
 

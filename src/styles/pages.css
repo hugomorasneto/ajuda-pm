@@ -426,6 +426,406 @@
 }
 
 /* ============================================================
+   AUTH FORGE THEME
+   ============================================================ */
+
+.auth-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  justify-content: center;
+  gap: var(--forge-space-5);
+  min-height: 100vh;
+  padding: clamp(var(--space-4), 4vw, var(--space-12));
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(255,122,26,0.08), transparent 32%, rgba(77,163,255,0.07)),
+    var(--forge-gradient-radial-ember),
+    var(--forge-gradient-radial-tech),
+    linear-gradient(180deg, var(--forge-bg-canvas) 0%, var(--forge-bg-graphite) 52%, var(--forge-bg-canvas) 100%);
+  color: var(--forge-text-secondary);
+}
+
+.auth-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.032) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.026) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
+}
+
+.auth-shell::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 16%;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255,145,56,0.42), rgba(77,163,255,0.34), transparent);
+  box-shadow: 0 0 24px rgba(255,145,56,0.16);
+}
+
+.auth-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.auth-shell .auth-card {
+  width: 100%;
+  max-width: 456px;
+  align-self: center;
+  justify-self: center;
+  min-height: min(720px, calc(100vh - 96px));
+  padding: clamp(var(--space-5), 4vw, var(--space-8));
+  border: 1px solid var(--forge-border);
+  border-radius: var(--forge-radius-md);
+  background:
+    radial-gradient(circle at 90% 8%, rgba(77,163,255,0.14), transparent 30%),
+    linear-gradient(135deg, rgba(255,122,26,0.10), transparent 38%),
+    var(--forge-gradient-panel);
+  box-shadow: var(--forge-shadow-floating), inset 0 1px 0 rgba(255,255,255,0.05);
+  color: var(--forge-text-secondary);
+  overflow-y: auto;
+}
+
+.auth-shell .auth-card__brand {
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--forge-border-subtle);
+}
+
+.auth-shell .auth-card__brand-mark {
+  width: 8px;
+  height: 30px;
+  background: var(--forge-gradient-cta-ember);
+  box-shadow: 0 0 18px var(--forge-amber-glow);
+}
+
+.auth-shell .auth-card__brand-name,
+.auth-shell .auth-card__title,
+.auth-shell .auth-card__label,
+.auth-shell .auth-card__helper-title {
+  color: var(--forge-text-primary);
+}
+
+.auth-shell .auth-card__brand-name {
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.auth-shell .auth-card__eyebrow {
+  min-height: 26px;
+  border-color: var(--forge-border-ember);
+  background: var(--forge-ember-soft);
+  color: #FFD0A8;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.auth-shell .auth-card__title {
+  font-size: clamp(1.55rem, 3vw, 2.15rem);
+  letter-spacing: -0.02em;
+}
+
+.auth-shell .auth-card__description,
+.auth-shell .auth-card__switch,
+.auth-shell .auth-card__terms,
+.auth-shell .auth-card__label-hint,
+.auth-shell .auth-card__helper-list {
+  color: var(--forge-text-secondary);
+}
+
+.auth-shell .auth-card__form {
+  gap: var(--space-5);
+}
+
+.auth-shell .auth-card__input {
+  min-height: 48px;
+  border-color: var(--forge-border);
+  background: var(--forge-surface-inset);
+  color: var(--forge-text-primary);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.auth-shell .auth-card__input:hover {
+  border-color: var(--forge-border-strong);
+}
+
+.auth-shell .auth-card__input:focus {
+  border-color: var(--forge-tech-hover);
+  box-shadow:
+    0 0 0 1px var(--forge-focus-ring-offset),
+    0 0 0 4px var(--forge-focus-ring),
+    inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.auth-shell .auth-card__input::placeholder {
+  color: var(--forge-placeholder);
+}
+
+.auth-shell .auth-card__input:-webkit-autofill,
+.auth-shell .auth-card__input:-webkit-autofill:hover,
+.auth-shell .auth-card__input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--forge-text-primary);
+  box-shadow: 0 0 0 1000px var(--forge-surface-inset) inset;
+  caret-color: var(--forge-text-primary);
+}
+
+.auth-shell .auth-card__info,
+.auth-shell .auth-card__helper-block {
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(90deg, var(--forge-tech-soft), transparent 82%),
+    var(--forge-surface-inset);
+  color: var(--forge-text-secondary);
+}
+
+.auth-shell .auth-card__error {
+  border-color: rgba(255,107,99,0.28);
+  background:
+    linear-gradient(90deg, var(--forge-error-soft), transparent 82%),
+    var(--forge-surface-inset);
+  color: #FFC7C3;
+}
+
+.auth-shell .auth-card__submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  border: 1px solid var(--forge-border-ember);
+  background: var(--forge-gradient-cta-ember);
+  color: var(--forge-text-primary);
+  box-shadow: var(--forge-shadow-soft), 0 0 20px rgba(255,145,56,0.18);
+  text-decoration: none;
+}
+
+.auth-shell .auth-card__submit:hover:not(:disabled) {
+  background: linear-gradient(135deg, #FFA14E 0%, var(--forge-ember-hover) 36%, var(--forge-ember-active) 100%);
+  box-shadow: var(--forge-shadow-soft), 0 0 24px rgba(255,145,56,0.24);
+  transform: translateY(-1px);
+}
+
+.auth-shell .auth-card__submit:focus-visible,
+.auth-shell .auth-card__link:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 1px var(--forge-focus-ring-offset),
+    0 0 0 4px var(--forge-focus-ring);
+}
+
+.auth-shell .auth-card__submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.auth-shell .auth-card__submit:disabled {
+  opacity: 0.55;
+}
+
+.auth-shell .auth-card__submit--secondary {
+  border-color: var(--forge-border-strong);
+  background: var(--forge-gradient-metal);
+  color: var(--forge-text-primary);
+  box-shadow: var(--forge-shadow-soft);
+}
+
+.auth-shell .auth-card__submit--secondary:hover:not(:disabled) {
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(135deg, rgba(106,180,255,0.14), transparent),
+    var(--forge-gradient-metal);
+  box-shadow: var(--forge-shadow-soft), var(--forge-glow-tech-sm);
+}
+
+.auth-shell .auth-card__link {
+  color: var(--forge-tech-hover);
+  text-underline-offset: 3px;
+}
+
+.auth-shell .auth-card__link:hover {
+  color: #C7E1FF;
+}
+
+.auth-shell .auth-side {
+  display: none;
+  min-height: min(720px, calc(100vh - 96px));
+  align-self: center;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: clamp(var(--space-6), 5vw, var(--space-10));
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--forge-border);
+  border-radius: var(--forge-radius-md);
+  background:
+    linear-gradient(180deg, rgba(11,13,16,0.40) 0%, rgba(11,13,16,0.72) 58%, rgba(11,13,16,0.92) 100%),
+    linear-gradient(90deg, rgba(255,122,26,0.26), transparent 48%),
+    url('../assets/forge/forging-workspace-bg.png') center / cover no-repeat,
+    var(--forge-gradient-panel);
+  box-shadow: var(--forge-shadow-floating), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.auth-shell .auth-side::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 16% 16%, rgba(255,145,56,0.24), transparent 30%),
+    radial-gradient(circle at 86% 8%, rgba(77,163,255,0.18), transparent 28%);
+}
+
+.auth-shell .auth-side__content {
+  max-width: 540px;
+  position: relative;
+  z-index: 1;
+  gap: var(--space-4);
+}
+
+.auth-shell .auth-side__eyebrow {
+  border-color: var(--forge-border-tech);
+  background: rgba(11,13,16,0.64);
+  color: #C7E1FF;
+  box-shadow: var(--forge-glow-tech-sm);
+}
+
+.auth-shell .auth-side__title {
+  max-width: 10.5em;
+  color: var(--forge-text-primary);
+  font-size: clamp(2rem, 4.4vw, 3.6rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.auth-shell .auth-side__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.auth-shell .auth-side__list li {
+  min-height: 42px;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--forge-radius-sm);
+  background: rgba(11,13,16,0.58);
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  backdrop-filter: blur(10px);
+}
+
+.auth-shell .auth-side__list li::before {
+  width: 9px;
+  height: 9px;
+  margin-top: 0;
+  border: 0;
+  background: var(--forge-ember-hover);
+  background-image: none;
+  box-shadow: 0 0 14px var(--forge-amber-glow);
+}
+
+.auth-shell .auth-side__list li:nth-child(even)::before {
+  background: var(--forge-tech);
+  box-shadow: 0 0 14px var(--forge-tech-glow);
+}
+
+.auth-shell .auth-side__preview-label {
+  color: var(--forge-ember-hover);
+}
+
+.auth-shell .auth-side__preview-card,
+.auth-shell .auth-side__upgrade {
+  border-color: var(--forge-border);
+  background: rgba(14,19,24,0.82);
+  box-shadow: var(--forge-shadow-panel);
+  backdrop-filter: blur(14px);
+}
+
+.auth-shell .auth-side__preview-card {
+  padding: var(--space-3);
+}
+
+.auth-shell .auth-side__preview-story,
+.auth-shell .auth-side__upgrade-label {
+  color: var(--forge-text-primary);
+}
+
+.auth-shell .auth-side__preview-story em {
+  color: var(--forge-tech-hover);
+}
+
+.auth-shell .auth-side__preview-criteria {
+  border-top-color: var(--forge-border-subtle);
+}
+
+.auth-shell .auth-side__preview-criteria li,
+.auth-shell .auth-side__upgrade p {
+  color: var(--forge-text-secondary);
+}
+
+.auth-shell .auth-side__preview-criteria li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.auth-shell .auth-side__preview-criteria li::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: var(--forge-success);
+  box-shadow: 0 0 10px rgba(54,201,143,0.26);
+  flex: 0 0 auto;
+}
+
+@media (min-width: 900px) {
+  .auth-shell {
+    grid-template-columns: minmax(380px, 456px) minmax(0, 640px);
+  }
+
+  .auth-shell .auth-card {
+    max-width: none;
+  }
+
+  .auth-shell .auth-side {
+    display: flex;
+  }
+
+  .auth-shell:has(> .auth-card:only-child) {
+    grid-template-columns: minmax(0, 456px);
+  }
+}
+
+@media (max-width: 899px) {
+  .auth-shell .auth-card {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .auth-shell {
+    padding: var(--space-4);
+  }
+
+  .auth-shell .auth-card {
+    padding: var(--space-5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-shell .auth-card__submit:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* ============================================================
    PLACEHOLDER PAGE
    ============================================================ */
 
