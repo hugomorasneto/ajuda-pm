@@ -1247,6 +1247,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-canvas-muted);
+  min-height: 46px;
   overflow: hidden;
 }
 
@@ -1869,6 +1870,7 @@
 
 .brief-accordion {
   background: transparent;
+  min-height: 44px;
 }
 
 .brief-accordion__trigger {
@@ -1878,6 +1880,7 @@
 
 .brief-accordion__body {
   opacity: 0;
+  pointer-events: none;
   transition:
     grid-template-rows 0.25s ease,
     opacity 0.18s ease;
@@ -1885,6 +1888,7 @@
 
 .brief-accordion--open .brief-accordion__body {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .brief-accordion__body > .composer-section {
@@ -3482,6 +3486,7 @@
 .workspace-shell--forge .brief-accordion {
   border-color: var(--forge-border);
   background: var(--forge-surface-inset);
+  min-height: 50px;
 }
 
 .workspace-shell--forge .brief-accordion__trigger {
@@ -5271,31 +5276,26 @@
 
   .workspace-canvas__col--left .brief-composer {
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
-    height: calc(100vh - 70px);
-    max-height: calc(100vh - 70px);
+    grid-template-rows: auto auto;
+    height: auto;
+    max-height: none;
   }
 
   .workspace-canvas__col--left .brief-composer__body {
-    display: flex;
-    flex-direction: column;
+    display: grid;
     min-height: 0;
   }
 
   .workspace-canvas__col--left .brief-composer__form {
     display: grid;
-    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
     min-height: 0;
   }
 
   .workspace-canvas__col--left .brief-composer__fields {
     min-height: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding-right: var(--space-2);
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-border) transparent;
+    overflow: visible;
+    padding-right: 0;
   }
 
   .workspace-canvas__col--left .brief-composer__footer {
@@ -5305,8 +5305,8 @@
 
 @media (min-width: 1280px) {
   .workspace-canvas__col--left .brief-composer {
-    height: calc(100vh - 96px);
-    max-height: calc(100vh - 96px);
+    height: auto;
+    max-height: none;
   }
 }
 

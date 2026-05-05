@@ -482,9 +482,9 @@ export function useUserStoryWorkspace() {
         page_path: '/tool',
         metadata: { usage_count: usageCount, free_limit: FREE_GENERATION_LIMIT },
       })
-      setSaveMessage(
-        `Limite do plano Free atingido (${FREE_GENERATION_LIMIT} forjas). Atualize para Pro para continuar.`,
-      )
+      const limitMessage = `Limite do plano Free atingido (${FREE_GENERATION_LIMIT} forjas). Atualize para Pro para continuar.`
+      setWorkspaceError(limitMessage)
+      setSaveMessage(limitMessage)
       return false
     }
 
