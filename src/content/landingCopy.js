@@ -24,6 +24,13 @@ export const landingCopy = {
     description:
       'A IA organiza contexto, objetivo, critérios e riscos para PMs, Devs e QAs trabalharem com menos ruído.',
     microcopy: 'Grátis para começar · Sem cartão · Resultado em 60 segundos',
+    trustSignals: [
+      'Grátis para começar',
+      'Sem cartão',
+      'Criado para PMs, POs, Devs e QA',
+      'Gera critérios, trincas e checklist de validação',
+      'Cópia em Markdown e formato para Jira',
+    ],
     stats: [
       { value: '60 segundos', label: 'da demanda vaga a uma story pronta para revisão' },
       { value: 'Critérios + trincas', label: 'acabamento e pontos frágeis mapeados no mesmo fluxo' },
@@ -218,6 +225,43 @@ export const landingCopy = {
       `Cadastre seu e-mail para receber novidades do plano ${PRO_PLAN_NAME}, expansão de integrações e convites de acesso antecipado.`,
     buttonLabel: 'Avise quando abrir',
     note: 'Sem spam. Apenas novidades relevantes sobre o produto.',
+  },
+  faq: {
+    eyebrow: 'Dúvidas rápidas',
+    title: 'Antes de abrir a Bancada.',
+    description:
+      'Respostas diretas para testar a ProdForge com clareza e sem promessas infladas.',
+    items: [
+      {
+        question: 'Preciso cadastrar cartão para testar?',
+        answer: 'Não. Você pode começar grátis e testar a Bancada sem cartão.',
+      },
+      {
+        question: 'A ProdForge substitui o PM ou PO?',
+        answer:
+          'Não. A IA estrutura o raciocínio, sugere critérios e aponta gaps, mas a decisão continua com o time.',
+      },
+      {
+        question: 'Posso usar com Devs e QAs?',
+        answer:
+          'Sim. A saída da ProdForge foi pensada para facilitar refinamento, desenvolvimento e validação, com critérios de aceite, trincas e testes de resistência.',
+      },
+      {
+        question: 'Meus briefings ficam salvos?',
+        answer:
+          'As peças geradas podem ser salvas no histórico da sua conta. Evite inserir dados sensíveis em testes iniciais.',
+      },
+      {
+        question: 'A ProdForge já integra com Jira?',
+        answer:
+          'A ProdForge já entrega uma estrutura pronta para copiar e levar para ferramentas como Jira. Integrações diretas fazem parte do planejamento do produto.',
+      },
+      {
+        question: 'O que é uma peça forjada?',
+        answer:
+          'É a user story estruturada pela ProdForge a partir da sua matéria-prima: briefing, problema, regras e contexto.',
+      },
+    ],
   },
   finalCta: {
     eyebrow: 'Pronto para começar',

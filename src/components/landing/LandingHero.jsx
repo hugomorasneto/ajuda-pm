@@ -25,6 +25,14 @@ function LandingHero({ hero, isAuthenticated, sectionId }) {
         </div>
 
         {hero.microcopy ? <p className="landing-hero__microcopy">{hero.microcopy}</p> : null}
+
+        {hero.trustSignals?.length ? (
+          <ul className="landing-hero__trust-signals" aria-label="Sinais de confiança da ProdForge">
+            {hero.trustSignals.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        ) : null}
       </div>
 
       <HeroTransformationPreview preview={hero.preview} />

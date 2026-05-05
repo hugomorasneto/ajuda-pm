@@ -4,6 +4,7 @@ import BeforeAfterStory from '../components/landing/BeforeAfterStory'
 import BenefitsStrip from '../components/landing/BenefitsStrip'
 import ContextStrip from '../components/landing/ContextStrip'
 import LandingHero from '../components/landing/LandingHero'
+import LandingFaq from '../components/landing/LandingFaq'
 import LeadCaptureForm from '../components/landing/LeadCaptureForm'
 import LearningTeaser from '../components/landing/LearningTeaser'
 import PricingTeaser from '../components/landing/PricingTeaser'
@@ -54,6 +55,7 @@ function HomePage() {
       <LearningTeaser content={landingCopy.learningTeaser} guides={featuredGuides} />
       <PricingTeaser content={landingCopy.pricing} isAuthenticated={Boolean(user)} />
       <LeadCaptureForm content={landingCopy.leadCapture} />
+      <LandingFaq content={landingCopy.faq} />
 
       <section className="landing-section landing-final-cta">
         <div className="landing-final-cta__content">
