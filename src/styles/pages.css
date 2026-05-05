@@ -508,7 +508,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: var(--space-6) var(--space-4) var(--space-10);
 }
@@ -577,6 +577,110 @@
   font-size: var(--text-small);
   font-weight: 600;
   cursor: pointer;
+}
+
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.admin-tabs__button,
+.admin-button {
+  min-height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-base);
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.admin-tabs__button {
+  padding: 0 var(--space-4);
+}
+
+.admin-tabs__button:hover,
+.admin-button:hover:not(:disabled) {
+  background: var(--color-canvas-muted);
+  border-color: var(--color-border-strong);
+}
+
+.admin-tabs__button--active {
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+  border-color: color-mix(in srgb, var(--color-accent) 24%, var(--color-border));
+}
+
+.admin-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+}
+
+.admin-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.admin-button--compact {
+  min-height: 30px;
+  padding: 0 var(--space-3);
+}
+
+.admin-tab-panel {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.admin-section-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.admin-search {
+  display: grid;
+  gap: var(--space-2);
+  min-width: min(100%, 320px);
+}
+
+.admin-search span {
+  font-size: var(--text-small);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.admin-search input {
+  min-height: 38px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-base);
+  font-size: var(--text-small);
+}
+
+.admin-search input:focus,
+.admin-page__filter-select:focus {
+  border-color: var(--color-focus);
+  outline: 2px solid color-mix(in srgb, var(--color-focus) 22%, transparent);
+  outline-offset: 1px;
+}
+
+.admin-search input::placeholder {
+  color: var(--color-text-muted);
 }
 
 /* States */
@@ -664,6 +768,13 @@
   margin: 0;
 }
 
+.admin-metric-card__note {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+  line-height: 1.4;
+}
+
 /* Tables */
 .admin-table-section {
   background: var(--color-surface);
@@ -728,6 +839,12 @@
   white-space: nowrap;
 }
 
+.admin-table__empty {
+  text-align: center;
+  color: var(--color-text-secondary) !important;
+  white-space: normal !important;
+}
+
 .admin-table tbody tr:last-child td {
   border-bottom: none;
 }
@@ -765,8 +882,139 @@
   border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
 
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.admin-pagination p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+
+.admin-pagination__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-xs);
+  background: var(--color-canvas-muted);
+  color: var(--color-text-secondary);
+  font-size: var(--text-label);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.admin-badge--strong {
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+
+.admin-story-detail {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.admin-story-detail__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-story-detail__header h2 {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-primary);
+  font-size: var(--text-h3);
+  line-height: 1.35;
+}
+
+.admin-story-detail__header p:last-child {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+
+.admin-story-detail__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-3);
+}
+
+.admin-story-detail__block {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  padding: var(--space-4);
+  background: var(--color-canvas-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.admin-story-detail__block h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--text-small);
+}
+
+.admin-story-detail__block p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
 @media (min-width: 768px) {
   .admin-page {
     padding: var(--space-8) var(--space-6) var(--space-12);
+  }
+}
+
+@media (max-width: 767px) {
+  .admin-page__filter,
+  .admin-section-toolbar,
+  .admin-search,
+  .admin-pagination,
+  .admin-pagination__actions {
+    width: 100%;
+  }
+
+  .admin-page__filter {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-page__filter-select,
+  .admin-search input,
+  .admin-button,
+  .admin-tabs__button {
+    width: 100%;
+  }
+
+  .admin-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

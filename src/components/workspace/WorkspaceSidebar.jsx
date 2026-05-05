@@ -155,7 +155,7 @@ function WorkspaceSidebar({
     { label: 'Peças forjadas', path: '/historico', end: true, icon: <IconHistory /> },
   ]
   const toolNavItems = location.pathname.startsWith('/admin')
-    ? [...baseToolNavItems, { label: 'Admin', path: '/admin', end: false, icon: <IconAdmin /> }]
+    ? [...baseToolNavItems, { label: 'Administração', path: '/admin', end: false, icon: <IconAdmin /> }]
     : baseToolNavItems
 
   const academyNavItems = [

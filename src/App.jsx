@@ -16,12 +16,42 @@ const CheckEmailPage = lazy(() => import('./pages/CheckEmailPage'))
 const AdminPage = lazy(() => import('./pages/AdminPage'))
 
 function RouteFallback() {
+  const loadingSteps = ['Carregando módulos', 'Organizando a interface', 'Preservando o contexto']
+
   return (
-    <div className="app-route-loader" role="status" aria-live="polite">
+    <div
+      className="app-route-loader theme-forge"
+      role="status"
+      aria-live="polite"
+      aria-label="Carregando módulos do ProdForge"
+    >
       <div className="app-route-loader__content">
-        <p className="eyebrow">ProdForge</p>
-        <h1>Carregando</h1>
-        <p>Aguarde enquanto o módulo desta área é preparado.</p>
+        <div className="app-route-loader__brand" aria-hidden="true">
+          <span className="app-route-loader__brand-mark" />
+          <span>ProdForge</span>
+        </div>
+
+        <div className="app-route-loader__copy">
+          <p className="app-route-loader__eyebrow">Carregando</p>
+          <h1>Preparando a experiência</h1>
+          <p>Estamos carregando os módulos desta área para você continuar com o contexto preservado.</p>
+        </div>
+
+        <div className="app-route-loader__skeleton" aria-hidden="true">
+          <span className="app-route-loader__skeleton-line app-route-loader__skeleton-line--title" />
+          <span className="app-route-loader__skeleton-line app-route-loader__skeleton-line--wide" />
+          <span className="app-route-loader__skeleton-line" />
+          <span className="app-route-loader__skeleton-card" />
+        </div>
+
+        <ol className="app-route-loader__steps" aria-hidden="true">
+          {loadingSteps.map((step) => (
+            <li key={step}>
+              <span className="app-route-loader__step-dot" />
+              <span>{step}</span>
+            </li>
+          ))}
+        </ol>
       </div>
     </div>
   )
