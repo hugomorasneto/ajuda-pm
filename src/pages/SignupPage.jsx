@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC, FREE_GENERATION_LIMIT, PRO_PLAN_NAME } from '../constants/app'
+import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC, PRO_PLAN_NAME } from '../constants/app'
 import { useAuth } from '../hooks/useAuth'
 import { usePageMetadata } from '../hooks/usePageMetadata'
 import '../styles/pages.css'
@@ -217,7 +217,7 @@ function SignupPage() {
             Transforme briefings em user stories claras antes da próxima sprint.
           </h2>
           <ul className="auth-side__list">
-            <li>{FREE_GENERATION_LIMIT} gerações de user story incluídas</li>
+            <li>Teste grátis a criação de user stories</li>
             <li>Critérios de aceite e riscos de implementação</li>
             <li>Histórico com versões por feature</li>
             <li>Cópia em Markdown para uso no backlog</li>

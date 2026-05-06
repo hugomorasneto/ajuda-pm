@@ -99,6 +99,12 @@ npm run supabase:secrets:set -- RESEND_API_KEY=YOUR_RESEND_KEY CONTACT_TO_EMAIL=
 npm run supabase:functions:deploy
 ```
 
+A função `contact-message` é pública e deve ser implantada sem verificação de JWT. O script `npm run supabase:functions:deploy` já passa `--no-verify-jwt` para ela; se fizer deploy manual, use:
+
+```powershell
+supabase functions deploy contact-message --no-verify-jwt --project-ref YOUR_PROJECT_REF
+```
+
 ## Notes
 
 - The scripts no longer hardcode the token env var name.

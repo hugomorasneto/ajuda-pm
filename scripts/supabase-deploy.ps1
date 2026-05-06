@@ -10,7 +10,12 @@ try {
   Use-SupabaseAccessToken -Context $context
 
   foreach ($functionName in $Functions) {
-    & supabase functions deploy $functionName --project-ref $context.ProjectRef
+    $command = @('functions', 'deploy', $functionName, '--project-ref', $context.ProjectRef)
+    if ($functionName -eq 'contact-message') {
+      $command += '--no-verify-jwt'
+    }
+
+    & supabase @command
     if ($LASTEXITCODE -ne 0) {
       exit $LASTEXITCODE
     }
