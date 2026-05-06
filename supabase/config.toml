@@ -4,3 +4,6 @@ project_id = "bkuizdxdmnneyjsjydtm"
 
 [functions.generate-user-story]
 verify_jwt = true
+
+[functions.contact-message]
+verify_jwt = false

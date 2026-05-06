@@ -1,5 +1,6 @@
 param(
   [string]$EnvFile = '.env.local',
+  [string]$FunctionName = '',
   [switch]$SkipJwtVerification
 )
 
@@ -8,7 +9,11 @@ param(
 try {
   [void](Assert-SupabaseProjectContext -EnvFile $EnvFile)
 
-  $command = @('functions', 'serve', 'generate-user-story')
+  $command = @('functions', 'serve')
+  if ($FunctionName) {
+    $command += $FunctionName
+  }
+
   if ($SkipJwtVerification) {
     $command += '--no-verify-jwt'
   }

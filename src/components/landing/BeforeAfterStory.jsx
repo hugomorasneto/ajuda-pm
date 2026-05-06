@@ -40,7 +40,7 @@ function BeforeAfterStory({ content }) {
           </div>
           <h3>{content.after.title}</h3>
 
-          <ul className="landing-before-after__indicators" aria-label="Indicadores da story estruturada">
+          <ul className="landing-before-after__indicators" aria-label="Indicadores da user story estruturada">
             {content.after.indicators.map((item) => (
               <li key={item}>{item}</li>
             ))}
@@ -69,7 +69,7 @@ function BeforeAfterStory({ content }) {
 
           <div className="landing-before-after__score" aria-label="Indicador de qualidade">
             <div className="landing-before-after__score-copy">
-              <span>Clareza da story</span>
+              <span>Clareza da user story</span>
               <strong>{content.after.scoreLabel}</strong>
             </div>
             <div className="forge-metric-bar forge-metric-bar--tech" style={{ '--forge-metric-value': content.after.scoreValue }}>

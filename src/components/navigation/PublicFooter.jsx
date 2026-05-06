@@ -9,10 +9,14 @@ const footerGuides = getLearningGuidesBySlugs([
   'backlog-e-refinamento',
 ])
 
+const footerGuideLabels = {
+  'fundamentos-produto-agil': 'Fundamentos de produto ágil para PMs e POs',
+}
+
 function PublicFooter() {
   const { user } = useAuth()
   const brandStatement =
-    'Transforme briefing confuso em user stories claras, testáveis e prontas para Dev, QA e negócio.'
+    'Transforme briefings confusos em user stories claras, testáveis e prontas para Dev, QA e negócio.'
   const bottomCopy = `© ${new Date().getFullYear()} ${APP_NAME} · Feito para times que precisam de stories mais claras`
   const footerClassName = 'public-footer public-footer--forge-home'
   const footerCtaClassName = ['public-footer__cta', 'forge-button forge-button--metal forge-button--sm']
@@ -40,7 +44,7 @@ function PublicFooter() {
         <div className="public-footer__links">
           <nav className="public-footer__nav" aria-label="Produto">
             <p className="public-footer__nav-title">Produto</p>
-            <Link to="/#produto">Produto</Link>
+            <Link to="/">Produto</Link>
             <Link to="/#como-funciona">Como funciona</Link>
             <Link to="/#antes-depois">Antes e depois</Link>
             <Link to="/#planos">Planos</Link>
@@ -50,7 +54,7 @@ function PublicFooter() {
             <p className="public-footer__nav-title">Campo de Treino</p>
             {footerGuides.map((guide) => (
               <Link key={guide.slug} to={`/aprender/${guide.slug}`}>
-                {guide.title}
+                {footerGuideLabels[guide.slug] ?? guide.title}
               </Link>
             ))}
             <Link to="/aprender">Ver todos os guias →</Link>
@@ -65,7 +69,7 @@ function PublicFooter() {
             <Link to="/termos-de-uso">Termos de Uso</Link>
             <Link to="/contato">Contato</Link>
             <a href={HUGO_MORAES_LINKEDIN_URL} target="_blank" rel="noopener noreferrer">
-              LinkedIn de Hugo
+              LinkedIn do criador
             </a>
           </nav>
         </div>

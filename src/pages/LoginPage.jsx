@@ -139,7 +139,7 @@ function LoginPage() {
     <div className="auth-shell auth-shell--login">
       <div className="auth-card">
         <div className="auth-card__topbar">
-          <Link to="/" className="auth-card__brand" aria-label="Voltar para a Home do ProdForge">
+          <Link to="/" className="auth-card__brand" aria-label="Voltar para o início do ProdForge">
             <img
               src={BRAND_LOGO_HORIZONTAL_SRC}
               alt={APP_NAME}
@@ -148,7 +148,7 @@ function LoginPage() {
             />
           </Link>
           <Link to="/" className="auth-card__home-link">
-            Home
+            Início
           </Link>
         </div>
 
@@ -243,7 +243,7 @@ function LoginPage() {
             <li>Histórico preservado por usuário</li>
             <li>Versões salvas por feature</li>
             <li>Critérios de aceite consistentes</li>
-            <li>Saída pronta para backlog e Jira</li>
+            <li>Saída estruturada para backlog e refinamento</li>
           </ul>
           <div className="auth-side__preview">
             <p className="auth-side__preview-label">Última peça na bancada</p>

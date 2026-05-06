@@ -10477,6 +10477,7 @@
 }
 
 .contact-card a,
+.contact-card button,
 .contact-page__plain-mail,
 .contact-page__privacy-note a,
 .contact-page__quick-links nav a {
@@ -10489,6 +10490,8 @@
 
 .contact-card a:hover,
 .contact-card a:focus-visible,
+.contact-card button:hover,
+.contact-card button:focus-visible,
 .contact-page__plain-mail:hover,
 .contact-page__plain-mail:focus-visible,
 .contact-page__privacy-note a:hover,
@@ -10496,6 +10499,21 @@
 .contact-page__quick-links nav a:hover,
 .contact-page__quick-links nav a:focus-visible {
   color: var(--forge-text-primary);
+}
+
+.contact-card button {
+  width: fit-content;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.contact-card button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
 }
 
 .contact-page__quick-links,
@@ -10507,6 +10525,152 @@
 
 .contact-page__mail-panel .contact-page__section-header {
   margin-bottom: 0;
+}
+
+.contact-page__form {
+  display: grid;
+  gap: var(--forge-space-4);
+  min-width: 0;
+}
+
+.contact-page__form-grid {
+  display: grid;
+  gap: var(--forge-space-4);
+}
+
+.contact-page__field {
+  display: grid;
+  gap: var(--forge-space-2);
+  min-width: 0;
+}
+
+.contact-page__field label {
+  color: var(--forge-text-primary);
+  font-size: var(--text-small);
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.contact-page__field input,
+.contact-page__field select,
+.contact-page__field textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--forge-radius-sm);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025)),
+    rgba(8, 12, 18, 0.78);
+  color: var(--forge-text-primary);
+  font: inherit;
+  font-size: var(--text-body);
+  line-height: 1.45;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.contact-page__field input,
+.contact-page__field select {
+  min-height: 48px;
+  padding: 0 var(--forge-space-4);
+}
+
+.contact-page__field textarea {
+  min-height: 176px;
+  resize: vertical;
+  padding: var(--forge-space-3) var(--forge-space-4);
+}
+
+.contact-page__field input::placeholder,
+.contact-page__field textarea::placeholder {
+  color: rgba(225, 231, 239, 0.48);
+}
+
+.contact-page__field input:focus-visible,
+.contact-page__field select:focus-visible,
+.contact-page__field textarea:focus-visible {
+  outline: none;
+  border-color: rgba(255, 145, 56, 0.72);
+  box-shadow:
+    0 0 0 3px rgba(255, 122, 26, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.contact-page__field input[aria-invalid='true'],
+.contact-page__field select[aria-invalid='true'],
+.contact-page__field textarea[aria-invalid='true'] {
+  border-color: rgba(255, 98, 98, 0.72);
+  box-shadow: 0 0 0 3px rgba(255, 98, 98, 0.12);
+}
+
+.contact-page__field input:disabled,
+.contact-page__field select:disabled,
+.contact-page__field textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.contact-page__field-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--forge-space-2);
+}
+
+.contact-page__field-error,
+.contact-page__counter {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.contact-page__field-error {
+  color: #ffb4b4;
+}
+
+.contact-page__counter {
+  margin-left: auto;
+  color: var(--forge-text-muted);
+}
+
+.contact-page__honeypot {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.contact-page__feedback {
+  margin: 0;
+  padding: var(--forge-space-3) var(--forge-space-4);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--forge-radius-sm);
+  font-size: var(--text-small);
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.contact-page__feedback--success {
+  border-color: rgba(54, 201, 143, 0.32);
+  background: rgba(54, 201, 143, 0.1);
+  color: #c6f8e3;
+}
+
+.contact-page__feedback--error {
+  border-color: rgba(255, 98, 98, 0.32);
+  background: rgba(255, 98, 98, 0.1);
+  color: #ffd1d1;
+}
+
+.contact-page__submit {
+  width: 100%;
+  min-height: 50px;
 }
 
 .contact-page__mail-actions {
@@ -10563,6 +10727,10 @@
 
 @media (min-width: 760px) {
   .contact-page__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .contact-page__form-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

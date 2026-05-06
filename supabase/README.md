@@ -83,6 +83,16 @@ powershell -ExecutionPolicy Bypass -File scripts/supabase-serve.ps1 -SkipJwtVeri
 npm run supabase:secrets:set -- GEMINI_API_KEY=YOUR_KEY GEMINI_MODEL=gemini-2.0-flash
 ```
 
+Para a função pública de contato, configure também as secrets abaixo nas Supabase Edge Functions, nunca no frontend:
+
+```powershell
+npm run supabase:secrets:set -- RESEND_API_KEY=YOUR_RESEND_KEY CONTACT_TO_EMAIL=contato-interno@example.com CONTACT_FROM_EMAIL="ProdForge <contato@seudominio-autorizado.com>"
+```
+
+- `CONTACT_TO_EMAIL` é o destinatário interno das mensagens recebidas em `/contato`.
+- `CONTACT_FROM_EMAIL` deve usar um domínio autorizado no provedor de e-mail.
+- Se essas variáveis não estiverem configuradas, a função registra a mensagem em `public.contact_messages`, marca `email_sent = false` e retorna sucesso controlado para o usuário.
+
 ## Deploy the edge function
 
 ```bash

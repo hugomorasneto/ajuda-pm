@@ -3,7 +3,7 @@ import HeroTransformationPreview from './HeroTransformationPreview'
 
 function LandingHero({ hero, isAuthenticated, sectionId }) {
   const primaryCtaPath = isAuthenticated ? '/tool' : '/signup'
-  const primaryCtaLabel = isAuthenticated ? 'Abrir bancada' : 'Testar com um briefing'
+  const primaryCtaLabel = isAuthenticated ? 'Abrir bancada' : 'Criar conta grátis'
 
   return (
     <section

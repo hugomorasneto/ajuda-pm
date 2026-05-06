@@ -20,16 +20,16 @@ export const landingCopy = {
   ],
   hero: {
     eyebrow: 'Feito para PMs e times de produto',
-    title: 'Transforme briefing confuso em story clara.',
+    title: 'Transforme briefings confusos em user stories claras.',
     description:
-      'A IA organiza contexto, objetivo, critérios e riscos para PMs, Devs e QAs trabalharem com menos ruído.',
+      'Use IA para transformar contexto solto em histórias de usuário claras, critérios de aceite e pontos de atenção para Dev, QA e negócio.',
     microcopy: 'Grátis para começar · Sem cartão · Resultado em 60 segundos',
     trustSignals: [
       'Grátis para começar',
       'Sem cartão',
       'Criado para PMs, POs, Devs e QA',
       'Gera critérios, trincas e checklist de validação',
-      'Cópia em Markdown e formato para Jira',
+      'Cópia em Markdown pronta para backlog',
     ],
     stats: [
       { value: '60 segundos', label: 'da demanda vaga a uma primeira versão revisável' },
@@ -49,7 +49,7 @@ export const landingCopy = {
       transitionLabel: 'A IA estrutura',
       furnaceTitle: 'Organizando contexto...',
       furnaceBody: 'Analisando, estruturando e refinando a entrada para revisão do time.',
-      storyLabel: 'Story estruturada',
+      storyLabel: 'User story estruturada',
       storyTitle: 'Validar domínio corporativo no onboarding B2B',
       outputPills: ['Objetivo', 'Critérios', 'QA'],
       objectiveLabel: 'Objetivo',
@@ -74,7 +74,7 @@ export const landingCopy = {
   },
   workflow: {
     eyebrow: 'Como funciona',
-    title: 'Do briefing confuso à story pronta em 3 passos.',
+    title: 'Do briefing confuso à user story pronta em 3 passos.',
     description:
       'Uma sequência curta para organizar contexto, gerar a primeira versão e revisar antes do backlog.',
     steps: [
@@ -88,11 +88,11 @@ export const landingCopy = {
         step: '02',
         title: 'A IA organiza',
         description:
-          'O ProdForge estrutura objetivo, story, critérios, trincas e checklist de validação no mesmo fluxo.',
+          'O ProdForge estrutura objetivo, user story, critérios, trincas e checklist de validação no mesmo fluxo.',
       },
       {
         step: '03',
-        title: 'Receba a story pronta',
+        title: 'Receba a user story pronta',
         description:
           'Revise com mais clareza antes de enviar ao backlog e reduzir ruído entre produto, dev e QA.',
       },
@@ -102,7 +102,7 @@ export const landingCopy = {
     eyebrow: 'Antes e depois',
     title: 'Menos ruído. Mais clareza. Entregas melhores.',
     description:
-      'Veja como uma demanda solta vira uma story clara, com objetivo, comportamento esperado e critérios de aceite.',
+      'Veja como uma demanda solta vira uma user story clara, com objetivo, comportamento esperado e critérios de aceite.',
     transition: {
       copy: 'A IA transforma contexto solto em uma estrutura clara.',
       label: 'Transformação de demanda vaga em user story estruturada',
@@ -147,7 +147,7 @@ export const landingCopy = {
         image: 'pm-strategist-forge',
         imageAlt: 'Estrategista de produto representando clareza e priorização na ProdForge',
         title: 'PM/PO: estratégia sem perder contexto',
-        description: 'Organize problema, objetivo, impacto e regras antes da story chegar ao time.',
+        description: 'Organize problema, objetivo, impacto e regras antes da user story chegar ao time.',
         benefits: [
           'Menos briefing solto',
           'Mais clareza de decisão',
@@ -211,7 +211,7 @@ export const landingCopy = {
       items: [
         'Mais gerações e versões por fluxo.',
         'Comparação de versões e formatos de cópia avançados.',
-        'Padrões do time, templates e integrações futuras.',
+        'Padrões do time, templates e estrutura pronta para discussão com o time.',
       ],
     },
   },
@@ -219,10 +219,10 @@ export const landingCopy = {
     eyebrow: `Interesse no plano ${PRO_PLAN_NAME}`,
     title: `Quer testar o plano ${PRO_PLAN_NAME}?`,
     description:
-      'Construído para PMs e POs que querem sair do briefing solto e chegar em stories claras, revisáveis e prontas para o time.',
+      'Construído para PMs e POs que querem sair do briefing solto e chegar em user stories claras, revisáveis e prontas para o time.',
     formTitle: 'Entre na lista de interesse',
     formDescription:
-      `Cadastre seu e-mail para receber novidades do plano ${PRO_PLAN_NAME}, expansão de integrações e convites de acesso antecipado.`,
+      `Cadastre seu e-mail para receber novidades do plano ${PRO_PLAN_NAME}, melhorias de fluxo e convites de acesso antecipado.`,
     buttonLabel: 'Avise quando abrir',
     note: 'Sem spam. Apenas novidades relevantes sobre o produto.',
   },
@@ -252,9 +252,9 @@ export const landingCopy = {
           'As peças geradas podem ser salvas no histórico da sua conta. Evite inserir dados sensíveis em testes iniciais.',
       },
       {
-        question: 'A ProdForge já integra com Jira?',
+        question: 'A ProdForge já tem integração direta com Jira?',
         answer:
-          'A ProdForge já entrega uma estrutura pronta para copiar e levar para ferramentas como Jira. Integrações diretas fazem parte do planejamento do produto.',
+          'Ainda não há integração direta. Hoje, a ProdForge entrega uma estrutura pronta para levar ao backlog e discutir com o time.',
       },
       {
         question: 'O que é uma peça forjada?',
@@ -265,7 +265,7 @@ export const landingCopy = {
   },
   finalCta: {
     eyebrow: 'Pronto para começar',
-    title: 'Pronto para transformar seu briefing em uma story clara?',
+    title: 'Pronto para transformar seu briefing em uma user story clara?',
     description:
       'Organize briefing, contexto e critérios antes do time começar a desenvolver.',
   },

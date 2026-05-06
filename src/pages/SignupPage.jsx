@@ -120,7 +120,7 @@ function SignupPage() {
     <div className="auth-shell auth-shell--signup">
       <div className="auth-card">
         <div className="auth-card__topbar">
-          <Link to="/" className="auth-card__brand" aria-label="Voltar para a Home do ProdForge">
+          <Link to="/" className="auth-card__brand" aria-label="Voltar para o início do ProdForge">
             <img
               src={BRAND_LOGO_HORIZONTAL_SRC}
               alt={APP_NAME}
@@ -129,7 +129,7 @@ function SignupPage() {
             />
           </Link>
           <Link to="/" className="auth-card__home-link">
-            Home
+            Início
           </Link>
         </div>
 
@@ -137,7 +137,7 @@ function SignupPage() {
           <p className="auth-card__eyebrow">Cadastro gratuito</p>
           <h1 className="auth-card__title">Crie sua conta grátis</h1>
           <p className="auth-card__description">
-            Transforme briefings em user stories claras, com critérios de aceite e prontas para Jira.
+            Transforme briefings em user stories claras, com critérios de aceite e prontas para backlog.
           </p>
         </div>
 
@@ -214,13 +214,13 @@ function SignupPage() {
         <div className="auth-side__content">
           <p className="auth-side__eyebrow">Grátis para começar</p>
           <h2 className="auth-side__title">
-            Transforme briefing em user story clara antes da próxima sprint.
+            Transforme briefings em user stories claras antes da próxima sprint.
           </h2>
           <ul className="auth-side__list">
             <li>{FREE_GENERATION_LIMIT} gerações de user story incluídas</li>
-            <li>Critérios de aceite e teste de resistência automáticos</li>
+            <li>Critérios de aceite e riscos de implementação</li>
             <li>Histórico com versões por feature</li>
-            <li>Cópia em Markdown e formato para Jira</li>
+            <li>Cópia em Markdown para uso no backlog</li>
           </ul>
           <div className="auth-side__preview">
             <p className="auth-side__preview-label">O que você vai gerar</p>
