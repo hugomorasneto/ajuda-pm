@@ -20,6 +20,7 @@
   transform: translateX(-100%);
   transition: transform 0.22s ease;
 }
+
 .workspace-sidebar--open { transform: translateX(0); }
 
 /* Desktop: sidebar becomes sticky col-1 of the CSS Grid */
@@ -5004,6 +5005,156 @@
   }
 }
 
+/* ============================================================
+   BANCADA VAZIA - COMPOSITOR CENTRAL
+   ============================================================ */
+
+.brief-composer__primary-flow,
+.brief-composer__optional-flow,
+.workspace-empty-rail {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.workspace-canvas--empty {
+  width: min(100%, 1260px);
+  margin-inline: auto;
+}
+
+.workspace-canvas--empty .brief-composer.panel {
+  padding: clamp(28px, 3vw, 40px);
+}
+
+.workspace-canvas--empty .brief-composer__panel-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  padding-bottom: var(--space-5);
+}
+
+.workspace-canvas--empty .brief-composer__panel-copy {
+  max-width: 48rem;
+}
+
+.workspace-canvas--empty .brief-composer__panel-copy h2 {
+  max-width: 16ch;
+  font-size: clamp(2rem, 3vw, 2.85rem);
+  line-height: 1.05;
+}
+
+.workspace-canvas--empty .brief-composer__panel-copy p:last-child {
+  max-width: 44rem;
+  font-size: var(--text-body);
+}
+
+.workspace-canvas--empty .brief-composer__quick-start {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.workspace-canvas--empty .brief-composer__template-list {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.workspace-canvas--empty .brief-composer__context-input {
+  min-height: clamp(240px, 30vh, 330px);
+}
+
+.workspace-canvas--empty .brief-composer__footer,
+.workspace-shell--forge .workspace-canvas--empty .brief-composer__footer {
+  position: static;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  border-top: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.workspace-canvas--empty .brief-composer__footer-copy {
+  text-align: left;
+}
+
+.workspace-canvas--empty .brief-composer__submit {
+  min-height: 52px;
+  font-size: 1rem;
+}
+
+.workspace-canvas--empty .brief-composer__optional-flow {
+  padding-top: var(--space-1);
+}
+
+.workspace-canvas--empty .project-context-panel {
+  padding: var(--space-4);
+}
+
+.workspace-canvas--empty .workspace-state--compact,
+.workspace-canvas--empty .workspace-inspection-preview {
+  padding: var(--space-4);
+}
+
+.workspace-canvas--empty .workspace-state--compact {
+  min-height: 0;
+}
+
+.workspace-canvas--empty .workspace-state--compact .workspace-state__content {
+  gap: var(--space-2);
+}
+
+.workspace-canvas--empty .workspace-state--compact .workspace-state__copy h2,
+.workspace-canvas--empty .workspace-inspection-preview h2 {
+  font-size: var(--text-body);
+  line-height: 1.35;
+}
+
+.workspace-canvas--empty .workspace-state--compact .workspace-state__copy p:last-child,
+.workspace-canvas--empty .workspace-inspection-preview p {
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+.workspace-canvas--empty .workspace-right-panel,
+.workspace-canvas--empty .workspace-right-panel__review {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .workspace-canvas--empty {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workspace-canvas--empty .workspace-canvas__col {
+    display: grid;
+    gap: var(--space-4);
+  }
+}
+
+@media (min-width: 1180px) {
+  .workspace-canvas--empty {
+    grid-template-columns: minmax(640px, 860px) minmax(240px, 300px);
+    justify-content: center;
+    align-items: start;
+  }
+
+  .workspace-canvas--empty .workspace-canvas__col--left,
+  .workspace-canvas--empty .workspace-canvas__col--right {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+@media (min-width: 1536px) {
+  .workspace-canvas--empty {
+    grid-template-columns: minmax(720px, 940px) minmax(260px, 320px);
+  }
+
+  .workspace-canvas--empty .brief-composer__panel-actions {
+    display: flex;
+  }
+}
+
 @media (min-width: 1100px) {
   .workspace-canvas--empty .workspace-canvas__col--left .brief-composer__footer {
     position: sticky;
@@ -6670,5 +6821,39 @@
   .planning-poker-room__stories,
   .planning-poker-room__guild {
     position: static;
+  }
+}
+
+/* Ajuste final do estado vazio da Bancada: mantém a forja no centro e apoios na lateral. */
+.workspace-canvas--empty {
+  width: min(100%, 1260px);
+  margin-inline: auto;
+}
+
+.workspace-canvas--empty .brief-composer__footer,
+.workspace-shell--forge .workspace-canvas--empty .brief-composer__footer {
+  position: static !important;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  border-top: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+@media (min-width: 1180px) {
+  .workspace-canvas--empty {
+    grid-template-columns: minmax(640px, 860px) minmax(240px, 300px) !important;
+    justify-content: center;
+    align-items: start;
+  }
+
+  .workspace-canvas--empty .workspace-canvas__col--right {
+    display: grid !important;
+  }
+}
+
+@media (min-width: 1536px) {
+  .workspace-canvas--empty {
+    grid-template-columns: minmax(720px, 940px) minmax(260px, 320px) !important;
   }
 }

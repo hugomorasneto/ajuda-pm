@@ -21,10 +21,8 @@ function InspectionPreviewCard() {
   return (
     <aside className="panel workspace-inspection-preview" aria-label="Prévia da inspeção">
       <p className="quality-panel__panel-eyebrow">Inspeção</p>
-      <h2>Inspeção após a primeira versão</h2>
-      <p>
-        Score, trincas, checklist de QA e ações de entrega aparecem aqui depois que a primeira user story for gerada.
-      </p>
+      <h2>A inspeção aparece depois da primeira versão.</h2>
+      <p>Score, trincas e checklist ficam disponíveis após a forja.</p>
     </aside>
   )
 }
@@ -311,6 +309,51 @@ function ToolPage() {
     </aside>
   )
 
+  const composerPanel = (
+    <BriefComposer
+      formValues={formValues}
+      validationErrors={validationErrors}
+      onChange={handleFieldChange}
+      onApplyPrompt={handlePromptChipApply}
+      onApplyTemplate={applyTemplateToBriefing}
+      onSubmit={handleSubmitWithProject}
+      onReset={handleResetToCreate}
+      isSubmitting={isSubmitting}
+      isEditing={isEditing && canEditSelectedStory}
+      isGenerated={Boolean(result)}
+      activeStoryTitle={activeStoryTitle}
+      hasAdjustment={Boolean(formValues.adjustment.trim())}
+    />
+  )
+
+  const projectPanel = (
+    <ProjectContextPanel
+      projects={projects}
+      selectedProjectId={selectedProjectId}
+      selectedProjectName={selectedProjectName}
+      onSelectProject={handleProjectSelect}
+      onCreateProject={handleCreateProject}
+      onAssignToSelectedProject={handleAssignToSelectedProject}
+      onForgeStandalone={handleSubmitWithProject}
+      isCreating={isCreatingProject}
+      isAssigning={isSavingEdits}
+      isLoading={isLoadingProjects}
+      isSubmitting={isSubmitting}
+      hasGeneratedStory={Boolean(result)}
+      canAssignGeneratedStory={Boolean(
+        result && selectedStoryId && !selectedStoryProjectId && canEditSelectedStory,
+      )}
+      canAssignToSelectedProject={Boolean(
+        result &&
+          selectedStoryId &&
+          canEditSelectedStory &&
+          selectedProjectId &&
+          selectedProjectId !== selectedStoryProjectId,
+      )}
+      actionMessage={projectActionMessage}
+    />
+  )
+
   return (
     <div className="tool-page story-workspace">
 
@@ -327,69 +370,56 @@ function ToolPage() {
         ))}
       </nav>
 
-      <div className={`workspace-canvas ${reviewStory ? 'workspace-canvas--with-story' : 'workspace-canvas--empty'}`}>
-        <div
-          className={`workspace-canvas__col workspace-canvas__col--left ${
-            mobileTab === 'entrada' ? 'workspace-canvas__col--active' : ''
-          }`}
-        >
-          <BriefComposer
-            formValues={formValues}
-            validationErrors={validationErrors}
-            onChange={handleFieldChange}
-            onApplyPrompt={handlePromptChipApply}
-            onApplyTemplate={applyTemplateToBriefing}
-            onSubmit={handleSubmitWithProject}
-            onReset={handleResetToCreate}
-            isSubmitting={isSubmitting}
-            isEditing={isEditing && canEditSelectedStory}
-            isGenerated={Boolean(result)}
-            activeStoryTitle={activeStoryTitle}
-            hasAdjustment={Boolean(formValues.adjustment.trim())}
-          />
-          <ProjectContextPanel
-            projects={projects}
-            selectedProjectId={selectedProjectId}
-            selectedProjectName={selectedProjectName}
-            onSelectProject={handleProjectSelect}
-            onCreateProject={handleCreateProject}
-            onAssignToSelectedProject={handleAssignToSelectedProject}
-            onForgeStandalone={handleSubmitWithProject}
-            isCreating={isCreatingProject}
-            isAssigning={isSavingEdits}
-            isLoading={isLoadingProjects}
-            isSubmitting={isSubmitting}
-            hasGeneratedStory={Boolean(result)}
-            canAssignGeneratedStory={Boolean(
-              result && selectedStoryId && !selectedStoryProjectId && canEditSelectedStory,
-            )}
-            canAssignToSelectedProject={Boolean(
-              result &&
-                selectedStoryId &&
-                canEditSelectedStory &&
-                selectedProjectId &&
-                selectedProjectId !== selectedStoryProjectId,
-            )}
-            actionMessage={projectActionMessage}
-          />
-        </div>
+      {reviewStory ? (
+        <div className="workspace-canvas workspace-canvas--with-story">
+          <div
+            className={`workspace-canvas__col workspace-canvas__col--left ${
+              mobileTab === 'entrada' ? 'workspace-canvas__col--active' : ''
+            }`}
+          >
+            {composerPanel}
+            {projectPanel}
+          </div>
 
-        <div
-          className={`workspace-canvas__col workspace-canvas__col--center ${
-            mobileTab === 'resultado' ? 'workspace-canvas__col--active' : ''
-          }`}
-        >
-          {documentCanvas}
-        </div>
+          <div
+            className={`workspace-canvas__col workspace-canvas__col--center ${
+              mobileTab === 'resultado' ? 'workspace-canvas__col--active' : ''
+            }`}
+          >
+            {documentCanvas}
+          </div>
 
-        <div
-          className={`workspace-canvas__col workspace-canvas__col--right ${
-            mobileTab === 'revisao' ? 'workspace-canvas__col--active' : ''
-          }`}
-        >
-          {rightPanel}
+          <div
+            className={`workspace-canvas__col workspace-canvas__col--right ${
+              mobileTab === 'revisao' ? 'workspace-canvas__col--active' : ''
+            }`}
+          >
+            {rightPanel}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="workspace-canvas workspace-canvas--empty">
+          <div
+            className={`workspace-canvas__col workspace-canvas__col--left ${
+              mobileTab === 'entrada' ? 'workspace-canvas__col--active' : ''
+            }`}
+          >
+            {composerPanel}
+            {projectPanel}
+          </div>
+
+          <div
+            className={`workspace-canvas__col workspace-canvas__col--right ${
+              mobileTab === 'resultado' || mobileTab === 'revisao' ? 'workspace-canvas__col--active' : ''
+            }`}
+          >
+            <div className="workspace-empty-rail">
+              {documentCanvas}
+              {rightPanel}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

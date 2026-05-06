@@ -265,7 +265,7 @@ function BriefComposer({
           <p className="brief-composer__eyebrow">Bancada</p>
           <h2>Descreva a matéria-prima da story</h2>
           <p>
-            Cole o briefing, problema ou demanda inicial. O ProdForge transforma isso em uma user story pronta para refino.
+            Cole o briefing, problema ou demanda inicial. O ProdForge transforma esse contexto em uma user story pronta para refino.
           </p>
         </div>
 
@@ -314,7 +314,7 @@ function BriefComposer({
         ) : null}
 
         <form onSubmit={handleSubmit} className="brief-composer__form">
-          <div className="brief-composer__fields">
+          <div className="brief-composer__primary-flow">
             <ComposerSection
               icon={<IconFileText />}
               label="Matéria-prima"
@@ -345,6 +345,23 @@ function BriefComposer({
               />
             </ComposerSection>
 
+            <div className="brief-composer__footer">
+              {isSubmitting ? <LoadingProgress /> : null}
+
+              <p className="brief-composer__footer-copy">{submitHelpText}</p>
+
+              <button
+                type="submit"
+                className="btn btn-primary btn-full brief-composer__submit"
+                disabled={isSubmitting || !canSubmit}
+              >
+                <IconSparkles />
+                {submitLabel}
+              </button>
+            </div>
+          </div>
+
+          <div className="brief-composer__optional-flow">
             <div className={`brief-accordion ${reqOpen ? 'brief-accordion--open' : ''}`}>
               <button
                 type="button"
@@ -447,21 +464,6 @@ function BriefComposer({
                 </ComposerSection>
               </div>
             </div>
-          </div>
-
-          <div className="brief-composer__footer">
-            {isSubmitting ? <LoadingProgress /> : null}
-
-            <p className="brief-composer__footer-copy">{submitHelpText}</p>
-
-            <button
-              type="submit"
-              className="btn btn-primary btn-full brief-composer__submit"
-              disabled={isSubmitting || !canSubmit}
-            >
-              <IconSparkles />
-              {submitLabel}
-            </button>
           </div>
         </form>
       </div>
