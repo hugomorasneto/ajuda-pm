@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabaseClient'
 
 const teamColumns = 'id, project_id, owner_id, name, description, created_at, updated_at'
+const editableTeamMemberRoles = new Set(['admin', 'member', 'viewer'])
 
 function normalizeTeamPayload({ name, description = '' }) {
   return {
@@ -121,6 +122,89 @@ export async function addTeamMemberByEmail({ teamId, email, role = 'member', use
     return { success: true, data: data?.[0] ?? null }
   } catch (error) {
     console.error('Unexpected addTeamMemberByEmail error:', error)
+    return { success: false, error, data: null }
+  }
+}
+
+export async function updateTeamMemberRole({ teamId, memberUserId, role, userId }) {
+  try {
+    if (!userId) {
+      return { success: false, error: new Error('Usuário não autenticado.'), data: null }
+    }
+    if (!teamId) {
+      return { success: false, error: new Error('Time não informado.'), data: null }
+    }
+    if (!memberUserId) {
+      return { success: false, error: new Error('Membro não informado.'), data: null }
+    }
+    if (!editableTeamMemberRoles.has(role)) {
+      return { success: false, error: new Error('Papel inválido para membro do time.'), data: null }
+    }
+
+    const { data, error } = await supabase.rpc('update_team_member_role', {
+      p_team_id: teamId,
+      p_member_user_id: memberUserId,
+      p_role: role,
+    })
+
+    if (error) {
+      console.error('Supabase updateTeamMemberRole error:', error)
+      return { success: false, error, data: null }
+    }
+
+    const updatedMember = data?.[0] ?? null
+    if (!updatedMember) {
+      return {
+        success: false,
+        error: new Error('Não foi possível alterar o papel deste membro.'),
+        data: null,
+      }
+    }
+
+    return { success: true, data: updatedMember }
+  } catch (error) {
+    console.error('Unexpected updateTeamMemberRole error:', error)
+    return { success: false, error, data: null }
+  }
+}
+
+export async function removeTeamMember({ teamId, memberUserId, userId }) {
+  try {
+    if (!userId) {
+      return { success: false, error: new Error('Usuário não autenticado.'), data: null }
+    }
+    if (!teamId) {
+      return { success: false, error: new Error('Time não informado.'), data: null }
+    }
+    if (!memberUserId) {
+      return { success: false, error: new Error('Membro não informado.'), data: null }
+    }
+    if (memberUserId === userId) {
+      return { success: false, error: new Error('Você não pode remover seu próprio acesso por aqui.'), data: null }
+    }
+
+    const { data, error } = await supabase.rpc('remove_team_member', {
+      p_team_id: teamId,
+      p_member_user_id: memberUserId,
+    })
+
+    if (error) {
+      console.error('Supabase removeTeamMember error:', error)
+      return { success: false, error, data: null }
+    }
+
+    const removedMember = data?.[0] ?? null
+    if (!removedMember) {
+      return {
+        success: false,
+        error: new Error('Não foi possível remover este membro.'),
+        data: null,
+      }
+    }
+
+    return { success: true, data: removedMember }
+  } catch (error) {
+    console.error('Unexpected removeTeamMember error:', error)
     return { success: false, error, data: null }
   }
 }
