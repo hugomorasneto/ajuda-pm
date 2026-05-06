@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabaseClient'
 
 const projectColumns = 'id, owner_id, name, description, created_at, updated_at'
+const editableProjectMemberRoles = new Set(['admin', 'member', 'viewer'])
 
 function normalizeProjectPayload({ name, description = '' }) {
   return {
@@ -204,6 +205,100 @@ export async function addProjectMemberByEmail({ projectId, email, role = 'member
     return { success: true, data: data?.[0] ?? null }
   } catch (error) {
     console.error('Unexpected addProjectMemberByEmail error:', error)
+    return { success: false, error, data: null }
+  }
+}
+
+export async function updateProjectMemberRole({ projectId, memberUserId, role, userId }) {
+  try {
+    if (!userId) {
+      return { success: false, error: new Error('Usuário não autenticado.'), data: null }
+    }
+
+    if (!projectId) {
+      return { success: false, error: new Error('Projeto não informado.'), data: null }
+    }
+
+    if (!memberUserId) {
+      return { success: false, error: new Error('Membro não informado.'), data: null }
+    }
+
+    if (!editableProjectMemberRoles.has(role)) {
+      return { success: false, error: new Error('Papel inválido para membro do projeto.'), data: null }
+    }
+
+    const { data, error } = await supabase
+      .from('project_members')
+      .update({ role })
+      .eq('project_id', projectId)
+      .eq('user_id', memberUserId)
+      .neq('role', 'owner')
+      .select('project_id, user_id, role, created_at')
+      .maybeSingle()
+
+    if (error) {
+      console.error('Supabase updateProjectMemberRole error:', error)
+      return { success: false, error, data: null }
+    }
+
+    if (!data) {
+      return {
+        success: false,
+        error: new Error('Não foi possível alterar o papel deste membro.'),
+        data: null,
+      }
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Unexpected updateProjectMemberRole error:', error)
+    return { success: false, error, data: null }
+  }
+}
+
+export async function removeProjectMember({ projectId, memberUserId, userId }) {
+  try {
+    if (!userId) {
+      return { success: false, error: new Error('Usuário não autenticado.'), data: null }
+    }
+
+    if (!projectId) {
+      return { success: false, error: new Error('Projeto não informado.'), data: null }
+    }
+
+    if (!memberUserId) {
+      return { success: false, error: new Error('Membro não informado.'), data: null }
+    }
+
+    if (memberUserId === userId) {
+      return { success: false, error: new Error('Você não pode remover seu próprio acesso por aqui.'), data: null }
+    }
+
+    const { data, error } = await supabase
+      .from('project_members')
+      .delete()
+      .eq('project_id', projectId)
+      .eq('user_id', memberUserId)
+      .neq('role', 'owner')
+      .select('project_id, user_id, role')
+      .maybeSingle()
+
+    if (error) {
+      console.error('Supabase removeProjectMember error:', error)
+      return { success: false, error, data: null }
+    }
+
+    if (!data) {
+      return {
+        success: false,
+        error: new Error('Não foi possível remover este membro.'),
+        data: null,
+      }
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Unexpected removeProjectMember error:', error)
     return { success: false, error, data: null }
   }
 }

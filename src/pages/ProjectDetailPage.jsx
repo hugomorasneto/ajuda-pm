@@ -6,7 +6,9 @@ import {
   checkCanManageProject,
   getProjectById,
   listProjectMembers,
+  removeProjectMember,
   updateProject,
+  updateProjectMemberRole,
 } from '../services/projectsService'
 import {
   listStoryHistoryGroups,
@@ -204,6 +206,8 @@ function ProjectDetailPage() {
   const [isSavingProject, setIsSavingProject] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [isAddingProjectMember, setIsAddingProjectMember] = useState(false)
+  const [updatingProjectMemberId, setUpdatingProjectMemberId] = useState(null)
+  const [removingProjectMemberId, setRemovingProjectMemberId] = useState(null)
   const [updatingStoryStatusId, setUpdatingStoryStatusId] = useState(null)
   const [canManageProjectMembers, setCanManageProjectMembers] = useState(false)
   const [projectMessage, setProjectMessage] = useState('')
@@ -484,6 +488,84 @@ function ProjectDetailPage() {
     await loadProject()
   }
 
+  async function handleUpdateProjectMemberRole(member, nextRole) {
+    if (!member || member.role === nextRole) return
+    setMemberMessage('')
+
+    if (!canManageProjectMembers) {
+      setMemberMessage('Apenas responsáveis e administradores podem alterar papéis no projeto.')
+      return
+    }
+
+    if (member.role === 'owner') {
+      setMemberMessage('O owner do projeto não pode ter o papel alterado por aqui.')
+      return
+    }
+
+    if (member.user_id === userId) {
+      setMemberMessage('Você não pode alterar seu próprio papel por aqui.')
+      return
+    }
+
+    setUpdatingProjectMemberId(member.user_id)
+    const response = await updateProjectMemberRole({
+      projectId,
+      memberUserId: member.user_id,
+      role: nextRole,
+      userId,
+    })
+    setUpdatingProjectMemberId(null)
+
+    if (!response.success) {
+      setMemberMessage(response.error?.message ?? 'Não foi possível alterar o papel deste membro.')
+      return
+    }
+
+    setProjectMembers((current) =>
+      current.map((item) => (item.user_id === member.user_id ? { ...item, role: nextRole } : item)),
+    )
+    setMemberMessage('Papel do membro atualizado.')
+  }
+
+  async function handleRemoveProjectMember(member) {
+    if (!member) return
+    setMemberMessage('')
+
+    if (!canManageProjectMembers) {
+      setMemberMessage('Apenas responsáveis e administradores podem remover membros do projeto.')
+      return
+    }
+
+    if (member.role === 'owner') {
+      setMemberMessage('O owner do projeto não pode ser removido por aqui.')
+      return
+    }
+
+    if (member.user_id === userId) {
+      setMemberMessage('Você não pode remover seu próprio acesso por aqui.')
+      return
+    }
+
+    const confirmed = window.confirm(`Remover ${member.email} deste projeto?`)
+    if (!confirmed) return
+
+    setRemovingProjectMemberId(member.user_id)
+    const response = await removeProjectMember({
+      projectId,
+      memberUserId: member.user_id,
+      userId,
+    })
+    setRemovingProjectMemberId(null)
+
+    if (!response.success) {
+      setMemberMessage(response.error?.message ?? 'Não foi possível remover este membro.')
+      return
+    }
+
+    setProjectMembers((current) => current.filter((item) => item.user_id !== member.user_id))
+    setMemberMessage('Membro removido do projeto.')
+  }
+
   if (notFound) {
     return <Navigate to="/projetos" replace />
   }
@@ -719,12 +801,48 @@ function ProjectDetailPage() {
         {isLoading ? <p className="projects-page__state">Carregando membros...</p> : null}
 
         <div className="project-detail-page__member-list">
-          {projectMembers.map((member) => (
-            <div key={member.user_id} className="project-detail-page__member">
-              <span>{member.email}</span>
-              <strong>{ROLE_LABELS[member.role] ?? member.role}</strong>
-            </div>
-          ))}
+          {projectMembers.map((member) => {
+            const canEditMember =
+              canManageProjectMembers && member.role !== 'owner' && member.user_id !== userId
+            const isUpdatingMember = updatingProjectMemberId === member.user_id
+            const isRemovingMember = removingProjectMemberId === member.user_id
+
+            return (
+              <div key={member.user_id} className="project-detail-page__member">
+                <span>{member.email}</span>
+                {canEditMember ? (
+                  <div className="project-detail-page__member-controls">
+                    <label className="project-detail-page__member-role">
+                      <span>Papel</span>
+                      <select
+                        value={member.role}
+                        onChange={(event) =>
+                          handleUpdateProjectMemberRole(member, event.target.value)
+                        }
+                        disabled={isUpdatingMember || isRemovingMember}
+                      >
+                        {PROJECT_MEMBER_ROLES.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-small"
+                      onClick={() => handleRemoveProjectMember(member)}
+                      disabled={isUpdatingMember || isRemovingMember || member.user_id === userId}
+                    >
+                      {isRemovingMember ? 'Removendo...' : 'Remover'}
+                    </button>
+                  </div>
+                ) : (
+                  <strong>{ROLE_LABELS[member.role] ?? member.role}</strong>
+                )}
+              </div>
+            )
+          })}
         </div>
       </section>
 
