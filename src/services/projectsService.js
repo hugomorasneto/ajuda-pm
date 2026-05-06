@@ -93,11 +93,11 @@ export async function getProjectById({ projectId, userId }) {
 export async function updateProject({ projectId, name, description = '', userId }) {
   try {
     if (!userId) {
-      return { success: false, error: new Error('UsuÃ¡rio nÃ£o autenticado.'), data: null }
+      return { success: false, error: new Error('Usuário não autenticado.'), data: null }
     }
 
     if (!projectId) {
-      return { success: false, error: new Error('Projeto nÃ£o informado.'), data: null }
+      return { success: false, error: new Error('Projeto não informado.'), data: null }
     }
 
     const payload = normalizeProjectPayload({ name, description })
@@ -127,11 +127,11 @@ export async function updateProject({ projectId, name, description = '', userId 
 export async function checkCanManageProject({ projectId, userId }) {
   try {
     if (!userId) {
-      return { success: false, error: new Error('UsuÃ¡rio nÃ£o autenticado.'), data: false }
+      return { success: false, error: new Error('Usuário não autenticado.'), data: false }
     }
 
     if (!projectId) {
-      return { success: false, error: new Error('Projeto nÃ£o informado.'), data: false }
+      return { success: false, error: new Error('Projeto não informado.'), data: false }
     }
 
     const { data, error } = await supabase.rpc('can_manage_project', {
@@ -153,11 +153,11 @@ export async function checkCanManageProject({ projectId, userId }) {
 export async function listProjectMembers({ projectId, userId }) {
   try {
     if (!userId) {
-      return { success: false, error: new Error('UsuÃ¡rio nÃ£o autenticado.'), data: [] }
+      return { success: false, error: new Error('Usuário não autenticado.'), data: [] }
     }
 
     if (!projectId) {
-      return { success: false, error: new Error('Projeto nÃ£o informado.'), data: [] }
+      return { success: false, error: new Error('Projeto não informado.'), data: [] }
     }
 
     const { data, error } = await supabase.rpc('list_project_members', {
@@ -179,11 +179,11 @@ export async function listProjectMembers({ projectId, userId }) {
 export async function addProjectMemberByEmail({ projectId, email, role = 'member', userId }) {
   try {
     if (!userId) {
-      return { success: false, error: new Error('UsuÃ¡rio nÃ£o autenticado.'), data: null }
+      return { success: false, error: new Error('Usuário não autenticado.'), data: null }
     }
 
     if (!projectId) {
-      return { success: false, error: new Error('Projeto nÃ£o informado.'), data: null }
+      return { success: false, error: new Error('Projeto não informado.'), data: null }
     }
 
     const safeEmail = String(email ?? '').trim()
