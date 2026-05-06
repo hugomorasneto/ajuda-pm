@@ -19,6 +19,7 @@ import {
   getEffectiveForgeLimit,
   getRemainingForgeGenerations,
 } from '../constants/app'
+import { copyTextToClipboard } from '../utils/storyExport'
 
 const STORY_STATUS_LABELS = {
   generated: 'Forjado',
@@ -403,7 +404,7 @@ export function useUserStoryWorkspace() {
     setCopyMessage('')
     try {
       const text = buildClipboardText(sourceStory)
-      await navigator.clipboard.writeText(text)
+      await copyTextToClipboard(text)
       setCopyMessage('Artefato copiado para a área de transferência.')
       trackEvent({
         event_name: 'user_story_copied',

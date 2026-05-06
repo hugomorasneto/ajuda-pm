@@ -1,7 +1,12 @@
 import { supabase } from '../lib/supabaseClient'
 
 const AUTH_REDIRECT_PATH = '/tool'
-const ALLOWED_EMAIL_REDIRECT_HOSTS = new Set(['localhost', 'prodforge.techtupa.com.br'])
+const ALLOWED_EMAIL_REDIRECT_HOSTS = new Set([
+  'localhost',
+  '127.0.0.1',
+  '::1',
+  'prodforge.techtupa.com.br',
+])
 
 function getRawAuthMessage(error) {
   return typeof error?.message === 'string' ? error.message.trim() : ''

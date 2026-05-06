@@ -1373,10 +1373,7 @@ for select
 to authenticated
 using (
   public.can_view_planning_session(session_id)
-  and (
-    user_id = auth.uid()
-    or public.planning_poker_round_is_revealed(round_id)
-  )
+  and public.planning_poker_round_is_revealed(round_id)
 );
 
 drop policy if exists "planning_poker_vote_status_select_viewer" on public.planning_poker_vote_status;
