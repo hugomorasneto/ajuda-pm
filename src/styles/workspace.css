@@ -4799,6 +4799,15 @@
   padding: 0 var(--space-3);
 }
 
+.history-page .btn {
+  min-height: 36px;
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-3);
+  font-size: var(--text-small);
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
 .history-layout {
   display: grid;
   grid-template-columns: minmax(340px, 380px) minmax(0, 1fr);
@@ -5335,7 +5344,7 @@
 }
 
 .workspace-shell--forge .history-page__eyebrow {
-  color: var(--forge-accent);
+  color: var(--forge-ember-hover);
 }
 
 .workspace-shell--forge .history-filters__applied strong,
@@ -5363,6 +5372,118 @@
   color: var(--forge-text-primary);
 }
 
+.workspace-shell--forge .history-page .btn {
+  border-color: var(--forge-border);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012)),
+    var(--forge-surface-inset);
+  color: var(--forge-text-secondary);
+  box-shadow: none;
+}
+
+.workspace-shell--forge .history-page .btn:hover:not(:disabled) {
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(180deg, var(--forge-ember-soft), rgba(255,122,26,0.03)),
+    var(--forge-surface-2);
+  color: var(--forge-text-primary);
+  transform: translateY(-1px);
+}
+
+.workspace-shell--forge .history-page .btn:focus-visible,
+.workspace-shell--forge .history-result-card:focus-visible,
+.workspace-shell--forge .history-filters__advanced summary:focus-visible,
+.workspace-shell--forge .history-advanced-section summary:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 1px var(--forge-focus-ring-offset),
+    0 0 0 4px var(--forge-focus-ring);
+}
+
+.workspace-shell--forge .history-page .btn:disabled {
+  border-color: var(--forge-border-subtle);
+  background: rgba(255,255,255,0.025);
+  color: var(--forge-text-disabled);
+  box-shadow: none;
+  opacity: 0.58;
+}
+
+.workspace-shell--forge .history-page .btn-primary {
+  border-color: var(--forge-border-ember);
+  background: var(--forge-gradient-cta-ember);
+  color: var(--forge-text-primary);
+  box-shadow: var(--forge-shadow-soft), 0 0 22px rgba(255,145,56,0.18);
+}
+
+.workspace-shell--forge .history-page .btn-primary:hover:not(:disabled) {
+  border-color: var(--forge-ember-hover);
+  background:
+    linear-gradient(135deg, var(--forge-ember-hover), var(--forge-ember-active));
+  box-shadow: var(--forge-glow-ember-md), var(--forge-shadow-soft);
+}
+
+.workspace-shell--forge .history-page .btn-secondary {
+  border-color: var(--forge-border-strong);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.012)),
+    var(--forge-surface-inset);
+  color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .history-page .btn-ghost {
+  border-color: var(--forge-border-subtle);
+  background: transparent;
+  color: var(--forge-text-secondary);
+}
+
+.workspace-shell--forge .history-page__hero .btn-secondary,
+.workspace-shell--forge .history-preview__actions .btn-secondary,
+.workspace-shell--forge .history-delivery__actions .btn-secondary {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.032), rgba(255,255,255,0.01)),
+    var(--forge-surface-inset);
+}
+
+.workspace-shell--forge .history-preview__actions .btn-primary {
+  min-height: 38px;
+}
+
+.workspace-shell--forge .history-preview__secondary-actions .btn-ghost {
+  min-height: 34px;
+  border-color: var(--forge-border);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.026);
+  color: var(--forge-text-secondary);
+}
+
+.workspace-shell--forge .history-preview__secondary-actions .btn-ghost:hover:not(:disabled) {
+  border-color: var(--forge-border-ember);
+  background: var(--forge-ember-soft);
+  color: var(--forge-text-primary);
+  box-shadow: var(--forge-glow-ember-sm);
+}
+
+.workspace-shell--forge .history-pagination .btn-ghost {
+  min-height: 32px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--forge-text-muted);
+}
+
+.workspace-shell--forge .history-pagination .btn-ghost:hover:not(:disabled) {
+  border-color: var(--forge-border);
+  background: var(--forge-surface-inset);
+  color: var(--forge-ember-hover);
+  box-shadow: none;
+}
+
+.workspace-shell--forge .history-pagination .btn-ghost:disabled {
+  border-color: transparent;
+  background: transparent;
+  color: var(--forge-text-disabled);
+  opacity: 0.48;
+}
+
 .workspace-shell--forge .history-filters__advanced[open] summary,
 .workspace-shell--forge .history-preview__header,
 .workspace-shell--forge .history-preview__facts div,
@@ -5381,13 +5502,87 @@
     var(--forge-surface-2);
 }
 
+.workspace-shell--forge .history-filters__advanced summary,
+.workspace-shell--forge .history-advanced-section summary {
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease;
+}
+
+.workspace-shell--forge .history-filters__advanced summary:hover,
+.workspace-shell--forge .history-advanced-section summary:hover {
+  background:
+    linear-gradient(90deg, rgba(255,122,26,0.08), transparent 84%),
+    var(--forge-surface-2);
+}
+
+.workspace-shell--forge .history-filters__advanced summary span,
+.workspace-shell--forge .history-advanced-section summary strong {
+  color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .history-filters__advanced[open] summary span,
+.workspace-shell--forge .history-advanced-section[open] summary strong {
+  color: var(--forge-ember-hover);
+}
+
 .workspace-shell--forge .history-result-card:hover,
 .workspace-shell--forge .history-result-card:focus-visible,
 .workspace-shell--forge .history-result-card--active {
-  border-color: var(--forge-accent);
+  border-color: var(--forge-border-ember);
   background:
     linear-gradient(145deg, rgba(255, 124, 36, 0.1), transparent 45%),
     var(--forge-surface-3);
+}
+
+.workspace-shell--forge .history-result-card__action {
+  border-color: var(--forge-border-subtle);
+  background: transparent;
+  color: var(--forge-text-muted);
+}
+
+.workspace-shell--forge .history-result-card:hover .history-result-card__action {
+  border-color: var(--forge-border);
+  color: var(--forge-text-secondary);
+}
+
+.workspace-shell--forge .history-result-card--active .history-result-card__action,
+.workspace-shell--forge .history-result-card__meta .history-badge--active {
+  border-color: var(--forge-border-ember);
+  background: var(--forge-ember-soft);
+  color: var(--forge-ember-hover);
+  box-shadow: none;
+}
+
+.workspace-shell--forge .history-result-card__meta span,
+.workspace-shell--forge .history-preview__badges span {
+  border-color: var(--forge-border-subtle);
+  background: rgba(255,255,255,0.026);
+  color: var(--forge-text-secondary);
+}
+
+.workspace-shell--forge .history-result-card--active .history-result-card__meta span:first-child,
+.workspace-shell--forge .history-preview__badges span:first-child {
+  border-color: var(--forge-border-ember);
+  background: var(--forge-ember-soft);
+  color: var(--forge-ember-hover);
+}
+
+.workspace-shell--forge .history-filter-field input:hover,
+.workspace-shell--forge .history-filter-field select:hover,
+.workspace-shell--forge .history-pagination__jump input:hover {
+  border-color: var(--forge-border-strong);
+}
+
+.workspace-shell--forge .history-filter-field input:focus-visible,
+.workspace-shell--forge .history-filter-field select:focus-visible,
+.workspace-shell--forge .history-pagination__jump input:focus-visible {
+  outline: none;
+  border-color: var(--forge-border-tech);
+  box-shadow:
+    0 0 0 1px var(--forge-focus-ring-offset),
+    0 0 0 4px var(--forge-focus-ring);
 }
 
 @media (max-width: 1180px) {
@@ -7490,10 +7685,11 @@
 
 .story-document__status-line {
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--forge-border);
-  border-radius: var(--radius-sm);
-  background: var(--forge-surface-inset);
+  justify-items: start;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .story-document__body {
@@ -7666,11 +7862,10 @@
 }
 
 .brief-composer__entry-summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
-  padding: var(--space-4);
+  padding: var(--space-3);
   color: var(--forge-text-primary);
   cursor: pointer;
   list-style: none;
@@ -7699,14 +7894,19 @@
   line-height: 1.25;
 }
 
-.brief-composer__entry-copy span:last-child {
+.brief-composer__entry-preview {
+  display: -webkit-box;
+  max-height: 2.9em;
+  overflow: hidden;
   color: var(--forge-text-secondary);
   font-size: var(--text-small);
   line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .brief-composer__entry-action {
-  flex: 0 0 auto;
+  justify-self: start;
   border: 1px solid var(--forge-border);
   border-radius: 999px;
   padding: 0.28rem 0.65rem;
@@ -7814,14 +8014,66 @@
   justify-content: center;
 }
 
+.story-document__save-status,
+.story-workspace .save-message-success,
+.story-workspace .copy-message {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 28px;
+  border: 1px solid var(--forge-border);
+  border-radius: 999px;
+  padding: 0.22rem 0.65rem;
+  background: var(--forge-surface-inset);
+  font-size: var(--text-label);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.story-document__save-status,
+.story-workspace .save-message-success {
+  border-color: rgba(55, 214, 122, 0.25);
+  color: var(--forge-success);
+  background:
+    linear-gradient(90deg, var(--forge-success-soft), transparent),
+    var(--forge-surface-inset);
+}
+
+.story-workspace .copy-message {
+  border-color: var(--forge-border-tech);
+  color: var(--forge-tech-hover);
+  background:
+    linear-gradient(90deg, var(--forge-tech-soft), transparent),
+    var(--forge-surface-inset);
+}
+
 .quality-panel__inline-action {
   width: 100%;
   justify-content: center;
 }
 
 .quality-panel__list--compact {
-  max-height: 8.5rem;
+  display: grid;
+  gap: var(--space-2);
+  max-height: none;
+  overflow: visible;
+}
+
+.quality-panel__list--compact li {
+  display: -webkit-box;
   overflow: hidden;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.quality-panel__detail {
+  opacity: 0.88;
+}
+
+.quality-panel__detail summary {
+  min-height: 40px;
+  padding-block: var(--space-2);
 }
 
 .quality-panel__detail-body {

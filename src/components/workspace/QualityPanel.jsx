@@ -144,7 +144,7 @@ function QualityPanel({
   const qaChecklist = Array.isArray(story?.qa_checklist) ? story.qa_checklist.filter(Boolean) : []
   const alertasPrincipais = gaps.slice(0, 2)
   const hasCriticalAlerts = Boolean(alertasPrincipais[0])
-  const haMaisAlertas = Boolean(gaps[2])
+  const haMaisAlertas = gaps.length > 2
 
   return (
     <aside className={`panel quality-panel ${!story ? 'quality-panel--empty' : ''}`}>
@@ -152,7 +152,7 @@ function QualityPanel({
         <div className="quality-panel__panel-copy">
           <p className="quality-panel__panel-eyebrow">Resumo</p>
           <h2>Inspeção executiva</h2>
-          <p>Qualidade, alertas e próximas ações sem repetir o artefato.</p>
+          <p>Qualidade, alertas e próxima ação.</p>
         </div>
 
         <div className="quality-panel__panel-actions">
@@ -269,7 +269,7 @@ function QualityPanel({
             <RailSection
               icon={<IconAlertTriangle />}
               label={hasCriticalAlerts ? 'Principais alertas' : 'Sem bloqueios críticos'}
-              description={hasCriticalAlerts ? 'Mostrando no máximo 2 pontos.' : 'A inspeção não encontrou trincas críticas.'}
+              description={hasCriticalAlerts ? 'Até 2 pontos prioritários.' : 'A inspeção não encontrou trincas críticas.'}
             >
               {hasCriticalAlerts ? (
                 <>
@@ -284,7 +284,7 @@ function QualityPanel({
                       className="btn btn-ghost btn-small quality-panel__inline-action"
                       onClick={onShowAllAlerts}
                     >
-                      Ver todos os alertas
+                      Ver todos
                     </button>
                   ) : null}
                 </>

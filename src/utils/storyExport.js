@@ -78,8 +78,12 @@ export function buildStoryJiraLike(story) {
 
 export async function copyTextToClipboard(text) {
   if (navigator?.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text)
-    return
+    try {
+      await navigator.clipboard.writeText(text)
+      return
+    } catch {
+      // Alguns navegadores bloqueiam a API assíncrona; o fallback mantém a ação local de cópia.
+    }
   }
 
   const textarea = document.createElement('textarea')
@@ -89,6 +93,10 @@ export async function copyTextToClipboard(text) {
   textarea.style.left = '-9999px'
   document.body.appendChild(textarea)
   textarea.select()
-  document.execCommand('copy')
+  const didCopy = document.execCommand('copy')
   document.body.removeChild(textarea)
+
+  if (!didCopy) {
+    throw new Error('Não foi possível copiar o texto.')
+  }
 }

@@ -28,6 +28,9 @@ function areCriteriaEqual(current = [], original = []) {
 
 function getCompactSaveMessage(message) {
   if (!message) return ''
+  if (message.startsWith('Alterações salvas.')) {
+    return 'Alterações salvas'
+  }
   if (message.includes('Primeira versão forjada e salva com sucesso')) {
     const scoreMatch = message.match(/(\d+)\/100/)
     return scoreMatch ? `Primeira versão salva · inspeção ${scoreMatch[1]}/100` : 'Primeira versão salva'
@@ -228,15 +231,21 @@ function StoryDocument({
             </button>
           ) : null}
 
-          {canEdit ? (
+          {canEdit && (hasPendingManualEdits || isSavingEdits) ? (
             <button
               type="button"
               className="btn btn-secondary btn-small"
               onClick={onSaveEdits}
-              disabled={isSavingEdits || isRefining || !hasPendingManualEdits}
+              disabled={isSavingEdits || isRefining}
             >
-              {isSavingEdits ? 'Salvando...' : hasPendingManualEdits ? 'Salvar ajustes' : 'Salvo'}
+              {isSavingEdits ? 'Salvando...' : 'Salvar ajustes'}
             </button>
+          ) : null}
+
+          {canEdit && !hasPendingManualEdits && !isSavingEdits ? (
+            <span className="story-document__save-status" aria-live="polite">
+              Salvo automaticamente
+            </span>
           ) : null}
         </div>
       </header>

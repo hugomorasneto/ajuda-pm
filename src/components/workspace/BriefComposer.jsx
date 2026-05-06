@@ -197,8 +197,8 @@ function getAdjustmentSummary(value) {
 function getBriefPreview(value) {
   const cleanValue = value?.trim().replace(/\s+/g, ' ') ?? ''
   if (!cleanValue) return 'A matéria-prima usada na forja fica disponível para consulta e ajustes.'
-  if (cleanValue.length <= 132) return cleanValue
-  return `${cleanValue.slice(0, 132)}...`
+  if (cleanValue.length <= 112) return cleanValue
+  return `${cleanValue.slice(0, 112).trim()}...`
 }
 
 function getBriefStage({ contextFilled, isGenerated, isSubmitting }) {
@@ -368,7 +368,7 @@ function BriefComposer({
               <span className="brief-composer__entry-copy">
                 <span className="brief-composer__entry-eyebrow">Entrada original</span>
                 <strong>Briefing usado na forja</strong>
-                <span>{briefPreview}</span>
+                <span className="brief-composer__entry-preview">{briefPreview}</span>
               </span>
               <span className="brief-composer__entry-action">Ver ou editar entrada</span>
             </summary>
