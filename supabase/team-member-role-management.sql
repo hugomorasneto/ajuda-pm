@@ -95,7 +95,7 @@ begin
 
   insert into public.team_members (team_id, user_id, role)
   values (p_team_id, v_user_id, v_role)
-  on conflict (team_id, user_id) do update
+  on conflict on constraint team_members_pkey do update
     set role = excluded.role;
 
   return query
