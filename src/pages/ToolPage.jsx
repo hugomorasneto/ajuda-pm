@@ -39,6 +39,8 @@ function ToolPage() {
   const [isLoadingProjects, setIsLoadingProjects] = useState(false)
   const [isCreatingProject, setIsCreatingProject] = useState(false)
   const [projectActionMessage, setProjectActionMessage] = useState('')
+  const [refineRequestId, setRefineRequestId] = useState(0)
+  const [attentionRequestId, setAttentionRequestId] = useState(0)
 
   const {
     activeStoryTitle,
@@ -208,6 +210,16 @@ function ToolPage() {
     return assigned
   }
 
+  function handleRequestRefineFromPanel() {
+    setMobileTab('resultado')
+    setRefineRequestId((current) => current + 1)
+  }
+
+  function handleShowAllAlertsFromPanel() {
+    setMobileTab('resultado')
+    setAttentionRequestId((current) => current + 1)
+  }
+
   const hasDraft = Boolean(
     formValues.problemContext.trim() ||
       formValues.requirements.trim() ||
@@ -290,6 +302,8 @@ function ToolPage() {
       canEdit={canEditSelectedStory}
       onRefineStory={handleRefineStory}
       isRefining={isSubmitting}
+      refineRequestId={refineRequestId}
+      attentionRequestId={attentionRequestId}
     />
   )
 
@@ -304,8 +318,11 @@ function ToolPage() {
             remainingGenerations={remainingGenerations}
             hasReachedLimit={hasReachedLimit}
             onCopyPlain={() => handleCopy(reviewStory)}
+            onRequestRefine={handleRequestRefineFromPanel}
+            onShowAllAlerts={handleShowAllAlertsFromPanel}
             plainCopyMessage={copyMessage}
             isCopyingPlain={isCopying}
+            canRefine={canEditSelectedStory}
           />
         ) : (
           <InspectionPreviewCard />

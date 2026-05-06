@@ -130,8 +130,11 @@ function QualityPanel({
   remainingGenerations,
   hasReachedLimit,
   onCopyPlain,
+  onRequestRefine,
+  onShowAllAlerts,
   plainCopyMessage,
   isCopyingPlain,
+  canRefine = false,
 }) {
   const inspectionSummary = buildInspectionSummary(story)
   const hasUnlimitedAccess = effectiveForgeLimit === null
@@ -228,7 +231,7 @@ function QualityPanel({
 
               <div className="quality-panel__summary-card quality-panel__summary-card--tech">
                 <span className="quality-panel__summary-label">QA</span>
-                <strong>{qaChecklist.length > 0 ? `${qaChecklist.length} itens` : 'Sem checklist'}</strong>
+                <strong>{qaChecklist.length > 0 ? `${qaChecklist.length} itens recolhidos` : 'Sem checklist'}</strong>
                 <span className="quality-panel__summary-note">
                   {qaChecklist.length > 0 ? 'Checklist recolhido no artefato.' : 'Refine se precisar de cenários de teste.'}
                 </span>
@@ -249,6 +252,16 @@ function QualityPanel({
                 >
                   {isCopyingPlain ? 'Copiando...' : 'Copiar artefato'}
                 </button>
+                {canRefine ? (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-small"
+                    onClick={onRequestRefine}
+                    disabled={!story}
+                  >
+                    Refinar story
+                  </button>
+                ) : null}
               </div>
               {plainCopyMessage ? <p className="copy-message">{plainCopyMessage}</p> : null}
             </RailSection>
@@ -266,7 +279,13 @@ function QualityPanel({
                     ))}
                   </ul>
                   {haMaisAlertas ? (
-                    <p className="quality-panel__empty-note">Abra “Pontos de atenção” no artefato para ver todos.</p>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-small quality-panel__inline-action"
+                      onClick={onShowAllAlerts}
+                    >
+                      Ver todos os alertas
+                    </button>
                   ) : null}
                 </>
               ) : (

@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useOutletContext } from 'react-router-dom'
-import ExportActionsBar from '../components/workspace/ExportActionsBar'
-import StoryDocument from '../components/workspace/StoryDocument'
 import VersionDiffSummary from '../components/workspace/VersionDiffSummary'
 import VersionTimeline from '../components/workspace/VersionTimeline'
+import { getResolvedQualityScore, getScoreMeta } from '../components/workspace/qualityScoreUtils'
 import { formatDateTime, parseTextList } from '../hooks/useUserStoryWorkspace'
 import { useAuth } from '../hooks/useAuth'
 import {
@@ -13,7 +12,11 @@ import {
   updateUserStory,
 } from '../services/userStoriesService'
 import { listProjects } from '../services/projectsService'
-import { copyTextToClipboard } from '../utils/storyExport'
+import {
+  buildStoryJiraLike,
+  buildStoryMarkdown,
+  copyTextToClipboard,
+} from '../utils/storyExport'
 
 const PERIOD_OPTIONS = [
   { value: 'today', label: 'Hoje' },
@@ -59,12 +62,23 @@ const PROJECT_FILTER_OPTIONS = [
   { value: 'project', label: 'Por projeto' },
 ]
 
+const INITIAL_ADVANCED_SECTIONS = {
+  delivery: false,
+  versions: false,
+  comparison: false,
+  inspection: false,
+}
+
 function getStatusLabel(status) {
   return STATUS_LABELS[status] ?? 'Forjado'
 }
 
 function getEstimationStatusLabel(status) {
   return ESTIMATION_STATUS_LABELS[status] ?? 'Criada'
+}
+
+function getOptionLabel(options, value, fallback = 'Todos') {
+  return options.find((option) => option.value === value)?.label ?? fallback
 }
 
 function buildSinceIso(period) {
@@ -117,6 +131,79 @@ function getVisibleRange({ page, pageSize, totalCount, itemCount }) {
   return `${start}-${end}`
 }
 
+function getVersionCount(story) {
+  const count = Number(story?.versions_count ?? story?.version_number ?? 1)
+  return Number.isFinite(count) && count > 0 ? count : 1
+}
+
+function getVersionLabel(count) {
+  return `${count} ${count === 1 ? 'versão' : 'versões'}`
+}
+
+function getProjectName(story, projects) {
+  if (story?.project_name) return story.project_name
+  if (story?.project_id) {
+    return projects.find((project) => project.id === story.project_id)?.name ?? 'Projeto vinculado'
+  }
+  return 'Sem projeto'
+}
+
+function getStoryPreview(story) {
+  return story?.input_context?.trim() || story?.input_requirements?.trim() || story?.user_story?.trim() || ''
+}
+
+function HistoryAccordion({ id, eyebrow, title, summary, open, onToggle, children }) {
+  return (
+    <details
+      className="history-advanced-section"
+      open={open}
+      onToggle={(event) => onToggle(id, event.currentTarget.open)}
+    >
+      <summary>
+        <span>
+          <small>{eyebrow}</small>
+          <strong>{title}</strong>
+        </span>
+        <em>{summary}</em>
+      </summary>
+      <div className="history-advanced-section__body">{children}</div>
+    </details>
+  )
+}
+
+function HistoryListState({ isLoading, loadError, hasItems }) {
+  if (isLoading) {
+    return (
+      <div className="history-state history-state--loading" role="status">
+        <span aria-hidden="true" />
+        <p>Buscando peças forjadas...</p>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return <p className="history-status history-status-error">{loadError}</p>
+  }
+
+  if (!hasItems) {
+    return (
+      <article className="history-empty-card">
+        <p className="history-page__eyebrow">Histórico vazio</p>
+        <h3>Nenhuma peça forjada ainda</h3>
+        <p>
+          Crie a primeira matéria-prima para gerar uma user story e voltar aqui para localizar,
+          revisar e entregar o artefato.
+        </p>
+        <Link className="btn btn-primary btn-small" to="/tool">
+          Criar primeira matéria-prima
+        </Link>
+      </article>
+    )
+  }
+
+  return null
+}
+
 function HistoryPage() {
   const { user } = useAuth()
   const userId = user?.id ?? null
@@ -142,9 +229,10 @@ function HistoryPage() {
   const [versions, setVersions] = useState([])
   const [isLoadingVersions, setIsLoadingVersions] = useState(false)
   const [copyMessage, setCopyMessage] = useState('')
-  const [isCopyingPlain, setIsCopyingPlain] = useState(false)
+  const [copyTarget, setCopyTarget] = useState(null)
   const [projectAssignmentMessage, setProjectAssignmentMessage] = useState('')
   const [isAssigningProject, setIsAssigningProject] = useState(false)
+  const [openAdvancedSections, setOpenAdvancedSections] = useState(INITIAL_ADVANCED_SECTIONS)
 
   const selectedResult = useMemo(() => mapStoryRowToResult(selectedStory), [selectedStory])
   const selectedVersion = useMemo(
@@ -310,19 +398,60 @@ function HistoryPage() {
     }
   }
 
-  async function handleCopyPlain() {
-    if (!selectedResult) return
+  async function copySelectedText({ target, value, successMessage, errorMessage, logMessage }) {
+    if (!value) return
 
-    setIsCopyingPlain(true)
+    setCopyTarget(target)
+    setCopyMessage('')
     try {
-      await copyTextToClipboard(buildPlainText(selectedResult))
-      setCopyMessage('Texto simples copiado.')
+      await copyTextToClipboard(value)
+      setCopyMessage(successMessage)
     } catch (error) {
-      console.error('Falha ao copiar texto simples do histórico:', error)
-      setCopyMessage('Não foi possível copiar o texto simples agora.')
+      console.error(logMessage, error)
+      setCopyMessage(errorMessage)
     } finally {
-      setIsCopyingPlain(false)
+      setCopyTarget(null)
     }
+  }
+
+  async function handleCopyUserStory() {
+    await copySelectedText({
+      target: 'story',
+      value: selectedResult?.user_story,
+      successMessage: 'User story copiada.',
+      errorMessage: 'Não foi possível copiar a user story agora.',
+      logMessage: 'Falha ao copiar user story do histórico:',
+    })
+  }
+
+  async function handleCopyPlain() {
+    await copySelectedText({
+      target: 'plain',
+      value: buildPlainText(selectedResult),
+      successMessage: 'Artefato copiado.',
+      errorMessage: 'Não foi possível copiar o artefato agora.',
+      logMessage: 'Falha ao copiar texto simples do histórico:',
+    })
+  }
+
+  async function handleCopyMarkdown() {
+    await copySelectedText({
+      target: 'markdown',
+      value: buildStoryMarkdown(selectedResult),
+      successMessage: 'Artefato em Markdown copiado.',
+      errorMessage: 'Não foi possível copiar o artefato em Markdown agora.',
+      logMessage: 'Falha ao copiar exportação em Markdown do histórico:',
+    })
+  }
+
+  async function handleCopyJira() {
+    await copySelectedText({
+      target: 'jira',
+      value: buildStoryJiraLike(selectedResult),
+      successMessage: 'Formato textual para Jira copiado. Revise antes de colar na issue.',
+      errorMessage: 'Não foi possível copiar o formato para Jira agora.',
+      logMessage: 'Falha ao copiar formato textual para Jira do histórico:',
+    })
   }
 
   function resetPageWith(nextValueSetter, value) {
@@ -397,21 +526,39 @@ function HistoryPage() {
 
     setSelectedStory(updatedStory)
     setItems((currentItems) =>
-      currentItems.map((item) =>
-        item.id === selectedStory.id
+      currentItems.map((item) => {
+        const sameStory = item.id === selectedStory.id
+        const sameGroup =
+          item.story_group_id && item.story_group_id === selectedStory.story_group_id
+
+        return sameStory || sameGroup
           ? {
               ...item,
               project_id: updatedStory.project_id,
               project_name: updatedStory.project_name,
             }
-          : item,
-      ),
+          : item
+      }),
     )
     setProjectAssignmentMessage(
       updatedStory.project_id
         ? 'História organizada no projeto selecionado.'
         : 'História marcada como sem projeto.',
     )
+  }
+
+  function toggleAdvancedSection(section, isOpen) {
+    setOpenAdvancedSections((current) => ({
+      ...current,
+      [section]: isOpen,
+    }))
+  }
+
+  function openAdvancedSection(section) {
+    setOpenAdvancedSections((current) => ({
+      ...current,
+      [section]: true,
+    }))
   }
 
   const visibleRange = getVisibleRange({
@@ -422,6 +569,27 @@ function HistoryPage() {
   })
   const selectedGroupKey = selectedStory?.story_group_id ?? selectedStory?.id ?? null
   const canAssignSelectedStoryProject = Boolean(selectedStory?.id && selectedStory.user_id === userId)
+  const selectedProjectName = getProjectName(selectedStory, projects)
+  const selectedVersionCount = Math.max(versions.length, getVersionCount(selectedStory))
+  const latestVersionDate = formatDateTime(versions[0]?.created_at ?? selectedStory?.created_at)
+  const qualityScore = selectedResult ? getResolvedQualityScore(selectedResult) : 0
+  const qualityMeta = getScoreMeta(qualityScore)
+  const acceptanceCriteria = selectedResult?.acceptance_criteria ?? []
+  const previewCriteria = acceptanceCriteria.slice(0, 3)
+  const hiddenCriteriaCount = Math.max(0, acceptanceCriteria.length - previewCriteria.length)
+  const hasOriginalContext = Boolean(
+    selectedStory?.input_context?.trim() || selectedStory?.input_requirements?.trim(),
+  )
+  const filterSummary = [
+    getOptionLabel(PERIOD_OPTIONS, period, 'Tudo'),
+    getOptionLabel(STATUS_OPTIONS, status, 'Todos'),
+    getOptionLabel(ESTIMATION_STATUS_OPTIONS, estimationStatus, 'Todos'),
+    projectFilter === 'project'
+      ? projects.find((project) => project.id === selectedProjectId)?.name ?? 'Projeto'
+      : getOptionLabel(PROJECT_FILTER_OPTIONS, projectFilter, 'Todas'),
+    `${pageSize} por página`,
+  ].join(' · ')
+  const isCopying = Boolean(copyTarget)
 
   return (
     <div className="history-page">
@@ -430,7 +598,7 @@ function HistoryPage() {
           <p className="history-page__eyebrow">Peças forjadas</p>
           <h1>Peças forjadas</h1>
           <p>
-            Histórico das user stories geradas para buscar, filtrar, entregar e reabrir sem poluir a bancada principal.
+            Histórico para localizar, revisar, copiar e reabrir user stories sem transformar esta tela em uma segunda bancada.
           </p>
         </div>
         <Link className="btn btn-secondary btn-small" to="/tool">
@@ -439,94 +607,110 @@ function HistoryPage() {
       </section>
 
       <section className="panel history-filters" aria-label="Filtros das peças forjadas">
-        <label className="history-filter-field history-filter-field--search">
-          <span>Buscar</span>
-          <input
-            type="search"
-            value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="Título, matéria-prima, liga ou critério"
-          />
-        </label>
-
-        <label className="history-filter-field">
-          <span>Período</span>
-          <select value={period} onChange={(event) => resetPageWith(setPeriod, event.target.value)}>
-            {PERIOD_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="history-filter-field">
-          <span>Status</span>
-          <select value={status} onChange={(event) => resetPageWith(setStatus, event.target.value)}>
-            {STATUS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="history-filter-field">
-          <span>Estimativa</span>
-          <select
-            value={estimationStatus}
-            onChange={(event) => resetPageWith(setEstimationStatus, event.target.value)}
-          >
-            {ESTIMATION_STATUS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="history-filter-field">
-          <span>Projeto</span>
-          <select value={projectFilter} onChange={(event) => handleProjectFilterChange(event.target.value)}>
-            {PROJECT_FILTER_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {projectFilter === 'project' ? (
-          <label className="history-filter-field">
-            <span>Escolher projeto</span>
-            <select
-              value={selectedProjectId}
-              onChange={(event) => handleSelectedProjectChange(event.target.value)}
-              disabled={projects.length === 0}
-            >
-              {projects.length === 0 ? <option value="">Nenhum projeto</option> : null}
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
+        <div className="history-filters__primary">
+          <label className="history-filter-field history-filter-field--search">
+            <span>Buscar peça</span>
+            <input
+              type="search"
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              placeholder="Título, matéria-prima, user story ou critério"
+            />
           </label>
-        ) : null}
 
-        <label className="history-filter-field">
-          <span>Por página</span>
-          <select
-            value={pageSize}
-            onChange={(event) => resetPageWith(setPageSize, Number(event.target.value))}
-          >
-            {PAGE_SIZE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
+          <div className="history-filters__applied" aria-live="polite">
+            <span>Recorte atual</span>
+            <strong>{filterSummary}</strong>
+          </div>
+        </div>
+
+        <details className="history-filters__advanced">
+          <summary>
+            <span>Filtros avançados</span>
+            <em>Período, status, estimativa, projeto e navegação por páginas</em>
+          </summary>
+
+          <div className="history-filters__grid">
+            <label className="history-filter-field">
+              <span>Período</span>
+              <select value={period} onChange={(event) => resetPageWith(setPeriod, event.target.value)}>
+                {PERIOD_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="history-filter-field">
+              <span>Status</span>
+              <select value={status} onChange={(event) => resetPageWith(setStatus, event.target.value)}>
+                {STATUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="history-filter-field">
+              <span>Estimativa</span>
+              <select
+                value={estimationStatus}
+                onChange={(event) => resetPageWith(setEstimationStatus, event.target.value)}
+              >
+                {ESTIMATION_STATUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="history-filter-field">
+              <span>Projeto</span>
+              <select value={projectFilter} onChange={(event) => handleProjectFilterChange(event.target.value)}>
+                {PROJECT_FILTER_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {projectFilter === 'project' ? (
+              <label className="history-filter-field">
+                <span>Escolher projeto</span>
+                <select
+                  value={selectedProjectId}
+                  onChange={(event) => handleSelectedProjectChange(event.target.value)}
+                  disabled={projects.length === 0}
+                >
+                  {projects.length === 0 ? <option value="">Nenhum projeto</option> : null}
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+
+            <label className="history-filter-field">
+              <span>Por página</span>
+              <select
+                value={pageSize}
+                onChange={(event) => resetPageWith(setPageSize, Number(event.target.value))}
+              >
+                {PAGE_SIZE_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </details>
       </section>
 
       <div className="history-layout">
@@ -541,39 +725,41 @@ function HistoryPage() {
             </span>
           </div>
 
-          {isLoading ? <p className="history-status">Buscando peças forjadas...</p> : null}
-          {loadError ? <p className="history-status history-status-error">{loadError}</p> : null}
-          {!isLoading && !loadError && items.length === 0 ? (
-            <p className="history-status">Nenhuma peça forjada encontrada para os filtros atuais.</p>
-          ) : null}
+          <HistoryListState isLoading={isLoading} loadError={loadError} hasItems={items.length > 0} />
 
           <div className="history-results__list">
             {items.map((item) => {
               const itemGroupKey = item.story_group_id ?? item.id
               const isActive = itemGroupKey === selectedGroupKey
-              const preview = item.input_context?.trim() || item.input_requirements?.trim() || ''
+              const preview = getStoryPreview(item)
+              const versionCount = getVersionCount(item)
 
               return (
                 <button
                   key={item.id}
                   type="button"
                   className={`history-result-card ${isActive ? 'history-result-card--active' : ''}`}
+                  aria-pressed={isActive}
                   onClick={() => {
                     setProjectAssignmentMessage('')
                     selectStory(item)
                   }}
                 >
-                  <div className="history-result-card__top">
+                  <div className="history-result-card__title-row">
                     <h3>{item.title}</h3>
-                    <span>{getStatusLabel(item.status)}</span>
+                    <span className="history-result-card__action">
+                      {isActive ? 'Selecionada' : 'Ver detalhes'}
+                    </span>
                   </div>
-                  {preview ? <p>{preview}</p> : null}
-                  <div className="history-result-card__meta">
+
+                  {preview ? <p>{preview}</p> : <p>Peça salva sem resumo de matéria-prima.</p>}
+
+                  <div className="history-result-card__meta" aria-label="Metadados da peça">
                     <span>{formatDateTime(item.created_at)}</span>
                     <span>{item.project_name || 'Sem projeto'}</span>
-                    <span>{getEstimationStatusLabel(item.estimation_status)}</span>
-                    <span>{item.versions_count ?? item.version_number ?? 1} versões</span>
-                    <span>{isActive ? 'Aberta para inspeção' : 'Ver inspeção'}</span>
+                    <span>{getVersionLabel(versionCount)}</span>
+                    <span>{getStatusLabel(item.status)}</span>
+                    {isActive ? <span className="history-badge--active">Aberta para inspeção</span> : null}
                   </div>
                 </button>
               )
@@ -628,95 +814,309 @@ function HistoryPage() {
         <aside className="history-detail" aria-label="Detalhe da peça selecionada">
           {selectedResult ? (
             <>
-              <div className="panel history-detail__actions">
-                <div>
-                  <p className="history-page__eyebrow">Inspeção</p>
-                  <h2>{selectedStory.title}</h2>
-                  <p>
-                    Revise qualidade, gaps e próximos ajustes antes de levar esta peça para a bancada.
-                    Estimativa: {getEstimationStatusLabel(selectedStory.estimation_status)}.
+              <article className="panel history-preview">
+                <header className="history-preview__header">
+                  <div className="history-preview__copy">
+                    <p className="history-page__eyebrow">Preview selecionado</p>
+                    <h2>{selectedStory.title}</h2>
+                    <div className="history-preview__badges" aria-label="Resumo da peça selecionada">
+                      <span>{getStatusLabel(selectedStory.status)}</span>
+                      <span>{selectedProjectName}</span>
+                      <span>{getVersionLabel(selectedVersionCount)}</span>
+                      <span>{getEstimationStatusLabel(selectedStory.estimation_status)}</span>
+                    </div>
+                  </div>
+
+                  <div className="history-preview__actions">
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-small"
+                      onClick={() => navigate(`/tool?storyId=${selectedStory.id}`)}
+                    >
+                      Abrir na bancada
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-small"
+                      onClick={handleCopyUserStory}
+                      disabled={isCopying}
+                    >
+                      {copyTarget === 'story' ? 'Copiando...' : 'Copiar user story'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-small"
+                      onClick={handleCopyPlain}
+                      disabled={isCopying}
+                    >
+                      {copyTarget === 'plain' ? 'Copiando...' : 'Copiar artefato'}
+                    </button>
+                  </div>
+                </header>
+
+                {copyMessage ? (
+                  <p className="history-copy-message" role="status">
+                    {copyMessage}
                   </p>
-                  <div className="history-detail__project-assignment">
-                    <label className="history-filter-field">
-                      <span>Projeto da história</span>
-                      <select
-                        value={selectedStory.project_id ?? ''}
-                        onChange={(event) => handleSelectedStoryProjectChange(event.target.value)}
-                        disabled={!canAssignSelectedStoryProject || isAssigningProject}
-                      >
-                        <option value="">Sem projeto</option>
-                        {projects.map((project) => (
-                          <option key={project.id} value={project.id}>
-                            {project.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <p className="history-detail__project-note">
-                      {canAssignSelectedStoryProject
-                        ? 'Organize peças antigas em projetos quando fizer sentido.'
-                        : 'Histórias compartilhadas ficam somente para consulta.'}
-                    </p>
-                    {projectAssignmentMessage ? (
-                      <p className="history-detail__project-message" role="status">
-                        {projectAssignmentMessage}
-                      </p>
-                    ) : null}
+                ) : null}
+
+                <div className="history-preview__facts">
+                  <div>
+                    <span>Projeto atual</span>
+                    <strong>{selectedProjectName}</strong>
+                  </div>
+                  <div>
+                    <span>Última versão</span>
+                    <strong>{latestVersionDate}</strong>
+                  </div>
+                  <div>
+                    <span>Inspeção</span>
+                    <strong>{qualityMeta.label} · {qualityScore}/100</strong>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className="btn btn-primary btn-small"
-                  onClick={() => navigate(`/tool?storyId=${selectedStory.id}`)}
-                >
-                  Abrir na bancada
-                </button>
-              </div>
 
-              <StoryDocument
-                result={selectedResult}
-                saveMessage=""
-                isLoadingSelectedStory={false}
-                editDraft={{
-                  title: selectedResult.title,
-                  user_story: selectedResult.user_story,
-                  acceptance_criteria: selectedResult.acceptance_criteria,
-                }}
-                onEditDraftChange={() => {}}
-                onSaveEdits={() => {}}
-                isSavingEdits={false}
-                canEdit={false}
-              />
-
-              <section className="panel history-detail__export">
-                <div>
-                  <p className="history-page__eyebrow">Entregar artefato</p>
-                  <h2>Entregar no backlog</h2>
+                <div className="history-preview__project-assignment">
+                  <label className="history-filter-field">
+                    <span>Vincular projeto</span>
+                    <select
+                      value={selectedStory.project_id ?? ''}
+                      onChange={(event) => handleSelectedStoryProjectChange(event.target.value)}
+                      disabled={!canAssignSelectedStoryProject || isAssigningProject}
+                    >
+                      <option value="">Sem projeto</option>
+                      {projects.map((project) => (
+                        <option key={project.id} value={project.id}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <p>
+                    {canAssignSelectedStoryProject
+                      ? 'Use projetos para separar peças antigas por produto, squad ou iniciativa.'
+                      : 'Histórias compartilhadas ficam somente para consulta.'}
+                  </p>
+                  {projectAssignmentMessage ? (
+                    <p className="history-detail__project-message" role="status">
+                      {projectAssignmentMessage}
+                    </p>
+                  ) : null}
                 </div>
-                <ExportActionsBar
-                  story={selectedResult}
-                  onCopyPlain={handleCopyPlain}
-                  plainCopyMessage={copyMessage}
-                  isCopyingPlain={isCopyingPlain}
-                />
-              </section>
 
-              <VersionTimeline
-                versions={versions}
-                selectedId={selectedStory.id}
-                isLoading={isLoadingVersions}
-                onSelect={handleSelectVersion}
-              />
-              <VersionDiffSummary
-                currentVersion={selectedVersion}
-                previousVersion={previousVersion}
-              />
+                <div className="history-preview__content">
+                  <section>
+                    <p className="history-page__eyebrow">Objetivo</p>
+                    <h3>O que esta peça resolve</h3>
+                    <p>{selectedResult.objective}</p>
+                  </section>
+
+                  <section className="history-preview__story">
+                    <p className="history-page__eyebrow">User story</p>
+                    <h3>Formulação principal</h3>
+                    <p>{selectedResult.user_story}</p>
+                  </section>
+
+                  <section>
+                    <p className="history-page__eyebrow">Critérios de aceite</p>
+                    <h3>Checklist resumido</h3>
+                    {previewCriteria.length > 0 ? (
+                      <>
+                        <ol className="history-preview__criteria">
+                          {previewCriteria.map((criterion) => (
+                            <li key={criterion}>{criterion}</li>
+                          ))}
+                        </ol>
+                        {hiddenCriteriaCount > 0 ? (
+                          <p className="history-preview__note">
+                            Mais {hiddenCriteriaCount} {hiddenCriteriaCount === 1 ? 'critério' : 'critérios'} na inspeção completa.
+                          </p>
+                        ) : null}
+                      </>
+                    ) : (
+                      <p className="history-preview__note">Nenhum critério de aceite salvo nesta peça.</p>
+                    )}
+                  </section>
+                </div>
+
+                <div className="history-preview__secondary-actions" aria-label="Atalhos para detalhes avançados">
+                  <button type="button" className="btn btn-ghost btn-small" onClick={() => openAdvancedSection('delivery')}>
+                    Entrega
+                  </button>
+                  <button type="button" className="btn btn-ghost btn-small" onClick={() => openAdvancedSection('versions')}>
+                    Ver versões
+                  </button>
+                  <button type="button" className="btn btn-ghost btn-small" onClick={() => openAdvancedSection('comparison')}>
+                    Comparação
+                  </button>
+                  <button type="button" className="btn btn-ghost btn-small" onClick={() => openAdvancedSection('inspection')}>
+                    Inspeção completa
+                  </button>
+                </div>
+              </article>
+
+              <section className="history-detail__advanced" aria-label="Detalhes avançados da peça selecionada">
+                <HistoryAccordion
+                  id="delivery"
+                  eyebrow="Entrega"
+                  title="Entregar artefato"
+                  summary="Markdown, texto simples e formato para Jira"
+                  open={openAdvancedSections.delivery}
+                  onToggle={toggleAdvancedSection}
+                >
+                  <div className="history-delivery">
+                    <p>
+                      Copie o artefato para o backlog. O formato para Jira é apenas texto formatado;
+                      o ProdForge não envia dados para Jira nem promete integração externa nesta ação.
+                    </p>
+                    <div className="history-delivery__actions">
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-small"
+                        onClick={handleCopyMarkdown}
+                        disabled={isCopying}
+                      >
+                        {copyTarget === 'markdown' ? 'Copiando...' : 'Copiar artefato em Markdown'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-small"
+                        onClick={handleCopyJira}
+                        disabled={isCopying}
+                      >
+                        {copyTarget === 'jira' ? 'Copiando...' : 'Copiar formato para Jira'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-small"
+                        onClick={handleCopyPlain}
+                        disabled={isCopying}
+                      >
+                        {copyTarget === 'plain' ? 'Copiando...' : 'Copiar artefato'}
+                      </button>
+                    </div>
+                  </div>
+                </HistoryAccordion>
+
+                <HistoryAccordion
+                  id="versions"
+                  eyebrow="Versões"
+                  title="Linha do tempo"
+                  summary={`${getVersionLabel(selectedVersionCount)} · Última versão: ${latestVersionDate}`}
+                  open={openAdvancedSections.versions}
+                  onToggle={toggleAdvancedSection}
+                >
+                  <VersionTimeline
+                    versions={versions}
+                    selectedId={selectedStory.id}
+                    isLoading={isLoadingVersions}
+                    onSelect={handleSelectVersion}
+                  />
+                </HistoryAccordion>
+
+                <HistoryAccordion
+                  id="comparison"
+                  eyebrow="Comparação"
+                  title="Resumo do refino"
+                  summary={selectedVersionCount > 1 ? 'Diferenças entre versões' : 'Sem comparação real ainda'}
+                  open={openAdvancedSections.comparison}
+                  onToggle={toggleAdvancedSection}
+                >
+                  {selectedVersionCount > 1 ? (
+                    <VersionDiffSummary
+                      currentVersion={selectedVersion}
+                      previousVersion={previousVersion}
+                    />
+                  ) : (
+                    <p className="history-status">
+                      Gere uma nova versão para comparar evolução, acabamento e critérios.
+                    </p>
+                  )}
+                </HistoryAccordion>
+
+                <HistoryAccordion
+                  id="inspection"
+                  eyebrow="Inspeção"
+                  title="Inspeção completa e contexto"
+                  summary={`${qualityMeta.label} · ${selectedResult.gaps.length} ${selectedResult.gaps.length === 1 ? 'trinca' : 'trincas'} · ${selectedResult.qa_checklist.length} itens de QA`}
+                  open={openAdvancedSections.inspection}
+                  onToggle={toggleAdvancedSection}
+                >
+                  <div className="history-inspection">
+                    <section className="history-inspection__score">
+                      <p className="history-page__eyebrow">Qualidade da peça</p>
+                      <strong>{qualityScore}/100</strong>
+                      <span>{qualityMeta.label}</span>
+                      <p>{qualityMeta.note}</p>
+                    </section>
+
+                    <section>
+                      <h3>Pontos de atenção</h3>
+                      {selectedResult.gaps.length > 0 ? (
+                        <ul>
+                          {selectedResult.gaps.map((gap) => (
+                            <li key={gap}>{gap}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>Nenhuma trinca crítica foi identificada nesta versão.</p>
+                      )}
+                    </section>
+
+                    <section>
+                      <h3>Checklist de QA</h3>
+                      {selectedResult.qa_checklist.length > 0 ? (
+                        <ul>
+                          {selectedResult.qa_checklist.map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>O checklist de QA ainda não veio preenchido para esta versão.</p>
+                      )}
+                    </section>
+
+                    <section>
+                      <h3>Regras e notas</h3>
+                      {selectedResult.business_rules.length > 0 ? (
+                        <ul>
+                          {selectedResult.business_rules.map((rule) => (
+                            <li key={rule}>{rule}</li>
+                          ))}
+                        </ul>
+                      ) : null}
+                      {selectedResult.notes ? <p>{selectedResult.notes}</p> : null}
+                    </section>
+
+                    <section className="history-inspection__context">
+                      <h3>Contexto original</h3>
+                      {hasOriginalContext ? (
+                        <>
+                          {selectedStory.input_context?.trim() ? (
+                            <div>
+                              <span>Matéria-prima</span>
+                              <p>{selectedStory.input_context}</p>
+                            </div>
+                          ) : null}
+                          {selectedStory.input_requirements?.trim() ? (
+                            <div>
+                              <span>Ligas e regras informadas</span>
+                              <p>{selectedStory.input_requirements}</p>
+                            </div>
+                          ) : null}
+                        </>
+                      ) : (
+                        <p>Esta peça não tem contexto original salvo para consulta.</p>
+                      )}
+                    </section>
+                  </div>
+                </HistoryAccordion>
+              </section>
             </>
           ) : (
             <section className="panel history-detail__empty">
-              <p className="history-page__eyebrow">Inspeção</p>
+              <p className="history-page__eyebrow">Preview</p>
               <h2>Selecione uma peça</h2>
-              <p>A revisão de qualidade, gaps e versões da peça selecionada aparece aqui.</p>
+              <p>A leitura rápida, as ações de cópia e os detalhes avançados aparecem aqui.</p>
             </section>
           )}
         </aside>

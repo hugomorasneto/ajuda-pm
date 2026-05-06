@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import StorySection from './StorySection'
 import { buildStoryMarkdown, copyTextToClipboard } from '../../utils/storyExport'
 
@@ -21,6 +21,24 @@ const REFINEMENT_SHORTCUTS = [
   },
 ]
 
+function areCriteriaEqual(current = [], original = []) {
+  if (current.length !== original.length) return false
+  return current.every((item, index) => item === original[index])
+}
+
+function getCompactSaveMessage(message) {
+  if (!message) return ''
+  if (message.includes('Primeira versão forjada e salva com sucesso')) {
+    const scoreMatch = message.match(/(\d+)\/100/)
+    return scoreMatch ? `Primeira versão salva · inspeção ${scoreMatch[1]}/100` : 'Primeira versão salva'
+  }
+  if (message.includes('Story refinada e salva como nova versão')) {
+    const scoreMatch = message.match(/(\d+)\/100/)
+    return scoreMatch ? `Versão refinada salva · inspeção ${scoreMatch[1]}/100` : 'Versão refinada salva'
+  }
+  return message
+}
+
 function StoryDocument({
   result,
   saveMessage,
@@ -34,12 +52,32 @@ function StoryDocument({
   canEdit,
   onRefineStory,
   isRefining = false,
+  refineRequestId = 0,
+  attentionRequestId = 0,
 }) {
   const [editingField, setEditingField] = useState(null)
   const [isRefineOpen, setIsRefineOpen] = useState(false)
   const [refinementText, setRefinementText] = useState('')
   const [copyStatus, setCopyStatus] = useState('')
   const [copyTarget, setCopyTarget] = useState(null)
+  const [openDetail, setOpenDetail] = useState(null)
+  const canRefine = canEdit && typeof onRefineStory === 'function'
+
+  useEffect(() => {
+    if (!result || !canRefine || refineRequestId <= 0) return
+    const timerId = window.setTimeout(() => {
+      setIsRefineOpen(true)
+    }, 0)
+    return () => window.clearTimeout(timerId)
+  }, [canRefine, refineRequestId, result])
+
+  useEffect(() => {
+    if (!result || attentionRequestId <= 0) return
+    const timerId = window.setTimeout(() => {
+      setOpenDetail('attention')
+    }, 0)
+    return () => window.clearTimeout(timerId)
+  }, [attentionRequestId, result])
 
   if (!result) {
     return (
@@ -73,6 +111,14 @@ function StoryDocument({
     acceptance_criteria: criteriaValue,
   }
   const hasOriginalContext = Boolean(baseContext?.trim() || baseRequirements?.trim())
+  const hasPendingManualEdits = Boolean(
+    canEdit && (
+      titleValue !== result.title ||
+      userStoryValue !== result.user_story ||
+      !areCriteriaEqual(criteriaValue, result.acceptance_criteria)
+    ),
+  )
+  const compactSaveMessage = getCompactSaveMessage(saveMessage)
 
   function renderEditButton(field) {
     if (!canEdit) return null
@@ -109,7 +155,7 @@ function StoryDocument({
     setCopyStatus('')
     try {
       await copyTextToClipboard(userStoryValue)
-      setCopyStatus('User story copiada.')
+      setCopyStatus('User story copiada')
     } catch (error) {
       setCopyStatus('Não foi possível copiar a user story agora.')
       console.error('Falha ao copiar user story:', error)
@@ -125,7 +171,7 @@ function StoryDocument({
     setCopyStatus('')
     try {
       await copyTextToClipboard(buildStoryMarkdown(currentStoryForExport))
-      setCopyStatus('Artefato completo em Markdown copiado.')
+      setCopyStatus('Artefato copiado em Markdown')
     } catch (error) {
       setCopyStatus('Não foi possível copiar o artefato em Markdown agora.')
       console.error('Falha ao copiar artefato em Markdown:', error)
@@ -134,7 +180,6 @@ function StoryDocument({
     }
   }
 
-  const canRefine = canEdit && typeof onRefineStory === 'function'
   const canSubmitRefinement = refinementText.trim().length > 0 && !isRefining
   const copiandoStory = copyTarget === 'story'
   const copiandoMarkdown = copyTarget === 'markdown'
@@ -188,22 +233,22 @@ function StoryDocument({
               type="button"
               className="btn btn-secondary btn-small"
               onClick={onSaveEdits}
-              disabled={isSavingEdits || isRefining}
+              disabled={isSavingEdits || isRefining || !hasPendingManualEdits}
             >
-              {isSavingEdits ? 'Guardando na bancada...' : 'Salvar alterações'}
+              {isSavingEdits ? 'Salvando...' : hasPendingManualEdits ? 'Salvar ajustes' : 'Salvo'}
             </button>
           ) : null}
         </div>
       </header>
 
-      {copyStatus || saveMessage ? (
+      {copyStatus || compactSaveMessage ? (
         <div className="story-document__status-line" aria-live="polite">
           {copyStatus ? <p className="copy-message">{copyStatus}</p> : null}
-          {saveMessage ? (
+          {compactSaveMessage ? (
             <p
               className={`save-message ${saveMessage.toLowerCase().includes('erro') ? 'save-message-error' : 'save-message-success'}`}
             >
-              {saveMessage}
+              {compactSaveMessage}
             </p>
           ) : null}
         </div>
@@ -319,7 +364,14 @@ function StoryDocument({
         </div>
 
         <div className="story-document__secondary-stack" aria-label="Detalhes secundários da peça">
-          <details className="story-document__detail">
+          <details
+            className="story-document__detail"
+            open={openDetail === 'attention'}
+            onToggle={(event) => {
+              if (event.currentTarget.open) setOpenDetail('attention')
+              else if (openDetail === 'attention') setOpenDetail(null)
+            }}
+          >
             <summary>
               <span>
                 <strong>Pontos de atenção</strong>
@@ -338,7 +390,14 @@ function StoryDocument({
             )}
           </details>
 
-          <details className="story-document__detail">
+          <details
+            className="story-document__detail"
+            open={openDetail === 'qa'}
+            onToggle={(event) => {
+              if (event.currentTarget.open) setOpenDetail('qa')
+              else if (openDetail === 'qa') setOpenDetail(null)
+            }}
+          >
             <summary>
               <span>
                 <strong>Checklist de QA</strong>
@@ -357,7 +416,14 @@ function StoryDocument({
             )}
           </details>
 
-          <details className="story-document__detail">
+          <details
+            className="story-document__detail"
+            open={openDetail === 'rules'}
+            onToggle={(event) => {
+              if (event.currentTarget.open) setOpenDetail('rules')
+              else if (openDetail === 'rules') setOpenDetail(null)
+            }}
+          >
             <summary>
               <span>
                 <strong>Regras e notas</strong>
@@ -376,7 +442,14 @@ function StoryDocument({
           </details>
 
           {hasOriginalContext ? (
-            <details className="story-document__detail">
+            <details
+              className="story-document__detail"
+              open={openDetail === 'context'}
+              onToggle={(event) => {
+                if (event.currentTarget.open) setOpenDetail('context')
+                else if (openDetail === 'context') setOpenDetail(null)
+              }}
+            >
               <summary>
                 <span>
                   <strong>Contexto original</strong>

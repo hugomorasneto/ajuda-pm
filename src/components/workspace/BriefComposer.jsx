@@ -194,6 +194,13 @@ function getAdjustmentSummary(value) {
   return count === 1 ? 'Definido' : `${count} instruções`
 }
 
+function getBriefPreview(value) {
+  const cleanValue = value?.trim().replace(/\s+/g, ' ') ?? ''
+  if (!cleanValue) return 'A matéria-prima usada na forja fica disponível para consulta e ajustes.'
+  if (cleanValue.length <= 132) return cleanValue
+  return `${cleanValue.slice(0, 132)}...`
+}
+
 function getBriefStage({ contextFilled, isGenerated, isSubmitting }) {
   if (isSubmitting) return 'Forjando'
   if (isGenerated) return 'Primeira versão pronta'
@@ -225,7 +232,9 @@ function BriefComposer({
   const [reqOpen, setReqOpen] = useState(Boolean(formValues.requirements?.trim()))
   const [adjOpen, setAdjOpen] = useState(Boolean(formValues.adjustment?.trim()))
 
+  const isPostForge = isGenerated || isEditing
   const contextFilled = formValues.problemContext?.trim().length > 9
+  const briefPreview = getBriefPreview(formValues.problemContext)
   const requirementsSummary = getRequirementsSummary(formValues.requirements)
   const adjustmentSummary = getAdjustmentSummary(formValues.adjustment)
   const requirementsFilled = Boolean(requirementsSummary)
@@ -292,7 +301,7 @@ function BriefComposer({
 
   return (
     <section
-      className={`panel brief-composer ${isGenerated || isEditing ? 'brief-composer--post-forge' : ''}`}
+      className={`panel brief-composer ${isPostForge ? 'brief-composer--post-forge' : ''}`}
       id="workspace-composer"
     >
       <header className="brief-composer__panel-header">
@@ -351,10 +360,24 @@ function BriefComposer({
         ) : null}
 
         <form onSubmit={handleSubmit} className="brief-composer__form">
+          <details
+            className={`brief-composer__entry-details ${isPostForge ? '' : 'brief-composer__entry-details--plain'}`}
+            open={!isPostForge}
+          >
+            <summary className="brief-composer__entry-summary">
+              <span className="brief-composer__entry-copy">
+                <span className="brief-composer__entry-eyebrow">Entrada original</span>
+                <strong>Briefing usado na forja</strong>
+                <span>{briefPreview}</span>
+              </span>
+              <span className="brief-composer__entry-action">Ver ou editar entrada</span>
+            </summary>
+
+            <div className="brief-composer__entry-body">
           <div className="brief-composer__primary-flow">
             <ComposerSection
               icon={<IconFileText />}
-              label="Matéria-prima"
+              label={isPostForge ? 'Entrada original' : 'Matéria-prima'}
               error={validationErrors.problemContext}
               footer={
                 <div className="brief-composer__prompt-shortcuts">
@@ -389,7 +412,7 @@ function BriefComposer({
 
               <button
                 type="submit"
-                className="btn btn-primary btn-full brief-composer__submit"
+                className={`btn ${isPostForge ? 'btn-secondary' : 'btn-primary'} btn-full brief-composer__submit`}
                 disabled={isSubmitting || !canSubmit}
               >
                 <IconSparkles />
@@ -507,6 +530,8 @@ function BriefComposer({
               </div>
             </div>
           </div>
+            </div>
+          </details>
         </form>
       </div>
     </section>

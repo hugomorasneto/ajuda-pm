@@ -43,7 +43,7 @@ function ProjectContextPanel({
   const canOfferGeneratedStoryOrganization =
     hasGeneratedStory && isStandalone && canAssignGeneratedStory
   const isOpen = Boolean(
-    isManuallyOpen || selectedProjectId || canOfferGeneratedStoryOrganization || actionMessage,
+    isManuallyOpen || selectedProjectId || actionMessage || (canOfferGeneratedStoryOrganization && isCreatingProject),
   )
 
   async function handleCreateProject(event) {
