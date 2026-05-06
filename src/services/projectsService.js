@@ -227,21 +227,19 @@ export async function updateProjectMemberRole({ projectId, memberUserId, role, u
       return { success: false, error: new Error('Papel inválido para membro do projeto.'), data: null }
     }
 
-    const { data, error } = await supabase
-      .from('project_members')
-      .update({ role })
-      .eq('project_id', projectId)
-      .eq('user_id', memberUserId)
-      .neq('role', 'owner')
-      .select('project_id, user_id, role, created_at')
-      .maybeSingle()
+    const { data, error } = await supabase.rpc('update_project_member_role', {
+      p_project_id: projectId,
+      p_member_user_id: memberUserId,
+      p_role: role,
+    })
 
     if (error) {
       console.error('Supabase updateProjectMemberRole error:', error)
       return { success: false, error, data: null }
     }
 
-    if (!data) {
+    const updatedMember = data?.[0] ?? null
+    if (!updatedMember) {
       return {
         success: false,
         error: new Error('Não foi possível alterar o papel deste membro.'),
@@ -249,7 +247,7 @@ export async function updateProjectMemberRole({ projectId, memberUserId, role, u
       }
     }
 
-    return { success: true, data }
+    return { success: true, data: updatedMember }
   } catch (error) {
     console.error('Unexpected updateProjectMemberRole error:', error)
     return { success: false, error, data: null }
@@ -274,21 +272,18 @@ export async function removeProjectMember({ projectId, memberUserId, userId }) {
       return { success: false, error: new Error('Você não pode remover seu próprio acesso por aqui.'), data: null }
     }
 
-    const { data, error } = await supabase
-      .from('project_members')
-      .delete()
-      .eq('project_id', projectId)
-      .eq('user_id', memberUserId)
-      .neq('role', 'owner')
-      .select('project_id, user_id, role')
-      .maybeSingle()
+    const { data, error } = await supabase.rpc('remove_project_member', {
+      p_project_id: projectId,
+      p_member_user_id: memberUserId,
+    })
 
     if (error) {
       console.error('Supabase removeProjectMember error:', error)
       return { success: false, error, data: null }
     }
 
-    if (!data) {
+    const removedMember = data?.[0] ?? null
+    if (!removedMember) {
       return {
         success: false,
         error: new Error('Não foi possível remover este membro.'),
@@ -296,7 +291,7 @@ export async function removeProjectMember({ projectId, memberUserId, userId }) {
       }
     }
 
-    return { success: true, data }
+    return { success: true, data: removedMember }
   } catch (error) {
     console.error('Unexpected removeProjectMember error:', error)
     return { success: false, error, data: null }
