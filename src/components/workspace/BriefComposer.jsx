@@ -173,11 +173,38 @@ function LoadingProgress() {
   )
 }
 
+function countFilledLines(value) {
+  return value
+    ?.split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean).length ?? 0
+}
+
+function getRequirementsSummary(value) {
+  const count = countFilledLines(value)
+  if (count <= 0) return ''
+
+  return count === 1 ? '1 regra' : `${count} regras`
+}
+
+function getAdjustmentSummary(value) {
+  const count = countFilledLines(value)
+  if (count <= 0) return ''
+
+  return count === 1 ? 'Definido' : `${count} instruções`
+}
+
 function getBriefStage({ contextFilled, isGenerated, isSubmitting }) {
   if (isSubmitting) return 'Forjando'
   if (isGenerated) return 'Primeira versão pronta'
   if (contextFilled) return 'Pronto para forjar'
   return 'Matéria-prima obrigatória'
+}
+
+function getBriefStageTone({ contextFilled, isGenerated, isSubmitting }) {
+  if (isSubmitting) return 'working'
+  if (isGenerated || contextFilled) return 'ready'
+  return 'required'
 }
 
 function BriefComposer({
@@ -199,8 +226,16 @@ function BriefComposer({
   const [adjOpen, setAdjOpen] = useState(Boolean(formValues.adjustment?.trim()))
 
   const contextFilled = formValues.problemContext?.trim().length > 9
-  const requirementsFilled = formValues.requirements?.trim().length > 4
+  const requirementsSummary = getRequirementsSummary(formValues.requirements)
+  const adjustmentSummary = getAdjustmentSummary(formValues.adjustment)
+  const requirementsFilled = Boolean(requirementsSummary)
+  const adjustmentFilled = Boolean(adjustmentSummary)
   const currentStage = getBriefStage({
+    contextFilled,
+    isGenerated,
+    isSubmitting,
+  })
+  const currentStageTone = getBriefStageTone({
     contextFilled,
     isGenerated,
     isSubmitting,
@@ -252,8 +287,8 @@ function BriefComposer({
     : canSubmit
       ? isEditing
         ? 'A IA aplica o acabamento e gera uma nova versão estruturada.'
-        : 'Forjar gera a primeira versão estruturada da story.'
-      : 'Preencha a matéria-prima para acionar a geração.'
+        : 'A forja gera a primeira versão estruturada da story.'
+      : 'Preencha a matéria-prima para liberar a geração.'
 
   return (
     <section
@@ -270,7 +305,9 @@ function BriefComposer({
         </div>
 
         <div className="brief-composer__panel-actions">
-          <span className="brief-composer__panel-pill">{currentStage}</span>
+          <span className={`brief-composer__panel-pill brief-composer__panel-pill--${currentStageTone}`}>
+            {currentStage}
+          </span>
         </div>
       </header>
 
@@ -381,7 +418,7 @@ function BriefComposer({
                   ) : null}
                   {requirementsFilled && !reqOpen ? (
                     <span className="brief-accordion__preview" aria-hidden="true">
-                      {formValues.requirements.slice(0, 32)}...
+                      {requirementsSummary}
                     </span>
                   ) : null}
                 </span>
@@ -431,6 +468,11 @@ function BriefComposer({
                   <IconSliders />
                   <span className="brief-accordion__label">Acabamento</span>
                   <span className="brief-accordion__optional">opcional</span>
+                  {adjustmentFilled && !adjOpen ? (
+                    <span className="brief-accordion__preview" aria-hidden="true">
+                      {adjustmentSummary}
+                    </span>
+                  ) : null}
                 </span>
                 <span className={`brief-accordion__chevron ${adjOpen ? 'brief-accordion__chevron--open' : ''}`}>
                   <IconChevronDown />

@@ -95,7 +95,7 @@ function ProjectContextPanel({
               onChange={(event) => onSelectProject?.(event.target.value)}
               disabled={isLoading || isSubmitting}
             >
-              <option value="">Forjar sem projeto</option>
+              <option value="">Sem projeto</option>
               {projects.map((project) => (
                 <option key={project.id} value={project.id}>
                   {project.name}
@@ -112,7 +112,7 @@ function ProjectContextPanel({
                 onClick={onForgeStandalone}
                 disabled={isSubmitting}
               >
-                Forjar sem projeto
+                Gerar sem projeto
               </button>
             ) : null}
             {canAssignToSelectedProject ? (

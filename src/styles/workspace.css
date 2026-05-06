@@ -6857,3 +6857,198 @@
     grid-template-columns: minmax(720px, 940px) minmax(260px, 320px) !important;
   }
 }
+
+/* Refinamento fino da Bancada vazia: CTA mais leve, apoios discretos e resumos limpos. */
+.workspace-canvas--empty .brief-composer__panel-header {
+  align-items: start;
+  gap: var(--space-4);
+}
+
+.workspace-canvas--empty .brief-composer__panel-actions {
+  justify-self: start;
+}
+
+.workspace-canvas--empty .brief-composer__panel-pill {
+  min-height: 26px;
+  padding: 0 var(--space-2);
+  border-radius: 999px;
+  font-size: var(--text-label);
+  font-weight: 700;
+  box-shadow: none;
+  opacity: 0.84;
+}
+
+.workspace-shell--forge .workspace-canvas--empty .brief-composer__panel-pill {
+  border-color: var(--forge-border);
+  background: var(--forge-surface-inset);
+  color: var(--forge-text-secondary);
+  box-shadow: none;
+}
+
+.workspace-shell--forge .workspace-canvas--empty .brief-composer__panel-pill--ready,
+.workspace-shell--forge .workspace-canvas--empty .brief-composer__panel-pill--working {
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(90deg, var(--forge-ember-soft), transparent 82%),
+    var(--forge-surface-inset);
+  color: var(--forge-text-primary);
+  opacity: 0.92;
+}
+
+.workspace-canvas--empty .brief-composer__primary-flow {
+  gap: var(--space-3);
+}
+
+.workspace-canvas--empty .brief-composer__optional-flow {
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+}
+
+.workspace-canvas--empty .composer-section {
+  gap: var(--space-3);
+}
+
+.workspace-canvas--empty .brief-composer__quick-start {
+  gap: var(--space-2);
+}
+
+.workspace-canvas--empty .brief-composer__footer,
+.workspace-shell--forge .workspace-canvas--empty .brief-composer__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.workspace-canvas--empty .brief-composer__footer-copy {
+  flex: 1 1 20rem;
+  max-width: 31rem;
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+.workspace-canvas--empty .brief-composer__submit {
+  width: auto;
+  min-width: min(100%, 15.5rem);
+  min-height: 48px;
+  padding-inline: var(--space-5);
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.workspace-canvas--empty .brief-composer__submit:disabled {
+  opacity: 0.5;
+  box-shadow: none;
+  filter: saturate(0.78);
+}
+
+.workspace-shell--forge .workspace-canvas--empty .brief-composer__submit:disabled {
+  border-color: var(--forge-border);
+  background: var(--forge-surface-2);
+  color: var(--forge-text-muted);
+  box-shadow: none;
+}
+
+.workspace-canvas--empty .brief-accordion {
+  min-height: 46px;
+}
+
+.workspace-canvas--empty .brief-accordion__trigger {
+  min-height: 46px;
+  padding-inline: var(--space-3);
+}
+
+.workspace-canvas--empty .brief-accordion__preview {
+  max-width: none;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--forge-border);
+  border-radius: 999px;
+  background: var(--forge-surface-inset);
+  color: var(--forge-text-secondary);
+  font-size: var(--text-label);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.workspace-canvas--empty .project-context-panel {
+  padding: var(--space-3) var(--space-4);
+}
+
+.workspace-canvas--empty .project-context-panel:not(.project-context-panel--open) {
+  box-shadow: none;
+}
+
+.workspace-canvas--empty .project-context-panel:not(.project-context-panel--open) .project-context-panel__summary-copy span:last-child {
+  display: none;
+}
+
+.workspace-canvas--empty .project-context-panel__summary-copy {
+  gap: 0.2rem;
+}
+
+.workspace-canvas--empty .project-context-panel__status {
+  min-height: 28px;
+  padding: 0.25rem 0.6rem;
+  font-size: var(--text-label);
+}
+
+.workspace-canvas--empty .project-context-panel__chevron {
+  width: 28px;
+  height: 28px;
+}
+
+.workspace-empty-rail {
+  gap: var(--space-3);
+}
+
+.workspace-canvas--empty .workspace-state--pre-forge.panel {
+  min-height: 0;
+  padding: var(--space-4);
+  border-color: var(--forge-border);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.018), transparent),
+    var(--forge-surface-inset);
+  box-shadow: var(--forge-shadow-soft);
+}
+
+.workspace-canvas--empty .workspace-state--pre-forge .workspace-state__content,
+.workspace-canvas--empty .workspace-state--pre-forge .workspace-state__copy {
+  max-width: none;
+}
+
+.workspace-canvas--empty .workspace-state--pre-forge .workspace-state__copy {
+  gap: var(--space-2);
+}
+
+.workspace-canvas--empty .workspace-state--pre-forge .workspace-state__copy h2 {
+  font-size: 0.98rem;
+  line-height: 1.35;
+}
+
+.workspace-canvas--empty .workspace-state--pre-forge .workspace-state__copy p:last-child {
+  font-size: var(--text-small);
+}
+
+.workspace-canvas--empty .workspace-inspection-preview {
+  padding: var(--space-3);
+  opacity: 0.9;
+  box-shadow: none;
+}
+
+@media (max-width: 760px) {
+  .workspace-canvas--empty .brief-composer__footer,
+  .workspace-shell--forge .workspace-canvas--empty .brief-composer__footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .workspace-canvas--empty .brief-composer__footer-copy {
+    flex: 0 1 auto;
+    max-width: none;
+  }
+
+  .workspace-canvas--empty .brief-composer__submit {
+    width: 100%;
+  }
+}

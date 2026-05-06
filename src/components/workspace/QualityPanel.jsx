@@ -128,6 +128,7 @@ function buildInspectionSummary(story) {
 function QualityPanel({
   story,
   isPremium,
+  effectiveForgeLimit,
   remainingGenerations,
   hasReachedLimit,
   onCopyPlain,
@@ -135,6 +136,7 @@ function QualityPanel({
   isCopyingPlain,
 }) {
   const inspectionSummary = buildInspectionSummary(story)
+  const hasUnlimitedAccess = effectiveForgeLimit === null
 
   return (
     <aside className={`panel quality-panel ${!story ? 'quality-panel--empty' : ''}`}>
@@ -243,7 +245,7 @@ function QualityPanel({
             >
               <span className="quality-panel__plan-label">{isPremium ? 'Pro' : 'Free'}</span>
               <span className="quality-panel__plan-count">
-                {isPremium
+                {hasUnlimitedAccess
                   ? 'Plano Pro ativo'
                   : hasReachedLimit
                   ? 'Limite atingido - Faça upgrade'

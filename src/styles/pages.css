@@ -1494,6 +1494,185 @@ body:has(.auth-shell--signup) {
   background: var(--color-accent-subtle);
 }
 
+.admin-badge--warning {
+  color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+}
+
+.admin-user-plan-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.admin-access-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+}
+
+.admin-access-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(0,0,0,0.58);
+  cursor: pointer;
+}
+
+.admin-access-modal__panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--space-5);
+  width: min(100%, 720px);
+  max-height: min(92vh, 820px);
+  overflow: auto;
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-floating);
+}
+
+.admin-access-modal__header,
+.admin-access-modal__actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.admin-access-modal__header h2 {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-primary);
+  font-size: var(--text-h3);
+}
+
+.admin-access-modal__header p:last-child {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+
+.admin-access-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.admin-access-summary__item {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-canvas-muted);
+}
+
+.admin-access-summary__item dt {
+  color: var(--color-text-muted);
+  font-size: var(--text-label);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.admin-access-summary__item dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.admin-access-modal__limit-warning,
+.admin-access-modal__feedback {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 26%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 9%, transparent);
+  color: var(--color-warning);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.admin-access-modal__feedback {
+  border-color: color-mix(in srgb, var(--color-success) 26%, transparent);
+  background: color-mix(in srgb, var(--color-success) 9%, transparent);
+  color: var(--color-success);
+}
+
+.admin-access-modal__feedback--error {
+  border-color: color-mix(in srgb, var(--color-error) 26%, transparent);
+  background: color-mix(in srgb, var(--color-error) 9%, transparent);
+  color: var(--color-error);
+}
+
+.admin-access-modal__fields {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.admin-access-field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.admin-access-field span {
+  color: var(--color-text-primary);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.admin-access-field small {
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+  line-height: 1.45;
+}
+
+.admin-access-field input,
+.admin-access-field select,
+.admin-access-field textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-base);
+  font-size: var(--text-small);
+}
+
+.admin-access-field textarea {
+  min-height: 96px;
+  padding-top: var(--space-3);
+  resize: vertical;
+}
+
+.admin-access-field input:focus,
+.admin-access-field select:focus,
+.admin-access-field textarea:focus {
+  border-color: var(--color-focus);
+  outline: 2px solid color-mix(in srgb, var(--color-focus) 22%, transparent);
+  outline-offset: 1px;
+}
+
+.admin-access-modal__actions {
+  justify-content: flex-end;
+}
+
+.admin-button--primary {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: #fff;
+}
+
 .admin-story-detail {
   display: grid;
   gap: var(--space-5);
@@ -1650,6 +1829,9 @@ body:has(.auth-shell--signup) {
 .workspace-shell--forge .admin-page__title,
 .workspace-shell--forge .admin-table-section__title,
 .workspace-shell--forge .admin-story-detail__header h2,
+.workspace-shell--forge .admin-access-modal__header h2,
+.workspace-shell--forge .admin-access-summary__item dd,
+.workspace-shell--forge .admin-access-field span,
 .workspace-shell--forge .admin-story-detail__block h3,
 .workspace-shell--forge .admin-metric-card__value,
 .workspace-shell--forge .admin-percent-bar,
@@ -1668,6 +1850,8 @@ body:has(.auth-shell--signup) {
 .workspace-shell--forge .admin-metric-card__note,
 .workspace-shell--forge .admin-pagination p,
 .workspace-shell--forge .admin-inline-note,
+.workspace-shell--forge .admin-access-modal__header p:last-child,
+.workspace-shell--forge .admin-access-field small,
 .workspace-shell--forge .admin-story-detail__header p:last-child,
 .workspace-shell--forge .admin-story-detail__block p,
 .workspace-shell--forge .admin-table__empty {
@@ -1818,6 +2002,7 @@ body:has(.auth-shell--signup) {
 .workspace-shell--forge .admin-table-section,
 .workspace-shell--forge .admin-pagination,
 .workspace-shell--forge .admin-story-detail,
+.workspace-shell--forge .admin-access-modal__panel,
 .workspace-shell--forge .admin-inline-note {
   border-color: var(--forge-border);
   background:
@@ -1831,6 +2016,7 @@ body:has(.auth-shell--signup) {
 }
 
 .workspace-shell--forge .admin-table-section__header,
+.workspace-shell--forge .admin-access-modal__header,
 .workspace-shell--forge .admin-story-detail__header {
   border-color: var(--forge-border);
   background:
@@ -1868,6 +2054,79 @@ body:has(.auth-shell--signup) {
   border-color: var(--forge-border-ember);
   background: var(--forge-ember-soft);
   color: #FFD0A8;
+}
+
+.workspace-shell--forge .admin-badge--warning {
+  border-color: rgba(255,194,87,0.34);
+  background: rgba(255,194,87,0.11);
+  color: #FFE0A3;
+}
+
+.workspace-shell--forge .admin-access-modal__backdrop {
+  background: rgba(0,0,0,0.72);
+}
+
+.workspace-shell--forge .admin-access-modal__panel {
+  box-shadow: var(--forge-shadow-floating), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.workspace-shell--forge .admin-access-summary__item,
+.workspace-shell--forge .admin-access-field input,
+.workspace-shell--forge .admin-access-field select,
+.workspace-shell--forge .admin-access-field textarea {
+  border-color: var(--forge-border);
+  background: var(--forge-surface-inset);
+  color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .admin-access-summary__item dt {
+  color: var(--forge-text-muted);
+}
+
+.workspace-shell--forge .admin-access-field input::placeholder,
+.workspace-shell--forge .admin-access-field textarea::placeholder {
+  color: var(--forge-placeholder);
+}
+
+.workspace-shell--forge .admin-access-field input:focus,
+.workspace-shell--forge .admin-access-field select:focus,
+.workspace-shell--forge .admin-access-field textarea:focus {
+  border-color: var(--forge-border-tech);
+  outline: 2px solid transparent;
+  box-shadow:
+    0 0 0 1px var(--forge-focus-ring-offset),
+    0 0 0 4px var(--forge-focus-ring);
+}
+
+.workspace-shell--forge .admin-access-modal__limit-warning {
+  border-color: rgba(255,194,87,0.36);
+  background:
+    linear-gradient(90deg, rgba(255,194,87,0.14), transparent),
+    var(--forge-surface-inset);
+  color: #FFE0A3;
+}
+
+.workspace-shell--forge .admin-access-modal__feedback {
+  border-color: rgba(64,211,154,0.34);
+  background:
+    linear-gradient(90deg, rgba(64,211,154,0.12), transparent),
+    var(--forge-surface-inset);
+  color: var(--forge-success);
+}
+
+.workspace-shell--forge .admin-access-modal__feedback--error {
+  border-color: rgba(255,107,99,0.36);
+  background:
+    linear-gradient(90deg, var(--forge-error-soft), transparent),
+    var(--forge-surface-inset);
+  color: #FFC7C3;
+}
+
+.workspace-shell--forge .admin-button--primary {
+  border-color: var(--forge-border-ember);
+  background: var(--forge-gradient-cta-ember);
+  color: var(--forge-text-primary);
+  box-shadow: var(--forge-shadow-soft), var(--forge-glow-ember-sm);
 }
 
 .workspace-shell--forge .admin-percent-bar {

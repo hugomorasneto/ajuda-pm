@@ -14,7 +14,11 @@ import {
 import { getUserProfile } from '../services/userProfilesService'
 import { useAuth } from './useAuth'
 import { trackEvent } from '../services/analyticsService'
-import { FREE_GENERATION_LIMIT } from '../constants/app'
+import {
+  FREE_GENERATION_LIMIT,
+  getEffectiveForgeLimit,
+  getRemainingForgeGenerations,
+} from '../constants/app'
 
 const STORY_STATUS_LABELS = {
   generated: 'Forjado',
@@ -163,12 +167,17 @@ export function useUserStoryWorkspace() {
   const [historyFilter, setHistoryFilter] = useState('7d')
   const [usageCount, setUsageCount] = useState(0)
   const [userPlan, setUserPlan] = useState('free')
+  const [forgeLimitOverride, setForgeLimitOverride] = useState(null)
 
   const isEditing = Boolean(selectedStoryId)
   const canEditSelectedStory = Boolean(isEditing && selectedStoryOwnerId === userId)
   const isPremium = userPlan === 'premium'
-  const remainingGenerations = Math.max(0, FREE_GENERATION_LIMIT - usageCount)
-  const hasReachedLimit = !isPremium && usageCount >= FREE_GENERATION_LIMIT
+  const effectiveForgeLimit = getEffectiveForgeLimit({ plan: userPlan, forgeLimitOverride })
+  const remainingGenerations = getRemainingForgeGenerations({
+    usageCount,
+    forgeLimit: effectiveForgeLimit,
+  })
+  const hasReachedLimit = effectiveForgeLimit !== null && usageCount >= effectiveForgeLimit
 
   const activeStoryTitle = useMemo(() => {
     const selected = recentStories.find((item) => item.id === selectedStoryId)
@@ -196,8 +205,14 @@ export function useUserStoryWorkspace() {
     if (countResponse.success) setUsageCount(countResponse.count)
     if (profileResponse.success && profileResponse.data?.plan) {
       setUserPlan(profileResponse.data.plan)
+      setForgeLimitOverride(
+        Number.isInteger(profileResponse.data.forge_limit_override)
+          ? profileResponse.data.forge_limit_override
+          : null,
+      )
     } else {
       setUserPlan('free')
+      setForgeLimitOverride(null)
     }
   }, [userId])
 
@@ -477,9 +492,17 @@ export function useUserStoryWorkspace() {
         event_name: 'limit_reached_free_plan',
         event_category: 'usage',
         page_path: '/tool',
-        metadata: { usage_count: usageCount, free_limit: FREE_GENERATION_LIMIT },
+        metadata: {
+          usage_count: usageCount,
+          free_limit: FREE_GENERATION_LIMIT,
+          effective_limit: effectiveForgeLimit,
+          forge_limit_override: forgeLimitOverride,
+        },
       })
-      const limitMessage = `Limite do plano Free atingido (${FREE_GENERATION_LIMIT} forjas). Atualize para Pro para continuar.`
+      const limitMessage =
+        userPlan === 'free' && forgeLimitOverride === null && effectiveForgeLimit === FREE_GENERATION_LIMIT
+          ? `Limite do plano Free atingido (${FREE_GENERATION_LIMIT} forjas). Atualize para Pro para continuar.`
+          : `Limite de forjas atingido (${effectiveForgeLimit} forjas). Ajuste seu acesso para continuar.`
       setWorkspaceError(limitMessage)
       setSaveMessage(limitMessage)
       return false
@@ -723,6 +746,8 @@ export function useUserStoryWorkspace() {
     editDraft,
     formValues,
     freeGenerationLimit: FREE_GENERATION_LIMIT,
+    effectiveForgeLimit,
+    forgeLimitOverride,
     canEditSelectedStory,
     handleCopy,
     handleEditDraftChange,

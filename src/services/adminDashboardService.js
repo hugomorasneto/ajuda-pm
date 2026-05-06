@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabaseClient'
 const PAGE_SIZE = 1000
 const MAX_ROWS = 50000
 const DEFAULT_PAGE_SIZE = 10
+const USER_PROFILE_COLUMNS = 'id, email, plan, role, forge_limit_override, access_notes, access_updated_by, updated_at, created_at'
+const USER_PROFILE_FALLBACK_COLUMNS = 'id, email, plan, role, created_at'
 
 const FUNNEL_EVENT_STEPS = [
   'landing_view',
@@ -69,6 +71,28 @@ function cleanSearchTerm(search) {
     .replace(/[,%()]/g, ' ')
     .replace(/\s+/g, ' ')
     .slice(0, 80)
+}
+
+function shouldRetryUsersWithoutAccessColumns(error) {
+  const message = String(error?.message ?? '').toLowerCase()
+  return (
+    message.includes('forge_limit_override') ||
+    message.includes('access_notes') ||
+    message.includes('access_updated_by') ||
+    message.includes('updated_at')
+  )
+}
+
+function withAccessDefaults(user) {
+  return {
+    ...user,
+    forge_limit_override: Number.isInteger(user?.forge_limit_override)
+      ? user.forge_limit_override
+      : null,
+    access_notes: user?.access_notes ?? null,
+    access_updated_by: user?.access_updated_by ?? null,
+    updated_at: user?.updated_at ?? null,
+  }
 }
 
 function buildEventCountMap(events) {
@@ -364,7 +388,7 @@ async function fetchUsers({ search, page, pageSize }) {
 
   let query = supabase
     .from('profiles')
-    .select('id, email, plan, role, created_at', { count: 'exact' })
+    .select(USER_PROFILE_COLUMNS, { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(from, to)
 
@@ -372,12 +396,30 @@ async function fetchUsers({ search, page, pageSize }) {
     query = query.ilike('email', `%${term}%`)
   }
 
-  const { data, error, count } = await query
+  let { data, error, count } = await query
+
+  if (error && shouldRetryUsersWithoutAccessColumns(error)) {
+    let fallbackQuery = supabase
+      .from('profiles')
+      .select(USER_PROFILE_FALLBACK_COLUMNS, { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to)
+
+    if (term) {
+      fallbackQuery = fallbackQuery.ilike('email', `%${term}%`)
+    }
+
+    const fallback = await fallbackQuery
+    data = fallback.data
+    error = fallback.error
+    count = fallback.count
+  }
+
   if (error) throw error
 
   const rows = await Promise.all(
     (data ?? []).map(async (user) => ({
-      ...user,
+      ...withAccessDefaults(user),
       ...(await getUserStats(user.id)),
     })),
   )

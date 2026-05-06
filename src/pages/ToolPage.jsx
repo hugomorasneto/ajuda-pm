@@ -21,8 +21,8 @@ function InspectionPreviewCard() {
   return (
     <aside className="panel workspace-inspection-preview" aria-label="Prévia da inspeção">
       <p className="quality-panel__panel-eyebrow">Inspeção</p>
-      <h2>A inspeção aparece depois da primeira versão.</h2>
-      <p>Score, trincas e checklist ficam disponíveis após a forja.</p>
+      <h2>A inspeção fica disponível depois da forja.</h2>
+      <p>Score, trincas e checklist aparecem com a primeira versão.</p>
     </aside>
   )
 }
@@ -45,6 +45,7 @@ function ToolPage() {
     canEditSelectedStory,
     copyMessage,
     editDraft,
+    effectiveForgeLimit,
     formValues,
     handleAssignSelectedStoryToProject,
     handleCopy,
@@ -227,7 +228,7 @@ function ToolPage() {
   useEffect(() => {
     if (typeof setTopbarStatus !== 'function') return
 
-    const generationsText = isPremium
+    const generationsText = effectiveForgeLimit === null
       ? 'Pro'
       : `${remainingGenerations} ${remainingGenerations === 1 ? 'forja' : 'forjas'}`
 
@@ -257,6 +258,7 @@ function ToolPage() {
     workspaceStatusTitle,
     isEditing,
     isPremium,
+    effectiveForgeLimit,
     remainingGenerations,
     hasReachedLimit,
     projectPillText,
@@ -296,6 +298,7 @@ function ToolPage() {
           <QualityPanel
             story={reviewStory}
             isPremium={isPremium}
+            effectiveForgeLimit={effectiveForgeLimit}
             remainingGenerations={remainingGenerations}
             hasReachedLimit={hasReachedLimit}
             onCopyPlain={() => handleCopy(reviewStory)}
@@ -414,8 +417,14 @@ function ToolPage() {
             }`}
           >
             <div className="workspace-empty-rail">
-              {documentCanvas}
-              {rightPanel}
+              {showEmptyState ? (
+                documentCanvas
+              ) : (
+                <>
+                  {documentCanvas}
+                  {rightPanel}
+                </>
+              )}
             </div>
           </div>
         </div>

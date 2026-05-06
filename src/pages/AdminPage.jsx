@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { APP_NAME } from '../constants/app'
+import {
+  APP_NAME,
+  MAX_FORGE_LIMIT_OVERRIDE,
+  PLAN_VALUES,
+  getEffectiveForgeLimit,
+  getRemainingForgeGenerations,
+} from '../constants/app'
 import { fetchAdminDashboard } from '../services/adminDashboardService'
+import { updateAdminUserAccess } from '../services/adminUserAccessService'
 import '../styles/pages.css'
 
 const periodOptions = [
@@ -17,6 +24,11 @@ const adminTabs = [
   { id: 'usage', label: 'Uso' },
   { id: 'stories', label: 'Peças' },
   { id: 'learning', label: 'Aprendizado' },
+]
+
+const accessPlanOptions = [
+  { value: PLAN_VALUES.FREE, label: 'Free' },
+  { value: PLAN_VALUES.PRO, label: 'Pro' },
 ]
 
 const emptyDash = '—'
@@ -74,6 +86,57 @@ function formatStoryStatus(status) {
   }
 
   return statusLabels[status] ?? status ?? emptyDash
+}
+
+function getNormalizedPlan(plan) {
+  return plan === PLAN_VALUES.PRO ? PLAN_VALUES.PRO : PLAN_VALUES.FREE
+}
+
+function getNormalizedForgeLimitOverride(value) {
+  return Number.isInteger(value) ? value : null
+}
+
+function getUserEffectiveForgeLimit(user) {
+  return getEffectiveForgeLimit({
+    plan: getNormalizedPlan(user?.plan),
+    forgeLimitOverride: getNormalizedForgeLimitOverride(user?.forge_limit_override),
+  })
+}
+
+function getUserRemainingForges(user) {
+  return getRemainingForgeGenerations({
+    usageCount: user?.stories_count ?? 0,
+    forgeLimit: getUserEffectiveForgeLimit(user),
+  })
+}
+
+function isUserAtForgeLimit(user) {
+  const limit = getUserEffectiveForgeLimit(user)
+  return limit !== null && Number(user?.stories_count ?? 0) >= limit
+}
+
+function formatForgeLimit(limit) {
+  return limit === null ? 'Ilimitado' : formatNumber(limit)
+}
+
+function formatRemainingForges(remaining) {
+  return remaining === null ? 'Ilimitadas' : formatNumber(remaining)
+}
+
+function parseForgeLimitOverride(value) {
+  const rawValue = String(value ?? '').trim()
+  if (!rawValue) return null
+
+  if (!/^\d+$/.test(rawValue)) {
+    throw new Error(`Informe um limite inteiro entre 0 e ${MAX_FORGE_LIMIT_OVERRIDE}.`)
+  }
+
+  const parsed = Number(rawValue)
+  if (!Number.isSafeInteger(parsed) || parsed < 0 || parsed > MAX_FORGE_LIMIT_OVERRIDE) {
+    throw new Error(`Informe um limite inteiro entre 0 e ${MAX_FORGE_LIMIT_OVERRIDE}.`)
+  }
+
+  return parsed
 }
 
 function MetricCard({ label, value, note, tone = 'neutral' }) {
@@ -206,6 +269,179 @@ function AdminSectionToolbar({ children }) {
   return <div className="admin-section-toolbar">{children}</div>
 }
 
+function buildAccessForm(user) {
+  return {
+    plan: getNormalizedPlan(user?.plan),
+    forgeLimitOverride: Number.isInteger(user?.forge_limit_override)
+      ? String(user.forge_limit_override)
+      : '',
+    notes: '',
+  }
+}
+
+function AccessSummaryItem({ label, value }) {
+  return (
+    <div className="admin-access-summary__item">
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  )
+}
+
+function UserAccessModal({ user, isSaving, feedback, onClose, onSave }) {
+  const [form, setForm] = useState(() => buildAccessForm(user))
+  const [localError, setLocalError] = useState('')
+
+  if (!user) return null
+
+  const currentLimit = getUserEffectiveForgeLimit(user)
+  const remainingForges = getUserRemainingForges(user)
+  const limitReached = isUserAtForgeLimit(user)
+  const shownFeedback = localError
+    ? { tone: 'error', message: localError }
+    : feedback
+
+  function updateForm(field, value) {
+    setForm((current) => ({ ...current, [field]: value }))
+    setLocalError('')
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault()
+    setLocalError('')
+
+    if (!accessPlanOptions.some((option) => option.value === form.plan)) {
+      setLocalError('Escolha um plano válido.')
+      return
+    }
+
+    let forgeLimitOverride = null
+    try {
+      forgeLimitOverride = parseForgeLimitOverride(form.forgeLimitOverride)
+    } catch (error) {
+      setLocalError(error instanceof Error ? error.message : 'Informe um limite válido.')
+      return
+    }
+
+    await onSave({
+      plan: form.plan,
+      forgeLimitOverride,
+      notes: form.notes.trim() || null,
+    })
+  }
+
+  return (
+    <div className="admin-access-modal" role="presentation">
+      <button
+        type="button"
+        className="admin-access-modal__backdrop"
+        aria-label="Cancelar gerenciamento de acesso"
+        onClick={onClose}
+      />
+
+      <form
+        className="admin-access-modal__panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="admin-access-modal-title"
+        onSubmit={handleSubmit}
+      >
+        <div className="admin-access-modal__header">
+          <div>
+            <p className="admin-section-label">Acesso do usuário</p>
+            <h2 id="admin-access-modal-title">Gerenciar acesso</h2>
+            <p>{user.email}</p>
+          </div>
+          <button type="button" className="admin-button admin-button--compact" onClick={onClose}>
+            Cancelar
+          </button>
+        </div>
+
+        <dl className="admin-access-summary">
+          <AccessSummaryItem label="Papel atual" value={formatRole(user.role)} />
+          <AccessSummaryItem label="Plano atual" value={formatPlan(user.plan)} />
+          <AccessSummaryItem label="Usadas" value={formatNumber(user.stories_count)} />
+          <AccessSummaryItem label="Limite" value={formatForgeLimit(currentLimit)} />
+          <AccessSummaryItem label="Restantes" value={formatRemainingForges(remainingForges)} />
+          <AccessSummaryItem label="Última atividade" value={formatDateTime(user.last_activity_at)} />
+        </dl>
+
+        {limitReached ? (
+          <p className="admin-access-modal__limit-warning" role="status">
+            Limite atingido
+          </p>
+        ) : null}
+
+        <div className="admin-access-modal__fields">
+          <label className="admin-access-field">
+            <span>Plano</span>
+            <select
+              value={form.plan}
+              onChange={(event) => updateForm('plan', event.target.value)}
+              disabled={isSaving}
+            >
+              {accessPlanOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="admin-access-field">
+            <span>Limite de forjas</span>
+            <input
+              type="number"
+              min="0"
+              max={MAX_FORGE_LIMIT_OVERRIDE}
+              step="1"
+              inputMode="numeric"
+              value={form.forgeLimitOverride}
+              placeholder="Usar padrão do plano"
+              onChange={(event) => updateForm('forgeLimitOverride', event.target.value)}
+              disabled={isSaving}
+            />
+            <small>
+              Deixe em branco para usar o padrão do plano. O plano Free mantém 10 forjas.
+            </small>
+          </label>
+
+          <label className="admin-access-field">
+            <span>Observação administrativa</span>
+            <textarea
+              value={form.notes}
+              placeholder="Motivo da alteração"
+              rows="3"
+              onChange={(event) => updateForm('notes', event.target.value)}
+              disabled={isSaving}
+            />
+          </label>
+        </div>
+
+        {shownFeedback?.message ? (
+          <p
+            className={`admin-access-modal__feedback ${
+              shownFeedback.tone === 'error' ? 'admin-access-modal__feedback--error' : ''
+            }`}
+            role={shownFeedback.tone === 'error' ? 'alert' : 'status'}
+          >
+            {shownFeedback.message}
+          </p>
+        ) : null}
+
+        <div className="admin-access-modal__actions">
+          <button type="button" className="admin-button" onClick={onClose} disabled={isSaving}>
+            Cancelar
+          </button>
+          <button type="submit" className="admin-button admin-button--primary" disabled={isSaving}>
+            {isSaving ? 'Salvando...' : 'Salvar alterações'}
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}
+
 function OverviewTab({ dashboard, periodLabel }) {
   const overview = dashboard.overview
 
@@ -301,7 +537,7 @@ function LeadsTab({ data, search, onSearchChange, onPageChange }) {
   )
 }
 
-function UsersTab({ data, search, onSearchChange, onPageChange }) {
+function UsersTab({ data, search, onSearchChange, onPageChange, onManageAccess }) {
   return (
     <>
       <AdminSectionToolbar>
@@ -316,13 +552,20 @@ function UsersTab({ data, search, onSearchChange, onPageChange }) {
       <DataTable
         title="Usuários"
         description="Contas criadas, papel, plano e atividade recente."
-        columns={['E-mail', 'Plano', 'Papel', 'Cadastro', 'Última atividade', 'Histórias', 'Guias']}
+        columns={['E-mail', 'Plano', 'Papel', 'Cadastro', 'Última atividade', 'Histórias', 'Guias', 'Acesso']}
         rows={data.rows}
         emptyMessage="Nenhum usuário encontrado."
         renderRow={(user) => (
           <tr key={user.id}>
             <td>{user.email}</td>
-            <td>{formatPlan(user.plan)}</td>
+            <td>
+              <span className="admin-user-plan-cell">
+                <span>{formatPlan(user.plan)}</span>
+                {isUserAtForgeLimit(user) ? (
+                  <span className="admin-badge admin-badge--warning">Limite atingido</span>
+                ) : null}
+              </span>
+            </td>
             <td>
               <span className={`admin-badge ${user.role === 'admin' ? 'admin-badge--strong' : ''}`}>
                 {formatRole(user.role)}
@@ -332,6 +575,11 @@ function UsersTab({ data, search, onSearchChange, onPageChange }) {
             <td>{formatDateTime(user.last_activity_at)}</td>
             <td>{formatNumber(user.stories_count)}</td>
             <td>{formatNumber(user.guides_count)}</td>
+            <td>
+              <button type="button" className="admin-button admin-button--compact" onClick={() => onManageAccess(user)}>
+                Gerenciar
+              </button>
+            </td>
           </tr>
         )}
       />
@@ -601,6 +849,9 @@ function AdminPage() {
   const [error, setError] = useState('')
   const [dashboard, setDashboard] = useState(null)
   const [selectedStoryId, setSelectedStoryId] = useState(null)
+  const [selectedAccessUser, setSelectedAccessUser] = useState(null)
+  const [isSavingAccess, setIsSavingAccess] = useState(false)
+  const [accessFeedback, setAccessFeedback] = useState(null)
 
   useEffect(() => {
     let active = true
@@ -658,7 +909,7 @@ function AdminPage() {
       title: activeTabLabel,
       pills: [
         { text: periodLabel },
-        { text: 'Somente leitura' },
+        { text: 'Controle seguro' },
       ],
     })
 
@@ -679,13 +930,74 @@ function AdminPage() {
     setPages((current) => ({ ...current, [section]: nextPage }))
   }
 
+  function openAccessModal(user) {
+    setSelectedAccessUser(user)
+    setAccessFeedback(null)
+  }
+
+  function closeAccessModal() {
+    setSelectedAccessUser(null)
+    setAccessFeedback(null)
+  }
+
+  async function handleSaveUserAccess(payload) {
+    if (!selectedAccessUser?.id) return
+
+    setIsSavingAccess(true)
+    setAccessFeedback(null)
+    const response = await updateAdminUserAccess({
+      userId: selectedAccessUser.id,
+      ...payload,
+    })
+    setIsSavingAccess(false)
+
+    if (!response.success) {
+      setAccessFeedback({
+        tone: 'error',
+        message: response.message,
+      })
+      return
+    }
+
+    const updatedAccess = response.data ?? {
+      plan: payload.plan,
+      forge_limit_override: payload.forgeLimitOverride,
+      access_notes: payload.notes,
+      updated_at: new Date().toISOString(),
+    }
+
+    const mergedUser = {
+      ...selectedAccessUser,
+      ...updatedAccess,
+    }
+
+    setSelectedAccessUser(mergedUser)
+    setDashboard((current) => {
+      if (!current?.users?.rows) return current
+
+      return {
+        ...current,
+        users: {
+          ...current.users,
+          rows: current.users.rows.map((user) => (
+            user.id === selectedAccessUser.id ? { ...user, ...updatedAccess } : user
+          )),
+        },
+      }
+    })
+    setAccessFeedback({
+      tone: 'success',
+      message: 'Acesso atualizado com sucesso.',
+    })
+  }
+
   return (
     <div className="admin-page">
       <header className="admin-page__header">
         <div className="admin-page__header-copy">
           <div className="admin-page__kicker-row">
             <p className="admin-page__eyebrow">Administração</p>
-            <span className="admin-page__status-pill">Somente leitura</span>
+            <span className="admin-page__status-pill">Controle seguro</span>
           </div>
           <h1 className="admin-page__title">Sala de controle da Forja</h1>
           <p className="admin-page__description">
@@ -739,6 +1051,7 @@ function AdminPage() {
               search={search.users}
               onSearchChange={(value) => updateSearch('users', value)}
               onPageChange={(page) => updatePage('users', page)}
+              onManageAccess={openAccessModal}
             />
           ) : null}
           {activeTab === 'usage' ? <UsageTab usage={dashboard.usage} /> : null}
@@ -762,6 +1075,17 @@ function AdminPage() {
             />
           ) : null}
         </div>
+      ) : null}
+
+      {selectedAccessUser ? (
+        <UserAccessModal
+          key={selectedAccessUser.id}
+          user={selectedAccessUser}
+          isSaving={isSavingAccess}
+          feedback={accessFeedback}
+          onClose={closeAccessModal}
+          onSave={handleSaveUserAccess}
+        />
       ) : null}
     </div>
   )
