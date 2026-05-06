@@ -59,9 +59,6 @@ function validateForm(formValues) {
   if (!formValues.problemContext.trim()) {
     errors.problemContext = 'Informe a matéria-prima principal antes de acionar a forja.'
   }
-  if (!formValues.requirements.trim()) {
-    errors.requirements = 'Informe as ligas e regras para montar critérios de aceite úteis.'
-  }
   return errors
 }
 
@@ -471,7 +468,7 @@ export function useUserStoryWorkspace() {
     setValidationErrors(errors)
 
     if (Object.keys(errors).length > 0) {
-      setSaveMessage('Revise a matéria-prima e as ligas antes de acionar a forja.')
+      setSaveMessage('Revise a matéria-prima antes de acionar a forja.')
       return false
     }
 

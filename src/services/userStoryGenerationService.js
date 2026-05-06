@@ -41,7 +41,7 @@ function mapGenerationHttpError(response, payload) {
   if (response.status === 400) {
     return createGenerationError(
       'INVALID_INPUT',
-      'Revise a matéria-prima e as ligas antes de acionar a forja.',
+      'Revise a matéria-prima antes de acionar a forja.',
       { status: response.status, payload },
     )
   }

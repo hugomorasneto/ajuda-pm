@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import ComposerSection from './ComposerSection'
 import PromptChips from './PromptChips'
+import { QUICK_TEMPLATES } from './workspaceTemplates'
 
 function IconFileText() {
   return (
@@ -130,12 +131,6 @@ function IconPlus() {
   )
 }
 
-const STEPS = [
-  { id: 'context', label: 'Matéria' },
-  { id: 'requirements', label: 'Ligas' },
-  { id: 'generate', label: 'Forjar' },
-]
-
 const contextPrompts = [
   { label: 'Dor do usuário', text: 'Dor do usuário: ' },
   { label: 'Fluxo atual', text: 'Fluxo atual: ' },
@@ -160,32 +155,6 @@ const LOADING_STEPS = [
   { label: 'Preparando critérios...', pct: 90 },
 ]
 
-function ComposerStepper({ contextFilled, requirementsFilled, isGenerated }) {
-  const activeIndex = isGenerated ? 3 : requirementsFilled ? 2 : contextFilled ? 1 : 0
-
-  return (
-    <div className="brief-stepper" aria-label="Progresso da geração">
-      {STEPS.map((step, index) => {
-        const done = index < activeIndex
-        const active = index === activeIndex
-
-        return (
-          <div
-            key={step.id}
-            className={`brief-stepper__step ${done ? 'brief-stepper__step--done' : ''} ${active ? 'brief-stepper__step--active' : ''}`}
-          >
-            <span className="brief-stepper__dot" aria-hidden="true">
-              {done ? '✓' : null}
-            </span>
-            <span className="brief-stepper__label">{step.label}</span>
-            {index < STEPS.length - 1 ? <span className="brief-stepper__line" aria-hidden="true" /> : null}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
 function LoadingProgress() {
   return (
     <div className="brief-loading" aria-live="polite">
@@ -204,12 +173,11 @@ function LoadingProgress() {
   )
 }
 
-function getBriefStage({ contextFilled, requirementsFilled, isGenerated, isSubmitting }) {
-  if (isSubmitting) return 'Gerando'
-  if (isGenerated) return 'Primeira versão gerada'
-  if (requirementsFilled) return 'Pronto para gerar'
-  if (contextFilled) return 'Detalhar ligas'
-  return 'Inserir insumo'
+function getBriefStage({ contextFilled, isGenerated, isSubmitting }) {
+  if (isSubmitting) return 'Forjando'
+  if (isGenerated) return 'Primeira versão pronta'
+  if (contextFilled) return 'Pronto para forjar'
+  return 'Matéria-prima obrigatória'
 }
 
 function BriefComposer({
@@ -217,6 +185,7 @@ function BriefComposer({
   validationErrors,
   onChange,
   onApplyPrompt,
+  onApplyTemplate,
   onSubmit,
   onReset,
   isSubmitting,
@@ -233,7 +202,6 @@ function BriefComposer({
   const requirementsFilled = formValues.requirements?.trim().length > 4
   const currentStage = getBriefStage({
     contextFilled,
-    requirementsFilled,
     isGenerated,
     isSubmitting,
   })
@@ -266,6 +234,11 @@ function BriefComposer({
     focusContextTextarea()
   }
 
+  function handleTemplateSelect(template) {
+    onApplyTemplate?.(template)
+    focusContextTextarea()
+  }
+
   const submitLabel = isSubmitting
     ? 'Gerando versão...'
     : isEditing
@@ -290,8 +263,10 @@ function BriefComposer({
       <header className="brief-composer__panel-header">
         <div className="brief-composer__panel-copy">
           <p className="brief-composer__eyebrow">Bancada</p>
-          <h2>Matéria-prima da story</h2>
-          <p>Espaço para transformar briefing, problema ou demanda inicial em user story.</p>
+          <h2>Descreva a matéria-prima da story</h2>
+          <p>
+            Cole o briefing, problema ou demanda inicial. O ProdForge transforma isso em uma user story pronta para refino.
+          </p>
         </div>
 
         <div className="brief-composer__panel-actions">
@@ -300,11 +275,28 @@ function BriefComposer({
       </header>
 
       <div className="brief-composer__body" id="workspace-composer-body">
-        <ComposerStepper
-          contextFilled={contextFilled}
-          requirementsFilled={requirementsFilled}
-          isGenerated={isGenerated}
-        />
+        <div className="brief-composer__quick-start" aria-label="Exemplos rápidos">
+          <div className="brief-composer__quick-start-copy">
+            <p className="brief-composer__quick-start-label">Exemplos rápidos</p>
+            <p>Use um exemplo para preencher a bancada ou cole seu próprio briefing no campo principal.</p>
+          </div>
+          <div className="brief-composer__template-list">
+            {QUICK_TEMPLATES.map((template) => (
+              <button
+                key={template.id}
+                type="button"
+                className="brief-composer__template-chip"
+                onClick={() => handleTemplateSelect(template)}
+                disabled={isSubmitting}
+              >
+                <span className="brief-composer__template-emoji" aria-hidden="true">
+                  {template.emoji}
+                </span>
+                <span className="brief-composer__template-label">{template.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {isEditing ? (
           <div className="brief-composer__active-story">
@@ -349,7 +341,7 @@ function BriefComposer({
                 onChange={(event) => onChange('problemContext', event.target.value)}
                 placeholder="Ex: Usuários esquecem a senha, tentam recuperar pelo celular e abandonam o login quando o e-mail não chega."
                 rows={5}
-                className={validationErrors.problemContext ? 'textarea--error' : ''}
+                className={`brief-composer__context-input ${validationErrors.problemContext ? 'textarea--error' : ''}`}
               />
             </ComposerSection>
 
@@ -363,6 +355,7 @@ function BriefComposer({
                 <span className="brief-accordion__trigger-left">
                   <IconListChecks />
                   <span className="brief-accordion__label">Ligas e regras</span>
+                  <span className="brief-accordion__optional">opcional</span>
                   {validationErrors.requirements ? (
                     <span
                       className="brief-accordion__error-dot"

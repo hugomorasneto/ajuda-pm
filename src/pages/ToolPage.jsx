@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useOutletContext, useSearchParams } from 'react-router-dom'
 import BriefComposer from '../components/workspace/BriefComposer'
-import OnboardingModal from '../components/workspace/OnboardingModal'
 import ProjectContextPanel from '../components/workspace/ProjectContextPanel'
 import QualityPanel from '../components/workspace/QualityPanel'
 import StoryDocument from '../components/workspace/StoryDocument'
@@ -18,26 +17,25 @@ const TABS = [
   { id: 'revisao', label: 'Inspeção' },
 ]
 
-function hasSeenOnboarding(storageKey) {
-  if (typeof window === 'undefined' || !storageKey) return true
-
-  try {
-    return Boolean(window.localStorage.getItem(storageKey))
-  } catch (error) {
-    console.error('Falha ao ler onboarding do workspace:', error)
-    return true
-  }
+function InspectionPreviewCard() {
+  return (
+    <aside className="panel workspace-inspection-preview" aria-label="Prévia da inspeção">
+      <p className="quality-panel__panel-eyebrow">Inspeção</p>
+      <h2>Inspeção após a primeira versão</h2>
+      <p>
+        Score, trincas, checklist de QA e ações de entrega aparecem aqui depois que a primeira user story for gerada.
+      </p>
+    </aside>
+  )
 }
 
 function ToolPage() {
   const [mobileTab, setMobileTab] = useState('entrada')
-  const [dismissedOnboardingKey, setDismissedOnboardingKey] = useState(null)
   const [searchParams] = useSearchParams()
   const projectIdFromQuery = searchParams.get('projectId')
   const loadedQueryStoryIdRef = useRef(null)
   const { user } = useAuth()
   const userId = user?.id ?? null
-  const onboardingStorageKey = user ? `pf_ob_${user.id}` : null
   const [projects, setProjects] = useState([])
   const [selectedProjectId, setSelectedProjectId] = useState('')
   const [isLoadingProjects, setIsLoadingProjects] = useState(false)
@@ -116,13 +114,6 @@ function ToolPage() {
 
     return () => clearTimeout(timerId)
   }, [projectIdFromQuery, projects, selectedProjectId, selectedStoryId])
-
-  function dismissOnboarding() {
-    if (typeof window !== 'undefined' && onboardingStorageKey) {
-      window.localStorage.setItem(onboardingStorageKey, '1')
-      setDismissedOnboardingKey(onboardingStorageKey)
-    }
-  }
 
   useEffect(() => {
     const storyIdFromQuery = searchParams.get('storyId')
@@ -231,11 +222,7 @@ function ToolPage() {
   const workspaceStatusTitle = isEditing && activeStoryTitle ? activeStoryTitle : 'Em preparo'
   const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? null
   const selectedProjectName = selectedProject?.name ?? 'Sem projeto'
-  const showOnboarding = Boolean(
-    onboardingStorageKey &&
-      dismissedOnboardingKey !== onboardingStorageKey &&
-      !hasSeenOnboarding(onboardingStorageKey),
-  )
+  const projectPillText = selectedProject ? selectedProjectName : 'Peça avulsa'
 
   const { setTopbarStatus } = useOutletContext() ?? {}
 
@@ -255,7 +242,7 @@ function ToolPage() {
           className: isEditing ? 'mode-pill-editing' : '',
         },
         {
-          text: selectedProjectName,
+          text: projectPillText,
           className: selectedProject ? 'mode-pill-editing' : '',
         },
         {
@@ -274,7 +261,7 @@ function ToolPage() {
     isPremium,
     remainingGenerations,
     hasReachedLimit,
-    selectedProjectName,
+    projectPillText,
     selectedProject,
   ])
 
@@ -283,11 +270,11 @@ function ToolPage() {
   ) : showBlockingErrorState ? (
       <WorkspaceErrorState
         message={workspaceError}
-        canRetry={Boolean(formValues.problemContext.trim() && formValues.requirements.trim())}
+        canRetry={Boolean(formValues.problemContext.trim())}
         onRetry={handleSubmitWithProject}
       />
   ) : showEmptyState ? (
-    <WorkspaceEmptyState hasDraft={hasDraft} onApplyTemplate={applyTemplateToBriefing} />
+    <WorkspaceEmptyState hasDraft={hasDraft} />
   ) : (
     <StoryDocument
       key={selectedStoryId ?? 'workspace-document'}
@@ -307,15 +294,19 @@ function ToolPage() {
   const rightPanel = (
     <aside className="workspace-right-panel">
       <div className="workspace-right-panel__review">
-        <QualityPanel
-          story={reviewStory}
-          isPremium={isPremium}
-          remainingGenerations={remainingGenerations}
-          hasReachedLimit={hasReachedLimit}
-          onCopyPlain={() => handleCopy(reviewStory)}
-          plainCopyMessage={copyMessage}
-          isCopyingPlain={isCopying}
-        />
+        {reviewStory ? (
+          <QualityPanel
+            story={reviewStory}
+            isPremium={isPremium}
+            remainingGenerations={remainingGenerations}
+            hasReachedLimit={hasReachedLimit}
+            onCopyPlain={() => handleCopy(reviewStory)}
+            plainCopyMessage={copyMessage}
+            isCopyingPlain={isCopying}
+          />
+        ) : (
+          <InspectionPreviewCard />
+        )}
       </div>
     </aside>
   )
@@ -336,12 +327,26 @@ function ToolPage() {
         ))}
       </nav>
 
-      <div className="workspace-canvas">
+      <div className={`workspace-canvas ${reviewStory ? 'workspace-canvas--with-story' : 'workspace-canvas--empty'}`}>
         <div
           className={`workspace-canvas__col workspace-canvas__col--left ${
             mobileTab === 'entrada' ? 'workspace-canvas__col--active' : ''
           }`}
         >
+          <BriefComposer
+            formValues={formValues}
+            validationErrors={validationErrors}
+            onChange={handleFieldChange}
+            onApplyPrompt={handlePromptChipApply}
+            onApplyTemplate={applyTemplateToBriefing}
+            onSubmit={handleSubmitWithProject}
+            onReset={handleResetToCreate}
+            isSubmitting={isSubmitting}
+            isEditing={isEditing && canEditSelectedStory}
+            isGenerated={Boolean(result)}
+            activeStoryTitle={activeStoryTitle}
+            hasAdjustment={Boolean(formValues.adjustment.trim())}
+          />
           <ProjectContextPanel
             projects={projects}
             selectedProjectId={selectedProjectId}
@@ -367,19 +372,6 @@ function ToolPage() {
             )}
             actionMessage={projectActionMessage}
           />
-          <BriefComposer
-            formValues={formValues}
-            validationErrors={validationErrors}
-            onChange={handleFieldChange}
-            onApplyPrompt={handlePromptChipApply}
-            onSubmit={handleSubmitWithProject}
-            onReset={handleResetToCreate}
-            isSubmitting={isSubmitting}
-            isEditing={isEditing && canEditSelectedStory}
-            isGenerated={Boolean(result)}
-            activeStoryTitle={activeStoryTitle}
-            hasAdjustment={Boolean(formValues.adjustment.trim())}
-          />
         </div>
 
         <div
@@ -398,8 +390,6 @@ function ToolPage() {
           {rightPanel}
         </div>
       </div>
-
-      {showOnboarding ? <OnboardingModal onDismiss={dismissOnboarding} /> : null}
     </div>
   )
 }
