@@ -1,7 +1,5 @@
 import ExportActionsBar from './ExportActionsBar'
-import GapList from './GapList'
-import QaChecklist from './QaChecklist'
-import QualityScore from './QualityScore'
+import { getResolvedQualityScore, getScoreMeta } from './qualityScoreUtils'
 
 function IconAlertTriangle() {
   return (
@@ -121,7 +119,7 @@ function ScoreCriteriaDetails() {
 
 function buildInspectionSummary(story) {
   return {
-    panelStatus: story ? 'Peça em inspeção' : 'Aguardando primeira versão',
+    panelStatus: story ? 'Resumo da peça' : 'Aguardando primeira versão',
   }
 }
 
@@ -137,14 +135,21 @@ function QualityPanel({
 }) {
   const inspectionSummary = buildInspectionSummary(story)
   const hasUnlimitedAccess = effectiveForgeLimit === null
+  const score = story ? getResolvedQualityScore(story) : 0
+  const scoreMeta = getScoreMeta(score)
+  const gaps = Array.isArray(story?.gaps) ? story.gaps.filter(Boolean) : []
+  const qaChecklist = Array.isArray(story?.qa_checklist) ? story.qa_checklist.filter(Boolean) : []
+  const alertasPrincipais = gaps.slice(0, 2)
+  const hasCriticalAlerts = Boolean(alertasPrincipais[0])
+  const haMaisAlertas = Boolean(gaps[2])
 
   return (
     <aside className={`panel quality-panel ${!story ? 'quality-panel--empty' : ''}`}>
       <div className="quality-panel__panel-header">
         <div className="quality-panel__panel-copy">
-          <p className="quality-panel__panel-eyebrow">Inspeção</p>
-          <h2>Inspeção da peça</h2>
-          <p>Revisão da qualidade, gaps e próximos ajustes no mesmo fluxo.</p>
+          <p className="quality-panel__panel-eyebrow">Resumo</p>
+          <h2>Inspeção executiva</h2>
+          <p>Qualidade, alertas e próximas ações sem repetir o artefato.</p>
         </div>
 
         <div className="quality-panel__panel-actions">
@@ -206,37 +211,89 @@ function QualityPanel({
           </>
         ) : (
           <>
-            <QualityScore story={story} />
-            <ScoreCriteriaDetails />
+            <section className={`quality-panel__executive-score ${scoreMeta.toneClass}`}>
+              <p className="quality-panel__summary-label">Qualidade</p>
+              <strong>{scoreMeta.label} · {score}/100</strong>
+              <span>{scoreMeta.note}</span>
+            </section>
 
-            <RailSection
-              icon={<IconAlertTriangle />}
-              label="Trincas"
-              description="Gaps, ambiguidades e pontos frágeis da story."
-            >
-              <GapList items={story.gaps} />
-            </RailSection>
+            <div className="quality-panel__summary-grid">
+              <div className={`quality-panel__summary-card ${hasCriticalAlerts ? 'quality-panel__summary-card--warning' : 'quality-panel__summary-card--success'}`}>
+                <span className="quality-panel__summary-label">Alertas</span>
+                <strong>{hasCriticalAlerts ? `${gaps.length} pontos` : 'Sem bloqueios críticos'}</strong>
+                <span className="quality-panel__summary-note">
+                  {hasCriticalAlerts ? 'Revise antes de encaminhar ao backlog.' : 'A peça está clara para refinamento.'}
+                </span>
+              </div>
+
+              <div className="quality-panel__summary-card quality-panel__summary-card--tech">
+                <span className="quality-panel__summary-label">QA</span>
+                <strong>{qaChecklist.length > 0 ? `${qaChecklist.length} itens` : 'Sem checklist'}</strong>
+                <span className="quality-panel__summary-note">
+                  {qaChecklist.length > 0 ? 'Checklist recolhido no artefato.' : 'Refine se precisar de cenários de teste.'}
+                </span>
+              </div>
+            </div>
 
             <RailSection
               icon={<IconClipboard />}
-              label="Teste de resistência"
-              description="Checklist de QA e cenários de validação."
+              label="Próxima ação"
+              description="Use o artefato ou refine os pontos abertos."
             >
-              <QaChecklist items={story.qa_checklist} />
+              <div className="quality-panel__quick-actions">
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-small"
+                  onClick={onCopyPlain}
+                  disabled={!story || isCopyingPlain}
+                >
+                  {isCopyingPlain ? 'Copiando...' : 'Copiar artefato'}
+                </button>
+              </div>
+              {plainCopyMessage ? <p className="copy-message">{plainCopyMessage}</p> : null}
             </RailSection>
 
             <RailSection
-              icon={<IconDownload />}
-              label="Entregar artefato"
-              description="Copie quando a peça estiver pronta."
+              icon={<IconAlertTriangle />}
+              label={hasCriticalAlerts ? 'Principais alertas' : 'Sem bloqueios críticos'}
+              description={hasCriticalAlerts ? 'Mostrando no máximo 2 pontos.' : 'A inspeção não encontrou trincas críticas.'}
             >
-              <ExportActionsBar
-                story={story}
-                onCopyPlain={onCopyPlain}
-                plainCopyMessage={plainCopyMessage}
-                isCopyingPlain={isCopyingPlain}
-              />
+              {hasCriticalAlerts ? (
+                <>
+                  <ul className="quality-panel__list quality-panel__list--compact">
+                    {alertasPrincipais.map((gap) => (
+                      <li key={gap}>{gap}</li>
+                    ))}
+                  </ul>
+                  {haMaisAlertas ? (
+                    <p className="quality-panel__empty-note">Abra “Pontos de atenção” no artefato para ver todos.</p>
+                  ) : null}
+                </>
+              ) : (
+                <p className="quality-panel__empty-note">Siga para revisão final, cópia ou refino se quiser ajustar o tom.</p>
+              )}
             </RailSection>
+
+            <details className="quality-panel__detail">
+              <summary>
+                <span>Mais formatos e critérios</span>
+              </summary>
+              <div className="quality-panel__detail-body">
+                <ScoreCriteriaDetails />
+                <RailSection
+                  icon={<IconDownload />}
+                  label="Formatos de cópia"
+                  description="Opções adicionais preservadas para o fluxo atual."
+                >
+                  <ExportActionsBar
+                    story={story}
+                    onCopyPlain={onCopyPlain}
+                    plainCopyMessage={plainCopyMessage}
+                    isCopyingPlain={isCopyingPlain}
+                  />
+                </RailSection>
+              </div>
+            </details>
 
             <div
               className={`quality-panel__usage-pill ${

@@ -282,6 +282,8 @@ function ToolPage() {
       saveMessage={saveMessage}
       isLoadingSelectedStory={isLoadingSelection}
       editDraft={editDraft}
+      baseContext={formValues.problemContext}
+      baseRequirements={formValues.requirements}
       onEditDraftChange={handleEditDraftChange}
       onSaveEdits={handleSaveEdits}
       isSavingEdits={isSavingEdits}

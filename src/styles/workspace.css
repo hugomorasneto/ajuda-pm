@@ -7052,3 +7052,267 @@
     width: 100%;
   }
 }
+
+/* Refinamento pós-forja: leitura primeiro, inspeção em camadas. */
+.story-document__status-row,
+.story-document__status-line,
+.story-document__primary-stack,
+.story-document__secondary-stack,
+.quality-panel__quick-actions,
+.quality-panel__detail-body {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.story-document__status-row {
+  justify-items: start;
+}
+
+.story-document__status-line {
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--forge-border);
+  border-radius: var(--radius-sm);
+  background: var(--forge-surface-inset);
+}
+
+.story-document__body {
+  gap: var(--space-5);
+}
+
+.story-document__primary-stack {
+  gap: var(--space-4);
+}
+
+.story-document__secondary-stack {
+  gap: var(--space-3);
+}
+
+.story-document__detail,
+.quality-panel__detail {
+  border: 1px solid var(--forge-border);
+  border-radius: var(--radius-sm);
+  background: var(--forge-surface-inset);
+  overflow: hidden;
+}
+
+.story-document__detail summary,
+.quality-panel__detail summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 50px;
+  padding: var(--space-3) var(--space-4);
+  color: var(--forge-text-primary);
+  cursor: pointer;
+  list-style: none;
+}
+
+.story-document__detail summary::-webkit-details-marker,
+.quality-panel__detail summary::-webkit-details-marker {
+  display: none;
+}
+
+.story-document__detail summary span,
+.quality-panel__detail summary span {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.story-document__detail summary strong,
+.quality-panel__detail summary span {
+  font-size: var(--text-small);
+  font-weight: 800;
+}
+
+.story-document__detail summary small {
+  color: var(--forge-text-muted);
+  font-size: var(--text-small);
+  line-height: 1.35;
+}
+
+.story-document__detail summary em {
+  flex: 0 0 auto;
+  border: 1px solid var(--forge-border);
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  color: var(--forge-text-secondary);
+  background: var(--forge-surface-2);
+  font-size: var(--text-label);
+  font-style: normal;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.story-document__detail[open] summary,
+.quality-panel__detail[open] summary {
+  border-bottom: 1px solid var(--forge-border);
+  background:
+    linear-gradient(90deg, var(--forge-ember-soft), transparent 86%),
+    var(--forge-surface-2);
+}
+
+.story-document__detail > :not(summary) {
+  margin: var(--space-4);
+}
+
+.story-document__detail > ul,
+.story-document__detail > p {
+  margin: var(--space-4);
+}
+
+.story-document__context-block {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.story-document__context-block + .story-document__context-block {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--forge-border-subtle);
+}
+
+.story-document__context-block p:last-child {
+  white-space: pre-wrap;
+}
+
+.workspace-shell--forge .story-document__meta-pill {
+  min-height: 26px;
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(90deg, var(--forge-ember-soft), transparent 82%),
+    var(--forge-surface-inset);
+  color: var(--forge-text-primary);
+  box-shadow: none;
+}
+
+.workspace-shell--forge .story-section--emphasis {
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(180deg, rgba(255,145,56,0.055), rgba(255,145,56,0.018)),
+    var(--forge-surface-inset);
+}
+
+.workspace-shell--forge .story-document__highlight {
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(180deg, var(--forge-tech-soft), transparent),
+    var(--forge-surface-2);
+  font-size: clamp(1rem, 1.1vw, 1.12rem);
+  line-height: 1.65;
+}
+
+.story-document__ordered-list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.story-document__ordered-list li {
+  padding: var(--space-3);
+  border: 1px solid var(--forge-border);
+  border-radius: var(--radius-sm);
+  background: var(--forge-surface-inset);
+}
+
+.story-document__ordered-list li + li {
+  margin-top: 0;
+}
+
+.brief-composer--post-forge .brief-composer__quick-start {
+  display: none;
+}
+
+.brief-composer--post-forge .brief-composer__panel-copy p:last-child {
+  display: none;
+}
+
+.brief-composer--post-forge .brief-composer__context-input {
+  min-height: 128px;
+  max-height: 190px;
+}
+
+.brief-composer--post-forge .brief-composer__body,
+.brief-composer--post-forge .brief-composer__form,
+.brief-composer--post-forge .brief-composer__primary-flow,
+.brief-composer--post-forge .brief-composer__optional-flow {
+  gap: var(--space-3);
+}
+
+.brief-composer--post-forge .brief-composer__footer {
+  margin-top: var(--space-3);
+}
+
+.brief-composer--post-forge .brief-composer__submit {
+  min-height: 44px;
+}
+
+.quality-panel__executive-score {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--forge-border-ember);
+  border-radius: var(--radius-sm);
+  background:
+    linear-gradient(180deg, var(--forge-ember-soft), transparent),
+    var(--forge-surface-inset);
+}
+
+.quality-panel__executive-score strong {
+  color: var(--forge-text-primary);
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+
+.quality-panel__executive-score span {
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.45;
+}
+
+.quality-panel__summary-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.quality-panel__summary-card {
+  padding: var(--space-3);
+}
+
+.quality-panel__quick-actions .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.quality-panel__list--compact {
+  max-height: 8.5rem;
+  overflow: hidden;
+}
+
+.quality-panel__detail-body {
+  padding: var(--space-4);
+}
+
+.quality-panel__detail .quality-score-explainer {
+  border: 0;
+  background: transparent;
+}
+
+.quality-panel__detail .quality-panel__section {
+  padding-top: var(--space-3);
+}
+
+@media (min-width: 1180px) and (max-width: 1535px) {
+  .workspace-canvas--with-story {
+    grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+  }
+
+  .workspace-canvas--with-story .workspace-canvas__col--right {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1536px) {
+  .workspace-canvas--with-story {
+    grid-template-columns: minmax(248px, 280px) minmax(0, 1fr) minmax(260px, 296px);
+  }
+}

@@ -292,7 +292,7 @@ function BriefComposer({
 
   return (
     <section
-      className="panel brief-composer"
+      className={`panel brief-composer ${isGenerated || isEditing ? 'brief-composer--post-forge' : ''}`}
       id="workspace-composer"
     >
       <header className="brief-composer__panel-header">
