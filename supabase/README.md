@@ -86,11 +86,13 @@ npm run supabase:secrets:set -- GEMINI_API_KEY=YOUR_KEY GEMINI_MODEL=gemini-2.0-
 Para a função pública de contato, configure também as secrets abaixo nas Supabase Edge Functions, nunca no frontend:
 
 ```powershell
-npm run supabase:secrets:set -- RESEND_API_KEY=YOUR_RESEND_KEY CONTACT_TO_EMAIL=contato-interno@example.com CONTACT_FROM_EMAIL="ProdForge <contato@seudominio-autorizado.com>"
+npm run supabase:secrets:set -- SMTP_HOST=smtp.hostinger.com SMTP_PORT=465 SMTP_SECURE=true SMTP_USERNAME=contato@seudominio.com SMTP_PASSWORD=SENHA_DO_EMAIL CONTACT_TO_EMAIL=contato-interno@example.com CONTACT_FROM_EMAIL="ProdForge <contato@seudominio.com>"
 ```
 
 - `CONTACT_TO_EMAIL` é o destinatário interno das mensagens recebidas em `/contato`.
 - `CONTACT_FROM_EMAIL` deve usar um domínio autorizado no provedor de e-mail.
+- `SMTP_USERNAME` deve ser o e-mail completo da conta SMTP.
+- `SMTP_PASSWORD` deve ser a senha da conta de e-mail, não a senha do painel de hospedagem.
 - Se essas variáveis não estiverem configuradas, a função registra a mensagem em `public.contact_messages`, marca `email_sent = false` e retorna sucesso controlado para o usuário.
 
 ## Deploy the edge function

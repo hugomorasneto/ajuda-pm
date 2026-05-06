@@ -1,5 +1,6 @@
 const PROJECT_ORIGIN = "https://prodforge.techtupa.com.br";
-const RESEND_API_URL = "https://api.resend.com/emails";
+const SMTP_TIMEOUT_MS = 15000;
+const SMTP_RESPONSE_BUFFER_SIZE = 4096;
 const ALLOWED_CATEGORIES = [
   "suporte",
   "privacidade",
@@ -42,6 +43,23 @@ type ValidContactMessage = {
 type ContactMessageRecord = ValidContactMessage & {
   id: string;
   created_at: string;
+};
+
+type SmtpConfig = {
+  host: string;
+  port: number;
+  secure: boolean;
+  username: string;
+  password: string;
+  fromHeader: string;
+  fromAddress: string;
+  toHeader: string;
+  recipients: string[];
+};
+
+type SmtpResponse = {
+  code: number;
+  message: string;
 };
 
 function isLocalhostOrigin(origin: string): boolean {
@@ -172,6 +190,11 @@ function buildMissingConfigMessage(missingKeys: string[]): string {
   return `Configuração de e-mail ausente: ${missingKeys.join(", ")}.`;
 }
 
+function parseBooleanEnv(value: string | undefined, fallback: boolean): boolean {
+  if (!value) return fallback;
+  return ["1", "true", "yes", "sim"].includes(value.trim().toLowerCase());
+}
+
 function truncate(value: string, maxLength: number): string {
   if (value.length <= maxLength) return value;
   return `${value.slice(0, maxLength - 3).trim()}...`;
@@ -184,6 +207,91 @@ function escapeHtml(value: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function encodeBase64(value: string): string {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary);
+}
+
+function encodeMimeHeader(value: string): string {
+  if (/^[\x20-\x7e]*$/.test(value)) return value;
+  return `=?UTF-8?B?${encodeBase64(value)}?=`;
+}
+
+function sanitizeHeaderValue(value: string): string {
+  return value.replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function parseEmailAddress(value: string): string {
+  const normalized = sanitizeHeaderValue(value);
+  const bracketMatch = normalized.match(/<([^<>\s]+@[^<>\s]+)>/);
+  const address = bracketMatch?.[1] ?? normalized;
+  return EMAIL_REGEX.test(address) ? address.toLowerCase() : "";
+}
+
+function parseRecipientAddresses(value: string): string[] {
+  const recipients = value
+    .split(/[;,]/)
+    .map((item) => parseEmailAddress(item))
+    .filter(Boolean);
+
+  return Array.from(new Set(recipients));
+}
+
+function getSmtpConfig(): SmtpConfig | { missingKeys: string[] } {
+  const smtpHost = Deno.env.get("SMTP_HOST");
+  const smtpPortRaw = Deno.env.get("SMTP_PORT");
+  const smtpUsername = Deno.env.get("SMTP_USERNAME");
+  const smtpPassword = Deno.env.get("SMTP_PASSWORD");
+  const contactFromEmail = Deno.env.get("CONTACT_FROM_EMAIL");
+  const contactToEmail = Deno.env.get("CONTACT_TO_EMAIL");
+  const missingKeys = [
+    { key: "SMTP_HOST", value: smtpHost },
+    { key: "SMTP_PORT", value: smtpPortRaw },
+    { key: "SMTP_USERNAME", value: smtpUsername },
+    { key: "SMTP_PASSWORD", value: smtpPassword },
+    { key: "CONTACT_FROM_EMAIL", value: contactFromEmail },
+    { key: "CONTACT_TO_EMAIL", value: contactToEmail },
+  ]
+    .filter(({ value }) => !value)
+    .map(({ key }) => key);
+
+  if (missingKeys.length > 0) {
+    return { missingKeys };
+  }
+
+  const smtpPort = Number(smtpPortRaw);
+  const fromAddress = parseEmailAddress(contactFromEmail ?? "");
+  const recipients = parseRecipientAddresses(contactToEmail ?? "");
+
+  if (!Number.isInteger(smtpPort) || smtpPort < 1 || smtpPort > 65535) {
+    return { missingKeys: ["SMTP_PORT válida"] };
+  }
+
+  if (!fromAddress) {
+    return { missingKeys: ["CONTACT_FROM_EMAIL válido"] };
+  }
+
+  if (recipients.length === 0) {
+    return { missingKeys: ["CONTACT_TO_EMAIL válido"] };
+  }
+
+  return {
+    host: smtpHost ?? "",
+    port: smtpPort,
+    secure: parseBooleanEnv(Deno.env.get("SMTP_SECURE"), smtpPort === 465),
+    username: smtpUsername ?? "",
+    password: smtpPassword ?? "",
+    fromHeader: sanitizeHeaderValue(contactFromEmail ?? ""),
+    fromAddress,
+    toHeader: sanitizeHeaderValue(contactToEmail ?? ""),
+    recipients,
+  };
 }
 
 function formatDateTime(value: string): string {
@@ -266,6 +374,153 @@ function buildEmailHtml(record: ContactMessageRecord): string {
       <p style="white-space: normal;">${messageHtml}</p>
     </div>
   `;
+}
+
+async function withSmtpTimeout<T>(promise: Promise<T>, message: string): Promise<T> {
+  let timeoutId: number | undefined;
+
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_resolve, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(message)), SMTP_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
+async function readSmtpResponse(conn: Deno.Conn): Promise<SmtpResponse> {
+  let response = "";
+
+  while (response.length < 20000) {
+    const buffer = new Uint8Array(SMTP_RESPONSE_BUFFER_SIZE);
+    const count = await withSmtpTimeout(
+      conn.read(buffer),
+      "Tempo limite ao aguardar resposta SMTP.",
+    );
+
+    if (count === null) {
+      throw new Error("Conexão SMTP encerrada antes da resposta.");
+    }
+
+    response += new TextDecoder().decode(buffer.subarray(0, count));
+    const lines = response.split(/\r?\n/).filter(Boolean);
+    const lastLine = lines[lines.length - 1] ?? "";
+
+    if (/^\d{3} /.test(lastLine)) {
+      return {
+        code: Number(lastLine.slice(0, 3)),
+        message: response.trim(),
+      };
+    }
+  }
+
+  throw new Error("Resposta SMTP maior que o esperado.");
+}
+
+async function writeSmtpRaw(conn: Deno.Conn, value: string): Promise<void> {
+  await withSmtpTimeout(
+    conn.write(new TextEncoder().encode(value)),
+    "Tempo limite ao escrever no SMTP.",
+  );
+}
+
+async function writeSmtpLine(conn: Deno.Conn, value: string): Promise<void> {
+  await writeSmtpRaw(conn, `${value}\r\n`);
+}
+
+function assertSmtpResponse(
+  response: SmtpResponse,
+  expectedCodes: number[],
+  action: string,
+): void {
+  if (!expectedCodes.includes(response.code)) {
+    throw new Error(
+      `${action} falhou (${response.code}): ${truncate(response.message, 500)}`,
+    );
+  }
+}
+
+async function sendSmtpCommand(
+  conn: Deno.Conn,
+  command: string,
+  expectedCodes: number[],
+  action: string,
+): Promise<SmtpResponse> {
+  await writeSmtpLine(conn, command);
+  const response = await readSmtpResponse(conn);
+  assertSmtpResponse(response, expectedCodes, action);
+  return response;
+}
+
+async function authenticateSmtp(conn: Deno.Conn, config: SmtpConfig): Promise<void> {
+  await writeSmtpLine(
+    conn,
+    `AUTH PLAIN ${encodeBase64(`\u0000${config.username}\u0000${config.password}`)}`,
+  );
+  const plainResponse = await readSmtpResponse(conn);
+
+  if (plainResponse.code === 235) return;
+
+  if (![500, 502, 504].includes(plainResponse.code)) {
+    assertSmtpResponse(plainResponse, [235], "Autenticação SMTP");
+  }
+
+  await sendSmtpCommand(conn, "AUTH LOGIN", [334], "Autenticação SMTP");
+  await sendSmtpCommand(
+    conn,
+    encodeBase64(config.username),
+    [334],
+    "Usuário SMTP",
+  );
+  await sendSmtpCommand(
+    conn,
+    encodeBase64(config.password),
+    [235],
+    "Senha SMTP",
+  );
+}
+
+function escapeSmtpData(value: string): string {
+  return value
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .split("\n")
+    .map((line) => (line.startsWith(".") ? `.${line}` : line))
+    .join("\r\n");
+}
+
+function buildSmtpMessage(record: ContactMessageRecord, config: SmtpConfig): string {
+  const boundary = `prodforge-contact-${record.id}`;
+  const subject = `[ProdForge] Nova mensagem de contato: ${record.subject}`;
+
+  return [
+    `From: ${config.fromHeader}`,
+    `To: ${config.toHeader}`,
+    `Reply-To: ${record.email}`,
+    `Subject: ${encodeMimeHeader(subject)}`,
+    `Date: ${new Date(record.created_at).toUTCString()}`,
+    `Message-ID: <${record.id}@prodforge.techtupa.com.br>`,
+    "MIME-Version: 1.0",
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    "",
+    `--${boundary}`,
+    "Content-Type: text/plain; charset=UTF-8",
+    "Content-Transfer-Encoding: 8bit",
+    "",
+    buildEmailText(record),
+    "",
+    `--${boundary}`,
+    "Content-Type: text/html; charset=UTF-8",
+    "Content-Transfer-Encoding: 8bit",
+    "",
+    buildEmailHtml(record).trim(),
+    "",
+    `--${boundary}--`,
+    "",
+  ].join("\r\n");
 }
 
 async function insertContactMessage(
@@ -368,54 +623,68 @@ async function updateEmailStatus(
 async function sendNotificationEmail(
   record: ContactMessageRecord,
 ): Promise<string | null> {
-  const resendApiKey = Deno.env.get("RESEND_API_KEY");
-  const contactToEmail = Deno.env.get("CONTACT_TO_EMAIL");
-  const contactFromEmail = Deno.env.get("CONTACT_FROM_EMAIL");
-  const missingKeys = [
-    { key: "RESEND_API_KEY", value: resendApiKey },
-    { key: "CONTACT_TO_EMAIL", value: contactToEmail },
-    { key: "CONTACT_FROM_EMAIL", value: contactFromEmail },
-  ]
-    .filter(({ value }) => !value)
-    .map(({ key }) => key);
+  const smtpConfig = getSmtpConfig();
 
-  if (missingKeys.length > 0) {
-    return buildMissingConfigMessage(missingKeys);
+  if ("missingKeys" in smtpConfig) {
+    return buildMissingConfigMessage(smtpConfig.missingKeys);
   }
 
-  try {
-    const response = await fetch(RESEND_API_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: contactFromEmail,
-        to: [contactToEmail],
-        reply_to: record.email,
-        subject: `[ProdForge] Nova mensagem de contato: ${record.subject}`,
-        text: buildEmailText(record),
-        html: buildEmailHtml(record),
-      }),
-    });
+  if (!smtpConfig.secure) {
+    return "SMTP sem TLS não suportado nesta função. Use SMTP_SECURE=true e porta 465.";
+  }
 
-    if (response.ok) {
-      return null;
+  let conn: Deno.Conn | null = null;
+
+  try {
+    conn = await withSmtpTimeout(
+      Deno.connectTls({
+        hostname: smtpConfig.host,
+        port: smtpConfig.port,
+      }),
+      "Tempo limite ao conectar no servidor SMTP.",
+    );
+
+    const greeting = await readSmtpResponse(conn);
+    assertSmtpResponse(greeting, [220], "Conexão SMTP");
+
+    await sendSmtpCommand(conn, "EHLO prodforge.techtupa.com.br", [250], "EHLO SMTP");
+    await authenticateSmtp(conn, smtpConfig);
+    await sendSmtpCommand(
+      conn,
+      `MAIL FROM:<${smtpConfig.fromAddress}>`,
+      [250],
+      "Remetente SMTP",
+    );
+
+    for (const recipient of smtpConfig.recipients) {
+      await sendSmtpCommand(
+        conn,
+        `RCPT TO:<${recipient}>`,
+        [250, 251],
+        "Destinatário SMTP",
+      );
     }
 
-    const payload = await response.text().catch(() => "");
-    return truncate(
-      `Falha no envio via Resend (${response.status}): ${payload}`,
-      1000,
-    );
+    await sendSmtpCommand(conn, "DATA", [354], "Início do corpo SMTP");
+    await writeSmtpRaw(conn, `${escapeSmtpData(buildSmtpMessage(record, smtpConfig))}\r\n.\r\n`);
+    const dataResponse = await readSmtpResponse(conn);
+    assertSmtpResponse(dataResponse, [250], "Envio SMTP");
+    await writeSmtpLine(conn, "QUIT").catch(() => undefined);
+
+    return null;
   } catch (error) {
     return truncate(
-      `Falha de rede no envio via Resend: ${
+      `Falha no envio via SMTP: ${
         error instanceof Error ? error.message : String(error)
       }`,
       1000,
     );
+  } finally {
+    try {
+      conn?.close();
+    } catch {
+      // Conexão SMTP já encerrada.
+    }
   }
 }
 
