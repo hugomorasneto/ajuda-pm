@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { createProject, listProjects } from '../services/projectsService'
@@ -39,6 +39,7 @@ function ProjectsPage() {
   const [isLoadingStats, setIsLoadingStats] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [message, setMessage] = useState('')
+  const nameInputRef = useRef(null)
 
   const projectCountLabel = useMemo(
     () => `${projects.length} ${projects.length === 1 ? 'projeto' : 'projetos'}`,
@@ -153,29 +154,49 @@ function ProjectsPage() {
     await loadProjects()
   }
 
+  function focusCreateProject() {
+    nameInputRef.current?.focus()
+  }
+
   return (
     <div className="projects-page">
       <section className="panel projects-page__hero">
-        <div>
+        <div className="projects-page__hero-copy">
           <p className="projects-page__eyebrow">Organização opcional</p>
           <h1>Projetos</h1>
           <p>
-            Agrupe histórias por jornada quando fizer sentido. Se quiser começar direto, a Bancada continua funcionando sem projeto.
+            Agrupe histórias por jornada, squad ou iniciativa quando fizer sentido. Se quiser começar direto,
+            a Bancada continua funcionando sem projeto.
           </p>
+          <div className="projects-page__hero-indicators" aria-label="Resumo da organização por projetos">
+            <span className="projects-page__indicator">
+              <strong>{projects.length}</strong>
+              {projects.length === 1 ? 'projeto' : 'projetos'}
+            </span>
+            <span className="projects-page__indicator projects-page__indicator--free">
+              Bancada continua livre
+            </span>
+          </div>
         </div>
-        <Link className="btn btn-primary btn-small" to="/tool">
-          Abrir Bancada
-        </Link>
+        <div className="projects-page__hero-actions">
+          <Link className="btn btn-secondary btn-small" to="/tool">
+            Abrir Bancada
+          </Link>
+        </div>
       </section>
 
       <div className="projects-page__layout">
-        <section className="panel projects-page__form-card" aria-label="Criar projeto">
-          <p className="projects-page__eyebrow">Novo contexto</p>
-          <h2>Criar projeto</h2>
+        <section className="panel projects-page__form-card" id="criar-projeto" aria-label="Criar projeto">
+          <div className="projects-page__card-header">
+            <p className="projects-page__eyebrow">Novo projeto</p>
+            <h2>Criar projeto</h2>
+            <p>Use projetos para agrupar histórias por jornada, squad ou objetivo.</p>
+          </div>
           <form className="projects-page__form" onSubmit={handleCreateProject}>
             <label className="projects-page__field">
-              <span>Nome</span>
+              <span>Nome do projeto</span>
               <input
+                ref={nameInputRef}
                 type="text"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
@@ -185,7 +206,10 @@ function ProjectsPage() {
             </label>
 
             <label className="projects-page__field">
-              <span>Descrição opcional</span>
+              <span>
+                Descrição
+                <small>Opcional</small>
+              </span>
               <textarea
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
@@ -195,27 +219,35 @@ function ProjectsPage() {
               />
             </label>
 
-            <button type="submit" className="btn btn-primary" disabled={isCreating}>
+            <button type="submit" className="btn btn-primary projects-page__submit" disabled={isCreating}>
               {isCreating ? 'Criando projeto...' : 'Criar projeto'}
             </button>
           </form>
-          {message ? <p className="projects-page__message">{message}</p> : null}
+          {message ? <p className="projects-page__message" role="status">{message}</p> : null}
         </section>
 
         <section className="panel projects-page__list-card" aria-label="Lista de projetos">
           <div className="projects-page__section-header">
             <div>
-              <p className="projects-page__eyebrow">Seus contextos</p>
-              <h2>{projectCountLabel}</h2>
+              <p className="projects-page__eyebrow">Portfólio</p>
+              <h2>Seus projetos</h2>
             </div>
+            <span className="projects-page__section-count">{projectCountLabel}</span>
           </div>
 
           {isLoading ? <p className="projects-page__state">Carregando projetos...</p> : null}
           {isLoadingStats ? <p className="projects-page__state">Atualizando resumo dos projetos...</p> : null}
           {!isLoading && projects.length === 0 ? (
             <div className="projects-page__empty">
+              <p className="projects-page__eyebrow">Comece quando fizer sentido</p>
               <h3>Nenhum projeto criado ainda</h3>
-              <p>Você pode continuar forjando histórias sem projeto e organizar depois.</p>
+              <p>
+                Você pode continuar usando a Bancada sem projeto ou criar seu primeiro projeto para organizar
+                histórias por iniciativa.
+              </p>
+              <button type="button" className="btn btn-secondary btn-small" onClick={focusCreateProject}>
+                Criar primeiro projeto
+              </button>
             </div>
           ) : null}
 
@@ -225,23 +257,34 @@ function ProjectsPage() {
 
               return (
                 <article key={project.id} className="projects-page__item">
-                  <div>
-                    <h3>{project.name}</h3>
-                    {project.description ? <p>{project.description}</p> : <p>Sem descrição.</p>}
+                  <div className="projects-page__item-main">
+                    <div className="projects-page__item-title-row">
+                      <span className="projects-page__item-marker" aria-hidden="true" />
+                      <h3>{project.name}</h3>
+                    </div>
+                    {project.description ? (
+                      <p>{project.description}</p>
+                    ) : (
+                      <p>Sem descrição por enquanto.</p>
+                    )}
+                    <p className="projects-page__item-date">Criado em {formatProjectDate(project.created_at)}</p>
                     <div className="projects-page__item-metrics" aria-label={`Resumo de ${project.name}`}>
-                      <span>{formatProjectMetric(stats.storyCount, 'história', 'histórias')}</span>
-                      <span>
+                      <span className="projects-page__metric">
+                        {formatProjectMetric(stats.storyCount, 'história', 'histórias')}
+                      </span>
+                      <span className="projects-page__metric projects-page__metric--ready">
                         {formatProjectMetric(
                           stats.readyStoryCount,
                           'pronta para estimar',
                           'prontas para estimar',
                         )}
                       </span>
-                      <span>{formatProjectMetric(stats.teamCount, 'time', 'times')}</span>
+                      <span className="projects-page__metric">
+                        {formatProjectMetric(stats.teamCount, 'time', 'times')}
+                      </span>
                     </div>
                   </div>
                   <div className="projects-page__item-actions">
-                    <span>Criado em {formatProjectDate(project.created_at)}</span>
                     <Link className="btn btn-secondary btn-small" to={`/projetos/${project.id}`}>
                       Ver projeto
                     </Link>

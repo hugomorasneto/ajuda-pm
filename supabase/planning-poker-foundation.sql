@@ -419,6 +419,7 @@ as $$
     where ppr.id = p_round_id
       and ppr.status = 'voting'
       and pps.status = 'voting'
+      and (ppr.ends_at is null or now() < ppr.ends_at)
       and ppp.status = 'joined'
       and ppp.role in ('facilitator', 'participant')
   );
@@ -836,6 +837,10 @@ begin
     raise exception 'Esta rodada não está aberta para votação.';
   end if;
 
+  if v_round.ends_at is not null and now() >= v_round.ends_at then
+    raise exception 'Tempo de votação encerrado.';
+  end if;
+
   if not public.is_project_member(v_session.project_id) then
     raise exception 'Apenas membros do projeto podem votar nesta sessão.';
   end if;
@@ -981,7 +986,7 @@ begin
     raise exception 'Apenas rodadas em votação podem ser reveladas.';
   end if;
 
-  if v_session.reveal_votes_after_all then
+  if v_session.reveal_votes_after_all and (v_round.ends_at is null or now() < v_round.ends_at) then
     select count(*)::integer into v_expected_votes
     from public.planning_poker_participants ppp
     where ppp.session_id = v_round.session_id

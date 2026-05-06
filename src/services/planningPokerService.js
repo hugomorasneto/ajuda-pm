@@ -137,6 +137,33 @@ export async function getPlanningPokerSession({ sessionId, userId }) {
   }
 }
 
+export async function getPlanningPokerSessionByInviteCode({ inviteCode, userId }) {
+  try {
+    const userError = requireUser(userId, null)
+    if (userError) return userError
+
+    const safeInviteCode = String(inviteCode ?? '').trim().toUpperCase()
+    const inviteCodeError = requireValue(safeInviteCode, 'Código da sala não informado.', null)
+    if (inviteCodeError) return inviteCodeError
+
+    const { data, error } = await supabase
+      .from('planning_poker_sessions')
+      .select(sessionColumns)
+      .eq('invite_code', safeInviteCode)
+      .maybeSingle()
+
+    if (error) {
+      console.error('Supabase getPlanningPokerSessionByInviteCode error:', error)
+      return { success: false, error, data: null }
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Unexpected getPlanningPokerSessionByInviteCode error:', error)
+    return { success: false, error, data: null }
+  }
+}
+
 export async function listPlanningPokerSessionStories({ sessionId, userId }) {
   try {
     const userError = requireUser(userId, [])

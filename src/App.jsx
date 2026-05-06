@@ -21,6 +21,7 @@ const ToolPage = lazy(() => import('./pages/ToolPage'))
 const HistoryPage = lazy(() => import('./pages/HistoryPage'))
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage'))
 const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage'))
+const PlanningPokerJoinPage = lazy(() => import('./pages/PlanningPokerJoinPage'))
 const PlanningPokerRoomPage = lazy(() => import('./pages/PlanningPokerRoomPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const SignupPage = lazy(() => import('./pages/SignupPage'))
@@ -125,6 +126,7 @@ function App() {
             <Route path="/tool" element={<ToolPage />} />
             <Route path="/historico" element={<HistoryPage />} />
             <Route path="/projetos" element={<ProjectsPage />} />
+            <Route path="/roda" element={<PlanningPokerJoinPage />} />
             <Route path="/projetos/:projectId" element={<ProjectDetailPage />} />
             <Route path="/projetos/:projectId/roda/:sessionId" element={<PlanningPokerRoomPage />} />
             <Route

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, useOutletContext, useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { checkCanManageProject } from '../services/projectsService'
+import { copyTextToClipboard } from '../utils/storyExport'
 import {
   castPlanningPokerVote,
   completePlanningPokerSession,
@@ -82,6 +83,13 @@ function formatRemainingTime(endsAt, currentTime) {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
+function isRoundTimerExpired(endsAt, currentTime) {
+  if (!endsAt || !currentTime) return false
+
+  const endsAtMs = new Date(endsAt).getTime()
+  return Number.isFinite(endsAtMs) && currentTime >= endsAtMs
+}
+
 function getParticipantLabel(participant, currentUserId, index) {
   if (!participant) return '-'
   if (participant.user_id === currentUserId) return 'Você'
@@ -101,6 +109,16 @@ function getMedian(values) {
 function formatNumber(value) {
   if (value === null || value === undefined || Number.isNaN(Number(value))) return '-'
   return Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 2 })
+}
+
+function buildInviteUrl({ inviteCode, projectId, sessionId }) {
+  if (typeof window === 'undefined') return ''
+
+  if (inviteCode) {
+    return new URL(`/roda?codigo=${encodeURIComponent(inviteCode)}`, window.location.origin).toString()
+  }
+
+  return new URL(`/projetos/${projectId}/roda/${sessionId}`, window.location.origin).toString()
 }
 
 function buildVoteSummary(votes) {
@@ -145,8 +163,13 @@ function PlanningPokerRoomPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isActing, setIsActing] = useState(false)
   const [message, setMessage] = useState('')
+  const [inviteMessage, setInviteMessage] = useState('')
   const [notFound, setNotFound] = useState(false)
-  const [nowTick, setNowTick] = useState(0)
+  const [nowTick, setNowTick] = useState(() => Date.now())
+  const inviteUrl = useMemo(
+    () => buildInviteUrl({ inviteCode: session?.invite_code, projectId, sessionId }),
+    [projectId, session?.invite_code, sessionId],
+  )
 
   const currentParticipant = useMemo(
     () => participants.find((participant) => participant.user_id === userId) ?? null,
@@ -236,17 +259,114 @@ function PlanningPokerRoomPage() {
       currentRoundVoteStatus.some((status) => status.user_id === userId && status.has_voted),
     [currentRoundVoteStatus, userId],
   )
+  const votedCount = useMemo(
+    () =>
+      currentRoundVoteStatus.filter((status) =>
+        status.has_voted &&
+        eligibleVoters.some((participant) => participant.id === status.participant_id),
+      ).length,
+    [currentRoundVoteStatus, eligibleVoters],
+  )
+  const votingProgressLabel = eligibleVoters.length > 0
+    ? `${votedCount}/${eligibleVoters.length} votantes`
+    : 'Sem votantes'
   const roomClosed = session?.status === 'completed' || session?.status === 'canceled'
   const storyLocked = ['estimated', 'skipped'].includes(currentStory?.status)
+  const votingExpired = Boolean(
+    currentRound?.status === 'voting' && isRoundTimerExpired(currentRound.ends_at, nowTick),
+  )
   const canVote =
     Boolean(currentRound) &&
     currentRound.status === 'voting' &&
     !roomClosed &&
+    !votingExpired &&
     currentParticipant?.status === 'joined' &&
     currentParticipant?.role !== 'observer'
+  const canCastVote = canVote && (Boolean(session?.allow_revote) || !hasUserVoted)
+  const requiresFullVotingBeforeReveal = Boolean(session?.reveal_votes_after_all)
+  const hasPendingVotes = eligibleVoters.length > 0 && votedCount < eligibleVoters.length
+  const canRevealRound = Boolean(
+    canFacilitate &&
+      currentRound?.status === 'voting' &&
+      !roomClosed &&
+      !isActing &&
+      (!requiresFullVotingBeforeReveal || !hasPendingVotes || votingExpired),
+  )
+  const revotePolicyLabel = session?.allow_revote ? 'Novo voto permitido' : 'Voto único'
+  const revealPolicyLabel = session?.reveal_votes_after_all
+    ? 'Revelação após todos votarem'
+    : 'Revelação pelo facilitador'
+  const revealActionHint =
+    currentRound?.status === 'voting'
+      ? votingExpired
+        ? 'Tempo encerrado. Os votos restantes foram bloqueados e o facilitador pode revelar as runas.'
+        : requiresFullVotingBeforeReveal && hasPendingVotes
+        ? 'A revelação está bloqueada até todos os votantes registrarem presença.'
+        : 'As runas podem ser reveladas pelo facilitador quando fizer sentido para a discussão.'
+      : null
   const remainingTimeLabel = useMemo(() => {
     return formatRemainingTime(currentRound?.status === 'voting' ? currentRound.ends_at : null, nowTick)
   }, [currentRound?.ends_at, currentRound?.status, nowTick])
+  const allStoriesResolved = Boolean(
+    sessionStories.length > 0 &&
+      sessionStories.every((story) => ['estimated', 'skipped'].includes(story.status)),
+  )
+  const roomGuidance = useMemo(() => {
+    if (session?.status === 'completed') {
+      return allStoriesResolved
+        ? 'Todas as histórias foram concluídas e a Roda foi finalizada automaticamente.'
+        : 'Sessão finalizada. O histórico permanece disponível para consulta.'
+    }
+
+    if (session?.status === 'canceled') return 'Sessão cancelada.'
+
+    if (currentRound?.status === 'voting') {
+      if (votingExpired) {
+        return canFacilitate
+          ? 'Tempo encerrado. Os votos restantes foram bloqueados; revele as runas para seguir com a discussão.'
+          : 'Tempo encerrado. Aguarde o facilitador revelar as runas.'
+      }
+
+      if (hasUserVoted) {
+        const revoteCopy = session?.allow_revote
+          ? 'Você ainda pode trocar sua carta antes da revelação.'
+          : 'Esta Roda não permite novo voto.'
+
+        return votedCount < eligibleVoters.length
+          ? `Seu voto está registrado e segue oculto. ${revoteCopy} Aguardando outros membros da guilda.`
+          : `Todos os votantes registraram presença. ${revoteCopy} O facilitador pode revelar as runas.`
+      }
+
+      return canVote && session?.reveal_votes_after_all
+        ? 'Escolha uma carta. Ninguém vê votos individuais antes da revelação, e as runas só liberam após todos votarem.'
+        : canVote
+          ? 'Escolha uma carta. Ninguém vê votos individuais antes da revelação.'
+        : 'Aguardando votos da guilda. Os valores permanecem ocultos até a revelação.'
+    }
+
+    if (currentRound?.status === 'revealed') {
+      return 'Runas reveladas. Revise a divergência e sele a estimativa final.'
+    }
+
+    if (storyLocked) return 'Esta história já foi encerrada nesta Roda.'
+
+    return canFacilitate
+      ? 'Acenda a fogueira para abrir a votação desta história.'
+      : 'Aguardando o facilitador iniciar a rodada.'
+  }, [
+    allStoriesResolved,
+    canFacilitate,
+    canVote,
+    currentRound?.status,
+    eligibleVoters.length,
+    hasUserVoted,
+    session?.allow_revote,
+    session?.reveal_votes_after_all,
+    session?.status,
+    storyLocked,
+    votingExpired,
+    votedCount,
+  ])
 
   const loadRoom = useCallback(async () => {
     if (!sessionId || !userId) return
@@ -375,6 +495,30 @@ function PlanningPokerRoomPage() {
     return response.data
   }
 
+  async function handleCopyInviteLink() {
+    if (!inviteUrl) return
+
+    setInviteMessage('')
+    try {
+      await copyTextToClipboard(inviteUrl)
+      setInviteMessage('Link de convite copiado.')
+    } catch {
+      setInviteMessage('Não foi possível copiar o link agora.')
+    }
+  }
+
+  async function handleCopyInviteCode() {
+    if (!session?.invite_code) return
+
+    setInviteMessage('')
+    try {
+      await copyTextToClipboard(session.invite_code)
+      setInviteMessage('Código da sala copiado.')
+    } catch {
+      setInviteMessage('Não foi possível copiar o código agora.')
+    }
+  }
+
   async function handleStartRound() {
     if (!currentStory) return
 
@@ -392,16 +536,30 @@ function PlanningPokerRoomPage() {
 
   async function handleVote(value) {
     if (!currentRound) return
+    if (!canCastVote) {
+      setMessage(votingExpired
+        ? 'Tempo encerrado. Aguarde a revelação das runas.'
+        : 'Seu voto já foi registrado e esta Roda não permite troca.'
+      )
+      return
+    }
 
     const voteKind = value === '?' ? 'unknown' : 'estimate'
     await runAction(
       () => castPlanningPokerVote({ roundId: currentRound.id, voteValue: value, voteKind, userId }),
-      'Voto registrado.',
+      'Voto registrado. Ele fica oculto até a revelação das runas.',
     )
   }
 
   async function handleAbstain() {
     if (!currentRound) return
+    if (!canCastVote) {
+      setMessage(votingExpired
+        ? 'Tempo encerrado. Aguarde a revelação das runas.'
+        : 'Seu voto já foi registrado e esta Roda não permite troca.'
+      )
+      return
+    }
 
     await runAction(
       () =>
@@ -411,7 +569,7 @@ function PlanningPokerRoomPage() {
           voteKind: 'abstain',
           userId,
         }),
-      'Abstenção registrada.',
+      'Abstenção registrada. Ela fica oculta até a revelação das runas.',
     )
   }
 
@@ -429,7 +587,7 @@ function PlanningPokerRoomPage() {
 
     await runAction(
       () => sealPlanningPokerEstimate({ sessionStoryId: currentStory.id, finalEstimate, userId }),
-      'Estimativa selada.',
+      'Estimativa selada. Se todas as histórias foram concluídas, a Roda é finalizada automaticamente.',
     )
   }
 
@@ -466,7 +624,28 @@ function PlanningPokerRoomPage() {
           </p>
         </div>
         <div className="planning-poker-room__hero-actions">
-          <span>Código: {session?.invite_code ?? '-'}</span>
+          <div className="planning-poker-room__invite-box">
+            <span>Código: {session?.invite_code ?? '-'}</span>
+            <div className="planning-poker-room__invite-actions">
+              <button
+                type="button"
+                className="btn btn-secondary btn-small"
+                onClick={handleCopyInviteLink}
+                disabled={!session}
+              >
+                Copiar link
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-small"
+                onClick={handleCopyInviteCode}
+                disabled={!session?.invite_code}
+              >
+                Copiar código
+              </button>
+            </div>
+            {inviteMessage ? <p className="planning-poker-room__invite-message">{inviteMessage}</p> : null}
+          </div>
           <Link className="btn btn-secondary btn-small" to={`/projetos/${projectId}`}>
             Voltar ao projeto
           </Link>
@@ -525,8 +704,12 @@ function PlanningPokerRoomPage() {
           <div className="planning-poker-room__round-status">
             <span>{currentRound ? getRoundStatusLabel(currentRound.status) : 'Nenhuma rodada iniciada'}</span>
             <strong>{remainingTimeLabel}</strong>
-            {hasUserVoted && currentRound?.status === 'voting' ? <span>Seu voto foi registrado.</span> : null}
+            <span>{votingProgressLabel}</span>
+            {hasUserVoted && currentRound?.status === 'voting' ? (
+              <span>{session?.allow_revote ? 'Voto registrado; troca permitida.' : 'Voto registrado; troca bloqueada.'}</span>
+            ) : null}
           </div>
+          <p className="planning-poker-room__guidance">{roomGuidance}</p>
 
           <div className="planning-poker-room__cards" aria-label="Cartas de estimativa">
             {scoringValues.map((value) => (
@@ -535,7 +718,7 @@ function PlanningPokerRoomPage() {
                 type="button"
                 className="planning-poker-room__card"
                 onClick={() => handleVote(value)}
-                disabled={!canVote || isActing}
+                disabled={!canCastVote || isActing}
               >
                 {value}
               </button>
@@ -545,7 +728,7 @@ function PlanningPokerRoomPage() {
                 type="button"
                 className="planning-poker-room__card planning-poker-room__card--muted"
                 onClick={handleAbstain}
-                disabled={!canVote || isActing}
+                disabled={!canCastVote || isActing}
               >
                 Observar
               </button>
@@ -566,7 +749,7 @@ function PlanningPokerRoomPage() {
                 type="button"
                 className="btn btn-secondary btn-small"
                 onClick={handleRevealRound}
-                disabled={!currentRound || currentRound.status !== 'voting' || isActing}
+                disabled={!canRevealRound}
               >
                 Revelar as Runas
               </button>
@@ -578,6 +761,7 @@ function PlanningPokerRoomPage() {
               >
                 Pular história
               </button>
+              {revealActionHint ? <p className="planning-poker-room__action-hint">{revealActionHint}</p> : null}
             </div>
           ) : null}
 
@@ -620,6 +804,12 @@ function PlanningPokerRoomPage() {
               {storyFinalEstimate && currentStory?.status === 'estimated' ? (
                 <p className="planning-poker-room__result-note">
                   Esta história já tem uma estimativa selada.
+                </p>
+              ) : null}
+
+              {session?.status === 'completed' && allStoriesResolved ? (
+                <p className="planning-poker-room__result-note">
+                  Todas as histórias desta Roda foram concluídas; a sessão foi finalizada automaticamente.
                 </p>
               ) : null}
 
@@ -676,6 +866,8 @@ function PlanningPokerRoomPage() {
           <div className="planning-poker-room__session-meta">
             <span>Status: {getSessionStatusLabel(session?.status)}</span>
             <span>Participantes votantes: {eligibleVoters.length}</span>
+            <span>{revotePolicyLabel}</span>
+            <span>{revealPolicyLabel}</span>
             <span>Criada em {formatDateTime(session?.created_at)}</span>
           </div>
 

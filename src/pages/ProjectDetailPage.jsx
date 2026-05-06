@@ -1049,6 +1049,11 @@ function ProjectDetailPage() {
               {readyPlanningStoriesLabel} para estimar. {planningSessionsLabel}.
             </p>
           </div>
+          <div className="project-detail-page__story-actions">
+            <Link className="btn btn-secondary btn-small" to="/roda">
+              Entrar com código
+            </Link>
+          </div>
         </div>
 
         {canManageProjectMembers ? (
