@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, Navigate, useOutletContext, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import {
   addProjectMemberByEmail,
@@ -14,6 +14,10 @@ import {
   listStoryHistoryGroups,
   updateUserStoryEstimationStatus,
 } from '../services/userStoriesService'
+import {
+  createPlanningPokerSession,
+  listPlanningPokerSessionsByProject,
+} from '../services/planningPokerService'
 import {
   addTeamMemberByEmail,
   createTeam,
@@ -61,6 +65,22 @@ const STORY_ESTIMATION_FILTER_OPTIONS = [
   ...ESTIMATION_STATUS_OPTIONS,
 ]
 
+const PLANNING_SESSION_STATUS_LABELS = {
+  draft: 'Rascunho',
+  active: 'Ativa',
+  voting: 'Em votação',
+  revealed: 'Votos revelados',
+  completed: 'Finalizada',
+  canceled: 'Cancelada',
+}
+
+const PLANNING_TIMER_OPTIONS = [
+  { value: 60, label: '1 minuto' },
+  { value: 180, label: '3 minutos' },
+  { value: 300, label: '5 minutos' },
+  { value: 600, label: '10 minutos' },
+]
+
 function formatProjectDateTime(value) {
   if (!value) return '-'
   const date = new Date(value)
@@ -76,6 +96,10 @@ function formatProjectDateTime(value) {
 
 function getEstimationStatusLabel(status) {
   return ESTIMATION_STATUS_LABELS[status] ?? 'Criada'
+}
+
+function getPlanningSessionStatusLabel(status) {
+  return PLANNING_SESSION_STATUS_LABELS[status] ?? 'Rascunho'
 }
 
 function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
@@ -319,6 +343,7 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
 
 function ProjectDetailPage() {
   const { projectId } = useParams()
+  const navigate = useNavigate()
   const { user } = useAuth()
   const userId = user?.id ?? null
   const { setTopbarStatus } = useOutletContext() ?? {}
@@ -326,9 +351,19 @@ function ProjectDetailPage() {
   const [teams, setTeams] = useState([])
   const [projectMembers, setProjectMembers] = useState([])
   const [projectStories, setProjectStories] = useState([])
+  const [planningSessions, setPlanningSessions] = useState([])
+  const [readyPlanningStories, setReadyPlanningStories] = useState([])
+  const [selectedPlanningStoryIds, setSelectedPlanningStoryIds] = useState([])
   const [projectStoryCount, setProjectStoryCount] = useState(0)
   const [projectStoryFilteredCount, setProjectStoryFilteredCount] = useState(0)
   const [storyEstimationFilter, setStoryEstimationFilter] = useState('all')
+  const [planningSessionName, setPlanningSessionName] = useState('')
+  const [planningTeamId, setPlanningTeamId] = useState('')
+  const [planningVoteTimeLimit, setPlanningVoteTimeLimit] = useState(300)
+  const [planningAllowRevote, setPlanningAllowRevote] = useState(true)
+  const [planningRevealAfterAll, setPlanningRevealAfterAll] = useState(false)
+  const [planningAllowAbstention, setPlanningAllowAbstention] = useState(true)
+  const [planningAllowObservers, setPlanningAllowObservers] = useState(true)
   const [projectNameDraft, setProjectNameDraft] = useState('')
   const [projectDescriptionDraft, setProjectDescriptionDraft] = useState('')
   const [name, setName] = useState('')
@@ -337,9 +372,11 @@ function ProjectDetailPage() {
   const [memberRole, setMemberRole] = useState('member')
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingStories, setIsLoadingStories] = useState(false)
+  const [isLoadingPlanningSessions, setIsLoadingPlanningSessions] = useState(false)
   const [isEditingProject, setIsEditingProject] = useState(false)
   const [isSavingProject, setIsSavingProject] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
+  const [isCreatingPlanningSession, setIsCreatingPlanningSession] = useState(false)
   const [isAddingProjectMember, setIsAddingProjectMember] = useState(false)
   const [updatingProjectMemberId, setUpdatingProjectMemberId] = useState(null)
   const [removingProjectMemberId, setRemovingProjectMemberId] = useState(null)
@@ -347,6 +384,7 @@ function ProjectDetailPage() {
   const [canManageProjectMembers, setCanManageProjectMembers] = useState(false)
   const [projectMessage, setProjectMessage] = useState('')
   const [storyStatusMessage, setStoryStatusMessage] = useState('')
+  const [planningMessage, setPlanningMessage] = useState('')
   const [message, setMessage] = useState('')
   const [memberMessage, setMemberMessage] = useState('')
   const [notFound, setNotFound] = useState(false)
@@ -362,6 +400,20 @@ function ProjectDetailPage() {
   const membersLabel = useMemo(
     () => `${projectMembers.length} ${projectMembers.length === 1 ? 'membro' : 'membros'}`,
     [projectMembers.length],
+  )
+  const planningSessionsLabel = useMemo(
+    () =>
+      `${planningSessions.length} ${
+        planningSessions.length === 1 ? 'roda criada' : 'rodas criadas'
+      }`,
+    [planningSessions.length],
+  )
+  const readyPlanningStoriesLabel = useMemo(
+    () =>
+      `${readyPlanningStories.length} ${
+        readyPlanningStories.length === 1 ? 'história pronta' : 'histórias prontas'
+      }`,
+    [readyPlanningStories.length],
   )
   const filteredStoriesLabel = useMemo(
     () =>
@@ -381,6 +433,9 @@ function ProjectDetailPage() {
   const hasNoStoriesForFilter =
     !isLoadingStories && projectStoryCount > 0 && projectStories.length === 0
   const shouldShowStoryLimitNotice = projectStoryFilteredCount > projectStories.length
+  const hasReadyPlanningStories = readyPlanningStories.length > 0
+  const canCreatePlanningSession =
+    canManageProjectMembers && hasReadyPlanningStories && selectedPlanningStoryIds.length > 0
 
   const loadProjectStories = useCallback(async () => {
     if (!projectId || !userId) return
@@ -422,6 +477,44 @@ function ProjectDetailPage() {
       setProjectStoryCount(0)
     }
   }, [projectId, storyEstimationFilter, userId])
+
+  const loadPlanningSessions = useCallback(async () => {
+    if (!projectId || !userId) return
+
+    setIsLoadingPlanningSessions(true)
+    const [sessionsResponse, readyStoriesResponse] = await Promise.all([
+      listPlanningPokerSessionsByProject({ projectId, userId }),
+      listStoryHistoryGroups({
+        userId,
+        projectFilter: 'project',
+        projectId,
+        estimationStatus: 'ready_for_estimation',
+        page: 1,
+        pageSize: 50,
+      }),
+    ])
+    setIsLoadingPlanningSessions(false)
+
+    if (sessionsResponse.success) {
+      setPlanningSessions(sessionsResponse.data ?? [])
+    } else {
+      setPlanningSessions([])
+      setPlanningMessage('Não foi possível carregar as Rodas da Fogueira agora.')
+    }
+
+    if (readyStoriesResponse.success) {
+      const nextStories = readyStoriesResponse.data ?? []
+      const validStoryIds = new Set(nextStories.map((story) => story.id))
+
+      setReadyPlanningStories(nextStories)
+      setSelectedPlanningStoryIds((current) =>
+        current.filter((storyId) => validStoryIds.has(storyId)),
+      )
+    } else {
+      setReadyPlanningStories([])
+      setSelectedPlanningStoryIds([])
+    }
+  }, [projectId, userId])
 
   const loadProject = useCallback(async () => {
     if (!projectId || !userId) return
@@ -475,6 +568,14 @@ function ProjectDetailPage() {
   }, [loadProjectStories])
 
   useEffect(() => {
+    const timerId = setTimeout(() => {
+      loadPlanningSessions()
+    }, 0)
+
+    return () => clearTimeout(timerId)
+  }, [loadPlanningSessions])
+
+  useEffect(() => {
     if (typeof setTopbarStatus !== 'function') return
 
     setTopbarStatus({
@@ -484,12 +585,64 @@ function ProjectDetailPage() {
         { text: storiesLabel },
         { text: membersLabel },
         { text: teamsLabel },
+        { text: planningSessionsLabel },
         { text: 'Times avançados' },
       ],
     })
 
     return () => setTopbarStatus(null)
-  }, [membersLabel, project?.name, setTopbarStatus, storiesLabel, teamsLabel])
+  }, [membersLabel, planningSessionsLabel, project?.name, setTopbarStatus, storiesLabel, teamsLabel])
+
+  function handleTogglePlanningStory(storyId) {
+    setPlanningMessage('')
+    setSelectedPlanningStoryIds((current) =>
+      current.includes(storyId)
+        ? current.filter((currentStoryId) => currentStoryId !== storyId)
+        : [...current, storyId],
+    )
+  }
+
+  async function handleCreatePlanningSession(event) {
+    event.preventDefault()
+    setPlanningMessage('')
+
+    if (!canManageProjectMembers) {
+      setPlanningMessage('Apenas responsáveis e administradores podem criar uma Roda da Fogueira.')
+      return
+    }
+
+    if (selectedPlanningStoryIds.length === 0) {
+      setPlanningMessage('Selecione ao menos uma história pronta para estimar.')
+      return
+    }
+
+    setIsCreatingPlanningSession(true)
+    const response = await createPlanningPokerSession({
+      projectId,
+      name: planningSessionName || `Roda da Fogueira - ${project?.name ?? 'Projeto'}`,
+      userStoryIds: selectedPlanningStoryIds,
+      teamId: planningTeamId || null,
+      voteTimeLimitSeconds: planningVoteTimeLimit,
+      allowRevote: planningAllowRevote,
+      revealVotesAfterAll: planningRevealAfterAll,
+      allowAbstention: planningAllowAbstention,
+      allowObservers: planningAllowObservers,
+      userId,
+    })
+    setIsCreatingPlanningSession(false)
+
+    if (!response.success || !response.data) {
+      setPlanningMessage(response.error?.message ?? 'Não foi possível criar a Roda da Fogueira agora.')
+      return
+    }
+
+    setPlanningSessionName('')
+    setPlanningTeamId('')
+    setSelectedPlanningStoryIds([])
+    setPlanningMessage('Roda da Fogueira criada.')
+    navigate(`/projetos/${projectId}/roda/${response.data.id}`)
+    await loadPlanningSessions()
+  }
 
   async function handleCreateTeam(event) {
     event.preventDefault()
@@ -592,6 +745,7 @@ function ProjectDetailPage() {
     )
     setStoryStatusMessage('Status de estimativa atualizado.')
     await loadProjectStories()
+    await loadPlanningSessions()
   }
 
   async function handleAddProjectMember(event) {
@@ -880,6 +1034,179 @@ function ProjectDetailPage() {
               </article>
             )
           })}
+        </div>
+      </section>
+
+      <section className="panel project-detail-page__campfire" aria-label="Roda da Fogueira">
+        <div className="projects-page__section-header">
+          <div>
+            <p className="projects-page__eyebrow">Roda da Fogueira</p>
+            <h2>Estimativas do projeto</h2>
+            <p>
+              Reúna a guilda para estimar histórias prontas, revelar as runas e selar o consenso.
+            </p>
+            <p className="project-detail-page__story-filter-summary">
+              {readyPlanningStoriesLabel} para estimar. {planningSessionsLabel}.
+            </p>
+          </div>
+        </div>
+
+        {canManageProjectMembers ? (
+          <form className="project-detail-page__campfire-form" onSubmit={handleCreatePlanningSession}>
+            <div className="project-detail-page__campfire-grid">
+              <label className="projects-page__field">
+                <span>Nome da Roda</span>
+                <input
+                  type="text"
+                  value={planningSessionName}
+                  onChange={(event) => setPlanningSessionName(event.target.value)}
+                  placeholder={`Roda da Fogueira - ${project?.name ?? 'Projeto'}`}
+                  disabled={isCreatingPlanningSession}
+                />
+              </label>
+
+              <label className="projects-page__field">
+                <span>Time vinculado</span>
+                <select
+                  value={planningTeamId}
+                  onChange={(event) => setPlanningTeamId(event.target.value)}
+                  disabled={isCreatingPlanningSession}
+                >
+                  <option value="">Projeto inteiro</option>
+                  {teams.map((team) => (
+                    <option key={team.id} value={team.id}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="projects-page__field">
+                <span>Tempo de votação</span>
+                <select
+                  value={planningVoteTimeLimit}
+                  onChange={(event) => setPlanningVoteTimeLimit(Number(event.target.value))}
+                  disabled={isCreatingPlanningSession}
+                >
+                  {PLANNING_TIMER_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="project-detail-page__campfire-options" aria-label="Configurações da Roda">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={planningAllowRevote}
+                  onChange={(event) => setPlanningAllowRevote(event.target.checked)}
+                  disabled={isCreatingPlanningSession}
+                />
+                <span>Permitir novo voto</span>
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={planningRevealAfterAll}
+                  onChange={(event) => setPlanningRevealAfterAll(event.target.checked)}
+                  disabled={isCreatingPlanningSession}
+                />
+                <span>Revelar somente após todos votarem</span>
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={planningAllowAbstention}
+                  onChange={(event) => setPlanningAllowAbstention(event.target.checked)}
+                  disabled={isCreatingPlanningSession}
+                />
+                <span>Permitir abstenção</span>
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={planningAllowObservers}
+                  onChange={(event) => setPlanningAllowObservers(event.target.checked)}
+                  disabled={isCreatingPlanningSession}
+                />
+                <span>Permitir observadores</span>
+              </label>
+            </div>
+
+            <div className="project-detail-page__campfire-stories">
+              <div>
+                <h3>Histórias prontas para estimar</h3>
+                <p>{selectedPlanningStoryIds.length} selecionadas.</p>
+              </div>
+
+              {isLoadingPlanningSessions ? (
+                <p className="projects-page__state">Carregando histórias prontas...</p>
+              ) : null}
+
+              {!isLoadingPlanningSessions && !hasReadyPlanningStories ? (
+                <div className="projects-page__empty">
+                  <h3>Nenhuma história pronta para estimar</h3>
+                  <p>Marque histórias do projeto como prontas para estimar antes de criar uma Roda.</p>
+                </div>
+              ) : null}
+
+              {hasReadyPlanningStories ? (
+                <div className="project-detail-page__campfire-story-list">
+                  {readyPlanningStories.map((story) => (
+                    <label key={story.id} className="project-detail-page__campfire-story-option">
+                      <input
+                        type="checkbox"
+                        checked={selectedPlanningStoryIds.includes(story.id)}
+                        onChange={() => handleTogglePlanningStory(story.id)}
+                        disabled={isCreatingPlanningSession}
+                      />
+                      <span>
+                        <strong>{story.title}</strong>
+                        <small>{formatProjectDateTime(story.created_at)}</small>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={isCreatingPlanningSession || !canCreatePlanningSession}
+            >
+              {isCreatingPlanningSession ? 'Criando Roda...' : 'Criar Roda da Fogueira'}
+            </button>
+          </form>
+        ) : (
+          <p className="projects-page__state">
+            Você pode consultar as Rodas do projeto. Apenas responsáveis e administradores criam novas sessões.
+          </p>
+        )}
+
+        {planningMessage ? <p className="projects-page__message">{planningMessage}</p> : null}
+        {isLoadingPlanningSessions ? <p className="projects-page__state">Carregando Rodas...</p> : null}
+
+        <div className="project-detail-page__campfire-session-list">
+          {planningSessions.map((session) => (
+            <article key={session.id} className="project-detail-page__campfire-session">
+              <div>
+                <h3>{session.name}</h3>
+                <p>Código da sala: {session.invite_code}</p>
+              </div>
+              <div className="project-detail-page__campfire-session-meta">
+                <span>{getPlanningSessionStatusLabel(session.status)}</span>
+                <span>{formatProjectDateTime(session.created_at)}</span>
+                <span>{session.vote_time_limit_seconds ? `${session.vote_time_limit_seconds}s` : 'Sem timer'}</span>
+                <Link className="btn btn-secondary btn-small" to={`/projetos/${projectId}/roda/${session.id}`}>
+                  Abrir sala
+                </Link>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 

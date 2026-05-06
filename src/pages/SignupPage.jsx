@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { APP_NAME, FREE_GENERATION_LIMIT, PRO_PLAN_NAME } from '../constants/app'
 import { useAuth } from '../hooks/useAuth'
+import { usePageMetadata } from '../hooks/usePageMetadata'
 import '../styles/pages.css'
 import { getAuthErrorMessage, signUpWithEmail } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
@@ -13,6 +14,17 @@ function SignupPage() {
   const [password, setPassword] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  usePageMetadata({
+    title: 'Criar conta no ProdForge',
+    description: 'Crie sua conta para testar a Bancada do ProdForge e gerar histórias de usuário com IA.',
+    path: '/signup',
+    ogTitle: 'Criar conta no ProdForge',
+    ogDescription: 'Crie sua conta para testar a Bancada do ProdForge e gerar histórias de usuário com IA.',
+    twitterTitle: 'Criar conta no ProdForge',
+    twitterDescription: 'Crie sua conta para testar a Bancada do ProdForge e gerar histórias de usuário com IA.',
+    robots: 'noindex,follow',
+  })
 
   useEffect(() => {
     if (!isAuthLoading && user) {

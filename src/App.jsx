@@ -21,6 +21,7 @@ const ToolPage = lazy(() => import('./pages/ToolPage'))
 const HistoryPage = lazy(() => import('./pages/HistoryPage'))
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage'))
 const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage'))
+const PlanningPokerRoomPage = lazy(() => import('./pages/PlanningPokerRoomPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const SignupPage = lazy(() => import('./pages/SignupPage'))
 const CheckEmailPage = lazy(() => import('./pages/CheckEmailPage'))
@@ -89,6 +90,10 @@ function App() {
             <Route path="/faq" element={<FaqPage />} />
             <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
             <Route path="/preferencias-de-privacidade" element={<PrivacyPreferencesPage />} />
+            <Route
+              path="/preferencias-de-cookies"
+              element={<Navigate to="/preferencias-de-privacidade" replace />}
+            />
             <Route path="/termos-de-uso" element={<TermsOfUsePage />} />
             <Route
               path="/fundamentos"
@@ -121,6 +126,7 @@ function App() {
             <Route path="/historico" element={<HistoryPage />} />
             <Route path="/projetos" element={<ProjectsPage />} />
             <Route path="/projetos/:projectId" element={<ProjectDetailPage />} />
+            <Route path="/projetos/:projectId/roda/:sessionId" element={<PlanningPokerRoomPage />} />
             <Route
               path="/tool/admin"
               element={

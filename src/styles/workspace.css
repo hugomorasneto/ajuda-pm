@@ -5946,6 +5946,109 @@
   font-size: var(--text-small);
 }
 
+.project-detail-page__campfire-form {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.project-detail-page__campfire-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(180px, 0.8fr) minmax(160px, 0.6fr);
+  gap: var(--space-3);
+}
+
+.project-detail-page__campfire-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.project-detail-page__campfire-options label,
+.project-detail-page__campfire-story-option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  color: var(--forge-text-secondary);
+  background: rgba(255,255,255,0.02);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.project-detail-page__campfire-options input,
+.project-detail-page__campfire-story-option input {
+  flex: 0 0 auto;
+  margin-top: 0.2rem;
+}
+
+.project-detail-page__campfire-stories {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.project-detail-page__campfire-story-list,
+.project-detail-page__campfire-session-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.project-detail-page__campfire-story-option {
+  cursor: pointer;
+}
+
+.project-detail-page__campfire-story-option span {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.project-detail-page__campfire-story-option strong {
+  color: var(--forge-text-primary);
+}
+
+.project-detail-page__campfire-story-option small {
+  color: var(--forge-text-muted);
+  font-size: var(--text-small);
+}
+
+.project-detail-page__campfire-session-list {
+  margin-top: var(--space-4);
+}
+
+.project-detail-page__campfire-session {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border: 1px solid var(--forge-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background: var(--forge-surface-inset);
+}
+
+.project-detail-page__campfire-session h3 {
+  margin: 0;
+}
+
+.project-detail-page__campfire-session-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.project-detail-page__campfire-session-meta span {
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  color: var(--forge-text-secondary);
+  background: rgba(255,255,255,0.03);
+  font-size: var(--text-small);
+  font-weight: 800;
+}
+
 .project-detail-team {
   border: 1px solid var(--forge-border);
   border-radius: var(--radius-md);
@@ -6014,6 +6117,221 @@
   font-size: var(--text-small);
 }
 
+.planning-poker-room {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.planning-poker-room__hero,
+.planning-poker-room__hero-actions,
+.planning-poker-room__round-status,
+.planning-poker-room__facilitator,
+.planning-poker-room__participant,
+.planning-poker-room__revealed-vote,
+.planning-poker-room__seal {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.planning-poker-room__hero-actions {
+  flex: 0 0 auto;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.planning-poker-room__hero-actions span {
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  color: var(--forge-text-secondary);
+  background: rgba(255,255,255,0.03);
+  font-size: var(--text-small);
+  font-weight: 800;
+}
+
+.planning-poker-room__layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.75fr) minmax(0, 1.5fr) minmax(220px, 0.8fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.planning-poker-room__stories,
+.planning-poker-room__guild {
+  position: sticky;
+  top: calc(var(--space-4) + 70px);
+}
+
+.planning-poker-room__story-list,
+.planning-poker-room__participant-list,
+.planning-poker-room__session-meta,
+.planning-poker-room__table,
+.planning-poker-room__story-focus,
+.planning-poker-room__result,
+.planning-poker-room__revealed-votes {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.planning-poker-room__story-list,
+.planning-poker-room__participant-list {
+  margin-top: var(--space-4);
+}
+
+.planning-poker-room__story-card {
+  width: 100%;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  color: var(--forge-text-secondary);
+  background: rgba(255,255,255,0.02);
+  text-align: left;
+  cursor: pointer;
+}
+
+.planning-poker-room__story-card:hover,
+.planning-poker-room__story-card--active {
+  border-color: var(--forge-ember);
+  background: rgba(194,112,31,0.12);
+}
+
+.planning-poker-room__story-card strong {
+  display: block;
+  color: var(--forge-text-primary);
+  font-size: var(--text-body);
+  line-height: 1.35;
+}
+
+.planning-poker-room__story-card span,
+.planning-poker-room__participant strong,
+.planning-poker-room__session-meta span {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: var(--space-2);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  color: var(--forge-text-muted);
+  background: rgba(255,255,255,0.03);
+  font-size: var(--text-small);
+  font-weight: 800;
+}
+
+.planning-poker-room__story-focus h2 {
+  margin: 0;
+}
+
+.planning-poker-room__story-focus p {
+  margin: 0;
+  color: var(--forge-text-secondary);
+  line-height: 1.6;
+}
+
+.planning-poker-room__round-status {
+  align-items: center;
+  border: 1px solid var(--forge-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  color: var(--forge-text-secondary);
+  background: var(--forge-surface-inset);
+  flex-wrap: wrap;
+}
+
+.planning-poker-room__round-status strong {
+  color: var(--forge-ember);
+  font-size: var(--text-h3);
+}
+
+.planning-poker-room__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: var(--space-3);
+}
+
+.planning-poker-room__card {
+  min-height: 96px;
+  border: 1px solid rgba(194,112,31,0.42);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  color: var(--forge-text-primary);
+  background:
+    linear-gradient(180deg, rgba(194,112,31,0.18), rgba(255,255,255,0.03)),
+    var(--forge-surface-inset);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+  font-size: clamp(1.2rem, 2vw, 1.75rem);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.planning-poker-room__card:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--forge-ember);
+}
+
+.planning-poker-room__card:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.planning-poker-room__card--muted {
+  color: var(--forge-text-secondary);
+  font-size: var(--text-body);
+}
+
+.planning-poker-room__facilitator {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.planning-poker-room__summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.planning-poker-room__summary-grid span,
+.planning-poker-room__revealed-vote,
+.planning-poker-room__participant {
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  color: var(--forge-text-secondary);
+  background: rgba(255,255,255,0.02);
+}
+
+.planning-poker-room__revealed-vote,
+.planning-poker-room__participant {
+  align-items: center;
+}
+
+.planning-poker-room__revealed-vote strong {
+  color: var(--forge-ember);
+  font-size: var(--text-h3);
+}
+
+.planning-poker-room__seal {
+  align-items: end;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.planning-poker-room__seal .projects-page__field {
+  min-width: 180px;
+}
+
+.planning-poker-room__session-meta {
+  margin: var(--space-4) 0;
+}
+
+.workspace-shell--forge .planning-poker-room .panel {
+  border: 1px solid var(--forge-border);
+  background: var(--forge-gradient-panel);
+  box-shadow: var(--forge-shadow-panel);
+}
+
 .workspace-shell--forge .project-context-panel,
 .workspace-shell--forge .projects-page .panel {
   border: 1px solid var(--forge-border);
@@ -6034,6 +6352,12 @@
   .project-detail-page__actions,
   .project-detail-page__member-controls,
   .project-detail-page__story-actions,
+  .project-detail-page__campfire-session,
+  .planning-poker-room__hero,
+  .planning-poker-room__hero-actions,
+  .planning-poker-room__participant,
+  .planning-poker-room__revealed-vote,
+  .planning-poker-room__seal,
   .project-detail-team__member-form,
   .project-detail-team__member,
   .project-detail-team__member-controls {
@@ -6053,5 +6377,17 @@
 
   .projects-page__layout {
     grid-template-columns: 1fr;
+  }
+
+  .project-detail-page__campfire-grid,
+  .project-detail-page__campfire-options,
+  .planning-poker-room__layout,
+  .planning-poker-room__summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .planning-poker-room__stories,
+  .planning-poker-room__guild {
+    position: static;
   }
 }

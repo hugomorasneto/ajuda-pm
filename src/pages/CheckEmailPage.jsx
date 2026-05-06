@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { APP_NAME, FREE_GENERATION_LIMIT } from '../constants/app'
 import { useAuth } from '../hooks/useAuth'
+import { usePageMetadata } from '../hooks/usePageMetadata'
 import '../styles/pages.css'
 import { getAuthErrorMessage, maskEmail, resendSignupConfirmation } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
@@ -14,6 +15,17 @@ function CheckEmailPage() {
   const [feedbackMessage, setFeedbackMessage] = useState('')
   const [feedbackTone, setFeedbackTone] = useState('info')
   const [isResending, setIsResending] = useState(false)
+
+  usePageMetadata({
+    title: 'Verifique seu e-mail | ProdForge',
+    description: 'Confirme seu e-mail para liberar o acesso à Bancada do ProdForge.',
+    path: '/check-email',
+    ogTitle: 'Verifique seu e-mail | ProdForge',
+    ogDescription: 'Confirme seu e-mail para liberar o acesso à Bancada do ProdForge.',
+    twitterTitle: 'Verifique seu e-mail | ProdForge',
+    twitterDescription: 'Confirme seu e-mail para liberar o acesso à Bancada do ProdForge.',
+    robots: 'noindex,follow',
+  })
 
   const maskedEmail = useMemo(() => maskEmail(email), [email])
 

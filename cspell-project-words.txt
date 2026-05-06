@@ -1,6 +1,7 @@
 # Product and domain terms allowed in visible copy.
 Admin
 Agile
+anonimização
 Android
 B2B
 backend
@@ -35,6 +36,7 @@ e-mails
 frontend
 framework
 Framework
+follow
 gap
 gaps
 Gemini
@@ -53,6 +55,7 @@ JSON
 LinkedIn
 lead
 leads
+LGPD
 malware
 Markdown
 Managers
@@ -60,9 +63,13 @@ mobile
 Mockup
 Moraes
 Neto
+noindex
 onboarding
 planning
+participant
+participants
 Planning
+voted
 PM
 PMs
 PO

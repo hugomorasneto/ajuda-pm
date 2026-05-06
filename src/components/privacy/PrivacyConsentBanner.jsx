@@ -13,6 +13,7 @@ const CONSENT_PUBLIC_BLOCKLIST = [
   '/projetos',
   '/admin',
   '/preferencias-de-privacidade',
+  '/preferencias-de-cookies',
 ]
 
 function isPublicConsentPath(pathname) {
@@ -60,11 +61,11 @@ function PrivacyConsentBanner() {
 
       <div className="privacy-consent-banner__content">
         <p className="privacy-consent-banner__eyebrow">Privacidade na forja</p>
-        <h2 id="privacy-consent-title">Controle de dados não essenciais</h2>
+        <h2 id="privacy-consent-title">Controle de dados opcionais</h2>
         <p id="privacy-consent-description">
           Usamos tecnologias essenciais para manter o ProdForge funcionando e, futuramente, poderemos
-          usar dados de navegação para melhorar a experiência, entender uso do produto e evoluir
-          nossas ferramentas com IA. Você pode aceitar ou recusar recursos não essenciais.
+          usar cookies analíticos para melhorar a experiência, entender uso do produto e evoluir
+          nossas ferramentas com IA. Você pode aceitar, recusar ou ajustar recursos opcionais.
         </p>
         <p className="privacy-consent-banner__links">
           <Link to="/politica-de-privacidade">Política de Privacidade</Link>
@@ -79,15 +80,18 @@ function PrivacyConsentBanner() {
           className="forge-button forge-button--ember forge-button--sm"
           onClick={() => handleDecision(PRIVACY_CONSENT_STATUS.accepted)}
         >
-          Aceitar
+          Aceitar todos
         </button>
         <button
           type="button"
           className="forge-button forge-button--metal forge-button--sm"
           onClick={() => handleDecision(PRIVACY_CONSENT_STATUS.essentialOnly)}
         >
-          Recusar não essenciais
+          Recusar opcionais
         </button>
+        <Link className="forge-button forge-button--ghost forge-button--sm" to="/preferencias-de-privacidade">
+          Gerenciar preferências
+        </Link>
       </div>
     </section>
   )

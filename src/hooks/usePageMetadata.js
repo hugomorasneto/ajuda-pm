@@ -6,9 +6,9 @@ const DEFAULT_IMAGE_URL = `${SITE_URL}/og-prodforge-workspace.png`
 const DEFAULT_IMAGE_ALT =
   'Imagem do ProdForge com captura real da Bancada e chamada para transformar briefing em user story clara.'
 
-export const ACADEMIA_IMAGE_URL = `${SITE_URL}/og-academia.png`
+export const ACADEMIA_IMAGE_URL = `${SITE_URL}/og-prodforge.png`
 export const ACADEMIA_IMAGE_ALT =
-  'Campo de Treino ProdForge — Trilha prática de product management para PMs e POs iniciantes.'
+  'Preview do ProdForge com proposta de valor e exemplo de user story estruturada.'
 
 function upsertMeta(selector, attributeName, attributeValue, content) {
   let element = document.head.querySelector(selector)
@@ -67,6 +67,7 @@ export function usePageMetadata({
   twitterCard = 'summary_large_image',
   twitterTitle = title,
   twitterDescription = description,
+  robots = 'index,follow',
   jsonLd = null,
 }) {
   useEffect(() => {
@@ -74,7 +75,7 @@ export function usePageMetadata({
 
     document.title = title
     upsertMeta('meta[name="description"]', 'name', 'description', description)
-    upsertMeta('meta[name="robots"]', 'name', 'robots', 'index,follow')
+    upsertMeta('meta[name="robots"]', 'name', 'robots', robots)
     upsertLink('link[rel="canonical"]', 'canonical', url)
 
     upsertMeta('meta[property="og:site_name"]', 'property', 'og:site_name', APP_NAME)
@@ -84,6 +85,7 @@ export function usePageMetadata({
     upsertMeta('meta[property="og:type"]', 'property', 'og:type', type)
     upsertMeta('meta[property="og:url"]', 'property', 'og:url', url)
     upsertMeta('meta[property="og:image"]', 'property', 'og:image', image)
+    upsertMeta('meta[property="og:image:secure_url"]', 'property', 'og:image:secure_url', image)
     upsertMeta('meta[property="og:image:type"]', 'property', 'og:image:type', 'image/png')
     upsertMeta('meta[property="og:image:width"]', 'property', 'og:image:width', '1200')
     upsertMeta('meta[property="og:image:height"]', 'property', 'og:image:height', '630')
@@ -104,6 +106,7 @@ export function usePageMetadata({
     ogDescription,
     ogTitle,
     path,
+    robots,
     title,
     twitterCard,
     twitterDescription,

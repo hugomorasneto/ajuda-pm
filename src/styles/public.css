@@ -9468,6 +9468,12 @@
   box-shadow: var(--forge-glow-ember-sm);
 }
 
+.privacy-preferences-status--custom {
+  border-color: var(--forge-border-tech);
+  background: var(--forge-tech-soft);
+  box-shadow: var(--forge-glow-tech-sm);
+}
+
 .privacy-preferences-status--empty {
   border-color: var(--forge-border-tech);
   background: var(--forge-tech-soft);
@@ -9553,6 +9559,35 @@
   overflow-wrap: anywhere;
 }
 
+.privacy-preferences-category-status {
+  display: grid;
+  gap: var(--forge-space-2);
+  min-width: 0;
+}
+
+.privacy-preferences-category-status p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--forge-space-2);
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  padding: var(--forge-space-3) var(--forge-space-4);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--forge-radius-sm);
+  background:
+    linear-gradient(90deg, rgba(255, 122, 26, 0.06), transparent 72%),
+    rgba(255, 255, 255, 0.022);
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.4;
+}
+
+.privacy-preferences-category-status strong {
+  color: var(--forge-text-primary);
+  font-weight: 850;
+}
+
 .privacy-preferences-feedback {
   margin: 0;
   padding: var(--forge-space-4);
@@ -9565,6 +9600,100 @@
   font-size: var(--text-small);
   font-weight: 700;
   line-height: 1.55;
+}
+
+.privacy-preferences-options {
+  display: grid;
+  gap: var(--forge-space-3);
+  min-width: 0;
+}
+
+.privacy-preferences-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--forge-space-3);
+  align-items: flex-start;
+  min-width: 0;
+  padding: var(--forge-space-4);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--forge-radius-sm);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.034), transparent),
+    var(--forge-surface-inset);
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.privacy-preferences-option:hover,
+.privacy-preferences-option:focus-within {
+  border-color: var(--forge-border-tech);
+  box-shadow: var(--forge-glow-tech-sm);
+}
+
+.privacy-preferences-option:has(input:checked) {
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(135deg, rgba(255, 122, 26, 0.10), transparent 46%),
+    var(--forge-surface-inset);
+  box-shadow: var(--forge-glow-ember-sm);
+}
+
+.privacy-preferences-option--disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.privacy-preferences-option input {
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: var(--forge-ember-hover);
+}
+
+.privacy-preferences-option input:focus-visible {
+  outline: 3px solid rgba(255, 145, 56, 0.30);
+  outline-offset: 2px;
+}
+
+.privacy-preferences-option__copy {
+  display: grid;
+  gap: var(--forge-space-2);
+  min-width: 0;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.58;
+}
+
+.privacy-preferences-option__topline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--forge-space-2);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.privacy-preferences-option__topline strong {
+  color: var(--forge-text-primary);
+  font-size: var(--text-body);
+  font-weight: 850;
+  line-height: 1.24;
+}
+
+.privacy-preferences-option__topline em {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  padding: 0 var(--forge-space-3);
+  border: 1px solid var(--forge-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--forge-text-muted);
+  font-size: var(--text-label);
+  font-style: normal;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .privacy-preferences-actions {

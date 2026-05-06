@@ -12,6 +12,16 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(rootDir, 'index.html'),
+        login: resolve(rootDir, 'login/index.html'),
+        signup: resolve(rootDir, 'signup/index.html'),
+        checkEmail: resolve(rootDir, 'check-email/index.html'),
+        privacyPolicy: resolve(rootDir, 'politica-de-privacidade/index.html'),
+        privacyPreferences: resolve(rootDir, 'preferencias-de-privacidade/index.html'),
+        cookiePreferences: resolve(rootDir, 'preferencias-de-cookies/index.html'),
+        termsOfUse: resolve(rootDir, 'termos-de-uso/index.html'),
+        contact: resolve(rootDir, 'contato/index.html'),
+        about: resolve(rootDir, 'sobre/index.html'),
+        faq: resolve(rootDir, 'faq/index.html'),
         aprender: resolve(rootDir, 'aprender/index.html'),
         fundamentos: resolve(rootDir, 'aprender/fundamentos-produto-agil/index.html'),
         userStories: resolve(rootDir, 'aprender/user-stories-na-pratica/index.html'),

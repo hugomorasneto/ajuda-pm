@@ -13,6 +13,7 @@ function PublicLayout() {
     '/faq',
     '/politica-de-privacidade',
     '/preferencias-de-privacidade',
+    '/preferencias-de-cookies',
     '/termos-de-uso',
   ].includes(location.pathname)
   const layoutClassName = [

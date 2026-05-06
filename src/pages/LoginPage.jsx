@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { APP_NAME } from '../constants/app'
 import { useAuth } from '../hooks/useAuth'
+import { usePageMetadata } from '../hooks/usePageMetadata'
 import '../styles/pages.css'
 import {
   getAuthErrorMessage,
@@ -24,6 +25,17 @@ function LoginPage() {
   const [canResendConfirmation, setCanResendConfirmation] = useState(false)
 
   const redirectTo = location.state?.from ?? '/tool'
+
+  usePageMetadata({
+    title: 'Entrar no ProdForge',
+    description: 'Acesse sua conta ProdForge para continuar na Bancada de histórias de usuário com IA.',
+    path: '/login',
+    ogTitle: 'Entrar no ProdForge',
+    ogDescription: 'Acesse sua conta ProdForge para continuar na Bancada de histórias de usuário com IA.',
+    twitterTitle: 'Entrar no ProdForge',
+    twitterDescription: 'Acesse sua conta ProdForge para continuar na Bancada de histórias de usuário com IA.',
+    robots: 'noindex,follow',
+  })
 
   useEffect(() => {
     if (!isAuthLoading && user) {

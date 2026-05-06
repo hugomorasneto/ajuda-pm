@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { APP_NAME } from '../constants/app'
 import { usePageMetadata } from '../hooks/usePageMetadata'
 
-const TERMS_LAST_UPDATED = '05/05/2026'
+const TERMS_LAST_UPDATED = '06/05/2026'
 // TODO: revisar este e-mail quando o canal oficial de termos e suporte estiver definido.
 const CONTACT_EMAIL = 'contato@techtupa.com.br'
 
@@ -107,7 +107,7 @@ const termsSections = [
   },
   {
     id: 'limitacao-de-responsabilidade',
-    title: 'Limitação de responsabilidade',
+    title: 'Limites da IA e ausência de garantia de resultado perfeito',
     paragraphs: [
       'O ProdForge é uma ferramenta de apoio para estruturação, refinamento e melhoria de artefatos de produto. O uso das respostas, sugestões, critérios, insights e materiais gerados depende da revisão e decisão do usuário.',
       'Não garantimos que uma história de usuário, critério de aceite, insight técnico ou sugestão gerada será correta, completa, adequada ao seu negócio, suficiente para implementação ou aceita por stakeholders.',
@@ -198,7 +198,7 @@ function TermsOfUsePage() {
         name: APP_NAME,
         url: 'https://prodforge.techtupa.com.br/',
       },
-      dateModified: '2026-05-05',
+      dateModified: '2026-05-06',
     },
   })
 

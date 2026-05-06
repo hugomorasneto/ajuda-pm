@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+
+Disallow: /tool
+Disallow: /tool/
+Disallow: /historico
+Disallow: /historico/
+Disallow: /admin
+Disallow: /admin/
+Disallow: /tool/admin
+Disallow: /tool/admin/
+Disallow: /projetos
+Disallow: /projetos/
+Disallow: /workspace
+Disallow: /workspace/
+Disallow: /check-email
+Disallow: /check-email/
+
+Sitemap: https://prodforge.techtupa.com.br/sitemap.xml

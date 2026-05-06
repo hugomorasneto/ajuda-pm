@@ -2,14 +2,15 @@ import { Link } from 'react-router-dom'
 import { APP_NAME } from '../constants/app'
 import { usePageMetadata } from '../hooks/usePageMetadata'
 
-const POLICY_LAST_UPDATED = '05/05/2026'
+const POLICY_LAST_UPDATED = '06/05/2026'
 // TODO: revisar este e-mail quando o canal oficial de privacidade estiver definido.
 const CONTACT_EMAIL = 'contato@techtupa.com.br'
 
 const policySummary = [
   'Dados de conta, autenticação e uso da plataforma',
   'Briefings, histórias de usuário e critérios de aceite inseridos na Bancada',
-  'Dados técnicos de navegação, segurança e analytics',
+  'Armazenamento em banco de dados para conta, histórico e projetos',
+  'Cookies essenciais, analíticos e categoria de marketing desativada nesta fase',
   'Processamento por serviços de IA para apoiar a geração de artefatos',
 ]
 
@@ -53,6 +54,14 @@ const policySections = [
     ],
   },
   {
+    id: 'armazenamento-em-banco-de-dados',
+    title: 'Armazenamento em banco de dados',
+    paragraphs: [
+      'Dados de conta, projetos, preferências, briefings, histórias geradas, versões, histórico e eventos operacionais podem ser armazenados em banco de dados e serviços de infraestrutura usados para operar o ProdForge.',
+      'Esse armazenamento permite recuperar conteúdo, manter a continuidade da Bancada, aplicar controles de acesso, diagnosticar falhas, prevenir abuso e atender solicitações do usuário. O acesso interno deve ser limitado ao necessário para operação, segurança e suporte.',
+    ],
+  },
+  {
     id: 'uso-de-inteligencia-artificial',
     title: 'Uso de inteligência artificial',
     paragraphs: [
@@ -63,11 +72,12 @@ const policySections = [
     note: 'Sempre que possível, remova ou anonimize informações pessoais antes de enviar um briefing para processamento por IA.',
   },
   {
-    id: 'cookies-analytics-e-tecnologias-semelhantes',
-    title: 'Arquivos de navegação, analytics e tecnologias semelhantes',
+    id: 'cookies-e-tecnologias-similares',
+    title: 'Cookies e tecnologias similares',
     paragraphs: [
-      'Podemos usar arquivos de navegação, armazenamento local, identificadores técnicos, eventos de analytics e tecnologias semelhantes para autenticação, segurança, manutenção de sessão, medição de uso e melhoria da experiência.',
-      'Essas tecnologias ajudam a entender quais páginas e fluxos são mais usados, identificar erros, medir conversões e evoluir o produto com base em sinais agregados. Você pode controlar esses arquivos e permissões pelo seu navegador, embora alguns recursos essenciais possam deixar de funcionar corretamente.',
+      'Podemos usar cookies, armazenamento local, identificadores técnicos, eventos de analytics e tecnologias similares para autenticação, segurança, manutenção de sessão, medição de uso e melhoria da experiência.',
+      'Cookies essenciais são necessários para o funcionamento básico do site e da plataforma. Cookies analíticos são opcionais e podem apoiar métricas agregadas de uso, erros, desempenho e evolução do produto. Cookies de marketing estão previstos para transparência, mas permanecem desativados nesta fase.',
+      'Você pode aceitar todos os recursos opcionais disponíveis, recusar opcionais ou salvar preferências por categoria na página de Preferências de Privacidade. A escolha fica salva no navegador e pode ser alterada a qualquer momento.',
     ],
   },
   {
@@ -100,11 +110,11 @@ const policySections = [
     ],
   },
   {
-    id: 'direitos-do-usuario',
-    title: 'Direitos do usuário',
+    id: 'direitos-do-titular',
+    title: 'Direitos do titular conforme a LGPD',
     paragraphs: [
-      'Você pode solicitar informações sobre dados associados à sua conta e, quando aplicável, pedir correção, atualização, exclusão, restrição de uso ou esclarecimentos sobre o tratamento realizado pelo ProdForge.',
-      'Também pode deixar de usar a plataforma, cancelar comunicações opcionais e solicitar orientação sobre dados inseridos na Bancada. Alguns pedidos podem depender de validação de identidade ou de limitações técnicas, operacionais e legais.',
+      'Nos termos da LGPD, você pode solicitar confirmação da existência de tratamento, acesso aos dados, correção de dados incompletos, inexatos ou desatualizados, anonimização, bloqueio ou eliminação de dados desnecessários ou tratados em desconformidade, portabilidade quando aplicável, informação sobre compartilhamento, revisão de consentimentos, revogação de consentimento e oposição a tratamentos irregulares.',
+      'Para exercer esses direitos, envie uma solicitação pelo canal de contato indicado nesta política. Alguns pedidos podem depender de validação de identidade, limites técnicos, preservação de registros mínimos, cumprimento de obrigação legal ou proteção de direitos.',
     ],
   },
   {
@@ -172,6 +182,7 @@ function PrivacyPolicyPage() {
     ogDescription: pageDescription,
     twitterTitle: 'Política de Privacidade | ProdForge',
     twitterDescription: pageDescription,
+    robots: 'noindex,follow',
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'WebPage',
@@ -183,7 +194,7 @@ function PrivacyPolicyPage() {
         name: APP_NAME,
         url: 'https://prodforge.techtupa.com.br/',
       },
-      dateModified: '2026-05-05',
+      dateModified: '2026-05-06',
     },
   })
 
