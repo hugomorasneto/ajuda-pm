@@ -11,6 +11,8 @@ const CONSENT_PUBLIC_BLOCKLIST = [
   '/tool',
   '/historico',
   '/projetos',
+  '/times',
+  '/roda',
   '/admin',
   '/preferencias-de-privacidade',
   '/preferencias-de-cookies',

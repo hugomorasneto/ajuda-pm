@@ -50,6 +50,28 @@ function IconProjects() {
   )
 }
 
+function IconTeams() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+      <circle cx="8" cy="8" r="3" />
+      <circle cx="16.5" cy="9" r="2.5" />
+      <path d="M3.5 19c.7-3 2.2-5 4.5-5s3.8 2 4.5 5" />
+      <path d="M12.5 18.5c.5-2.2 1.8-3.7 4-3.7 1.7 0 3 1.1 4 3.7" />
+    </svg>
+  )
+}
+
+function IconCampfire() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+      <path d="M8 21 19 10" />
+      <path d="M16 21 5 10" />
+      <path d="M12 4c2 2 3.2 4 3.2 6.1A3.2 3.2 0 0 1 12 13.3a3.2 3.2 0 0 1-3.2-3.2C8.8 8.1 10.3 6.4 12 4Z" />
+      <path d="M12 8.5c.9 1 1.4 1.9 1.4 2.8A1.4 1.4 0 0 1 12 12.7a1.4 1.4 0 0 1-1.4-1.4c0-.9.7-1.7 1.4-2.8Z" />
+    </svg>
+  )
+}
+
 function IconAcademy() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
@@ -159,6 +181,20 @@ function WorkspaceSidebar({ isOpen, onClose }) {
       path: '/projetos',
       end: true,
       icon: <IconProjects />,
+    },
+    {
+      label: 'Times',
+      description: 'Gerencie guildas e membros por projeto.',
+      path: '/times',
+      end: false,
+      icon: <IconTeams />,
+    },
+    {
+      label: 'Roda da Fogueira',
+      description: 'Crie e acompanhe estimativas colaborativas.',
+      path: '/roda',
+      end: true,
+      icon: <IconCampfire />,
     },
   ]
   const toolNavItems = canSeeAdmin || isAdminPath

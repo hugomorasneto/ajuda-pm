@@ -14,6 +14,8 @@ function WorkspaceLayout() {
     location.pathname === '/tool' ||
     location.pathname === '/tool/admin' ||
     location.pathname === '/historico' ||
+    location.pathname === '/times' ||
+    location.pathname === '/roda' ||
     location.pathname.startsWith('/projetos')
 
   function openSidebar() {

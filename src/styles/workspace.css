@@ -7101,6 +7101,37 @@
   justify-content: flex-start;
 }
 
+.project-detail-page__collaboration-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.teams-page__groups {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.teams-page__group {
+  display: grid;
+  gap: var(--space-3);
+  border: 1px solid var(--forge-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background: var(--forge-surface-inset);
+}
+
+.teams-page__group-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.teams-page__group-header h3 {
+  margin: 0;
+}
+
 .project-detail-page__teams,
 .project-detail-page__member-list,
 .project-detail-page__story-list,
@@ -7272,7 +7303,7 @@
 
 .project-detail-page__campfire-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(180px, 0.8fr) minmax(160px, 0.6fr);
+  grid-template-columns: minmax(240px, 1.2fr) repeat(3, minmax(160px, 0.75fr));
   gap: var(--space-3);
 }
 
@@ -7307,6 +7338,27 @@
   gap: var(--space-3);
 }
 
+.project-detail-page__campfire-story-tools {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  align-items: end;
+  gap: var(--space-3);
+}
+
+.project-detail-page__campfire-story-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.project-detail-page__campfire-story-actions span {
+  color: var(--forge-text-muted);
+  font-size: var(--text-small);
+  font-weight: 800;
+}
+
 .project-detail-page__campfire-story-list,
 .project-detail-page__campfire-session-list {
   display: grid;
@@ -7331,8 +7383,103 @@
   font-size: var(--text-small);
 }
 
+.project-detail-page__campfire-create-summary {
+  display: grid;
+  gap: var(--space-3);
+  border: 1px solid var(--forge-border-tech);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background:
+    linear-gradient(90deg, var(--forge-tech-soft), transparent 82%),
+    var(--forge-surface-inset);
+}
+
+.project-detail-page__campfire-create-summary h3 {
+  margin: 0;
+}
+
+.project-detail-page__campfire-create-summary p {
+  margin: 0;
+}
+
+.project-detail-page__campfire-create-summary dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.project-detail-page__campfire-create-summary dl div {
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(255,255,255,0.025);
+}
+
+.project-detail-page__campfire-create-summary dt {
+  color: var(--forge-text-muted);
+  font-size: var(--text-micro);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.project-detail-page__campfire-create-summary dd {
+  margin: var(--space-1) 0 0;
+  color: var(--forge-text-primary);
+  font-size: var(--text-small);
+  font-weight: 800;
+}
+
+.project-detail-page__campfire-create-rules,
+.project-detail-page__campfire-create-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+}
+
+.project-detail-page__campfire-create-rules span,
+.project-detail-page__campfire-create-preview li {
+  display: inline-flex;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: 999px;
+  padding: 0.18rem 0.58rem;
+  color: var(--forge-text-secondary);
+  background: rgba(255,255,255,0.035);
+  font-size: var(--text-small);
+  font-weight: 800;
+  list-style: none;
+}
+
 .project-detail-page__campfire-session-list {
   margin-top: var(--space-4);
+}
+
+.project-detail-page__campfire-filters {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(160px, 0.4fr) minmax(180px, 0.45fr) auto;
+  align-items: end;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: rgba(255,255,255,0.025);
+}
+
+.project-detail-page__campfire-filter-summary {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  min-width: max-content;
+}
+
+.project-detail-page__campfire-filter-summary span {
+  color: var(--forge-text-muted);
+  font-size: var(--text-small);
+  font-weight: 800;
 }
 
 .project-detail-page__campfire-session {
@@ -7346,8 +7493,77 @@
   background: var(--forge-surface-inset);
 }
 
+.project-detail-page__campfire-session--live {
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(90deg, rgba(255,145,56,0.08), transparent 58%),
+    var(--forge-surface-inset);
+  box-shadow: 0 0 0 1px rgba(255,145,56,0.08), var(--forge-shadow-soft);
+}
+
 .project-detail-page__campfire-session h3 {
   margin: 0;
+}
+
+.project-detail-page__campfire-session-content {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.project-detail-page__campfire-session-progress {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 520px;
+}
+
+.project-detail-page__campfire-session-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.project-detail-page__campfire-session-progress-header span {
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  font-weight: 800;
+}
+
+.project-detail-page__campfire-session-progress-header strong {
+  color: var(--forge-ember);
+  font-size: var(--text-small);
+}
+
+.project-detail-page__campfire-session-progress-bar {
+  height: 0.45rem;
+  overflow: hidden;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+}
+
+.project-detail-page__campfire-session-progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--forge-ember), var(--forge-warning));
+}
+
+.project-detail-page__campfire-session-progress-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.project-detail-page__campfire-session-progress-chips span {
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: 999px;
+  padding: 0.12rem 0.5rem;
+  color: var(--forge-text-muted);
+  background: rgba(255,255,255,0.025);
+  font-size: var(--text-micro);
+  font-weight: 800;
 }
 
 .project-detail-page__campfire-session-meta {
@@ -7437,6 +7653,10 @@
 
 .planning-poker-join {
   width: min(100%, 1080px);
+}
+
+.planning-poker-dashboard {
+  width: min(100%, 1280px);
 }
 
 .planning-poker-join__hero {
@@ -7832,9 +8052,11 @@
   .project-detail-page__member,
   .project-detail-page__story,
   .project-detail-page__actions,
+  .project-detail-page__collaboration-actions,
   .project-detail-page__member-controls,
   .project-detail-page__story-actions,
   .project-detail-page__campfire-session,
+  .teams-page__group-header,
   .planning-poker-join__hero,
   .planning-poker-join__notes,
   .planning-poker-room__hero,
@@ -7873,6 +8095,8 @@
 
   .project-detail-page__campfire-grid,
   .project-detail-page__campfire-options,
+  .project-detail-page__campfire-filters,
+  .project-detail-page__campfire-story-tools,
   .planning-poker-room__layout,
   .planning-poker-room__summary-grid {
     grid-template-columns: 1fr;

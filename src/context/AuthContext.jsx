@@ -9,6 +9,8 @@ const EAGER_AUTH_PATH_PREFIXES = [
   '/tool',
   '/historico',
   '/projetos',
+  '/times',
+  '/roda',
   '/admin',
 ]
 const IDLE_BOOTSTRAP_DELAY_MS = 1200

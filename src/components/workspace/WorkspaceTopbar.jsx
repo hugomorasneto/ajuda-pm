@@ -14,6 +14,14 @@ const pageMeta = {
     title: 'Projetos',
     description: 'Organize histórias por jornada quando fizer sentido.',
   },
+  '/times': {
+    title: 'Times',
+    description: 'Gerencie guildas e membros por projeto.',
+  },
+  '/roda': {
+    title: 'Roda da Fogueira',
+    description: 'Crie e acompanhe estimativas colaborativas.',
+  },
   '/tool/admin': {
     title: 'Administração da Forja',
     description: 'Acompanhe operação, aquisição e uso do ProdForge.',

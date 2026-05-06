@@ -190,6 +190,34 @@ export async function listPlanningPokerSessionStories({ sessionId, userId }) {
   }
 }
 
+export async function listPlanningPokerSessionStorySummaries({ sessionIds, userId }) {
+  try {
+    const userError = requireUser(userId, [])
+    if (userError) return userError
+
+    const safeSessionIds = Array.isArray(sessionIds) ? sessionIds.filter(Boolean) : []
+    if (safeSessionIds.length === 0) {
+      return { success: true, data: [] }
+    }
+
+    const { data, error } = await supabase
+      .from('planning_poker_session_stories')
+      .select('id, session_id, status, final_estimate, final_estimate_numeric, estimated_at, updated_at')
+      .in('session_id', safeSessionIds)
+      .order('position', { ascending: true })
+
+    if (error) {
+      console.error('Supabase listPlanningPokerSessionStorySummaries error:', error)
+      return { success: false, error, data: [] }
+    }
+
+    return { success: true, data: data ?? [] }
+  } catch (error) {
+    console.error('Unexpected listPlanningPokerSessionStorySummaries error:', error)
+    return { success: false, error, data: [] }
+  }
+}
+
 export async function listPlanningPokerParticipants({ sessionId, userId }) {
   try {
     const userError = requireUser(userId, [])

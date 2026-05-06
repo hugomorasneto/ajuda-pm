@@ -44,6 +44,12 @@ const ROUND_STATUS_LABELS = {
   canceled: 'Rodada cancelada',
 }
 
+const SCORING_SCALE_LABELS = {
+  fibonacci: 'Fibonacci',
+  tshirt: 'Tamanho de camiseta',
+  custom: 'Customizada',
+}
+
 function getSessionStatusLabel(status) {
   return SESSION_STATUS_LABELS[status] ?? 'Rascunho'
 }
@@ -54,6 +60,10 @@ function getStoryStatusLabel(status) {
 
 function getRoundStatusLabel(status) {
   return ROUND_STATUS_LABELS[status] ?? 'Sem rodada ativa'
+}
+
+function getScoringScaleLabel(scoringScale) {
+  return SCORING_SCALE_LABELS[scoringScale] ?? 'Fibonacci'
 }
 
 function formatDateTime(value) {
@@ -296,6 +306,7 @@ function PlanningPokerRoomPage() {
   const revealPolicyLabel = session?.reveal_votes_after_all
     ? 'Revelação após todos votarem'
     : 'Revelação pelo facilitador'
+  const scoringScaleLabel = getScoringScaleLabel(session?.scoring_scale)
   const revealActionHint =
     currentRound?.status === 'voting'
       ? votingExpired
@@ -472,12 +483,13 @@ function PlanningPokerRoomPage() {
       pills: [
         { text: getSessionStatusLabel(session?.status) },
         { text: `${participants.length} membros` },
+        { text: scoringScaleLabel },
         { text: currentRound ? getRoundStatusLabel(currentRound.status) : 'Sem rodada' },
       ],
     })
 
     return () => setTopbarStatus(null)
-  }, [currentRound, participants.length, session?.name, session?.status, setTopbarStatus])
+  }, [currentRound, participants.length, scoringScaleLabel, session?.name, session?.status, setTopbarStatus])
 
   async function runAction(action, successMessage) {
     setMessage('')
@@ -865,6 +877,7 @@ function PlanningPokerRoomPage() {
 
           <div className="planning-poker-room__session-meta">
             <span>Status: {getSessionStatusLabel(session?.status)}</span>
+            <span>Escala: {scoringScaleLabel}</span>
             <span>Participantes votantes: {eligibleVoters.length}</span>
             <span>{revotePolicyLabel}</span>
             <span>{revealPolicyLabel}</span>
