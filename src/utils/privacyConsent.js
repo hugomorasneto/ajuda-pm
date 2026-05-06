@@ -1,5 +1,5 @@
 export const PRIVACY_CONSENT_STORAGE_KEY = 'prodforge_privacy_consent'
-export const PRIVACY_CONSENT_VERSION = '2.0'
+export const PRIVACY_CONSENT_VERSION = '2.1'
 export const PRIVACY_CONSENT_CHANGE_EVENT = 'prodforge_privacy_consent_change'
 
 export const PRIVACY_CONSENT_STATUS = {
@@ -17,7 +17,7 @@ export const PRIVACY_CONSENT_CATEGORIES = {
 export const PRIVACY_CONSENT_CATEGORY_AVAILABILITY = {
   [PRIVACY_CONSENT_CATEGORIES.essential]: true,
   [PRIVACY_CONSENT_CATEGORIES.analytics]: true,
-  [PRIVACY_CONSENT_CATEGORIES.marketing]: false,
+  [PRIVACY_CONSENT_CATEGORIES.marketing]: true,
 }
 
 const VALID_PRIVACY_CONSENT_STATUSES = new Set(Object.values(PRIVACY_CONSENT_STATUS))
@@ -32,7 +32,13 @@ const OPTIONAL_PRIVACY_CATEGORIES = [
 ]
 
 function canUseLocalStorage() {
-  return typeof window !== 'undefined' && Boolean(window.localStorage)
+  if (typeof window === 'undefined') return false
+
+  try {
+    return Boolean(window.localStorage)
+  } catch {
+    return false
+  }
 }
 
 function notifyPrivacyConsentChange(detail) {
@@ -118,6 +124,15 @@ export function getPrivacyConsent() {
   } catch {
     return null
   }
+}
+
+export function hasPrivacyConsentForCategory(categoryId) {
+  if (categoryId === PRIVACY_CONSENT_CATEGORIES.essential) return true
+  if (!OPTIONAL_PRIVACY_CATEGORIES.includes(categoryId)) return false
+  if (!PRIVACY_CONSENT_CATEGORY_AVAILABILITY[categoryId]) return false
+
+  const consent = getPrivacyConsent()
+  return Boolean(consent?.categories?.[categoryId])
 }
 
 export function setPrivacyConsent(status) {

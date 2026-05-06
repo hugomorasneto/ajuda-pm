@@ -63,9 +63,10 @@ function PrivacyConsentBanner() {
         <p className="privacy-consent-banner__eyebrow">Privacidade na forja</p>
         <h2 id="privacy-consent-title">Controle de dados opcionais</h2>
         <p id="privacy-consent-description">
-          Usamos tecnologias essenciais para manter o ProdForge funcionando e, futuramente, poderemos
-          usar cookies analíticos para melhorar a experiência, entender uso do produto e evoluir
-          nossas ferramentas com IA. Você pode aceitar, recusar ou ajustar recursos opcionais.
+          Usamos tecnologias essenciais para login, segurança e funcionamento básico. Com sua
+          autorização, cookies analíticos ajudam a entender uso e melhorar o produto; cookies de
+          marketing ficam preparados para campanhas e mensuração futuras. Se algum recurso opcional
+          ainda não estiver ativo, sua escolha apenas registra a preferência para uso futuro.
         </p>
         <p className="privacy-consent-banner__links">
           <Link to="/politica-de-privacidade">Política de Privacidade</Link>

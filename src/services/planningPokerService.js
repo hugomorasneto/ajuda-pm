@@ -12,6 +12,8 @@ const voteStatusColumns =
   'round_id, session_id, session_story_id, participant_id, user_id, has_voted, voted_at, updated_at'
 const voteColumns =
   'id, session_id, session_story_id, round_id, participant_id, user_id, vote_value, vote_numeric, vote_kind, created_at, updated_at'
+const resultColumns =
+  'id, session_id, session_story_id, final_round_id, final_estimate, final_estimate_numeric, average, median, lowest_vote, highest_vote, divergence, vote_count, abstention_count, unknown_count, accepted_by, created_at, updated_at'
 
 function requireUser(userId, fallbackData) {
   if (userId) return null
@@ -261,6 +263,32 @@ export async function listPlanningPokerVotes({ roundId, userId }) {
     return { success: true, data: data ?? [] }
   } catch (error) {
     console.error('Unexpected listPlanningPokerVotes error:', error)
+    return { success: false, error, data: [] }
+  }
+}
+
+export async function listPlanningPokerResults({ sessionId, userId }) {
+  try {
+    const userError = requireUser(userId, [])
+    if (userError) return userError
+
+    const sessionError = requireValue(sessionId, 'Sessão não informada.', [])
+    if (sessionError) return sessionError
+
+    const { data, error } = await supabase
+      .from('planning_poker_results')
+      .select(resultColumns)
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Supabase listPlanningPokerResults error:', error)
+      return { success: false, error, data: [] }
+    }
+
+    return { success: true, data: data ?? [] }
+  } catch (error) {
+    console.error('Unexpected listPlanningPokerResults error:', error)
     return { success: false, error, data: [] }
   }
 }

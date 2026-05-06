@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { APP_NAME } from '../constants/app'
+import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC } from '../constants/app'
 import { useAuth } from '../hooks/useAuth'
 import { usePageMetadata } from '../hooks/usePageMetadata'
 import '../styles/pages.css'
@@ -12,12 +12,17 @@ import {
 } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
 
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
 function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, isAuthLoading } = useAuth()
   const [email, setEmail] = useState(location.state?.email ?? '')
   const [password, setPassword] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
   const [errorMessage, setErrorMessage] = useState('')
   const [infoMessage, setInfoMessage] = useState(location.state?.message ?? '')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -45,13 +50,36 @@ function LoginPage() {
 
   async function handleSubmit(event) {
     event.preventDefault()
-    setIsSubmitting(true)
+
+    const normalizedEmail = email.trim()
+    const nextFieldErrors = {}
+
+    if (!normalizedEmail) {
+      nextFieldErrors.email = 'Informe seu e-mail.'
+    } else if (!isValidEmail(normalizedEmail)) {
+      nextFieldErrors.email = 'Digite um e-mail válido.'
+    }
+
+    if (!password) {
+      nextFieldErrors.password = 'A senha é obrigatória.'
+    }
+
+    if (Object.keys(nextFieldErrors).length > 0) {
+      setFieldErrors(nextFieldErrors)
+      setErrorMessage('')
+      setInfoMessage('')
+      setCanResendConfirmation(false)
+      return
+    }
+
+    setFieldErrors({})
     setErrorMessage('')
     setInfoMessage('')
     setCanResendConfirmation(false)
+    setIsSubmitting(true)
 
     const { error } = await signInWithEmail({
-      email: email.trim(),
+      email: normalizedEmail,
       password,
     })
 
@@ -70,6 +98,18 @@ function LoginPage() {
 
     trackEvent({ event_name: 'login_completed', event_category: 'auth', page_path: '/login' })
     navigate(redirectTo, { replace: true })
+  }
+
+  function handleEmailChange(event) {
+    setEmail(event.target.value)
+    setFieldErrors((current) => ({ ...current, email: '' }))
+    setErrorMessage('')
+  }
+
+  function handlePasswordChange(event) {
+    setPassword(event.target.value)
+    setFieldErrors((current) => ({ ...current, password: '' }))
+    setErrorMessage('')
   }
 
   async function handleResendConfirmation() {
@@ -96,29 +136,34 @@ function LoginPage() {
   }
 
   return (
-    <div className="auth-shell">
+    <div className="auth-shell auth-shell--login">
       <div className="auth-card">
-        {/* Brand */}
-        <div className="auth-card__brand">
-          <span className="auth-card__brand-mark" />
-          <span className="auth-card__brand-name">{APP_NAME}</span>
+        <div className="auth-card__topbar">
+          <Link to="/" className="auth-card__brand" aria-label="Voltar para a Home do ProdForge">
+            <img
+              src={BRAND_LOGO_HORIZONTAL_SRC}
+              alt={APP_NAME}
+              className="auth-card__brand-logo"
+              loading="eager"
+            />
+          </Link>
+          <Link to="/" className="auth-card__home-link">
+            Home
+          </Link>
         </div>
 
-        {/* Header */}
         <div className="auth-card__header">
-          <p className="auth-card__eyebrow">Acesso</p>
-          <h1 className="auth-card__title">Entrar na sua conta</h1>
+          <p className="auth-card__eyebrow">Acesso seguro</p>
+          <h1 className="auth-card__title">Entre na sua bancada</h1>
           <p className="auth-card__description">
-            Acesse a Bancada, o histórico de stories e as inspeções salvas.
+            Continue refinando suas user stories com histórico, versões e critérios de aceite.
           </p>
         </div>
 
-        {/* Info (redirect message) */}
         {infoMessage ? (
           <p className="auth-card__info" role="status">{infoMessage}</p>
         ) : null}
 
-        {/* Form */}
         <form className="auth-card__form" onSubmit={handleSubmit} noValidate>
           <div className="auth-card__field">
             <label className="auth-card__label" htmlFor="email">E-mail</label>
@@ -129,9 +174,14 @@ function LoginPage() {
               autoComplete="email"
               placeholder="seu@email.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
+              aria-invalid={Boolean(fieldErrors.email)}
+              aria-describedby={fieldErrors.email ? 'login-email-error' : undefined}
               required
             />
+            {fieldErrors.email ? (
+              <p className="auth-card__field-error" id="login-email-error">{fieldErrors.email}</p>
+            ) : null}
           </div>
 
           <div className="auth-card__field">
@@ -143,9 +193,14 @@ function LoginPage() {
               autoComplete="current-password"
               placeholder="••••••••"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
+              aria-invalid={Boolean(fieldErrors.password)}
+              aria-describedby={fieldErrors.password ? 'login-password-error' : undefined}
               required
             />
+            {fieldErrors.password ? (
+              <p className="auth-card__field-error" id="login-password-error">{fieldErrors.password}</p>
+            ) : null}
           </div>
 
           {errorMessage ? (
@@ -157,7 +212,7 @@ function LoginPage() {
             className="auth-card__submit"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Entrando…' : 'Entrar'}
+            {isSubmitting ? 'Entrando...' : 'Entrar'}
           </button>
 
           {canResendConfirmation ? (
@@ -167,34 +222,31 @@ function LoginPage() {
               onClick={handleResendConfirmation}
               disabled={isResending}
             >
-              {isResending ? 'Reenviando…' : 'Reenviar confirmação'}
+              {isResending ? 'Reenviando...' : 'Reenviar confirmação'}
             </button>
           ) : null}
         </form>
 
-        {/* Footer */}
         <p className="auth-card__switch">
           Não tem conta?{' '}
           <Link to="/signup" className="auth-card__link">Criar conta grátis</Link>
         </p>
       </div>
 
-      {/* Side panel — value prop */}
       <aside className="auth-side">
         <div className="auth-side__content">
-          <p className="auth-side__eyebrow">Para times de produto</p>
+          <p className="auth-side__eyebrow">Continuidade de produto</p>
           <h2 className="auth-side__title">
-            Escreva user stories que devs entendem na primeira leitura.
+            Sua bancada pronta para o próximo refinamento.
           </h2>
           <ul className="auth-side__list">
-            <li>User story estruturada com critérios de aceite</li>
-            <li>Trincas e teste de resistência no mesmo fluxo</li>
-            <li>Histórico de peças forjadas com versões por feature</li>
-            <li>Cópia em Markdown e formato para Jira</li>
-            <li>Guias práticos no Campo de Treino ProdForge</li>
+            <li>Histórico preservado por usuário</li>
+            <li>Versões salvas por feature</li>
+            <li>Critérios de aceite consistentes</li>
+            <li>Saída pronta para backlog e Jira</li>
           </ul>
           <div className="auth-side__preview">
-            <p className="auth-side__preview-label">Exemplo de saída</p>
+            <p className="auth-side__preview-label">Última peça na bancada</p>
             <div className="auth-side__preview-card">
               <p className="auth-side__preview-story">
                 "Como <em>responsável pelo cadastro</em>, quero{' '}

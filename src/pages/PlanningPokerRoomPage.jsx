@@ -8,6 +8,7 @@ import {
   getPlanningPokerSession,
   joinPlanningPokerSession,
   listPlanningPokerParticipants,
+  listPlanningPokerResults,
   listPlanningPokerRounds,
   listPlanningPokerSessionStories,
   listPlanningPokerVotes,
@@ -135,6 +136,7 @@ function PlanningPokerRoomPage() {
   const [sessionStories, setSessionStories] = useState([])
   const [participants, setParticipants] = useState([])
   const [rounds, setRounds] = useState([])
+  const [results, setResults] = useState([])
   const [voteStatus, setVoteStatus] = useState([])
   const [revealedVotes, setRevealedVotes] = useState([])
   const [selectedSessionStoryId, setSelectedSessionStoryId] = useState('')
@@ -195,6 +197,32 @@ function PlanningPokerRoomPage() {
     [currentRound?.id, revealedVotes],
   )
   const voteSummary = useMemo(() => buildVoteSummary(currentRoundVotes), [currentRoundVotes])
+  const currentStoryResult = useMemo(
+    () => results.find((result) => result.session_story_id === currentStory?.id) ?? null,
+    [currentStory?.id, results],
+  )
+  const storyFinalEstimate = currentStoryResult?.final_estimate ?? currentStory?.final_estimate ?? ''
+  const persistedSummary = useMemo(() => {
+    if (!currentStoryResult && !currentStory?.final_estimate) return null
+
+    return {
+      average: currentStoryResult?.average ?? null,
+      median: currentStoryResult?.median ?? null,
+      lowest: currentStoryResult?.lowest_vote ?? null,
+      highest: currentStoryResult?.highest_vote ?? null,
+      divergence: currentStoryResult?.divergence ?? null,
+      suggestion: currentStoryResult?.final_estimate ?? currentStory?.final_estimate ?? '',
+      voteCount: currentStoryResult?.vote_count ?? null,
+      abstentionCount: currentStoryResult?.abstention_count ?? null,
+      unknownCount: currentStoryResult?.unknown_count ?? null,
+    }
+  }, [currentStory?.final_estimate, currentStoryResult])
+  const visibleSummary =
+    currentRound?.status === 'revealed' ? voteSummary : persistedSummary
+  const shouldShowResult =
+    currentRound?.status === 'revealed' ||
+    Boolean(currentStoryResult) ||
+    Boolean(currentStory?.final_estimate)
   const scoringValues = Array.isArray(session?.scoring_values) ? session.scoring_values : []
   const eligibleVoters = useMemo(
     () =>
@@ -209,6 +237,7 @@ function PlanningPokerRoomPage() {
     [currentRoundVoteStatus, userId],
   )
   const roomClosed = session?.status === 'completed' || session?.status === 'canceled'
+  const storyLocked = ['estimated', 'skipped'].includes(currentStory?.status)
   const canVote =
     Boolean(currentRound) &&
     currentRound.status === 'voting' &&
@@ -242,11 +271,12 @@ function PlanningPokerRoomPage() {
       hasJoinedRef.current = true
     }
 
-    const [storiesResponse, participantsResponse, roundsResponse, voteStatusResponse, manageResponse] =
+    const [storiesResponse, participantsResponse, roundsResponse, resultsResponse, voteStatusResponse, manageResponse] =
       await Promise.all([
         listPlanningPokerSessionStories({ sessionId, userId }),
         listPlanningPokerParticipants({ sessionId, userId }),
         listPlanningPokerRounds({ sessionId, userId }),
+        listPlanningPokerResults({ sessionId, userId }),
         listPlanningPokerVoteStatus({ sessionId, userId }),
         checkCanManageProject({ projectId: nextSession.project_id, userId }),
       ])
@@ -263,6 +293,7 @@ function PlanningPokerRoomPage() {
     setSessionStories(storiesResponse.success ? storiesResponse.data ?? [] : [])
     setParticipants(participantsResponse.success ? participantsResponse.data ?? [] : [])
     setRounds(nextRounds)
+    setResults(resultsResponse.success ? resultsResponse.data ?? [] : [])
     setVoteStatus(voteStatusResponse.success ? voteStatusResponse.data ?? [] : [])
     setRevealedVotes(votesResponses.flatMap((response) => (response.success ? response.data ?? [] : [])))
     setCanManageProject(manageResponse.success ? Boolean(manageResponse.data) : false)
@@ -469,6 +500,7 @@ function PlanningPokerRoomPage() {
               >
                 <strong>{story.user_story?.title ?? 'História sem título'}</strong>
                 <span>{getStoryStatusLabel(story.status)}</span>
+                {story.final_estimate ? <span>Estimativa: {story.final_estimate}</span> : null}
               </button>
             ))}
           </div>
@@ -483,6 +515,11 @@ function PlanningPokerRoomPage() {
                 currentStory?.user_story?.input_context ??
                 'Inicie uma rodada para estimar este item.'}
             </p>
+            {storyFinalEstimate ? (
+              <div className="planning-poker-room__story-pills" aria-label="Estimativa da história">
+                <span>Estimativa selada: {storyFinalEstimate}</span>
+              </div>
+            ) : null}
           </div>
 
           <div className="planning-poker-room__round-status">
@@ -521,7 +558,7 @@ function PlanningPokerRoomPage() {
                 type="button"
                 className="btn btn-primary btn-small"
                 onClick={handleStartRound}
-                disabled={!currentStory || roomClosed || isActing}
+                disabled={!currentStory || roomClosed || storyLocked || isActing}
               >
                 {currentRound ? 'Reacender a Fogueira' : 'Acender Fogueira'}
               </button>
@@ -544,33 +581,49 @@ function PlanningPokerRoomPage() {
             </div>
           ) : null}
 
-          {currentRound?.status === 'revealed' ? (
+          {shouldShowResult && visibleSummary ? (
             <section className="planning-poker-room__result" aria-label="Resultado da rodada">
               <div className="planning-poker-room__summary-grid">
-                <span>Média: {formatNumber(voteSummary.average)}</span>
-                <span>Mediana: {formatNumber(voteSummary.median)}</span>
-                <span>Menor: {formatNumber(voteSummary.lowest)}</span>
-                <span>Maior: {formatNumber(voteSummary.highest)}</span>
-                <span>Divergência: {formatNumber(voteSummary.divergence)}</span>
+                {storyFinalEstimate ? <span>Final: {storyFinalEstimate}</span> : null}
+                <span>Média: {formatNumber(visibleSummary.average)}</span>
+                <span>Mediana: {formatNumber(visibleSummary.median)}</span>
+                <span>Menor: {formatNumber(visibleSummary.lowest)}</span>
+                <span>Maior: {formatNumber(visibleSummary.highest)}</span>
+                <span>Divergência: {formatNumber(visibleSummary.divergence)}</span>
+                {visibleSummary.voteCount !== null && visibleSummary.voteCount !== undefined ? (
+                  <span>Votos: {visibleSummary.voteCount}</span>
+                ) : null}
               </div>
 
               <div className="planning-poker-room__revealed-votes">
-                {currentRoundVotes.map((vote) => {
-                  const participantIndex = participants.findIndex(
-                    (participant) => participant.id === vote.participant_id,
-                  )
-                  const participant = participants[participantIndex]
+                {currentRoundVotes.length > 0 ? (
+                  currentRoundVotes.map((vote) => {
+                    const participantIndex = participants.findIndex(
+                      (participant) => participant.id === vote.participant_id,
+                    )
+                    const participant = participants[participantIndex]
 
-                  return (
-                    <div key={vote.id} className="planning-poker-room__revealed-vote">
-                      <span>{getParticipantLabel(participant, userId, participantIndex)}</span>
-                      <strong>{vote.vote_value}</strong>
-                    </div>
-                  )
-                })}
+                    return (
+                      <div key={vote.id} className="planning-poker-room__revealed-vote">
+                        <span>{getParticipantLabel(participant, userId, participantIndex)}</span>
+                        <strong>{vote.vote_value}</strong>
+                      </div>
+                    )
+                  })
+                ) : (
+                  <p className="planning-poker-room__result-note">
+                    Votos individuais disponíveis após a revelação das runas.
+                  </p>
+                )}
               </div>
 
-              {canFacilitate ? (
+              {storyFinalEstimate && currentStory?.status === 'estimated' ? (
+                <p className="planning-poker-room__result-note">
+                  Esta história já tem uma estimativa selada.
+                </p>
+              ) : null}
+
+              {canFacilitate && currentRound?.status === 'revealed' && currentStory?.status !== 'estimated' ? (
                 <form
                   className="planning-poker-room__seal"
                   onSubmit={(event) => {
@@ -584,7 +637,7 @@ function PlanningPokerRoomPage() {
                       type="text"
                       value={finalEstimate}
                       onChange={(event) => setFinalEstimate(event.target.value)}
-                      placeholder={voteSummary.suggestion || 'Ex.: 5'}
+                      placeholder={visibleSummary.suggestion || 'Ex.: 5'}
                       disabled={isActing}
                     />
                   </label>

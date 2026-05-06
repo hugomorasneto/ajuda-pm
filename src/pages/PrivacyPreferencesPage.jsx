@@ -16,7 +16,7 @@ const STATUS_COPY = {
   [PRIVACY_CONSENT_STATUS.accepted]: {
     label: 'Todos aceitos',
     tone: 'accepted',
-    description: 'Você autorizou tecnologias essenciais e recursos opcionais disponíveis.',
+    description: 'Você autorizou tecnologias essenciais, analíticas e de marketing neste navegador.',
   },
   [PRIVACY_CONSENT_STATUS.essentialOnly]: {
     label: 'Apenas essenciais',
@@ -41,7 +41,7 @@ const cookieCategories = [
     title: 'Cookies essenciais',
     badge: 'Sempre ativos',
     description:
-      'Mantêm autenticação, segurança, sessão, preferências básicas e funcionamento técnico do ProdForge.',
+      'Necessários para login, segurança e funcionamento básico do ProdForge.',
     locked: true,
   },
   {
@@ -49,15 +49,14 @@ const cookieCategories = [
     title: 'Cookies analíticos',
     badge: 'Opcional',
     description:
-      'Ajudam a entender uso, erros, páginas visitadas e pontos de fricção para melhorar o produto.',
+      'Ajudam a entender uso, identificar pontos de fricção e melhorar o produto.',
   },
   {
     id: PRIVACY_CONSENT_CATEGORIES.marketing,
     title: 'Cookies de marketing',
-    badge: 'Desativados nesta fase',
+    badge: 'Opcional',
     description:
-      'Reservados para campanhas, atribuição e comunicação comercial. O ProdForge não usa essa categoria no momento.',
-    disabled: true,
+      'Usados futuramente para campanhas e mensuração. Se ainda não houver recursos opcionais ativos, a escolha fica registrada para uso futuro.',
   },
 ]
 
@@ -90,9 +89,9 @@ function getPreferenceFormState(consent) {
 }
 
 function getCategoryStatusLabel(consent, categoryId) {
-  if (categoryId === PRIVACY_CONSENT_CATEGORIES.essential) return 'Ativos'
-  if (!PRIVACY_CONSENT_CATEGORY_AVAILABILITY[categoryId]) return 'Desativados'
-  return consent?.categories?.[categoryId] ? 'Autorizados' : 'Não autorizados'
+  if (categoryId === PRIVACY_CONSENT_CATEGORIES.essential) return 'Sempre ativos'
+  if (!PRIVACY_CONSENT_CATEGORY_AVAILABILITY[categoryId]) return 'Indisponíveis'
+  return consent?.categories?.[categoryId] ? 'Autorizados' : 'Recusados'
 }
 
 function PrivacyPreferencesPage() {
@@ -153,8 +152,8 @@ function PrivacyPreferencesPage() {
     syncConsent(nextConsent)
     setFeedbackMessage(
       status === PRIVACY_CONSENT_STATUS.accepted
-        ? 'Preferência atualizada: todos os recursos opcionais disponíveis foram aceitos.'
-        : 'Preferência atualizada: cookies opcionais foram recusados.',
+        ? 'Preferência atualizada: cookies analíticos e de marketing foram aceitos.'
+        : 'Preferência atualizada: cookies analíticos e de marketing foram recusados.',
     )
   }
 
@@ -281,6 +280,7 @@ function PrivacyPreferencesPage() {
               const inputId = `privacy-preferences-${category.id}`
               const isDisabled =
                 category.locked || category.disabled || !PRIVACY_CONSENT_CATEGORY_AVAILABILITY[category.id]
+              const descriptionId = `${inputId}-description`
 
               return (
                 <label
@@ -294,18 +294,23 @@ function PrivacyPreferencesPage() {
                   key={category.id}
                 >
                   <input
+                    aria-describedby={descriptionId}
                     checked={Boolean(selectedCategories[category.id])}
+                    className="privacy-preferences-option__input"
                     disabled={isDisabled}
                     id={inputId}
                     onChange={() => handleToggleCategory(category.id)}
                     type="checkbox"
                   />
+                  <span className="privacy-preferences-option__switch" aria-hidden="true">
+                    <span />
+                  </span>
                   <span className="privacy-preferences-option__copy">
                     <span className="privacy-preferences-option__topline">
                       <strong>{category.title}</strong>
                       <em>{category.badge}</em>
                     </span>
-                    <span>{category.description}</span>
+                    <span id={descriptionId}>{category.description}</span>
                   </span>
                 </label>
               )
@@ -316,6 +321,13 @@ function PrivacyPreferencesPage() {
             <button
               type="button"
               className="forge-button forge-button--ember forge-button--md"
+              onClick={handleSavePreferences}
+            >
+              Salvar preferências
+            </button>
+            <button
+              type="button"
+              className="forge-button forge-button--metal forge-button--md"
               onClick={() => handleSetConsent(PRIVACY_CONSENT_STATUS.accepted)}
             >
               Aceitar todos
@@ -326,13 +338,6 @@ function PrivacyPreferencesPage() {
               onClick={() => handleSetConsent(PRIVACY_CONSENT_STATUS.essentialOnly)}
             >
               Recusar opcionais
-            </button>
-            <button
-              type="button"
-              className="forge-button forge-button--metal forge-button--md"
-              onClick={handleSavePreferences}
-            >
-              Salvar preferências
             </button>
             <button
               type="button"
@@ -357,22 +362,23 @@ function PrivacyPreferencesPage() {
             <article>
               <h3>Cookies essenciais</h3>
               <p>
-                São necessários para manter site, autenticação, segurança, sessão e funcionamento
-                básico do ProdForge. Eles não são bloqueados por esta preferência.
+                São necessários para login, segurança, sessão e funcionamento básico do ProdForge.
+                Eles não são bloqueados por esta preferência.
               </p>
             </article>
             <article>
               <h3>Cookies analíticos</h3>
               <p>
-                Podem apoiar métricas agregadas de navegação, desempenho, erros e evolução da
-                experiência. Eles só devem ser usados quando autorizados neste navegador.
+                Ajudam a entender uso, desempenho, erros e oportunidades de melhoria. Eles só devem
+                ser usados quando autorizados neste navegador.
               </p>
             </article>
             <article>
               <h3>Cookies de marketing</h3>
               <p>
-                A categoria está prevista para transparência, mas permanece desativada nesta fase.
-                Se ela for ativada no futuro, a versão do consentimento deve ser revisada.
+                São usados futuramente para campanhas e mensuração. Se ainda não houver recursos
+                opcionais ativos nessa categoria, a escolha apenas deixa sua preferência registrada
+                para uso futuro.
               </p>
             </article>
           </div>

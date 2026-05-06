@@ -30,7 +30,14 @@ export function getAuthErrorMessage(error) {
   const message = rawMessage.toLowerCase()
 
   if (message.includes('invalid login credentials')) {
-    return 'E-mail ou senha inválidos.'
+    return 'E-mail ou senha incorretos.'
+  }
+
+  if (
+    message.includes('invalid email') ||
+    (message.includes('email') && message.includes('invalid'))
+  ) {
+    return 'Digite um e-mail válido.'
   }
 
   if (message.includes('user already registered')) {
@@ -53,7 +60,7 @@ export function getAuthErrorMessage(error) {
     return 'Limite temporário de tentativas ou envios atingido. Aguarde alguns minutos e tente novamente.'
   }
 
-  return rawMessage || 'Não foi possível concluir a autenticação agora.'
+  return 'Não foi possível concluir agora. Tente novamente.'
 }
 
 export function maskEmail(email) {

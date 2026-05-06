@@ -1,4 +1,8 @@
 import { supabase } from '../lib/supabaseClient'
+import {
+  hasPrivacyConsentForCategory,
+  PRIVACY_CONSENT_CATEGORIES,
+} from '../utils/privacyConsent'
 
 function sanitizeMetadata(metadata) {
   if (!metadata || typeof metadata !== 'object') return null
@@ -8,6 +12,9 @@ function sanitizeMetadata(metadata) {
 export async function trackEvent({ event_name, event_category = null, page_path = null, metadata = null }) {
   try {
     if (!event_name) return { success: false }
+    if (!hasPrivacyConsentForCategory(PRIVACY_CONSENT_CATEGORIES.analytics)) {
+      return { success: false, skipped: true, reason: 'privacy_consent_required' }
+    }
 
     const { data } = await supabase.auth.getUser()
     const userId = data?.user?.id ?? null
@@ -31,4 +38,3 @@ export async function trackEvent({ event_name, event_category = null, page_path 
     return { success: false }
   }
 }
-
