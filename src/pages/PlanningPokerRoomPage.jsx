@@ -31,6 +31,7 @@ import {
   startPlanningPokerRound,
   subscribeToPlanningPokerSession,
 } from '../services/planningPokerService'
+import { sendPlanningPokerInviteEmail } from '../services/planningPokerInviteService'
 
 function formatDateTime(value) {
   if (!value) return '-'
@@ -1137,9 +1138,8 @@ function PlanningPokerRoomPage() {
       role: 'member',
       userId,
     })
-    setIsAddingInviteMember(false)
-
     if (!response.success) {
+      setIsAddingInviteMember(false)
       const rawMessage = response.error?.message ?? 'Não foi possível adicionar esse e-mail ao projeto.'
       const inviteHint = rawMessage.includes('Usuário não encontrado')
         ? 'Esse e-mail ainda não tem conta confirmada no ProdForge. Peça para criar a conta pelo link e adicione o e-mail depois da confirmação.'
@@ -1148,8 +1148,22 @@ function PlanningPokerRoomPage() {
       return
     }
 
+    const emailResponse = await sendPlanningPokerInviteEmail({
+      email: response.data?.email ?? safeEmail,
+      projectId: session?.project_id ?? projectId,
+      sessionId: session?.id ?? sessionId,
+      inviteUrl,
+    })
+    setIsAddingInviteMember(false)
+
     setInviteEmail('')
-    setInviteMessage('Participante adicionado ao projeto. Agora envie o link da Roda para esse e-mail.')
+    setInviteMessage(
+      emailResponse.success
+        ? 'Participante adicionado ao projeto e convite enviado por e-mail.'
+        : `Participante adicionado, mas o e-mail não foi enviado. ${
+            emailResponse.error?.message ?? 'Copie o convite e envie manualmente.'
+          }`,
+    )
     await loadRoom()
   }
 
@@ -2002,9 +2016,9 @@ function PlanningPokerRoomPage() {
             <form className="planning-poker-room__invite-member" onSubmit={handleInviteProjectMember}>
               <div>
                 <span>Convidar participante</span>
-                <strong>Adicionar e-mail ao projeto</strong>
+                <strong>Adicionar e enviar convite</strong>
                 <p>
-                  O link da Roda libera a sala para quem já tem acesso ao projeto. Adicione o e-mail e envie o link pelo canal do time.
+                  O participante entra com a mesma conta deste e-mail. Ao adicionar, o ProdForge envia o link da Roda automaticamente.
                 </p>
               </div>
               {canManageProject ? (
@@ -2024,7 +2038,7 @@ function PlanningPokerRoomPage() {
                     className="btn btn-secondary btn-small"
                     disabled={isAddingInviteMember || !session}
                   >
-                    {isAddingInviteMember ? 'Adicionando...' : 'Adicionar ao projeto'}
+                    {isAddingInviteMember ? 'Enviando convite...' : 'Adicionar e enviar convite'}
                   </button>
                 </>
               ) : (

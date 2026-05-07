@@ -1,6 +1,6 @@
 param(
   [string]$EnvFile = '.env.local',
-  [string[]]$Functions = @('generate-user-story', 'contact-message')
+  [string[]]$Functions = @('generate-user-story', 'contact-message', 'planning-poker-invite')
 )
 
 . (Join-Path $PSScriptRoot 'supabase-context.ps1')

@@ -96,7 +96,7 @@ begin
 
   insert into public.project_members (project_id, user_id, role)
   values (p_project_id, p_user_id, v_role)
-  on conflict (project_id, user_id) do update
+  on conflict on constraint project_members_pkey do update
     set role = excluded.role;
 
   return v_role;
@@ -125,7 +125,7 @@ where pm.role in ('owner', 'admin')
     where t.project_id = pm.project_id
       and tm.user_id = pm.user_id
   )
-on conflict (project_id, user_id, source_type, source_id) do update
+on conflict on constraint project_member_sources_pkey do update
   set role = excluded.role;
 
 insert into public.project_member_sources (project_id, user_id, source_type, source_id, role, created_at, updated_at)
@@ -139,7 +139,7 @@ select
   tm.created_at
 from public.team_members tm
 join public.teams t on t.id = tm.team_id
-on conflict (project_id, user_id, source_type, source_id) do update
+on conflict on constraint project_member_sources_pkey do update
   set role = excluded.role;
 
 create or replace function public.handle_project_owner_member()
@@ -151,7 +151,7 @@ as $$
 begin
   insert into public.project_member_sources (project_id, user_id, source_type, source_id, role)
   values (new.id, new.owner_id, 'direct', new.id, 'owner')
-  on conflict (project_id, user_id, source_type, source_id) do update
+  on conflict on constraint project_member_sources_pkey do update
     set role = 'owner';
 
   perform public.refresh_project_member_from_sources(new.id, new.owner_id);
@@ -213,7 +213,7 @@ begin
 
   insert into public.project_member_sources (project_id, user_id, source_type, source_id, role)
   values (p_project_id, v_user_id, 'direct', p_project_id, v_role)
-  on conflict (project_id, user_id, source_type, source_id) do update
+  on conflict on constraint project_member_sources_pkey do update
     set role = excluded.role;
 
   perform public.refresh_project_member_from_sources(p_project_id, v_user_id);
@@ -283,7 +283,7 @@ begin
 
   insert into public.project_member_sources (project_id, user_id, source_type, source_id, role)
   values (p_project_id, p_member_user_id, 'direct', p_project_id, v_role)
-  on conflict (project_id, user_id, source_type, source_id) do update
+  on conflict on constraint project_member_sources_pkey do update
     set role = excluded.role;
 
   perform public.refresh_project_member_from_sources(p_project_id, p_member_user_id);
@@ -415,7 +415,7 @@ begin
 
     insert into public.project_member_sources (project_id, user_id, source_type, source_id, role)
     values (v_project_id, v_user_id, 'team', v_team_id, v_role)
-    on conflict (project_id, user_id, source_type, source_id) do update
+    on conflict on constraint project_member_sources_pkey do update
       set role = excluded.role;
   end if;
 

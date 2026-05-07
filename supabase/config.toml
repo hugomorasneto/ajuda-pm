@@ -7,3 +7,6 @@ verify_jwt = true
 
 [functions.contact-message]
 verify_jwt = false
+
+[functions.planning-poker-invite]
+verify_jwt = true
