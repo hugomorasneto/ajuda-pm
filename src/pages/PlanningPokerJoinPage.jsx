@@ -86,6 +86,7 @@ function PlanningPokerJoinPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const codeFromUrl = useMemo(() => normalizeInviteCode(searchParams.get('codigo')), [searchParams])
   const projectIdFromUrl = searchParams.get('projectId') ?? ''
+  const storyIdFromUrl = searchParams.get('storyId') ?? ''
   const [inviteCode, setInviteCode] = useState(() => codeFromUrl)
   const [projects, setProjects] = useState([])
   const [selectedProjectId, setSelectedProjectId] = useState(projectIdFromUrl)
@@ -665,6 +666,29 @@ function PlanningPokerJoinPage() {
   }, [loadSelectedProjectContext])
 
   useEffect(() => {
+    if (!storyIdFromUrl || !selectedProjectId || isLoadingProjectContext) return
+
+    const timerId = window.setTimeout(() => {
+      const storyFromShortcut = readyStories.find((story) => story.id === storyIdFromUrl)
+      if (!storyFromShortcut) {
+        if (readyStories.length > 0) {
+          setPlanningMessage('A história enviada pela Bancada não está disponível entre as histórias prontas deste projeto.')
+        }
+        return
+      }
+
+      setSelectedStoryIds((current) =>
+        current.includes(storyIdFromUrl) ? current : [storyIdFromUrl, ...current],
+      )
+      setReadyStorySearch('')
+      setHideActiveSessionStories(false)
+      setPlanningMessage('História selecionada para criar a Roda.')
+    }, 0)
+
+    return () => window.clearTimeout(timerId)
+  }, [isLoadingProjectContext, readyStories, selectedProjectId, storyIdFromUrl])
+
+  useEffect(() => {
     if (typeof setTopbarStatus !== 'function') return
 
     setTopbarStatus({
@@ -691,6 +715,7 @@ function PlanningPokerJoinPage() {
     } else {
       nextParams.delete('projectId')
     }
+    nextParams.delete('storyId')
     setSearchParams(nextParams, { replace: true })
   }
 

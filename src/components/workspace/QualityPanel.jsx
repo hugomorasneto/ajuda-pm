@@ -132,6 +132,7 @@ function QualityPanel({
   onCopyPlain,
   onRequestRefine,
   onShowAllAlerts,
+  planningShortcut = null,
   plainCopyMessage,
   isCopyingPlain,
   canRefine = false,
@@ -263,6 +264,20 @@ function QualityPanel({
                   </button>
                 ) : null}
               </div>
+              {planningShortcut ? (
+                <div className="quality-panel__planning-shortcut">
+                  <span>Roda da Fogueira</span>
+                  <p>{planningShortcut.description}</p>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-small"
+                    onClick={planningShortcut.onClick}
+                    disabled={planningShortcut.disabled || planningShortcut.isLoading}
+                  >
+                    {planningShortcut.isLoading ? 'Preparando...' : planningShortcut.buttonLabel}
+                  </button>
+                </div>
+              ) : null}
               {plainCopyMessage ? <p className="copy-message">{plainCopyMessage}</p> : null}
             </RailSection>
 

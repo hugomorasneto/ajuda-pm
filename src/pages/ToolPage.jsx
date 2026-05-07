@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useOutletContext, useSearchParams } from 'react-router-dom'
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import BriefComposer from '../components/workspace/BriefComposer'
 import ProjectContextPanel from '../components/workspace/ProjectContextPanel'
 import QualityPanel from '../components/workspace/QualityPanel'
@@ -28,6 +28,7 @@ function InspectionPreviewCard() {
 }
 
 function ToolPage() {
+  const navigate = useNavigate()
   const [mobileTab, setMobileTab] = useState('entrada')
   const [searchParams] = useSearchParams()
   const projectIdFromQuery = searchParams.get('projectId')
@@ -38,6 +39,7 @@ function ToolPage() {
   const [selectedProjectId, setSelectedProjectId] = useState('')
   const [isLoadingProjects, setIsLoadingProjects] = useState(false)
   const [isCreatingProject, setIsCreatingProject] = useState(false)
+  const [isOpeningPlanningShortcut, setIsOpeningPlanningShortcut] = useState(false)
   const [projectActionMessage, setProjectActionMessage] = useState('')
   const [refineRequestId, setRefineRequestId] = useState(0)
   const [attentionRequestId, setAttentionRequestId] = useState(0)
@@ -59,6 +61,7 @@ function ToolPage() {
     handleSaveEdits,
     handleSelectHistory,
     handleSubmitStory,
+    handleUpdateSelectedStoryEstimationStatus,
     hasReachedLimit,
     isCopying,
     isEditing,
@@ -70,6 +73,7 @@ function ToolPage() {
     result,
     saveMessage,
     selectedStoryId,
+    selectedStoryEstimationStatus,
     selectedStoryProjectId,
     validationErrors,
     workspaceError,
@@ -220,6 +224,48 @@ function ToolPage() {
     setAttentionRequestId((current) => current + 1)
   }
 
+  async function handleOpenPlanningFromWorkspace() {
+    if (!selectedStoryId || !canEditSelectedStory) return
+
+    const linkedProjectId = selectedStoryProjectId
+    const targetProjectId = linkedProjectId || selectedProjectId
+
+    if (!targetProjectId) {
+      setMobileTab('entrada')
+      setProjectActionMessage('Escolha ou crie um projeto para levar esta história para a Roda da Fogueira.')
+      return
+    }
+
+    setIsOpeningPlanningShortcut(true)
+    setProjectActionMessage('')
+
+    if (!linkedProjectId) {
+      const assigned = await handleAssignSelectedStoryToProject(targetProjectId)
+      if (!assigned) {
+        setIsOpeningPlanningShortcut(false)
+        setMobileTab('entrada')
+        setProjectActionMessage('Não foi possível vincular a história ao projeto antes de abrir a Roda.')
+        return
+      }
+    }
+
+    if (selectedStoryEstimationStatus !== 'ready_for_estimation' && selectedStoryEstimationStatus !== 'estimated') {
+      const updated = await handleUpdateSelectedStoryEstimationStatus('ready_for_estimation')
+      if (!updated) {
+        setIsOpeningPlanningShortcut(false)
+        return
+      }
+    }
+
+    setIsOpeningPlanningShortcut(false)
+
+    const query = new URLSearchParams({ projectId: targetProjectId })
+    if (selectedStoryEstimationStatus !== 'estimated') {
+      query.set('storyId', selectedStoryId)
+    }
+    navigate(`/roda?${query.toString()}`)
+  }
+
   const hasDraft = Boolean(
     formValues.problemContext.trim() ||
       formValues.requirements.trim() ||
@@ -234,6 +280,33 @@ function ToolPage() {
   const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? null
   const selectedProjectName = selectedProject?.name ?? 'Sem projeto'
   const projectPillText = selectedProject ? selectedProjectName : 'Peça avulsa'
+  const planningShortcut = reviewStory
+    ? {
+        description: !canEditSelectedStory
+          ? 'Apenas quem criou a história pode prepará-la para estimativa.'
+          : selectedStoryProjectId
+            ? selectedStoryEstimationStatus === 'ready_for_estimation'
+              ? 'Esta história já está pronta para entrar em uma Roda.'
+              : selectedStoryEstimationStatus === 'estimated'
+                ? 'Esta história já possui estimativa. Consulte as Rodas do projeto.'
+                : 'Marque a história como pronta e abra a Roda com o projeto vinculado.'
+            : selectedProjectId
+              ? 'Vincule esta história ao projeto selecionado e abra a Roda em seguida.'
+              : 'Vincule a história a um projeto antes de criar uma Roda.',
+        buttonLabel: selectedStoryProjectId
+          ? selectedStoryEstimationStatus === 'ready_for_estimation'
+            ? 'Criar Roda com esta história'
+            : selectedStoryEstimationStatus === 'estimated'
+              ? 'Abrir Rodas do projeto'
+              : 'Marcar e criar Roda'
+          : selectedProjectId
+            ? 'Vincular e criar Roda'
+            : 'Vincular a projeto',
+        isLoading: isOpeningPlanningShortcut,
+        disabled: !selectedStoryId || !canEditSelectedStory || isOpeningPlanningShortcut || isSavingEdits,
+        onClick: handleOpenPlanningFromWorkspace,
+      }
+    : null
 
   const { setTopbarStatus } = useOutletContext() ?? {}
 
@@ -320,6 +393,7 @@ function ToolPage() {
             onCopyPlain={() => handleCopy(reviewStory)}
             onRequestRefine={handleRequestRefineFromPanel}
             onShowAllAlerts={handleShowAllAlertsFromPanel}
+            planningShortcut={planningShortcut}
             plainCopyMessage={copyMessage}
             isCopyingPlain={isCopying}
             canRefine={canEditSelectedStory}

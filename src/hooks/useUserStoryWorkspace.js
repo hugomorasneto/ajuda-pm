@@ -6,6 +6,7 @@ import {
   listRecentStoryGroups,
   listStoryVersions,
   updateUserStory,
+  updateUserStoryEstimationStatus,
 } from '../services/userStoriesService'
 import {
   generateUserStory,
@@ -161,6 +162,7 @@ export function useUserStoryWorkspace() {
   const [selectedStoryGroupId, setSelectedStoryGroupId] = useState(null)
   const [selectedStoryOwnerId, setSelectedStoryOwnerId] = useState(null)
   const [selectedStoryProjectId, setSelectedStoryProjectId] = useState(null)
+  const [selectedStoryEstimationStatus, setSelectedStoryEstimationStatus] = useState(null)
   const [selectedStoryTitle, setSelectedStoryTitle] = useState('')
   const [selectedBaseInput, setSelectedBaseInput] = useState({ context: '', requirements: '' })
   const [versions, setVersions] = useState([])
@@ -289,6 +291,7 @@ export function useUserStoryWorkspace() {
     setSelectedStoryTitle(story.title ?? mapped.title ?? '')
     setSelectedStoryOwnerId(story.user_id ?? null)
     setSelectedStoryProjectId(story.project_id ?? null)
+    setSelectedStoryEstimationStatus(story.estimation_status ?? 'created')
     setEditDraft({
       title: mapped.title,
       user_story: mapped.user_story,
@@ -331,6 +334,7 @@ export function useUserStoryWorkspace() {
     setSelectedStoryGroupId(null)
     setSelectedStoryOwnerId(null)
     setSelectedStoryProjectId(null)
+    setSelectedStoryEstimationStatus(null)
     setSelectedStoryTitle('')
     setSelectedBaseInput({ context: '', requirements: '' })
     setFormValues({ problemContext: '', requirements: '', adjustment: '' })
@@ -596,6 +600,7 @@ export function useUserStoryWorkspace() {
       setSelectedStoryGroupId(persisted.story_group_id ?? persisted.id)
       setSelectedStoryOwnerId(persisted.user_id ?? userId)
       setSelectedStoryProjectId(persisted.project_id ?? null)
+      setSelectedStoryEstimationStatus(persisted.estimation_status ?? 'created')
       setSelectedStoryTitle(persisted.title ?? generated.title ?? '')
       setSelectedBaseInput({
         context: persisted.input_context ?? contextTrimmed,
@@ -724,6 +729,7 @@ export function useUserStoryWorkspace() {
 
     fillScreenWithStory(response.data[0])
     setSelectedStoryProjectId(response.data[0].project_id ?? null)
+    setSelectedStoryEstimationStatus(response.data[0].estimation_status ?? 'created')
     setSaveMessage(
       response.data[0].project_id
         ? 'História organizada no projeto selecionado.'
@@ -736,6 +742,47 @@ export function useUserStoryWorkspace() {
       event_category: 'workspace',
       page_path: '/tool',
       metadata: { story_id: selectedStoryId, project_id: response.data[0].project_id ?? null },
+    })
+
+    return true
+  }
+
+  async function handleUpdateSelectedStoryEstimationStatus(nextStatus) {
+    if (!userId || !selectedStoryId) return false
+
+    if (!canEditSelectedStory) {
+      setSaveMessage('Apenas quem criou esta história pode alterar o status de estimativa.')
+      return false
+    }
+
+    if (selectedStoryEstimationStatus === nextStatus) {
+      return true
+    }
+
+    setIsSavingEdits(true)
+    const response = await updateUserStoryEstimationStatus({
+      storyId: selectedStoryId,
+      estimationStatus: nextStatus,
+      userId,
+    })
+    setIsSavingEdits(false)
+
+    if (!response.success) {
+      const errorMessage = response.error?.message ?? 'Não foi possível preparar a história para estimativa.'
+      setSaveMessage(errorMessage)
+      return false
+    }
+
+    setSelectedStoryEstimationStatus(response.data?.estimation_status ?? nextStatus)
+    setSaveMessage('História marcada como pronta para estimar.')
+    await loadRecentStories()
+    await loadVersionsByGroup(selectedStoryGroupId)
+
+    trackEvent({
+      event_name: 'user_story_estimation_status_updated',
+      event_category: 'workspace',
+      page_path: '/tool',
+      metadata: { story_id: selectedStoryId, estimation_status: nextStatus },
     })
 
     return true
@@ -761,6 +808,7 @@ export function useUserStoryWorkspace() {
     handleSelectHistory,
     handleSelectVersion,
     handleSubmitStory,
+    handleUpdateSelectedStoryEstimationStatus,
     hasReachedLimit,
     historyError,
     historyFilter,
@@ -779,6 +827,7 @@ export function useUserStoryWorkspace() {
     result,
     saveMessage,
     selectedStoryId,
+    selectedStoryEstimationStatus,
     selectedStoryProjectId,
     selectedVersion,
     setHistoryFilter,
