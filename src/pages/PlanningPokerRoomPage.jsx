@@ -136,6 +136,8 @@ function buildVoteSummary(votes) {
     .filter((vote) => vote.vote_kind === 'estimate' && vote.vote_numeric !== null)
     .map((vote) => Number(vote.vote_numeric))
     .filter((value) => Number.isFinite(value))
+  const abstentionCount = votes.filter((vote) => vote.vote_kind === 'abstain').length
+  const unknownCount = votes.filter((vote) => vote.vote_kind === 'unknown').length
 
   const total = numericVotes.reduce((sum, value) => sum + value, 0)
   const average = numericVotes.length > 0 ? total / numericVotes.length : null
@@ -150,6 +152,10 @@ function buildVoteSummary(votes) {
     highest,
     divergence: lowest !== null && highest !== null ? highest - lowest : null,
     suggestion: median !== null ? formatNumber(median) : '',
+    voteCount: votes.length,
+    estimateCount: numericVotes.length,
+    abstentionCount,
+    unknownCount,
   }
 }
 
@@ -205,6 +211,27 @@ function PlanningPokerRoomPage() {
     )
   }, [selectedSessionStoryId, sessionStories])
 
+  const storyStatusCounts = useMemo(
+    () =>
+      sessionStories.reduce(
+        (counts, story) => {
+          const status = story.status ?? 'pending'
+          return {
+            ...counts,
+            [status]: (counts[status] ?? 0) + 1,
+          }
+        },
+        { pending: 0, voting: 0, estimated: 0, skipped: 0 },
+      ),
+    [sessionStories],
+  )
+  const storyRoundCounts = useMemo(() => {
+    return rounds.reduce((counts, round) => {
+      const currentCount = counts.get(round.session_story_id) ?? 0
+      counts.set(round.session_story_id, currentCount + 1)
+      return counts
+    }, new Map())
+  }, [rounds])
   const currentStoryRounds = useMemo(
     () =>
       rounds
@@ -256,6 +283,56 @@ function PlanningPokerRoomPage() {
     currentRound?.status === 'revealed' ||
     Boolean(currentStoryResult) ||
     Boolean(currentStory?.final_estimate)
+  const consensusInsight = useMemo(() => {
+    if (!shouldShowResult || !visibleSummary) return null
+
+    const numericDivergence = Number(visibleSummary.divergence)
+    const hasNumericDivergence = Number.isFinite(numericDivergence)
+    const suggestion = visibleSummary.suggestion || storyFinalEstimate || ''
+
+    if (!hasNumericDivergence) {
+      return {
+        tone: 'neutral',
+        label: 'Sem consenso numérico',
+        description: 'A rodada teve votos não numéricos ou ainda não possui estimativas suficientes para calcular divergência.',
+        suggestion,
+      }
+    }
+
+    if (numericDivergence === 0) {
+      return {
+        tone: 'strong',
+        label: 'Consenso forte',
+        description: 'Todos os votos numéricos convergiram para o mesmo valor. A estimativa já pode ser selada.',
+        suggestion,
+      }
+    }
+
+    if (numericDivergence <= 2) {
+      return {
+        tone: 'good',
+        label: 'Alinhamento alto',
+        description: 'A divergência é baixa. Confirme se há algum ponto aberto antes de selar a estimativa.',
+        suggestion,
+      }
+    }
+
+    if (numericDivergence <= 5) {
+      return {
+        tone: 'attention',
+        label: 'Divergência moderada',
+        description: 'Vale discutir os votos extremos antes de decidir se a mediana representa o consenso.',
+        suggestion,
+      }
+    }
+
+    return {
+      tone: 'risk',
+      label: 'Divergência alta',
+      description: 'A guilda está desalinhada. Reabra a conversa ou faça uma nova rodada após esclarecer a história.',
+      suggestion,
+    }
+  }, [shouldShowResult, storyFinalEstimate, visibleSummary])
   const scoringValues = Array.isArray(session?.scoring_values) ? session.scoring_values : []
   const eligibleVoters = useMemo(
     () =>
@@ -282,6 +359,13 @@ function PlanningPokerRoomPage() {
     : 'Sem votantes'
   const roomClosed = session?.status === 'completed' || session?.status === 'canceled'
   const storyLocked = ['estimated', 'skipped'].includes(currentStory?.status)
+  const resolvedStoriesCount = storyStatusCounts.estimated + storyStatusCounts.skipped
+  const roomProgressLabel =
+    sessionStories.length > 0
+      ? `${resolvedStoriesCount}/${sessionStories.length} histórias concluídas`
+      : 'Sem histórias'
+  const roomProgressPercent =
+    sessionStories.length > 0 ? Math.round((resolvedStoriesCount / sessionStories.length) * 100) : 0
   const votingExpired = Boolean(
     currentRound?.status === 'voting' && isRoundTimerExpired(currentRound.ends_at, nowTick),
   )
@@ -301,6 +385,14 @@ function PlanningPokerRoomPage() {
       !roomClosed &&
       !isActing &&
       (!requiresFullVotingBeforeReveal || !hasPendingVotes || votingExpired),
+  )
+  const canStartRound = Boolean(
+    canFacilitate &&
+      currentStory &&
+      !roomClosed &&
+      !storyLocked &&
+      !isActing &&
+      currentRound?.status !== 'voting',
   )
   const revotePolicyLabel = session?.allow_revote ? 'Novo voto permitido' : 'Voto único'
   const revealPolicyLabel = session?.reveal_votes_after_all
@@ -322,6 +414,217 @@ function PlanningPokerRoomPage() {
     sessionStories.length > 0 &&
       sessionStories.every((story) => ['estimated', 'skipped'].includes(story.status)),
   )
+  const roomStage = useMemo(() => {
+    if (session?.status === 'completed') {
+      return {
+        tone: 'closed',
+        label: 'Roda finalizada',
+        description: allStoriesResolved
+          ? 'Todas as histórias foram concluídas e salvas no histórico.'
+          : 'A sessão foi finalizada e permanece disponível para consulta.',
+      }
+    }
+
+    if (session?.status === 'canceled') {
+      return {
+        tone: 'closed',
+        label: 'Roda cancelada',
+        description: 'A sessão foi encerrada sem novas votações.',
+      }
+    }
+
+    if (currentRound?.status === 'revealed') {
+      return {
+        tone: 'revealed',
+        label: 'Runas reveladas',
+        description: 'Compare os votos, discuta a divergência e sele a estimativa final.',
+      }
+    }
+
+    if (currentRound?.status === 'voting') {
+      return {
+        tone: votingExpired ? 'expired' : 'voting',
+        label: votingExpired ? 'Tempo encerrado' : 'Votação em andamento',
+        description: votingExpired
+          ? 'Os votos restantes foram bloqueados. O facilitador pode revelar as runas.'
+          : 'As cartas seguem ocultas para todos até a revelação.',
+      }
+    }
+
+    if (currentStory?.status === 'estimated') {
+      return {
+        tone: 'closed',
+        label: 'História estimada',
+        description: 'Selecione outra história pendente ou finalize a sessão.',
+      }
+    }
+
+    if (currentStory?.status === 'skipped') {
+      return {
+        tone: 'closed',
+        label: 'História pulada',
+        description: 'Selecione outra história para continuar a Roda.',
+      }
+    }
+
+    return {
+      tone: 'idle',
+      label: canFacilitate ? 'Pronta para iniciar' : 'Aguardando facilitador',
+      description: canFacilitate
+        ? 'Acenda a fogueira para abrir a votação da história atual.'
+        : 'O facilitador inicia a rodada quando a guilda estiver pronta.',
+    }
+  }, [allStoriesResolved, canFacilitate, currentRound?.status, currentStory?.status, session?.status, votingExpired])
+  const facilitatorPanel = useMemo(() => {
+    if (roomClosed) {
+      return {
+        title: 'Sessão encerrada',
+        description: 'As ações de facilitação ficam bloqueadas após o encerramento da Roda.',
+      }
+    }
+
+    if (currentRound?.status === 'revealed') {
+      return {
+        title: 'Selar ou reacender',
+        description: 'Use o consenso da conversa para selar a estimativa ou abra nova rodada se a divergência persistir.',
+      }
+    }
+
+    if (currentRound?.status === 'voting') {
+      return {
+        title: votingExpired ? 'Tempo encerrado' : 'Votação aberta',
+        description: votingExpired
+          ? 'Revele as runas para liberar a discussão dos votos.'
+          : 'Acompanhe a presença dos votos sem ver valores individuais.',
+      }
+    }
+
+    if (storyLocked) {
+      return {
+        title: 'História encerrada',
+        description: 'Escolha outra história pendente para continuar a estimativa.',
+      }
+    }
+
+    return {
+      title: 'Comandos da Roda',
+      description: 'Inicie a votação, revele as runas ou pule a história quando necessário.',
+    }
+  }, [currentRound?.status, roomClosed, storyLocked, votingExpired])
+  const participantPanel = useMemo(() => {
+    const roleLabel = currentParticipant?.role === 'observer' ? 'Observador' : 'Votante'
+
+    if (roomClosed) {
+      return {
+        tone: 'closed',
+        title: 'Roda encerrada',
+        description: 'A sessão terminou. Você ainda pode consultar o resultado das histórias estimadas.',
+        role: roleLabel,
+        status: 'Consulta',
+        action: 'Revisar resultado',
+      }
+    }
+
+    if (!currentParticipant) {
+      return {
+        tone: 'idle',
+        title: 'Entrando na guilda',
+        description: 'Estamos registrando sua presença na sala antes de liberar a participação.',
+        role: 'Carregando',
+        status: 'Entrando',
+        action: 'Aguardar',
+      }
+    }
+
+    if (currentParticipant.role === 'observer') {
+      return {
+        tone: 'observer',
+        title: 'Você está como observador',
+        description: 'Acompanhe a conversa e os resultados. Observadores não votam nesta Roda.',
+        role: roleLabel,
+        status: currentRound?.status === 'revealed' ? 'Votos revelados' : 'Sem voto',
+        action: currentRound?.status === 'revealed' ? 'Acompanhar discussão' : 'Aguardar revelação',
+      }
+    }
+
+    if (currentRound?.status === 'voting') {
+      if (votingExpired) {
+        return {
+          tone: 'expired',
+          title: 'Tempo encerrado',
+          description: 'A votação foi bloqueada pelo timer. Aguarde o facilitador revelar as runas.',
+          role: roleLabel,
+          status: hasUserVoted ? 'Voto registrado' : 'Sem voto',
+          action: 'Aguardar revelação',
+        }
+      }
+
+      if (hasUserVoted) {
+        return {
+          tone: 'ready',
+          title: 'Voto registrado',
+          description: session?.allow_revote
+            ? 'Seu voto continua oculto. Você pode trocar a carta até a revelação.'
+            : 'Seu voto continua oculto. Esta Roda não permite troca antes da revelação.',
+          role: roleLabel,
+          status: session?.allow_revote ? 'Troca permitida' : 'Troca bloqueada',
+          action: 'Aguardar a guilda',
+        }
+      }
+
+      return {
+        tone: canVote ? 'voting' : 'idle',
+        title: canVote ? 'Escolha sua carta' : 'Aguardando liberação',
+        description: canVote
+          ? 'Selecione uma runa. Ninguém vê o valor do seu voto antes da revelação.'
+          : 'A votação está aberta, mas sua participação ainda não está liberada para esta rodada.',
+        role: roleLabel,
+        status: canVote ? 'Voto pendente' : 'Sem ação',
+        action: canVote ? 'Votar agora' : 'Aguardar',
+      }
+    }
+
+    if (currentRound?.status === 'revealed') {
+      return {
+        tone: 'revealed',
+        title: 'Runas reveladas',
+        description: 'Os votos estão visíveis. Participe da discussão antes da estimativa ser selada.',
+        role: roleLabel,
+        status: hasUserVoted ? 'Voto aberto' : 'Sem voto registrado',
+        action: 'Discutir consenso',
+      }
+    }
+
+    if (storyLocked) {
+      return {
+        tone: 'closed',
+        title: 'História encerrada',
+        description: 'Esta história já foi concluída nesta Roda. Aguarde a próxima seleção.',
+        role: roleLabel,
+        status: getStoryStatusLabel(currentStory?.status),
+        action: 'Aguardar próxima história',
+      }
+    }
+
+    return {
+      tone: 'idle',
+      title: 'Aguardando facilitador',
+      description: 'A votação começa quando o facilitador acender a fogueira da história atual.',
+      role: roleLabel,
+      status: 'Sem rodada ativa',
+      action: 'Aguardar início',
+    }
+  }, [
+    canVote,
+    currentParticipant,
+    currentRound?.status,
+    currentStory?.status,
+    hasUserVoted,
+    roomClosed,
+    session?.allow_revote,
+    storyLocked,
+    votingExpired,
+  ])
   const roomGuidance = useMemo(() => {
     if (session?.status === 'completed') {
       return allStoriesResolved
@@ -667,6 +970,37 @@ function PlanningPokerRoomPage() {
       {message ? <p className="projects-page__message">{message}</p> : null}
       {isLoading ? <p className="projects-page__state">Carregando sala...</p> : null}
 
+      {session ? (
+        <section
+          className={`panel planning-poker-room__command-bar planning-poker-room__command-bar--${roomStage.tone}`}
+          aria-label="Status operacional da Roda"
+        >
+          <div className="planning-poker-room__command-copy">
+            <p className="projects-page__eyebrow">Status da Roda</p>
+            <h2>{roomStage.label}</h2>
+            <p>{roomStage.description}</p>
+          </div>
+          <div className="planning-poker-room__command-metrics" aria-label="Resumo da sessão">
+            <span>
+              <small>Histórias</small>
+              <strong>{roomProgressLabel}</strong>
+            </span>
+            <span>
+              <small>Votantes</small>
+              <strong>{votingProgressLabel}</strong>
+            </span>
+            <span>
+              <small>Timer</small>
+              <strong>{remainingTimeLabel}</strong>
+            </span>
+            <span>
+              <small>Privacidade</small>
+              <strong>{currentRound?.status === 'revealed' ? 'Votos revelados' : 'Votos ocultos'}</strong>
+            </span>
+          </div>
+        </section>
+      ) : null}
+
       <div className="planning-poker-room__layout">
         <aside className="panel planning-poker-room__stories" aria-label="Histórias da sessão">
           <div className="projects-page__section-header">
@@ -676,24 +1010,70 @@ function PlanningPokerRoomPage() {
             </div>
           </div>
 
+          <div className="planning-poker-room__story-progress" aria-label="Progresso das histórias da sessão">
+            <div className="planning-poker-room__story-progress-header">
+              <span>Progresso</span>
+              <strong>{roomProgressLabel}</strong>
+            </div>
+            <div
+              className="planning-poker-room__story-progress-bar"
+              role="progressbar"
+              aria-label="Histórias concluídas"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow={roomProgressPercent}
+            >
+              <span style={{ width: `${roomProgressPercent}%` }} />
+            </div>
+            <div className="planning-poker-room__story-progress-chips" aria-label="Status das histórias">
+              <span>{storyStatusCounts.pending} pendentes</span>
+              <span>{storyStatusCounts.voting} em votação</span>
+              <span>{storyStatusCounts.estimated} estimadas</span>
+              <span>{storyStatusCounts.skipped} puladas</span>
+            </div>
+          </div>
+
           <div className="planning-poker-room__story-list">
-            {sessionStories.map((story) => (
-              <button
-                key={story.id}
-                type="button"
-                className={`planning-poker-room__story-card ${
-                  story.id === currentStory?.id ? 'planning-poker-room__story-card--active' : ''
-                }`.trim()}
-                onClick={() => {
-                  setSelectedSessionStoryId(story.id)
-                  setFinalEstimate('')
-                }}
-              >
-                <strong>{story.user_story?.title ?? 'História sem título'}</strong>
-                <span>{getStoryStatusLabel(story.status)}</span>
-                {story.final_estimate ? <span>Estimativa: {story.final_estimate}</span> : null}
-              </button>
-            ))}
+            {sessionStories.length > 0 ? (
+              sessionStories.map((story) => {
+                const safeStatus = story.status ?? 'pending'
+                const isActive = story.id === currentStory?.id
+                const storyRoundCount = storyRoundCounts.get(story.id) ?? 0
+                const storyRoundLabel = storyRoundCount === 1 ? '1 rodada' : `${storyRoundCount} rodadas`
+
+                return (
+                  <button
+                    key={story.id}
+                    type="button"
+                    className={[
+                      'planning-poker-room__story-card',
+                      `planning-poker-room__story-card--${safeStatus}`,
+                      isActive ? 'planning-poker-room__story-card--active' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    onClick={() => {
+                      setSelectedSessionStoryId(story.id)
+                      setFinalEstimate('')
+                    }}
+                  >
+                    <div className="planning-poker-room__story-card-header">
+                      <strong>{story.user_story?.title ?? 'História sem título'}</strong>
+                      {isActive ? <span>Atual</span> : null}
+                    </div>
+                    <div className="planning-poker-room__story-card-meta">
+                      <span className={`planning-poker-room__story-status planning-poker-room__story-status--${safeStatus}`}>
+                        {getStoryStatusLabel(safeStatus)}
+                      </span>
+                      <span>{storyRoundLabel}</span>
+                      {story.final_estimate ? <span>Final: {story.final_estimate}</span> : null}
+                    </div>
+                  </button>
+                )
+              })
+            ) : (
+              <p className="projects-page__state">Nenhuma história vinculada a esta Roda.</p>
+            )}
           </div>
         </aside>
 
@@ -713,15 +1093,62 @@ function PlanningPokerRoomPage() {
             ) : null}
           </div>
 
-          <div className="planning-poker-room__round-status">
-            <span>{currentRound ? getRoundStatusLabel(currentRound.status) : 'Nenhuma rodada iniciada'}</span>
-            <strong>{remainingTimeLabel}</strong>
-            <span>{votingProgressLabel}</span>
+          <div className="planning-poker-room__round-status" aria-label="Resumo da rodada atual">
+            <span>
+              <small>Rodada</small>
+              <strong>{currentRound ? getRoundStatusLabel(currentRound.status) : 'Nenhuma rodada iniciada'}</strong>
+            </span>
+            <span>
+              <small>Tempo</small>
+              <strong>{remainingTimeLabel}</strong>
+            </span>
+            <span>
+              <small>Presença</small>
+              <strong>{votingProgressLabel}</strong>
+            </span>
             {hasUserVoted && currentRound?.status === 'voting' ? (
-              <span>{session?.allow_revote ? 'Voto registrado; troca permitida.' : 'Voto registrado; troca bloqueada.'}</span>
+              <span>
+                <small>Seu voto</small>
+                <strong>{session?.allow_revote ? 'Registrado; troca permitida' : 'Registrado; troca bloqueada'}</strong>
+              </span>
             ) : null}
           </div>
           <p className="planning-poker-room__guidance">{roomGuidance}</p>
+
+          {!canFacilitate && participantPanel ? (
+            <div
+              className={`planning-poker-room__participant-panel planning-poker-room__participant-panel--${participantPanel.tone}`}
+              aria-label="Sua participação na Roda"
+            >
+              <div className="planning-poker-room__participant-panel-copy">
+                <p className="projects-page__eyebrow">Sua participação</p>
+                <h3>{participantPanel.title}</h3>
+                <p>{participantPanel.description}</p>
+              </div>
+              <div className="planning-poker-room__participant-panel-meta">
+                <span>
+                  <small>Seu papel</small>
+                  <strong>{participantPanel.role}</strong>
+                </span>
+                <span>
+                  <small>Status</small>
+                  <strong>{participantPanel.status}</strong>
+                </span>
+                <span>
+                  <small>Próximo passo</small>
+                  <strong>{participantPanel.action}</strong>
+                </span>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="planning-poker-room__cards-headline">
+            <div>
+              <p className="projects-page__eyebrow">Cartas da guilda</p>
+              <h3>Escolha sua runa</h3>
+            </div>
+            <span>{currentRound?.status === 'revealed' ? 'Valores liberados' : 'Ninguém vê votos antes da revelação'}</span>
+          </div>
 
           <div className="planning-poker-room__cards" aria-label="Cartas de estimativa">
             {scoringValues.map((value) => (
@@ -748,37 +1175,60 @@ function PlanningPokerRoomPage() {
           </div>
 
           {canFacilitate ? (
-            <div className="planning-poker-room__facilitator">
-              <button
-                type="button"
-                className="btn btn-primary btn-small"
-                onClick={handleStartRound}
-                disabled={!currentStory || roomClosed || storyLocked || isActing}
-              >
-                {currentRound ? 'Reacender a Fogueira' : 'Acender Fogueira'}
-              </button>
-              <button
-                type="button"
-                className="btn btn-secondary btn-small"
-                onClick={handleRevealRound}
-                disabled={!canRevealRound}
-              >
-                Revelar as Runas
-              </button>
-              <button
-                type="button"
-                className="btn btn-ghost btn-small"
-                onClick={handleSkipStory}
-                disabled={!currentStory || roomClosed || currentStory.status === 'estimated' || isActing}
-              >
-                Pular história
-              </button>
+            <div className="planning-poker-room__facilitator" aria-label="Comandos do facilitador">
+              <div className="planning-poker-room__facilitator-copy">
+                <p className="projects-page__eyebrow">Facilitador</p>
+                <h3>{facilitatorPanel.title}</h3>
+                <p>{facilitatorPanel.description}</p>
+              </div>
+              <div className="planning-poker-room__facilitator-actions">
+                <button
+                  type="button"
+                  className="btn btn-primary btn-small"
+                  onClick={handleStartRound}
+                  disabled={!canStartRound}
+                >
+                  {currentRound ? 'Reacender a Fogueira' : 'Acender Fogueira'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-small"
+                  onClick={handleRevealRound}
+                  disabled={!canRevealRound}
+                >
+                  Revelar as Runas
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-small"
+                  onClick={handleSkipStory}
+                  disabled={!currentStory || roomClosed || currentStory.status === 'estimated' || isActing}
+                >
+                  Pular história
+                </button>
+              </div>
               {revealActionHint ? <p className="planning-poker-room__action-hint">{revealActionHint}</p> : null}
             </div>
           ) : null}
 
           {shouldShowResult && visibleSummary ? (
             <section className="planning-poker-room__result" aria-label="Resultado da rodada">
+              {consensusInsight ? (
+                <div
+                  className={`planning-poker-room__consensus planning-poker-room__consensus--${consensusInsight.tone}`}
+                >
+                  <div>
+                    <p className="projects-page__eyebrow">Decisão da rodada</p>
+                    <h3>{consensusInsight.label}</h3>
+                    <p>{consensusInsight.description}</p>
+                  </div>
+                  <div className="planning-poker-room__consensus-score">
+                    <span>Consenso sugerido</span>
+                    <strong>{consensusInsight.suggestion || '-'}</strong>
+                  </div>
+                </div>
+              ) : null}
+
               <div className="planning-poker-room__summary-grid">
                 {storyFinalEstimate ? <span>Final: {storyFinalEstimate}</span> : null}
                 <span>Média: {formatNumber(visibleSummary.average)}</span>
@@ -789,9 +1239,19 @@ function PlanningPokerRoomPage() {
                 {visibleSummary.voteCount !== null && visibleSummary.voteCount !== undefined ? (
                   <span>Votos: {visibleSummary.voteCount}</span>
                 ) : null}
+                {visibleSummary.abstentionCount !== null && visibleSummary.abstentionCount !== undefined ? (
+                  <span>Abstenções: {visibleSummary.abstentionCount}</span>
+                ) : null}
+                {visibleSummary.unknownCount !== null && visibleSummary.unknownCount !== undefined ? (
+                  <span>Não sei: {visibleSummary.unknownCount}</span>
+                ) : null}
               </div>
 
-              <div className="planning-poker-room__revealed-votes">
+              <div className="planning-poker-room__revealed-votes" aria-label="Votos revelados">
+                <div className="planning-poker-room__revealed-votes-header">
+                  <p className="projects-page__eyebrow">Votos revelados</p>
+                  <span>{currentRoundVotes.length} cartas abertas</span>
+                </div>
                 {currentRoundVotes.length > 0 ? (
                   currentRoundVotes.map((vote) => {
                     const participantIndex = participants.findIndex(
@@ -833,19 +1293,38 @@ function PlanningPokerRoomPage() {
                     handleSealEstimate()
                   }}
                 >
-                  <label className="projects-page__field">
-                    <span>Estimativa final</span>
-                    <input
-                      type="text"
-                      value={finalEstimate}
-                      onChange={(event) => setFinalEstimate(event.target.value)}
-                      placeholder={visibleSummary.suggestion || 'Ex.: 5'}
-                      disabled={isActing}
-                    />
-                  </label>
-                  <button type="submit" className="btn btn-primary btn-small" disabled={isActing}>
-                    Selar Estimativa
-                  </button>
+                  <div className="planning-poker-room__seal-copy">
+                    <p className="projects-page__eyebrow">Estimativa final</p>
+                    <h3>Selar decisão</h3>
+                    <p>
+                      Registre o valor acordado pela guilda. A sugestão usa a mediana dos votos numéricos revelados.
+                    </p>
+                  </div>
+                  <div className="planning-poker-room__seal-controls">
+                    <label className="projects-page__field">
+                      <span>Valor final</span>
+                      <input
+                        type="text"
+                        value={finalEstimate}
+                        onChange={(event) => setFinalEstimate(event.target.value)}
+                        placeholder={visibleSummary.suggestion || 'Ex.: 5'}
+                        disabled={isActing}
+                      />
+                    </label>
+                    {consensusInsight?.suggestion ? (
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-small"
+                        onClick={() => setFinalEstimate(consensusInsight.suggestion)}
+                        disabled={isActing}
+                      >
+                        Usar sugestão
+                      </button>
+                    ) : null}
+                    <button type="submit" className="btn btn-primary btn-small" disabled={isActing}>
+                      Selar Estimativa
+                    </button>
+                  </div>
                 </form>
               ) : null}
             </section>
