@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC, PRO_PLAN_NAME } from '../constants/app'
 import { useAuth } from '../hooks/useAuth'
 import { usePageMetadata } from '../hooks/usePageMetadata'
 import '../styles/pages.css'
 import { getAuthErrorMessage, signUpWithEmail } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
+import { getAuthRedirectFromLocation } from '../utils/authRedirect'
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
@@ -13,8 +14,11 @@ function isValidEmail(value) {
 
 function SignupPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user, isAuthLoading } = useAuth()
-  const [email, setEmail] = useState('')
+  const redirectTo = useMemo(() => getAuthRedirectFromLocation(location), [location])
+  const isPlanningInvite = redirectTo.includes('/roda')
+  const [email, setEmail] = useState(location.state?.email ?? '')
   const [password, setPassword] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
   const [errorMessage, setErrorMessage] = useState('')
@@ -33,9 +37,9 @@ function SignupPage() {
 
   useEffect(() => {
     if (!isAuthLoading && user) {
-      navigate('/tool', { replace: true })
+      navigate(redirectTo, { replace: true })
     }
-  }, [isAuthLoading, navigate, user])
+  }, [isAuthLoading, navigate, redirectTo, user])
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -67,7 +71,11 @@ function SignupPage() {
 
     trackEvent({ event_name: 'signup_started', event_category: 'auth', page_path: '/signup' })
 
-    const { data, error } = await signUpWithEmail({ email: normalizedEmail, password })
+    const { data, error } = await signUpWithEmail({
+      email: normalizedEmail,
+      password,
+      redirectTo,
+    })
 
     if (error) {
       setErrorMessage(getAuthErrorMessage(error))
@@ -88,7 +96,7 @@ function SignupPage() {
 
     if (data.session) {
       trackEvent({ event_name: 'signup_completed', event_category: 'auth', page_path: '/signup' })
-      navigate('/tool', { replace: true })
+      navigate(redirectTo, { replace: true })
       return
     }
 
@@ -100,7 +108,7 @@ function SignupPage() {
     })
     navigate('/check-email', {
       replace: true,
-      state: { email: normalizedEmail, pendingConfirmation: true },
+      state: { email: normalizedEmail, from: redirectTo, pendingConfirmation: true },
     })
   }
 
@@ -137,7 +145,9 @@ function SignupPage() {
           <p className="auth-card__eyebrow">Cadastro gratuito</p>
           <h1 className="auth-card__title">Crie sua conta grátis</h1>
           <p className="auth-card__description">
-            Transforme briefings em user stories claras, com critérios de aceite e prontas para backlog.
+            {isPlanningInvite
+              ? 'Crie sua conta para voltar ao convite da Roda da Fogueira depois da confirmação.'
+              : 'Transforme briefings em user stories claras, com critérios de aceite e prontas para backlog.'}
           </p>
         </div>
 
@@ -206,7 +216,9 @@ function SignupPage() {
 
         <p className="auth-card__switch">
           Já tem conta?{' '}
-          <Link to="/login" className="auth-card__link">Entrar</Link>
+          <Link to="/login" className="auth-card__link" state={{ from: redirectTo, email: email.trim() }}>
+            Entrar
+          </Link>
         </p>
       </div>
 

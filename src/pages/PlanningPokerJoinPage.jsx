@@ -783,7 +783,7 @@ function PlanningPokerJoinPage() {
     setIsSearching(false)
 
     if (!response.success || !response.data) {
-      setMessage('Não encontramos uma Roda acessível com esse código. Confirme o código ou peça acesso ao projeto.')
+      setMessage('Não encontramos uma Roda acessível com esse código. Se você recebeu um convite, peça ao facilitador para adicionar seu e-mail ao projeto.')
       return
     }
 
@@ -853,8 +853,8 @@ function PlanningPokerJoinPage() {
 
     try {
       await copyTextToClipboard(textToCopy)
-      const nextMessage = copyType === 'link' ? 'Convite copiado' : 'Código copiado'
-      setCopyMessage(`${nextMessage}.`)
+      const nextMessage = copyType === 'link' ? 'Link copiado' : 'Código copiado'
+      setCopyMessage(copyType === 'link' ? 'Link copiado. Envie para pessoas adicionadas ao projeto.' : `${nextMessage}.`)
       setCopyFeedbackBySessionId((current) => ({ ...current, [session.id]: nextMessage }))
     } catch {
       setCopyMessage('Não foi possível copiar o convite agora.')
@@ -913,6 +913,10 @@ function PlanningPokerJoinPage() {
           <button type="submit" className="btn btn-secondary" disabled={isSearching}>
             {isSearching ? 'Buscando Roda...' : 'Entrar na Roda'}
           </button>
+
+          <p className="planning-poker-join__access-note">
+            O código e o link funcionam para pessoas já adicionadas ao projeto da Roda.
+          </p>
 
           {message ? <p className="projects-page__message">{message}</p> : null}
         </form>
@@ -1610,7 +1614,7 @@ function PlanningPokerJoinPage() {
                       className="btn btn-secondary btn-small"
                       onClick={() => handleCopySessionInvite(session, 'link')}
                     >
-                      Copiar convite
+                      Copiar link para membros
                     </button>
                     <button
                       type="button"

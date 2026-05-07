@@ -6,12 +6,15 @@ import { usePageMetadata } from '../hooks/usePageMetadata'
 import '../styles/pages.css'
 import { getAuthErrorMessage, maskEmail, resendSignupConfirmation } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
+import { getAuthRedirectFromLocation } from '../utils/authRedirect'
 
 function CheckEmailPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, isAuthLoading } = useAuth()
   const email = typeof location.state?.email === 'string' ? location.state.email.trim() : ''
+  const redirectTo = useMemo(() => getAuthRedirectFromLocation(location), [location])
+  const isPlanningInvite = redirectTo.includes('/roda')
   const [feedbackMessage, setFeedbackMessage] = useState('')
   const [feedbackTone, setFeedbackTone] = useState('info')
   const [isResending, setIsResending] = useState(false)
@@ -31,9 +34,9 @@ function CheckEmailPage() {
 
   useEffect(() => {
     if (!isAuthLoading && user) {
-      navigate('/tool', { replace: true })
+      navigate(redirectTo, { replace: true })
     }
-  }, [isAuthLoading, navigate, user])
+  }, [isAuthLoading, navigate, redirectTo, user])
 
   async function handleResend() {
     if (!email) return
@@ -42,7 +45,7 @@ function CheckEmailPage() {
     setFeedbackMessage('')
     setFeedbackTone('info')
 
-    const { error } = await resendSignupConfirmation(email)
+    const { error } = await resendSignupConfirmation(email, redirectTo)
     setIsResending(false)
 
     if (error) {
@@ -98,8 +101,8 @@ function CheckEmailPage() {
 
         <p className="auth-card__info" role="status">
           {maskedEmail
-            ? `E-mail enviado para ${maskedEmail}. Depois de confirmar, você volta para a Bancada.`
-            : 'Abra o e-mail usado no cadastro, confirme a conta e depois entre para acessar a bancada.'}
+            ? `E-mail enviado para ${maskedEmail}. Depois de confirmar, você volta para ${isPlanningInvite ? 'a Roda da Fogueira' : 'a Bancada'}.`
+            : `Abra o e-mail usado no cadastro, confirme a conta e depois entre para acessar ${isPlanningInvite ? 'a Roda da Fogueira' : 'a bancada'}.`}
         </p>
 
         {feedbackMessage ? (
@@ -135,7 +138,8 @@ function CheckEmailPage() {
             replace
             state={{
               email,
-              message: 'Depois de confirmar o e-mail, entre para acessar a bancada.',
+              from: redirectTo,
+              message: `Depois de confirmar o e-mail, entre para acessar ${isPlanningInvite ? 'a Roda da Fogueira' : 'a bancada'}.`,
             }}
             className="auth-card__submit auth-card__submit--secondary"
           >

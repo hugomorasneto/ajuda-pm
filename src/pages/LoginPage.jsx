@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC } from '../constants/app'
 import { useAuth } from '../hooks/useAuth'
@@ -11,6 +11,7 @@ import {
   signInWithEmail,
 } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
+import { getAuthRedirectFromLocation } from '../utils/authRedirect'
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
@@ -29,7 +30,7 @@ function LoginPage() {
   const [isResending, setIsResending] = useState(false)
   const [canResendConfirmation, setCanResendConfirmation] = useState(false)
 
-  const redirectTo = location.state?.from ?? '/tool'
+  const redirectTo = useMemo(() => getAuthRedirectFromLocation(location), [location])
 
   usePageMetadata({
     title: 'Entrar no ProdForge',
@@ -44,9 +45,9 @@ function LoginPage() {
 
   useEffect(() => {
     if (!isAuthLoading && user) {
-      navigate('/tool', { replace: true })
+      navigate(redirectTo, { replace: true })
     }
-  }, [isAuthLoading, navigate, user])
+  }, [isAuthLoading, navigate, redirectTo, user])
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -119,7 +120,7 @@ function LoginPage() {
     setIsResending(true)
     setErrorMessage('')
 
-    const { error } = await resendSignupConfirmation(normalizedEmail)
+    const { error } = await resendSignupConfirmation(normalizedEmail, redirectTo)
     setIsResending(false)
 
     if (error) {
@@ -229,7 +230,13 @@ function LoginPage() {
 
         <p className="auth-card__switch">
           Não tem conta?{' '}
-          <Link to="/signup" className="auth-card__link">Criar conta grátis</Link>
+          <Link
+            to="/signup"
+            className="auth-card__link"
+            state={{ from: redirectTo, email: email.trim() }}
+          >
+            Criar conta grátis
+          </Link>
         </p>
       </div>
 

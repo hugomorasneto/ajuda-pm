@@ -8422,6 +8422,13 @@
   text-transform: uppercase;
 }
 
+.planning-poker-join__access-note {
+  margin: 0;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.45;
+}
+
 .planning-poker-join__notes {
   display: flex;
   align-items: center;
@@ -8500,6 +8507,11 @@
   gap: var(--space-2);
 }
 
+.planning-poker-room__invite-actions .btn {
+  white-space: normal;
+  line-height: 1.25;
+}
+
 .planning-poker-room__invite-message,
 .planning-poker-room__guidance {
   margin: 0;
@@ -8511,6 +8523,29 @@
 .planning-poker-room__invite-message {
   color: var(--forge-tech-hover);
   font-weight: 800;
+}
+
+.planning-poker-room__access-state {
+  display: grid;
+  gap: var(--space-4);
+  width: min(100%, 760px);
+  margin-inline: auto;
+}
+
+.planning-poker-room__access-state h1,
+.planning-poker-room__access-state p {
+  margin: 0;
+}
+
+.planning-poker-room__access-state h1 {
+  color: var(--forge-text-primary);
+  font-size: var(--text-h1);
+  line-height: 1.1;
+}
+
+.planning-poker-room__access-state p:not(.projects-page__eyebrow) {
+  color: var(--forge-text-secondary);
+  line-height: 1.55;
 }
 
 .planning-poker-room__guidance {
@@ -9265,6 +9300,7 @@
 }
 
 .planning-poker-room__guild-progress,
+.planning-poker-room__invite-member,
 .planning-poker-room__session-control {
   display: grid;
   gap: var(--space-2);
@@ -9278,6 +9314,40 @@
 
 .planning-poker-room__guild-progress {
   margin-top: var(--space-4);
+}
+
+.planning-poker-room__invite-member {
+  margin-top: var(--space-4);
+}
+
+.planning-poker-room__invite-member > div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.planning-poker-room__invite-member span {
+  color: var(--forge-ember);
+  font-size: var(--text-label);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.planning-poker-room__invite-member strong {
+  color: var(--forge-text-primary);
+  font-size: var(--text-small);
+}
+
+.planning-poker-room__invite-member p,
+.planning-poker-room__invite-note {
+  margin: 0;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.45;
+}
+
+.planning-poker-room__invite-member .btn {
+  width: 100%;
+  justify-content: center;
 }
 
 .planning-poker-room__guild-progress-header {

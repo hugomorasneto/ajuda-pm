@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabaseClient'
+import { DEFAULT_AUTH_REDIRECT_PATH, normalizeAuthRedirect } from '../utils/authRedirect'
 
-const AUTH_REDIRECT_PATH = '/tool'
 const ALLOWED_EMAIL_REDIRECT_HOSTS = new Set([
   'localhost',
   '127.0.0.1',
@@ -12,7 +12,7 @@ function getRawAuthMessage(error) {
   return typeof error?.message === 'string' ? error.message.trim() : ''
 }
 
-function buildEmailRedirectOptions() {
+function buildEmailRedirectOptions(redirectTo = DEFAULT_AUTH_REDIRECT_PATH) {
   if (typeof window === 'undefined') return undefined
 
   const { hostname, origin } = window.location
@@ -20,8 +20,10 @@ function buildEmailRedirectOptions() {
     return undefined
   }
 
+  const redirectPath = normalizeAuthRedirect(redirectTo)
+
   return {
-    emailRedirectTo: new URL(AUTH_REDIRECT_PATH, origin).toString(),
+    emailRedirectTo: new URL(redirectPath, origin).toString(),
   }
 }
 
@@ -82,8 +84,8 @@ export function maskEmail(email) {
   return `${localPart.slice(0, 2)}***@${domain}`
 }
 
-export async function signUpWithEmail({ email, password }) {
-  const options = buildEmailRedirectOptions()
+export async function signUpWithEmail({ email, password, redirectTo }) {
+  const options = buildEmailRedirectOptions(redirectTo)
 
   return supabase.auth.signUp({
     email,
@@ -96,8 +98,8 @@ export async function signInWithEmail({ email, password }) {
   return supabase.auth.signInWithPassword({ email, password })
 }
 
-export async function resendSignupConfirmation(email) {
-  const options = buildEmailRedirectOptions()
+export async function resendSignupConfirmation(email, redirectTo) {
+  const options = buildEmailRedirectOptions(redirectTo)
 
   return supabase.auth.resend({
     type: 'signup',

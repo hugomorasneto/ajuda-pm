@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, Navigate, useOutletContext, useParams } from 'react-router-dom'
+import { Link, useOutletContext, useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { checkCanManageProject, getProjectById } from '../services/projectsService'
+import { addProjectMemberByEmail, checkCanManageProject, getProjectById } from '../services/projectsService'
 import {
   buildPlanningSessionSummaryMarkdown,
   formatPlanningTimerDuration,
@@ -172,6 +172,8 @@ function PlanningPokerRoomPage() {
   const [isActing, setIsActing] = useState(false)
   const [message, setMessage] = useState('')
   const [inviteMessage, setInviteMessage] = useState('')
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [isAddingInviteMember, setIsAddingInviteMember] = useState(false)
   const [roomCopyFeedback, setRoomCopyFeedback] = useState('')
   const [notFound, setNotFound] = useState(false)
   const [nowTick, setNowTick] = useState(() => Date.now())
@@ -1098,12 +1100,57 @@ function PlanningPokerRoomPage() {
     setRoomCopyFeedback('')
     try {
       await copyTextToClipboard(inviteUrl)
-      setInviteMessage('Convite copiado.')
+      setInviteMessage('Link copiado. Envie para pessoas já adicionadas ao projeto.')
       setRoomCopyFeedback('Convite copiado')
     } catch {
       setInviteMessage('Não foi possível copiar o link agora.')
       setRoomCopyFeedback('Falha ao copiar')
     }
+  }
+
+  async function handleInviteProjectMember(event) {
+    event.preventDefault()
+
+    const safeEmail = inviteEmail.trim()
+    setInviteMessage('')
+    setRoomCopyFeedback('')
+
+    if (!safeEmail) {
+      setInviteMessage('Informe o e-mail da pessoa que vai participar da Roda.')
+      return
+    }
+
+    if (!safeEmail.includes('@')) {
+      setInviteMessage('Informe um e-mail válido para liberar o acesso ao projeto.')
+      return
+    }
+
+    if (!canManageProject) {
+      setInviteMessage('Apenas responsáveis e administradores do projeto podem adicionar participantes.')
+      return
+    }
+
+    setIsAddingInviteMember(true)
+    const response = await addProjectMemberByEmail({
+      projectId: session?.project_id ?? projectId,
+      email: safeEmail,
+      role: 'member',
+      userId,
+    })
+    setIsAddingInviteMember(false)
+
+    if (!response.success) {
+      const rawMessage = response.error?.message ?? 'Não foi possível adicionar esse e-mail ao projeto.'
+      const inviteHint = rawMessage.includes('Usuário não encontrado')
+        ? 'Esse e-mail ainda não tem conta confirmada no ProdForge. Peça para criar a conta pelo link e adicione o e-mail depois da confirmação.'
+        : rawMessage
+      setInviteMessage(inviteHint)
+      return
+    }
+
+    setInviteEmail('')
+    setInviteMessage('Participante adicionado ao projeto. Agora envie o link da Roda para esse e-mail.')
+    await loadRoom()
   }
 
   async function handleCopyInviteCode() {
@@ -1269,7 +1316,26 @@ function PlanningPokerRoomPage() {
   }
 
   if (notFound) {
-    return <Navigate to={`/projetos/${projectId}`} replace />
+    return (
+      <div className="planning-poker-room">
+        <section className="panel planning-poker-room__access-state">
+          <p className="projects-page__eyebrow">Roda da Fogueira</p>
+          <h1>Roda não encontrada ou sem acesso</h1>
+          <p>
+            O link da Roda funciona para pessoas adicionadas ao projeto. Peça ao facilitador para incluir seu e-mail
+            no projeto e tente abrir o convite novamente.
+          </p>
+          <div className="planning-poker-room__final-summary-actions">
+            <Link className="btn btn-primary btn-small" to="/roda">
+              Entrar por código
+            </Link>
+            <Link className="btn btn-secondary btn-small" to="/tool">
+              Ir para a Bancada
+            </Link>
+          </div>
+        </section>
+      </div>
+    )
   }
 
   return (
@@ -1292,7 +1358,7 @@ function PlanningPokerRoomPage() {
                 onClick={handleCopyInviteLink}
                 disabled={!session}
               >
-                {roomCopyFeedback === 'Convite copiado' ? 'Convite copiado' : 'Copiar link'}
+                {roomCopyFeedback === 'Convite copiado' ? 'Link copiado' : 'Copiar link para membros'}
               </button>
               <button
                 type="button"
@@ -1931,6 +1997,44 @@ function PlanningPokerRoomPage() {
             </div>
             <p>{voteVisibilityLabel}. Valores individuais permanecem protegidos até a revelação.</p>
           </div>
+
+          {canFacilitate ? (
+            <form className="planning-poker-room__invite-member" onSubmit={handleInviteProjectMember}>
+              <div>
+                <span>Convidar participante</span>
+                <strong>Adicionar e-mail ao projeto</strong>
+                <p>
+                  O link da Roda libera a sala para quem já tem acesso ao projeto. Adicione o e-mail e envie o link pelo canal do time.
+                </p>
+              </div>
+              {canManageProject ? (
+                <>
+                  <label className="projects-page__field">
+                    <span>E-mail do participante</span>
+                    <input
+                      type="email"
+                      value={inviteEmail}
+                      onChange={(event) => setInviteEmail(event.target.value)}
+                      placeholder="participante@empresa.com"
+                      disabled={isAddingInviteMember}
+                    />
+                  </label>
+                  <button
+                    type="submit"
+                    className="btn btn-secondary btn-small"
+                    disabled={isAddingInviteMember || !session}
+                  >
+                    {isAddingInviteMember ? 'Adicionando...' : 'Adicionar ao projeto'}
+                  </button>
+                </>
+              ) : (
+                <p className="planning-poker-room__invite-note">
+                  Apenas responsáveis e administradores do projeto podem liberar novos e-mails.
+                </p>
+              )}
+              {inviteMessage ? <p className="planning-poker-room__invite-note">{inviteMessage}</p> : null}
+            </form>
+          ) : null}
 
           <div className="planning-poker-room__session-meta">
             <span>Status: {getSessionStatusLabel(session?.status)}</span>
