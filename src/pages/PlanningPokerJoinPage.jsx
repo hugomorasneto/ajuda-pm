@@ -605,7 +605,7 @@ function PlanningPokerJoinPage() {
               </label>
 
               <label className="projects-page__field">
-                <span>Time vinculado</span>
+                <span>Time</span>
                 <select
                   value={planningTeamId}
                   onChange={(event) => setPlanningTeamId(event.target.value)}
@@ -621,7 +621,7 @@ function PlanningPokerJoinPage() {
               </label>
 
               <label className="projects-page__field">
-                <span>Escala da Roda</span>
+                <span>Escala</span>
                 <select
                   value={planningScoringScale}
                   onChange={(event) => setPlanningScoringScale(event.target.value)}
@@ -668,7 +668,7 @@ function PlanningPokerJoinPage() {
                   onChange={(event) => setPlanningRevealAfterAll(event.target.checked)}
                   disabled={isCreatingPlanningSession}
                 />
-                <span>Revelar somente após todos votarem</span>
+                <span>Revelar após todos votarem</span>
               </label>
               <label>
                 <input
