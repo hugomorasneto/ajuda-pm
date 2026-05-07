@@ -7629,6 +7629,102 @@
   font-weight: 800;
 }
 
+.planning-poker-dashboard__session-stories {
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(255,255,255,0.02);
+}
+
+.planning-poker-dashboard__session-stories summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--forge-text-primary);
+  cursor: pointer;
+  font-weight: 900;
+  list-style: none;
+}
+
+.planning-poker-dashboard__session-stories summary::-webkit-details-marker {
+  display: none;
+}
+
+.planning-poker-dashboard__session-stories summary::after {
+  content: '+';
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 1.35rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: 999px;
+  color: var(--forge-text-secondary);
+  background: rgba(255,255,255,0.035);
+}
+
+.planning-poker-dashboard__session-stories[open] summary::after {
+  content: '-';
+}
+
+.planning-poker-dashboard__session-stories summary span,
+.planning-poker-dashboard__session-stories summary strong {
+  min-width: 0;
+}
+
+.planning-poker-dashboard__session-stories summary strong {
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  text-align: right;
+}
+
+.planning-poker-dashboard__session-story-list {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.planning-poker-dashboard__session-story {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  background: rgba(255,255,255,0.02);
+}
+
+.planning-poker-dashboard__session-story div {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.planning-poker-dashboard__session-story strong {
+  color: var(--forge-text-primary);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.planning-poker-dashboard__session-story span,
+.planning-poker-dashboard__session-story em {
+  width: fit-content;
+  color: var(--forge-text-muted);
+  font-size: var(--text-micro);
+  font-weight: 900;
+}
+
+.planning-poker-dashboard__session-story em {
+  flex: 0 0 auto;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: 999px;
+  padding: 0.12rem 0.5rem;
+  background: rgba(255,255,255,0.03);
+  font-style: normal;
+}
+
 .project-detail-page__campfire-session-meta {
   display: flex;
   flex-wrap: wrap;
@@ -7961,6 +8057,71 @@
 
 .planning-poker-dashboard .project-detail-page__campfire-story-actions {
   justify-content: flex-start;
+}
+
+.planning-poker-dashboard__selected-stories {
+  display: grid;
+  gap: var(--space-3);
+  border: 1px solid var(--forge-border-tech);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background:
+    linear-gradient(135deg, var(--forge-tech-soft), transparent 82%),
+    var(--forge-surface-inset);
+}
+
+.planning-poker-dashboard__selected-stories-header,
+.planning-poker-dashboard__selected-story {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.planning-poker-dashboard__selected-stories-header h3 {
+  margin: 0;
+  color: var(--forge-text-primary);
+  font-size: var(--text-body);
+}
+
+.planning-poker-dashboard__selected-stories-header > div,
+.planning-poker-dashboard__selected-story > div {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.planning-poker-dashboard__selected-story-list {
+  display: grid;
+  gap: var(--space-2);
+  max-height: 240px;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+.planning-poker-dashboard__selected-story {
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  background: rgba(255,255,255,0.03);
+}
+
+.planning-poker-dashboard__selected-story strong {
+  color: var(--forge-text-primary);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.planning-poker-dashboard__selected-story span {
+  color: var(--forge-text-muted);
+  font-size: var(--text-small);
+  font-weight: 800;
+}
+
+.planning-poker-dashboard__selected-story .btn,
+.planning-poker-dashboard__selected-stories-header .btn {
+  flex: 0 0 auto;
 }
 
 .planning-poker-dashboard__quick-filters {
@@ -8522,6 +8683,32 @@
   color: var(--forge-text-muted);
 }
 
+.planning-poker-room__story-focus-head,
+.planning-poker-room__continuity {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.planning-poker-room__story-focus-head > div {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.planning-poker-room__story-focus-head > span {
+  flex: 0 0 auto;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: 999px;
+  padding: var(--space-1) var(--space-2);
+  color: var(--forge-text-secondary);
+  background: rgba(255,255,255,0.035);
+  font-size: var(--text-small);
+  font-weight: 900;
+}
+
 .planning-poker-room__story-focus h2 {
   margin: 0;
   color: var(--forge-text-primary);
@@ -8552,6 +8739,54 @@
   font-weight: 800;
 }
 
+.planning-poker-room__continuity {
+  align-items: center;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.035), transparent 80%),
+    var(--forge-surface-inset);
+}
+
+.planning-poker-room__continuity--next,
+.planning-poker-room__continuity--ready {
+  border-color: var(--forge-border-ember);
+}
+
+.planning-poker-room__continuity--decision,
+.planning-poker-room__continuity--complete {
+  border-color: var(--forge-border-tech);
+}
+
+.planning-poker-room__continuity--closed {
+  opacity: 0.9;
+}
+
+.planning-poker-room__continuity > div {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.planning-poker-room__continuity h3 {
+  margin: 0;
+  color: var(--forge-text-primary);
+  font-size: var(--text-body);
+}
+
+.planning-poker-room__continuity p {
+  margin: 0;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.planning-poker-room__continuity .btn {
+  flex: 0 0 auto;
+}
+
 .planning-poker-room__result-note {
   margin: 0;
   line-height: 1.5;
@@ -8569,6 +8804,87 @@
 .planning-poker-room__round-status strong {
   color: var(--forge-ember);
   font-size: var(--text-body);
+}
+
+.planning-poker-room__live-progress {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.planning-poker-room__live-progress-item {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-width: 0;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.035), transparent 78%),
+    var(--forge-surface-inset);
+}
+
+.planning-poker-room__live-progress-item--state {
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(135deg, var(--forge-tech-soft), transparent 84%),
+    var(--forge-surface-inset);
+}
+
+.planning-poker-room__live-progress-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.planning-poker-room__live-progress-head span {
+  color: var(--forge-text-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.planning-poker-room__live-progress-head strong {
+  color: var(--forge-text-primary);
+  font-size: var(--text-small);
+  line-height: 1.35;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.planning-poker-room__live-progress-item p {
+  margin: 0;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.45;
+}
+
+.planning-poker-room__live-progress-track {
+  overflow: hidden;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(255,255,255,0.08);
+}
+
+.planning-poker-room__live-progress-track span {
+  display: block;
+  width: var(--progress-width, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--forge-ember), var(--forge-tech));
+  transition: width 180ms ease;
+}
+
+.planning-poker-room__live-progress-track--timer span {
+  background: linear-gradient(90deg, var(--forge-tech), rgba(255, 190, 92, 0.92));
+}
+
+.planning-poker-room__live-progress-track--expired span {
+  background: linear-gradient(90deg, rgba(255, 190, 92, 0.92), var(--forge-ember));
 }
 
 .planning-poker-room__cards-headline {
@@ -8781,6 +9097,50 @@
   color: var(--forge-text-muted);
 }
 
+.planning-poker-room__guild-progress,
+.planning-poker-room__session-control {
+  display: grid;
+  gap: var(--space-2);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.035), transparent 78%),
+    var(--forge-surface-inset);
+}
+
+.planning-poker-room__guild-progress {
+  margin-top: var(--space-4);
+}
+
+.planning-poker-room__guild-progress-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.planning-poker-room__guild-progress-header span {
+  color: var(--forge-text-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.planning-poker-room__guild-progress-header strong {
+  color: var(--forge-text-primary);
+  font-size: var(--text-small);
+  line-height: 1.35;
+  text-align: right;
+}
+
+.planning-poker-room__guild-progress p {
+  margin: 0;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.45;
+}
+
 .planning-poker-room__facilitator {
   display: grid;
   border: 1px solid var(--forge-border-subtle);
@@ -8825,6 +9185,11 @@
   color: var(--forge-text-secondary);
   font-size: var(--text-small);
   line-height: 1.45;
+}
+
+.planning-poker-room__facilitator-state .btn {
+  width: fit-content;
+  margin-top: var(--space-2);
 }
 
 .planning-poker-room__action-hint {
@@ -9081,6 +9446,49 @@
   margin: var(--space-4) 0;
 }
 
+.planning-poker-room__session-control {
+  gap: var(--space-3);
+}
+
+.planning-poker-room__session-control--complete {
+  border-color: rgba(88, 190, 139, 0.42);
+  background:
+    linear-gradient(135deg, rgba(88, 190, 139, 0.11), transparent 78%),
+    var(--forge-surface-inset);
+}
+
+.planning-poker-room__session-control--active {
+  border-color: rgba(255, 190, 92, 0.36);
+}
+
+.planning-poker-room__session-control--closed {
+  opacity: 0.9;
+}
+
+.planning-poker-room__session-control > div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.planning-poker-room__session-control strong {
+  color: var(--forge-text-primary);
+  font-size: var(--text-small);
+  font-weight: 900;
+}
+
+.planning-poker-room__session-control span {
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.45;
+}
+
+.planning-poker-room__seal-note {
+  margin: 0;
+  color: var(--forge-text-muted);
+  font-size: var(--text-small);
+  line-height: 1.4;
+}
+
 .workspace-shell--forge .planning-poker-room .panel {
   border: 1px solid var(--forge-border);
   background: var(--forge-gradient-panel);
@@ -9224,10 +9632,16 @@
   .planning-poker-room__hero,
   .planning-poker-room__hero-actions,
   .planning-poker-room__cards-headline,
+  .planning-poker-room__continuity,
   .planning-poker-room__deck-state,
   .planning-poker-room__sealed-result,
+  .planning-poker-room__story-focus-head,
   .planning-poker-room__result-details summary,
   .planning-poker-room__revealed-votes-header,
+  .planning-poker-dashboard__session-stories summary,
+  .planning-poker-dashboard__session-story,
+  .planning-poker-dashboard__selected-stories-header,
+  .planning-poker-dashboard__selected-story,
   .planning-poker-room__participant,
   .planning-poker-room__revealed-vote,
   .planning-poker-room__seal,
@@ -9268,6 +9682,7 @@
   .planning-poker-room__command-metrics,
   .planning-poker-room__consensus,
   .planning-poker-room__layout,
+  .planning-poker-room__live-progress,
   .planning-poker-room__participant-panel,
   .planning-poker-room__participant-panel-meta,
   .planning-poker-room__seal,

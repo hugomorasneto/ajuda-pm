@@ -21,6 +21,13 @@ const PLANNING_SESSION_STATUS_LABELS = {
   canceled: 'Cancelada',
 }
 
+const PLANNING_STORY_STATUS_LABELS = {
+  pending: 'Pendente',
+  voting: 'Em votação',
+  estimated: 'Estimada',
+  skipped: 'Pulada',
+}
+
 const LIVE_PLANNING_SESSION_STATUSES = ['active', 'voting', 'revealed']
 
 const PLANNING_SESSION_FILTER_OPTIONS = [
@@ -81,6 +88,10 @@ function getPlanningSessionStatusLabel(status) {
   return PLANNING_SESSION_STATUS_LABELS[status] ?? 'Rascunho'
 }
 
+function getPlanningStoryStatusLabel(status) {
+  return PLANNING_STORY_STATUS_LABELS[status] ?? 'Pendente'
+}
+
 function getPlanningScoringScaleLabel(scoringScale) {
   return PLANNING_SCORING_SCALE_LABELS[scoringScale] ?? 'Fibonacci'
 }
@@ -89,9 +100,49 @@ function formatPlanningCount(count, singular, plural) {
   return `${count} ${count === 1 ? singular : plural}`
 }
 
+function formatPlanningTimerDuration(seconds) {
+  const numericSeconds = Number(seconds)
+  if (!Number.isFinite(numericSeconds) || numericSeconds <= 0) return 'Sem timer'
+
+  if (numericSeconds < 60) {
+    return formatPlanningCount(numericSeconds, 'segundo', 'segundos')
+  }
+
+  const minutes = Math.round(numericSeconds / 60)
+  return formatPlanningCount(minutes, 'minuto', 'minutos')
+}
+
 function buildPlanningInviteUrl(inviteCode) {
   if (typeof window === 'undefined' || !inviteCode) return ''
   return new URL(`/roda?codigo=${encodeURIComponent(inviteCode)}`, window.location.origin).toString()
+}
+
+function buildPlanningSessionSummaryMarkdown({ progress, session, stories }) {
+  const lines = [
+    '# Roda da Fogueira',
+    '',
+    `**Sessão:** ${session.name}`,
+    `**Status:** ${getPlanningSessionStatusLabel(session.status)}`,
+    `**Código:** ${session.invite_code ?? '-'}`,
+    `**Escala:** ${getPlanningScoringScaleLabel(session.scoring_scale)}`,
+    `**Timer:** ${formatPlanningTimerDuration(session.vote_time_limit_seconds)}`,
+    `**Progresso:** ${progress.label}`,
+    '',
+    '## Histórias',
+  ]
+
+  if (stories.length === 0) {
+    lines.push('- Nenhuma história vinculada.')
+    return lines.join('\n')
+  }
+
+  stories.forEach((story, index) => {
+    const title = story.user_story?.title ?? `História ${index + 1}`
+    const estimate = story.final_estimate ? ` · Final: ${story.final_estimate}` : ''
+    lines.push(`- ${title} · ${getPlanningStoryStatusLabel(story.status)}${estimate}`)
+  })
+
+  return lines.join('\n')
 }
 
 function getPlanningSessionSortWeight(status) {
@@ -152,17 +203,25 @@ function PlanningPokerJoinPage() {
   const selectedTimerLabel = useMemo(
     () =>
       PLANNING_TIMER_OPTIONS.find((option) => option.value === planningVoteTimeLimit)?.label ??
-      `${planningVoteTimeLimit}s`,
+      formatPlanningTimerDuration(planningVoteTimeLimit),
     [planningVoteTimeLimit],
   )
-  const selectedStoryPreview = useMemo(
-    () => readyStories.filter((story) => selectedStoryIds.includes(story.id)).slice(0, 3),
+  const selectedStories = useMemo(
+    () => readyStories.filter((story) => selectedStoryIds.includes(story.id)),
     [readyStories, selectedStoryIds],
+  )
+  const selectedStoryPreview = useMemo(
+    () => selectedStories.slice(0, 3),
+    [selectedStories],
   )
   const hasSelectedStoryPreview = selectedStoryPreview.length > 0
   const remainingSelectedStoryCount = selectedStoryIds.length - selectedStoryPreview.length
   const remainingSelectedStoryLabel =
     remainingSelectedStoryCount > 0 ? `Mais ${remainingSelectedStoryCount} selecionadas` : ''
+  const selectedStoriesPanelLabel =
+    selectedStoryIds.length === 1
+      ? '1 história selecionada para a Roda'
+      : `${selectedStoryIds.length} histórias selecionadas para a Roda`
   const planningRuleSummary = useMemo(
     () => [
       planningAllowRevote ? 'Novo voto permitido' : 'Voto único',
@@ -668,6 +727,11 @@ function PlanningPokerJoinPage() {
     setSelectedStoryIds([])
   }
 
+  function handleRemovePlanningStory(storyId) {
+    setPlanningMessage('')
+    setSelectedStoryIds((current) => current.filter((currentStoryId) => currentStoryId !== storyId))
+  }
+
   async function handleJoinByCode(event) {
     event.preventDefault()
     setMessage('')
@@ -760,6 +824,24 @@ function PlanningPokerJoinPage() {
       setCopyMessage(copyType === 'link' ? 'Link de convite copiado.' : 'Código da sala copiado.')
     } catch {
       setCopyMessage('Não foi possível copiar o convite agora.')
+    }
+  }
+
+  async function handleCopySessionSummary(session, progress) {
+    setCopyMessage('')
+    if (!session) return
+
+    try {
+      await copyTextToClipboard(
+        buildPlanningSessionSummaryMarkdown({
+          progress,
+          session,
+          stories: planningSessionStoriesBySession[session.id] ?? [],
+        }),
+      )
+      setCopyMessage('Resumo da Roda copiado em Markdown.')
+    } catch {
+      setCopyMessage('Não foi possível copiar o resumo agora.')
     }
   }
 
@@ -1023,6 +1105,46 @@ function PlanningPokerJoinPage() {
                     </div>
                   </div>
 
+                  {selectedStories.length > 0 ? (
+                    <div
+                      className="planning-poker-dashboard__selected-stories"
+                      aria-label="Histórias selecionadas para a Roda"
+                    >
+                      <div className="planning-poker-dashboard__selected-stories-header">
+                        <div>
+                          <p className="projects-page__eyebrow">Seleção atual</p>
+                          <h3>{selectedStoriesPanelLabel}</h3>
+                        </div>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-small"
+                          onClick={handleClearStorySelection}
+                          disabled={isCreatingPlanningSession}
+                        >
+                          Limpar seleção
+                        </button>
+                      </div>
+                      <div className="planning-poker-dashboard__selected-story-list">
+                        {selectedStories.map((story) => (
+                          <article key={story.id} className="planning-poker-dashboard__selected-story">
+                            <div>
+                              <strong>{story.title ?? 'História sem título'}</strong>
+                              <span>{formatPlanningDateTime(story.created_at)}</span>
+                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-ghost btn-small"
+                              onClick={() => handleRemovePlanningStory(story.id)}
+                              disabled={isCreatingPlanningSession}
+                            >
+                              Remover
+                            </button>
+                          </article>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
                   {filteredReadyStories.length === 0 ? (
                     <div className="projects-page__empty">
                       <h3>Nenhuma história encontrada</h3>
@@ -1258,6 +1380,7 @@ function PlanningPokerJoinPage() {
           <div className="project-detail-page__campfire-session-list">
             {filteredPlanningSessions.map((session) => {
               const isLiveSession = ['active', 'voting', 'revealed'].includes(session.status)
+              const sessionStories = planningSessionStoriesBySession[session.id] ?? []
               const progress = planningSessionProgressById[session.id] ?? {
                 estimated: 0,
                 label: 'Sem histórias vinculadas',
@@ -1289,7 +1412,7 @@ function PlanningPokerJoinPage() {
                       </div>
                       <p>
                         Código {session.invite_code} · {getPlanningScoringScaleLabel(session.scoring_scale)} ·{' '}
-                        {session.vote_time_limit_seconds ? `${session.vote_time_limit_seconds}s` : 'sem timer'}
+                        {formatPlanningTimerDuration(session.vote_time_limit_seconds)}
                       </p>
                     </div>
 
@@ -1313,6 +1436,28 @@ function PlanningPokerJoinPage() {
                         ) : null}
                       </div>
                     </div>
+
+                    <details className="planning-poker-dashboard__session-stories">
+                      <summary>
+                        <span>Histórias da Roda</span>
+                        <strong>{progress.label}</strong>
+                      </summary>
+                      {sessionStories.length > 0 ? (
+                        <div className="planning-poker-dashboard__session-story-list">
+                          {sessionStories.map((story, index) => (
+                            <div key={story.id} className="planning-poker-dashboard__session-story">
+                              <div>
+                                <strong>{story.user_story?.title ?? `História ${index + 1}`}</strong>
+                                <span>{getPlanningStoryStatusLabel(story.status)}</span>
+                              </div>
+                              <em>{story.final_estimate ? `Final: ${story.final_estimate}` : 'Sem estimativa final'}</em>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="projects-page__state">Nenhuma história vinculada a esta Roda.</p>
+                      )}
+                    </details>
                   </div>
 
                   <div className="project-detail-page__campfire-session-meta">
@@ -1330,6 +1475,13 @@ function PlanningPokerJoinPage() {
                       onClick={() => handleCopySessionInvite(session, 'link')}
                     >
                       Copiar convite
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-small"
+                      onClick={() => handleCopySessionSummary(session, progress)}
+                    >
+                      Copiar resumo
                     </button>
                     <Link className="btn btn-secondary btn-small" to={`/projetos/${selectedProjectId}/roda/${session.id}`}>
                       {sessionActionLabel}

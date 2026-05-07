@@ -202,7 +202,7 @@ export async function listPlanningPokerSessionStorySummaries({ sessionIds, userI
 
     const { data, error } = await supabase
       .from('planning_poker_session_stories')
-      .select('id, session_id, status, final_estimate, final_estimate_numeric, estimated_at, updated_at')
+      .select(sessionStoryColumns)
       .in('session_id', safeSessionIds)
       .order('position', { ascending: true })
 

@@ -400,6 +400,9 @@ function PlanningPokerRoomPage() {
       ).length,
     [currentRoundVoteStatus, eligibleVoters],
   )
+  const votingProgressPercent = eligibleVoters.length > 0
+    ? Math.min(100, Math.round((votedCount / eligibleVoters.length) * 100))
+    : 0
   const votingProgressLabel = eligibleVoters.length > 0
     ? `${votedCount}/${eligibleVoters.length} votantes`
     : 'Sem votantes'
@@ -419,6 +422,15 @@ function PlanningPokerRoomPage() {
       : 'Sem histórias'
   const roomProgressPercent =
     sessionStories.length > 0 ? Math.round((resolvedStoriesCount / sessionStories.length) * 100) : 0
+  const unresolvedStoriesCount = sessionStories.length - resolvedStoriesCount
+  const unresolvedStoriesLabel =
+    unresolvedStoriesCount === 1
+      ? '1 história ainda aberta'
+      : `${Math.max(unresolvedStoriesCount, 0)} histórias ainda abertas`
+  const allStoriesResolved = Boolean(
+    sessionStories.length > 0 &&
+      sessionStories.every((story) => ['estimated', 'skipped'].includes(story.status)),
+  )
   const votingExpired = Boolean(
     currentRound?.status === 'voting' && isRoundTimerExpired(currentRound.ends_at, nowTick),
   )
@@ -439,6 +451,89 @@ function PlanningPokerRoomPage() {
       ) ?? null,
     [currentStory?.id, sessionStories],
   )
+  const currentStoryIndex = useMemo(
+    () => sessionStories.findIndex((story) => story.id === currentStory?.id),
+    [currentStory?.id, sessionStories],
+  )
+  const currentStoryPositionLabel =
+    currentStoryIndex >= 0 && sessionStories.length > 0
+      ? `${currentStoryIndex + 1} de ${sessionStories.length}`
+      : 'Sem seleção'
+  const canSelectNextPendingStory = Boolean(nextPendingStory && canFacilitate && !roomClosed && !isActing)
+  const storyContinuityPanel = useMemo(() => {
+    if (sessionStories.length === 0) {
+      return {
+        tone: 'empty',
+        eyebrow: 'Sem artefatos',
+        title: 'Nenhuma história vinculada',
+        description: 'Crie uma Roda com histórias prontas para estimar antes de abrir a votação.',
+        action: null,
+      }
+    }
+
+    if (roomClosed) {
+      return {
+        tone: 'closed',
+        eyebrow: 'Histórico da Roda',
+        title: 'Sessão disponível para consulta',
+        description: `${roomProgressLabel}. Revise as estimativas salvas e os votos revelados desta sessão.`,
+        action: null,
+      }
+    }
+
+    if (allStoriesResolved) {
+      return {
+        tone: 'complete',
+        eyebrow: 'Sessão concluída',
+        title: 'Todas as histórias foram resolvidas',
+        description: canFacilitate
+          ? 'Finalize a sessão para manter este resultado apenas como histórico.'
+          : 'Aguarde o facilitador encerrar a sessão.',
+        action: null,
+      }
+    }
+
+    if (storyLocked && nextPendingStory) {
+      return {
+        tone: 'next',
+        eyebrow: 'Próximo passo',
+        title: 'Avançar para a próxima história',
+        description: `${nextPendingStory.user_story?.title ?? 'A próxima história pendente'} ainda está pendente nesta Roda.`,
+        action: canFacilitate ? 'select-next' : null,
+      }
+    }
+
+    if (currentRound?.status === 'revealed') {
+      return {
+        tone: 'decision',
+        eyebrow: 'Decisão aberta',
+        title: 'Discuta antes de selar',
+        description: 'Os votos estão visíveis. Confirme o consenso ou reacenda a fogueira para uma nova rodada.',
+        action: null,
+      }
+    }
+
+    if (!currentRound && canFacilitate) {
+      return {
+        tone: 'ready',
+        eyebrow: 'Pronto para iniciar',
+        title: 'Abra a votação quando a guilda estiver pronta',
+        description: 'As cartas ficam ocultas até a revelação. Use a lista lateral para trocar de história.',
+        action: null,
+      }
+    }
+
+    return null
+  }, [
+    allStoriesResolved,
+    canFacilitate,
+    currentRound,
+    nextPendingStory,
+    roomClosed,
+    roomProgressLabel,
+    sessionStories.length,
+    storyLocked,
+  ])
   const facilitatorStateLabel = roomClosed
     ? getSessionStatusLabel(session?.status)
     : storyLocked
@@ -472,11 +567,47 @@ function PlanningPokerRoomPage() {
       !isActing &&
       currentRound?.status !== 'voting',
   )
+  const proposedFinalEstimate = String(
+    finalEstimate || visibleSummary?.suggestion || storyFinalEstimate || '',
+  ).trim()
+  const canSealEstimate = Boolean(
+    canFacilitate &&
+      currentRound?.status === 'revealed' &&
+      currentStory?.status !== 'estimated' &&
+      proposedFinalEstimate &&
+      !isActing,
+  )
   const revotePolicyLabel = session?.allow_revote ? 'Novo voto permitido' : 'Voto único'
   const revealPolicyLabel = session?.reveal_votes_after_all
     ? 'Revelação após todos votarem'
     : 'Revelação pelo facilitador'
   const scoringScaleLabel = getScoringScaleLabel(session?.scoring_scale)
+  const sessionControlPanel = useMemo(() => {
+    if (roomClosed) {
+      return {
+        tone: 'closed',
+        title: sessionCompletionLabel || 'Sessão encerrada',
+        description: 'A Roda está bloqueada para novas ações e segue disponível como histórico.',
+        actionLabel: null,
+      }
+    }
+
+    if (allStoriesResolved) {
+      return {
+        tone: 'complete',
+        title: 'Pronta para finalizar',
+        description: 'Todas as histórias foram resolvidas. Finalize a sessão para manter a Roda apenas como consulta.',
+        actionLabel: 'Finalizar sessão',
+      }
+    }
+
+    return {
+      tone: 'active',
+      title: 'Sessão em andamento',
+      description: `${unresolvedStoriesLabel}. Encerre manualmente apenas se a Roda precisar parar antes do fim.`,
+      actionLabel: 'Encerrar manualmente',
+    }
+  }, [allStoriesResolved, roomClosed, sessionCompletionLabel, unresolvedStoriesLabel])
   const revealActionHint =
     currentRound?.status === 'voting'
       ? votingExpired
@@ -520,10 +651,57 @@ function PlanningPokerRoomPage() {
   const remainingTimeLabel = useMemo(() => {
     return formatRemainingTime(currentRound?.status === 'voting' ? currentRound.ends_at : null, nowTick)
   }, [currentRound?.ends_at, currentRound?.status, nowTick])
-  const allStoriesResolved = Boolean(
-    sessionStories.length > 0 &&
-      sessionStories.every((story) => ['estimated', 'skipped'].includes(story.status)),
-  )
+  const timerProgressPercent = useMemo(() => {
+    if (currentRound?.status !== 'voting' || !currentRound.started_at || !currentRound.ends_at) {
+      return null
+    }
+
+    const startedAt = new Date(currentRound.started_at).getTime()
+    const endsAt = new Date(currentRound.ends_at).getTime()
+    if (!Number.isFinite(startedAt) || !Number.isFinite(endsAt) || endsAt <= startedAt) {
+      return null
+    }
+
+    const elapsed = Math.min(Math.max(nowTick - startedAt, 0), endsAt - startedAt)
+    const remainingPercent = 100 - Math.round((elapsed / (endsAt - startedAt)) * 100)
+    return Math.max(0, Math.min(100, remainingPercent))
+  }, [currentRound, nowTick])
+  const revealReadinessLabel = useMemo(() => {
+    if (roomClosed) return 'Histórico'
+    if (storyLocked) return 'História encerrada'
+    if (currentRound?.status === 'revealed') return 'Runas abertas'
+    if (currentRound?.status !== 'voting') return 'Aguardando rodada'
+    if (votingExpired) return 'Pronto para revelar'
+    if (canRevealRound) return 'Revelação liberada'
+    if (requiresFullVotingBeforeReveal && hasPendingVotes) return 'Aguardando votos'
+    return 'Em votação'
+  }, [
+    canRevealRound,
+    currentRound,
+    hasPendingVotes,
+    requiresFullVotingBeforeReveal,
+    roomClosed,
+    storyLocked,
+    votingExpired,
+  ])
+  const revealReadinessDescription = useMemo(() => {
+    if (roomClosed) return 'A sessão está disponível apenas para consulta.'
+    if (storyLocked) return 'Selecione uma história pendente para continuar.'
+    if (currentRound?.status === 'revealed') return 'Discuta a divergência e sele a estimativa.'
+    if (currentRound?.status !== 'voting') return 'O facilitador abre a próxima votação.'
+    if (votingExpired) return 'O tempo acabou; os votos restantes foram bloqueados.'
+    if (canRevealRound) return 'O facilitador já pode revelar as runas.'
+    if (requiresFullVotingBeforeReveal && hasPendingVotes) return 'A revelação libera quando todos votarem.'
+    return 'Os votos seguem ocultos até a revelação.'
+  }, [
+    canRevealRound,
+    currentRound,
+    hasPendingVotes,
+    requiresFullVotingBeforeReveal,
+    roomClosed,
+    storyLocked,
+    votingExpired,
+  ])
   const roomStage = useMemo(() => {
     if (session?.status === 'completed') {
       return {
@@ -1039,9 +1217,13 @@ function PlanningPokerRoomPage() {
 
   async function handleSealEstimate() {
     if (!currentStory) return
+    if (!proposedFinalEstimate) {
+      setMessage('Informe ou escolha uma estimativa final antes de selar.')
+      return
+    }
 
     await runAction(
-      () => sealPlanningPokerEstimate({ sessionStoryId: currentStory.id, finalEstimate, userId }),
+      () => sealPlanningPokerEstimate({ sessionStoryId: currentStory.id, finalEstimate: proposedFinalEstimate, userId }),
       'Estimativa selada. Se todas as histórias foram concluídas, a Roda é finalizada automaticamente.',
     )
   }
@@ -1219,8 +1401,13 @@ function PlanningPokerRoomPage() {
 
         <main className="panel planning-poker-room__table" aria-label="Mesa de votação">
           <div className="planning-poker-room__story-focus">
-            <p className="projects-page__eyebrow">História atual</p>
-            <h2>{currentStory?.user_story?.title ?? 'Selecione uma história'}</h2>
+            <div className="planning-poker-room__story-focus-head">
+              <div>
+                <p className="projects-page__eyebrow">História atual</p>
+                <h2>{currentStory?.user_story?.title ?? 'Selecione uma história'}</h2>
+              </div>
+              <span>{currentStoryPositionLabel}</span>
+            </div>
             <p>
               {currentStory?.user_story?.user_story ??
                 currentStory?.user_story?.input_context ??
@@ -1232,6 +1419,29 @@ function PlanningPokerRoomPage() {
               </div>
             ) : null}
           </div>
+
+          {storyContinuityPanel ? (
+            <div
+              className={`planning-poker-room__continuity planning-poker-room__continuity--${storyContinuityPanel.tone}`}
+              aria-label="Próximo passo da Roda"
+            >
+              <div>
+                <p className="projects-page__eyebrow">{storyContinuityPanel.eyebrow}</p>
+                <h3>{storyContinuityPanel.title}</h3>
+                <p>{storyContinuityPanel.description}</p>
+              </div>
+              {storyContinuityPanel.action === 'select-next' ? (
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-small"
+                  onClick={handleSelectNextPendingStory}
+                  disabled={!canSelectNextPendingStory}
+                >
+                  Selecionar próxima
+                </button>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="planning-poker-room__round-status" aria-label="Resumo da rodada atual">
             <span>
@@ -1252,6 +1462,60 @@ function PlanningPokerRoomPage() {
                 <strong>{session?.allow_revote ? 'Registrado; troca permitida' : 'Registrado; troca bloqueada'}</strong>
               </span>
             ) : null}
+          </div>
+
+          <div className="planning-poker-room__live-progress" aria-label="Progresso ao vivo da rodada">
+            <div className="planning-poker-room__live-progress-item">
+              <div className="planning-poker-room__live-progress-head">
+                <span>Votos registrados</span>
+                <strong>{votingProgressLabel}</strong>
+              </div>
+              <div
+                className="planning-poker-room__live-progress-track"
+                role="progressbar"
+                aria-label="Progresso dos votos registrados"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow={votingProgressPercent}
+                aria-valuetext={votingProgressLabel}
+                style={{ '--progress-width': `${votingProgressPercent}%` }}
+              >
+                <span />
+              </div>
+            </div>
+
+            <div className="planning-poker-room__live-progress-item">
+              <div className="planning-poker-room__live-progress-head">
+                <span>Tempo da rodada</span>
+                <strong>{remainingTimeLabel}</strong>
+              </div>
+              {timerProgressPercent === null ? (
+                <p>Sem limite ativo para esta rodada.</p>
+              ) : (
+                <div
+                  className={`planning-poker-room__live-progress-track planning-poker-room__live-progress-track--timer ${
+                    votingExpired ? 'planning-poker-room__live-progress-track--expired' : ''
+                  }`}
+                  role="progressbar"
+                  aria-label="Tempo restante da rodada"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow={timerProgressPercent}
+                  aria-valuetext={remainingTimeLabel}
+                  style={{ '--progress-width': `${timerProgressPercent}%` }}
+                >
+                  <span />
+                </div>
+              )}
+            </div>
+
+            <div className="planning-poker-room__live-progress-item planning-poker-room__live-progress-item--state">
+              <div className="planning-poker-room__live-progress-head">
+                <span>Condução</span>
+                <strong>{revealReadinessLabel}</strong>
+              </div>
+              <p>{revealReadinessDescription}</p>
+            </div>
           </div>
           <p className="planning-poker-room__guidance">{roomGuidance}</p>
 
@@ -1376,6 +1640,16 @@ function PlanningPokerRoomPage() {
                       ? 'Os comandos de facilitação foram encerrados. Use esta tela para consultar o histórico da votação.'
                       : 'Selecione uma história pendente para reabrir os comandos da rodada.'}
                   </p>
+                  {storyLocked && nextPendingStory ? (
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-small"
+                      onClick={handleSelectNextPendingStory}
+                      disabled={!canSelectNextPendingStory}
+                    >
+                      Selecionar próxima pendente
+                    </button>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -1524,9 +1798,14 @@ function PlanningPokerRoomPage() {
                         Usar sugestão
                       </button>
                     ) : null}
-                    <button type="submit" className="btn btn-primary btn-small" disabled={isActing}>
+                    <button type="submit" className="btn btn-primary btn-small" disabled={!canSealEstimate}>
                       Selar Estimativa
                     </button>
+                    {visibleSummary?.suggestion && !finalEstimate ? (
+                      <p className="planning-poker-room__seal-note">
+                        Se nada for alterado, a sugestão {visibleSummary.suggestion} será usada.
+                      </p>
+                    ) : null}
                   </div>
                 </form>
               ) : null}
@@ -1555,6 +1834,24 @@ function PlanningPokerRoomPage() {
             ))}
           </div>
 
+          <div className="planning-poker-room__guild-progress" aria-label="Progresso de votos da guilda">
+            <div className="planning-poker-room__guild-progress-header">
+              <span>Rodada atual</span>
+              <strong>{votingProgressLabel}</strong>
+            </div>
+            <div
+              className="planning-poker-room__story-progress-bar"
+              role="progressbar"
+              aria-label="Votos registrados pela guilda"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow={votingProgressPercent}
+            >
+              <span style={{ width: `${votingProgressPercent}%` }} />
+            </div>
+            <p>{voteVisibilityLabel}. Valores individuais permanecem protegidos até a revelação.</p>
+          </div>
+
           <div className="planning-poker-room__session-meta">
             <span>Status: {getSessionStatusLabel(session?.status)}</span>
             <span>Escala: {scoringScaleLabel}</span>
@@ -1565,21 +1862,25 @@ function PlanningPokerRoomPage() {
           </div>
 
           {canFacilitate ? (
-            roomClosed ? (
-              <div className="planning-poker-room__session-state" role="status">
-                <strong>{sessionCompletionLabel}</strong>
-                <span>Histórico disponível para consulta.</span>
+            <div
+              className={`planning-poker-room__session-control planning-poker-room__session-control--${sessionControlPanel.tone}`}
+              role="status"
+            >
+              <div>
+                <strong>{sessionControlPanel.title}</strong>
+                <span>{sessionControlPanel.description}</span>
               </div>
-            ) : (
-              <button
-                type="button"
-                className="btn btn-secondary btn-small"
-                onClick={handleCompleteSession}
-                disabled={isActing}
-              >
-                Finalizar sessão
-              </button>
-            )
+              {sessionControlPanel.actionLabel ? (
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-small"
+                  onClick={handleCompleteSession}
+                  disabled={isActing}
+                >
+                  {sessionControlPanel.actionLabel}
+                </button>
+              ) : null}
+            </div>
           ) : null}
         </aside>
       </div>
