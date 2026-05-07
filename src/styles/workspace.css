@@ -10404,15 +10404,84 @@
 }
 
 .workspace-canvas--with-story .project-context-panel {
+  min-width: 0;
   padding: var(--space-3) var(--space-4);
+}
+
+.workspace-canvas--with-story .project-context-panel__summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.workspace-canvas--with-story .project-context-panel__summary-copy {
+  gap: 0.2rem;
+}
+
+.workspace-canvas--with-story .project-context-panel__summary-copy strong {
+  line-height: 1.25;
+}
+
+.workspace-canvas--with-story .project-context-panel__summary-copy span:last-child {
+  display: none;
+}
+
+.workspace-canvas--with-story .project-context-panel__summary-meta {
+  width: 100%;
+  min-width: 0;
+  justify-content: space-between;
+}
+
+.workspace-canvas--with-story .project-context-panel__status {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-canvas--with-story .project-context-panel__body {
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+}
+
+.workspace-canvas--with-story .project-context-panel__controls,
+.workspace-canvas--with-story .project-context-panel__actions,
+.workspace-canvas--with-story .project-context-panel__form-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.workspace-canvas--with-story .project-context-panel__field {
+  min-width: 0;
+}
+
+.workspace-canvas--with-story .project-context-panel__actions {
+  padding-top: 0;
+}
+
+.workspace-canvas--with-story .project-context-panel__actions .btn,
+.workspace-canvas--with-story .project-context-panel__form-actions .btn {
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.workspace-canvas--with-story .project-context-panel__hint {
+  margin-top: 0;
+  font-size: var(--text-small);
+  line-height: 1.45;
 }
 
 .workspace-canvas--with-story .project-context-panel:not(.project-context-panel--open) {
   box-shadow: none;
-}
-
-.workspace-canvas--with-story .project-context-panel:not(.project-context-panel--open) .project-context-panel__summary-copy span:last-child {
-  display: none;
 }
 
 .quality-panel__executive-score {
@@ -10528,7 +10597,7 @@
 
 @media (min-width: 1180px) and (max-width: 1535px) {
   .workspace-canvas--with-story {
-    grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+    grid-template-columns: minmax(260px, 300px) minmax(0, 1fr);
   }
 
   .workspace-canvas--with-story .workspace-canvas__col--right {
@@ -10538,6 +10607,6 @@
 
 @media (min-width: 1536px) {
   .workspace-canvas--with-story {
-    grid-template-columns: minmax(248px, 280px) minmax(0, 1fr) minmax(260px, 296px);
+    grid-template-columns: minmax(300px, 332px) minmax(0, 1fr) minmax(260px, 296px);
   }
 }

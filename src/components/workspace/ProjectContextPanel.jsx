@@ -77,7 +77,10 @@ function ProjectContextPanel({
           </span>
         </span>
         <span className="project-context-panel__summary-meta">
-          <span className={`project-context-panel__status ${isStandalone ? '' : 'project-context-panel__status--active'}`}>
+          <span
+            className={`project-context-panel__status ${isStandalone ? '' : 'project-context-panel__status--active'}`}
+            title={isStandalone ? 'Sem projeto' : selectedProjectName}
+          >
             {isStandalone ? 'Sem projeto' : selectedProjectName}
           </span>
           <span className={`project-context-panel__chevron ${isOpen ? 'project-context-panel__chevron--open' : ''}`}>
