@@ -40,8 +40,12 @@ function IconMenu() {
 
 function WorkspaceTopbar({ onOpenSidebar, topbarStatus }) {
   const location = useLocation()
+  const isPlanningPokerRoute =
+    location.pathname === '/roda' || location.pathname.includes('/roda/')
   const meta = pageMeta[location.pathname] ??
-    (location.pathname.startsWith('/projetos/')
+    (isPlanningPokerRoute
+      ? pageMeta['/roda']
+      : location.pathname.startsWith('/projetos/')
       ? pageMeta['/projetos']
       : {
           title: 'Bancada de trabalho',

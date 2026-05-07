@@ -21,8 +21,11 @@ const PLANNING_SESSION_STATUS_LABELS = {
   canceled: 'Cancelada',
 }
 
+const LIVE_PLANNING_SESSION_STATUSES = ['active', 'voting', 'revealed']
+
 const PLANNING_SESSION_FILTER_OPTIONS = [
   { value: 'all', label: 'Todas' },
+  { value: 'active_group', label: 'Em andamento' },
   { value: 'draft', label: 'Rascunho' },
   { value: 'active', label: 'Ativa' },
   { value: 'voting', label: 'Em votação' },
@@ -89,6 +92,16 @@ function formatPlanningCount(count, singular, plural) {
 function buildPlanningInviteUrl(inviteCode) {
   if (typeof window === 'undefined' || !inviteCode) return ''
   return new URL(`/roda?codigo=${encodeURIComponent(inviteCode)}`, window.location.origin).toString()
+}
+
+function getPlanningSessionSortWeight(status) {
+  if (status === 'voting') return 0
+  if (status === 'revealed') return 1
+  if (status === 'active') return 2
+  if (status === 'draft') return 3
+  if (status === 'completed') return 4
+  if (status === 'canceled') return 5
+  return 6
 }
 
 function PlanningPokerJoinPage() {
@@ -198,37 +211,124 @@ function PlanningPokerJoinPage() {
       }`,
     [planningSessions.length],
   )
+  const activePlanningSessionsCount = useMemo(
+    () => planningSessions.filter((session) => LIVE_PLANNING_SESSION_STATUSES.includes(session.status)).length,
+    [planningSessions],
+  )
+  const completedPlanningSessionsCount = useMemo(
+    () => planningSessions.filter((session) => session.status === 'completed').length,
+    [planningSessions],
+  )
+  const primaryActivePlanningSession = useMemo(
+    () => planningSessions.find((session) => LIVE_PLANNING_SESSION_STATUSES.includes(session.status)) ?? null,
+    [planningSessions],
+  )
+  const latestCompletedPlanningSession = useMemo(
+    () => planningSessions.find((session) => session.status === 'completed') ?? null,
+    [planningSessions],
+  )
+  const dashboardOverviewCards = useMemo(
+    () => [
+      {
+        label: 'Projeto',
+        value: selectedProject?.name ?? 'Nenhum projeto selecionado',
+        description: selectedProject
+          ? 'Contexto carregado para criar e consultar Rodas.'
+          : 'Escolha um projeto para carregar histórias e sessões.',
+      },
+      {
+        label: 'Histórias prontas',
+        value: readyStoriesLabel,
+        description:
+          readyStories.length > 0
+            ? 'Disponíveis para entrar em uma nova Roda.'
+            : 'Marque histórias como prontas para estimar no projeto.',
+      },
+      {
+        label: 'Rodas ativas',
+        value: `${activePlanningSessionsCount} em andamento`,
+        description:
+          activePlanningSessionsCount > 0
+            ? 'Há sessões abertas para continuar.'
+            : 'Nenhuma sessão operacional neste projeto.',
+      },
+      {
+        label: 'Histórico',
+        value: `${completedPlanningSessionsCount} finalizadas`,
+        description: 'Sessões concluídas permanecem disponíveis para consulta.',
+      },
+    ],
+    [activePlanningSessionsCount, completedPlanningSessionsCount, readyStories.length, readyStoriesLabel, selectedProject],
+  )
   const filteredPlanningSessions = useMemo(() => {
     const search = planningSessionSearch.trim().toLocaleLowerCase('pt-BR')
 
-    return planningSessions.filter((session) => {
-      if (planningSessionStatusFilter !== 'all' && session.status !== planningSessionStatusFilter) {
-        return false
-      }
+    return planningSessions
+      .filter((session) => {
+        if (
+          planningSessionStatusFilter === 'active_group' &&
+          !LIVE_PLANNING_SESSION_STATUSES.includes(session.status)
+        ) {
+          return false
+        }
 
-      if (
-        planningSessionScaleFilter !== 'all' &&
-        session.scoring_scale !== planningSessionScaleFilter
-      ) {
-        return false
-      }
+        if (
+          planningSessionStatusFilter !== 'all' &&
+          planningSessionStatusFilter !== 'active_group' &&
+          session.status !== planningSessionStatusFilter
+        ) {
+          return false
+        }
 
-      if (!search) return true
+        if (
+          planningSessionScaleFilter !== 'all' &&
+          session.scoring_scale !== planningSessionScaleFilter
+        ) {
+          return false
+        }
 
-      const searchable = [
-        session.name,
-        session.invite_code,
-        getPlanningSessionStatusLabel(session.status),
-        getPlanningScoringScaleLabel(session.scoring_scale),
-        formatPlanningDateTime(session.created_at),
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLocaleLowerCase('pt-BR')
+        if (!search) return true
 
-      return searchable.includes(search)
-    })
+        const searchable = [
+          session.name,
+          session.invite_code,
+          getPlanningSessionStatusLabel(session.status),
+          getPlanningScoringScaleLabel(session.scoring_scale),
+          formatPlanningDateTime(session.created_at),
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLocaleLowerCase('pt-BR')
+
+        return searchable.includes(search)
+      })
+      .sort((a, b) => {
+        const weightDiff = getPlanningSessionSortWeight(a.status) - getPlanningSessionSortWeight(b.status)
+        if (weightDiff !== 0) return weightDiff
+
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      })
   }, [planningSessionScaleFilter, planningSessionSearch, planningSessionStatusFilter, planningSessions])
+  const planningSessionQuickFilters = useMemo(
+    () => [
+      {
+        value: 'all',
+        label: 'Todas',
+        count: planningSessions.length,
+      },
+      {
+        value: 'active_group',
+        label: 'Em andamento',
+        count: activePlanningSessionsCount,
+      },
+      {
+        value: 'completed',
+        label: 'Finalizadas',
+        count: completedPlanningSessionsCount,
+      },
+    ],
+    [activePlanningSessionsCount, completedPlanningSessionsCount, planningSessions.length],
+  )
   const planningSessionProgressById = useMemo(() => {
     return planningSessions.reduce((progressById, session) => {
       const stories = planningSessionStoriesBySession[session.id] ?? []
@@ -263,6 +363,133 @@ function PlanningPokerJoinPage() {
     planningSessionStatusFilter !== 'all' ||
     planningSessionScaleFilter !== 'all' ||
     planningSessionSearch.trim().length > 0
+  const planningReadinessItems = useMemo(
+    () => [
+      {
+        label: 'Projeto',
+        value: selectedProject?.name ?? 'Selecione um projeto',
+        isReady: Boolean(selectedProject),
+      },
+      {
+        label: 'Permissão',
+        value: canManageSelectedProject
+          ? 'Você pode criar Rodas'
+          : selectedProject
+            ? 'Consulta disponível'
+            : 'Aguardando projeto',
+        isReady: canManageSelectedProject,
+      },
+      {
+        label: 'Histórias',
+        value:
+          selectedStoryIds.length > 0
+            ? formatPlanningCount(selectedStoryIds.length, 'selecionada', 'selecionadas')
+            : readyStories.length > 0
+              ? 'Selecione histórias prontas'
+              : 'Sem histórias prontas',
+        isReady: selectedStoryIds.length > 0,
+      },
+    ],
+    [canManageSelectedProject, readyStories.length, selectedProject, selectedStoryIds.length],
+  )
+  const planningCreateHint = canCreatePlanningSession
+    ? 'Tudo pronto para abrir a sessão para a guilda.'
+    : !selectedProject
+      ? 'Selecione um projeto para carregar histórias e permissões.'
+      : !canManageSelectedProject
+        ? 'Você pode consultar Rodas, mas não criar novas sessões neste projeto.'
+        : readyStories.length === 0
+          ? 'Marque histórias deste projeto como prontas para estimar.'
+          : 'Selecione ao menos uma história para criar a Roda.'
+  const dashboardNextAction = useMemo(() => {
+    if (primaryActivePlanningSession && selectedProjectId) {
+      return {
+        tone: 'live',
+        label: 'Roda ativa',
+        title: primaryActivePlanningSession.name,
+        description: 'Há uma sessão em andamento neste projeto. Continue a votação antes de abrir uma nova Roda.',
+        primaryText: 'Continuar Roda',
+        primaryTo: `/projetos/${selectedProjectId}/roda/${primaryActivePlanningSession.id}`,
+        secondaryText: latestCompletedPlanningSession ? 'Consultar último resultado' : '',
+        secondaryTo: latestCompletedPlanningSession
+          ? `/projetos/${selectedProjectId}/roda/${latestCompletedPlanningSession.id}`
+          : '',
+      }
+    }
+
+    if (!selectedProject) {
+      return {
+        tone: 'setup',
+        label: 'Primeiro passo',
+        title: 'Escolha ou crie um projeto',
+        description: 'A Roda depende de um projeto com histórias prontas para estimar.',
+        primaryText: 'Gerenciar projetos',
+        primaryTo: '/projetos',
+        secondaryText: '',
+        secondaryTo: '',
+      }
+    }
+
+    if (!canManageSelectedProject) {
+      return {
+        tone: 'readonly',
+        label: 'Consulta',
+        title: 'Você pode acompanhar este projeto',
+        description: 'A criação de novas Rodas fica restrita a responsáveis e administradores do projeto.',
+        primaryText: 'Abrir projeto',
+        primaryTo: `/projetos/${selectedProjectId}`,
+        secondaryText: latestCompletedPlanningSession ? 'Consultar histórico' : '',
+        secondaryTo: latestCompletedPlanningSession
+          ? `/projetos/${selectedProjectId}/roda/${latestCompletedPlanningSession.id}`
+          : '',
+      }
+    }
+
+    if (readyStories.length === 0) {
+      return {
+        tone: 'setup',
+        label: 'Preparação',
+        title: 'Prepare histórias para estimar',
+        description: 'Abra o projeto e marque histórias como prontas para estimativa antes de criar a Roda.',
+        primaryText: 'Abrir projeto',
+        primaryTo: `/projetos/${selectedProjectId}`,
+        secondaryText: '',
+        secondaryTo: '',
+      }
+    }
+
+    if (selectedStoryIds.length === 0) {
+      return {
+        tone: 'select',
+        label: 'Seleção',
+        title: 'Escolha as histórias da sessão',
+        description: 'Selecione uma ou mais histórias prontas na lista para liberar a criação da Roda.',
+        primaryText: '',
+        primaryTo: '',
+        secondaryText: '',
+        secondaryTo: '',
+      }
+    }
+
+    return {
+      tone: 'ready',
+      label: 'Pronta',
+      title: 'Roda pronta para criar',
+      description: 'Revise o resumo, confirme as regras e abra a sessão para a guilda.',
+      primaryText: '',
+      primaryTo: '',
+      secondaryText: '',
+      secondaryTo: '',
+    }
+  }, [
+    canManageSelectedProject,
+    latestCompletedPlanningSession,
+    primaryActivePlanningSession,
+    readyStories.length,
+    selectedProject,
+    selectedProjectId,
+    selectedStoryIds.length,
+  ])
 
   const loadProjects = useCallback(async () => {
     if (!userId) return
@@ -431,6 +658,11 @@ function PlanningPokerJoinPage() {
     setSelectedStoryIds((current) => Array.from(new Set([...current, ...visibleStoryIds])))
   }
 
+  function handleSelectAllReadyStories() {
+    setPlanningMessage('')
+    setSelectedStoryIds(readyStories.map((story) => story.id))
+  }
+
   function handleClearStorySelection() {
     setPlanningMessage('')
     setSelectedStoryIds([])
@@ -565,6 +797,39 @@ function PlanningPokerJoinPage() {
         </form>
       </section>
 
+      <section className="planning-poker-dashboard__overview" aria-label="Resumo operacional da Roda da Fogueira">
+        {dashboardOverviewCards.map((card) => (
+          <article key={card.label}>
+            <span>{card.label}</span>
+            <strong>{card.value}</strong>
+            <p>{card.description}</p>
+          </article>
+        ))}
+      </section>
+
+      <section
+        className={`planning-poker-dashboard__next-action planning-poker-dashboard__next-action--${dashboardNextAction.tone}`}
+        aria-label="Próxima ação recomendada"
+      >
+        <div>
+          <p className="projects-page__eyebrow">{dashboardNextAction.label}</p>
+          <h2>{dashboardNextAction.title}</h2>
+          <p>{dashboardNextAction.description}</p>
+        </div>
+        <div className="planning-poker-dashboard__next-actions">
+          {dashboardNextAction.primaryTo ? (
+            <Link className="btn btn-primary btn-small" to={dashboardNextAction.primaryTo}>
+              {dashboardNextAction.primaryText}
+            </Link>
+          ) : null}
+          {dashboardNextAction.secondaryTo ? (
+            <Link className="btn btn-secondary btn-small" to={dashboardNextAction.secondaryTo}>
+              {dashboardNextAction.secondaryText}
+            </Link>
+          ) : null}
+        </div>
+      </section>
+
       <div className="projects-page__layout">
         <section className="panel projects-page__form-card" aria-label="Criar Roda da Fogueira">
           <div className="projects-page__card-header">
@@ -651,44 +916,50 @@ function PlanningPokerJoinPage() {
               </label>
             </div>
 
-            <div className="project-detail-page__campfire-options" aria-label="Configurações da Roda">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={planningAllowRevote}
-                  onChange={(event) => setPlanningAllowRevote(event.target.checked)}
-                  disabled={isCreatingPlanningSession}
-                />
-                <span>Permitir novo voto</span>
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={planningRevealAfterAll}
-                  onChange={(event) => setPlanningRevealAfterAll(event.target.checked)}
-                  disabled={isCreatingPlanningSession}
-                />
-                <span>Revelar após todos votarem</span>
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={planningAllowAbstention}
-                  onChange={(event) => setPlanningAllowAbstention(event.target.checked)}
-                  disabled={isCreatingPlanningSession}
-                />
-                <span>Permitir abstenção</span>
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={planningAllowObservers}
-                  onChange={(event) => setPlanningAllowObservers(event.target.checked)}
-                  disabled={isCreatingPlanningSession}
-                />
-                <span>Permitir observadores</span>
-              </label>
-            </div>
+            <details className="planning-poker-dashboard__advanced">
+              <summary>
+                <span>Regras avançadas</span>
+                <strong>{planningRuleSummary.length} regras definidas</strong>
+              </summary>
+              <div className="project-detail-page__campfire-options" aria-label="Configurações da Roda">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={planningAllowRevote}
+                    onChange={(event) => setPlanningAllowRevote(event.target.checked)}
+                    disabled={isCreatingPlanningSession}
+                  />
+                  <span>Permitir novo voto</span>
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={planningRevealAfterAll}
+                    onChange={(event) => setPlanningRevealAfterAll(event.target.checked)}
+                    disabled={isCreatingPlanningSession}
+                  />
+                  <span>Revelar após todos votarem</span>
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={planningAllowAbstention}
+                    onChange={(event) => setPlanningAllowAbstention(event.target.checked)}
+                    disabled={isCreatingPlanningSession}
+                  />
+                  <span>Permitir abstenção</span>
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={planningAllowObservers}
+                    onChange={(event) => setPlanningAllowObservers(event.target.checked)}
+                    disabled={isCreatingPlanningSession}
+                  />
+                  <span>Permitir observadores</span>
+                </label>
+              </div>
+            </details>
 
             <div className="project-detail-page__campfire-stories">
               <div>
@@ -704,6 +975,9 @@ function PlanningPokerJoinPage() {
                 <div className="projects-page__empty">
                   <h3>Nenhuma história pronta para estimar</h3>
                   <p>Marque histórias do projeto como prontas para estimar antes de criar uma Roda.</p>
+                  <Link className="btn btn-secondary btn-small" to={`/projetos/${selectedProjectId}`}>
+                    Abrir projeto
+                  </Link>
                 </div>
               ) : null}
 
@@ -732,6 +1006,14 @@ function PlanningPokerJoinPage() {
                       </button>
                       <button
                         type="button"
+                        className="btn btn-secondary btn-small"
+                        onClick={handleSelectAllReadyStories}
+                        disabled={isCreatingPlanningSession || readyStories.length === 0}
+                      >
+                        Selecionar todas
+                      </button>
+                      <button
+                        type="button"
                         className="btn btn-ghost btn-small"
                         onClick={handleClearStorySelection}
                         disabled={isCreatingPlanningSession || selectedStoryIds.length === 0}
@@ -749,7 +1031,14 @@ function PlanningPokerJoinPage() {
                   ) : (
                     <div className="project-detail-page__campfire-story-list">
                       {filteredReadyStories.map((story) => (
-                        <label key={story.id} className="project-detail-page__campfire-story-option">
+                        <label
+                          key={story.id}
+                          className={`project-detail-page__campfire-story-option ${
+                            selectedStoryIds.includes(story.id)
+                              ? 'project-detail-page__campfire-story-option--selected'
+                              : ''
+                          }`.trim()}
+                        >
                           <input
                             type="checkbox"
                             checked={selectedStoryIds.includes(story.id)}
@@ -759,6 +1048,7 @@ function PlanningPokerJoinPage() {
                           <span>
                             <strong>{story.title}</strong>
                             <small>{formatPlanningDateTime(story.created_at)}</small>
+                            <em>{selectedStoryIds.includes(story.id) ? 'Selecionada' : 'Pronta para estimar'}</em>
                           </span>
                         </label>
                       ))}
@@ -816,6 +1106,22 @@ function PlanningPokerJoinPage() {
               ) : null}
             </div>
 
+            <div className="planning-poker-dashboard__readiness" aria-label="Pré-requisitos para criar a Roda">
+              <div>
+                <p className="projects-page__eyebrow">Pronto para criar?</p>
+                <h3>{canCreatePlanningSession ? 'Roda pronta para abrir' : 'Complete os requisitos'}</h3>
+                <p>{planningCreateHint}</p>
+              </div>
+              <ul>
+                {planningReadinessItems.map((item) => (
+                  <li key={item.label} className={item.isReady ? 'is-ready' : ''}>
+                    <span>{item.label}</span>
+                    <strong>{item.value}</strong>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             <button
               type="submit"
               className="btn btn-primary"
@@ -835,9 +1141,13 @@ function PlanningPokerJoinPage() {
             </div>
           ) : null}
           {selectedProjectId && !canManageSelectedProject ? (
-            <p className="projects-page__state">
-              Você pode consultar Rodas deste projeto. Apenas responsáveis e administradores criam novas sessões.
-            </p>
+            <div className="projects-page__empty">
+              <h3>Modo consulta neste projeto</h3>
+              <p>Você pode consultar Rodas deste projeto. Apenas responsáveis e administradores criam novas sessões.</p>
+              <Link className="btn btn-secondary btn-small" to={`/projetos/${selectedProjectId}`}>
+                Abrir projeto
+              </Link>
+            </div>
           ) : null}
           {planningMessage ? <p className="projects-page__message">{planningMessage}</p> : null}
         </section>
@@ -852,60 +1162,77 @@ function PlanningPokerJoinPage() {
           </div>
 
           {hasPlanningSessions ? (
-            <div className="project-detail-page__campfire-filters" aria-label="Filtros de Rodas da Fogueira">
-              <label className="projects-page__field">
-                <span>Buscar Roda</span>
-                <input
-                  type="search"
-                  value={planningSessionSearch}
-                  onChange={(event) => setPlanningSessionSearch(event.target.value)}
-                  placeholder="Nome ou código da sala"
-                  disabled={isLoadingProjectContext}
-                />
-              </label>
-
-              <label className="projects-page__field">
-                <span>Status</span>
-                <select
-                  value={planningSessionStatusFilter}
-                  onChange={(event) => setPlanningSessionStatusFilter(event.target.value)}
-                  disabled={isLoadingProjectContext}
-                >
-                  {PLANNING_SESSION_FILTER_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="projects-page__field">
-                <span>Escala</span>
-                <select
-                  value={planningSessionScaleFilter}
-                  onChange={(event) => setPlanningSessionScaleFilter(event.target.value)}
-                  disabled={isLoadingProjectContext}
-                >
-                  {PLANNING_SCORING_SCALE_FILTER_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <div className="project-detail-page__campfire-filter-summary">
-                <span>{formatPlanningCount(filteredPlanningSessions.length, 'roda encontrada', 'rodas encontradas')}</span>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-small"
-                  onClick={handleClearPlanningSessionFilters}
-                  disabled={!hasActivePlanningSessionFilters || isLoadingProjectContext}
-                >
-                  Limpar filtros
-                </button>
+            <>
+              <div className="planning-poker-dashboard__quick-filters" aria-label="Filtros rápidos de Rodas">
+                {planningSessionQuickFilters.map((filter) => (
+                  <button
+                    key={filter.value}
+                    type="button"
+                    className={planningSessionStatusFilter === filter.value ? 'is-active' : ''}
+                    onClick={() => setPlanningSessionStatusFilter(filter.value)}
+                    disabled={isLoadingProjectContext}
+                  >
+                    <span>{filter.label}</span>
+                    <strong>{filter.count}</strong>
+                  </button>
+                ))}
               </div>
-            </div>
+
+              <div className="project-detail-page__campfire-filters" aria-label="Filtros de Rodas da Fogueira">
+                <label className="projects-page__field">
+                  <span>Buscar Roda</span>
+                  <input
+                    type="search"
+                    value={planningSessionSearch}
+                    onChange={(event) => setPlanningSessionSearch(event.target.value)}
+                    placeholder="Nome ou código da sala"
+                    disabled={isLoadingProjectContext}
+                  />
+                </label>
+
+                <label className="projects-page__field">
+                  <span>Status</span>
+                  <select
+                    value={planningSessionStatusFilter}
+                    onChange={(event) => setPlanningSessionStatusFilter(event.target.value)}
+                    disabled={isLoadingProjectContext}
+                  >
+                    {PLANNING_SESSION_FILTER_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="projects-page__field">
+                  <span>Escala</span>
+                  <select
+                    value={planningSessionScaleFilter}
+                    onChange={(event) => setPlanningSessionScaleFilter(event.target.value)}
+                    disabled={isLoadingProjectContext}
+                  >
+                    {PLANNING_SCORING_SCALE_FILTER_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <div className="project-detail-page__campfire-filter-summary">
+                  <span>{formatPlanningCount(filteredPlanningSessions.length, 'roda encontrada', 'rodas encontradas')}</span>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-small"
+                    onClick={handleClearPlanningSessionFilters}
+                    disabled={!hasActivePlanningSessionFilters || isLoadingProjectContext}
+                  >
+                    Limpar filtros
+                  </button>
+                </div>
+              </div>
+            </>
           ) : null}
 
           {isLoadingProjectContext ? <p className="projects-page__state">Carregando Rodas...</p> : null}
@@ -913,6 +1240,11 @@ function PlanningPokerJoinPage() {
             <div className="projects-page__empty">
               <h3>Nenhuma Roda criada</h3>
               <p>Crie uma Roda da Fogueira com histórias prontas para estimar e acompanhe o histórico aqui.</p>
+              {readyStories.length === 0 ? (
+                <Link className="btn btn-secondary btn-small" to={`/projetos/${selectedProjectId}`}>
+                  Preparar histórias
+                </Link>
+              ) : null}
             </div>
           ) : null}
           {!isLoadingProjectContext && hasPlanningSessions && filteredPlanningSessions.length === 0 ? (
@@ -935,6 +1267,12 @@ function PlanningPokerJoinPage() {
                 total: 0,
                 voting: 0,
               }
+              const sessionStatusLabel = getPlanningSessionStatusLabel(session.status)
+              const sessionActionLabel = isLiveSession
+                ? 'Continuar Roda'
+                : session.status === 'completed'
+                  ? 'Consultar resultado'
+                  : 'Abrir sala'
 
               return (
                 <article
@@ -945,8 +1283,14 @@ function PlanningPokerJoinPage() {
                 >
                   <div className="project-detail-page__campfire-session-content">
                     <div>
-                      <h3>{session.name}</h3>
-                      <p>Código da sala: {session.invite_code}</p>
+                      <div className="planning-poker-dashboard__session-title">
+                        <h3>{session.name}</h3>
+                        <span className={isLiveSession ? 'is-live' : ''}>{sessionStatusLabel}</span>
+                      </div>
+                      <p>
+                        Código {session.invite_code} · {getPlanningScoringScaleLabel(session.scoring_scale)} ·{' '}
+                        {session.vote_time_limit_seconds ? `${session.vote_time_limit_seconds}s` : 'sem timer'}
+                      </p>
                     </div>
 
                     <div
@@ -972,10 +1316,7 @@ function PlanningPokerJoinPage() {
                   </div>
 
                   <div className="project-detail-page__campfire-session-meta">
-                    <span>{getPlanningSessionStatusLabel(session.status)}</span>
-                    <span>{getPlanningScoringScaleLabel(session.scoring_scale)}</span>
-                    <span>{formatPlanningDateTime(session.created_at)}</span>
-                    <span>{session.vote_time_limit_seconds ? `${session.vote_time_limit_seconds}s` : 'Sem timer'}</span>
+                    <span>Criada em {formatPlanningDateTime(session.created_at)}</span>
                     <button
                       type="button"
                       className="btn btn-secondary btn-small"
@@ -991,7 +1332,7 @@ function PlanningPokerJoinPage() {
                       Copiar convite
                     </button>
                     <Link className="btn btn-secondary btn-small" to={`/projetos/${selectedProjectId}/roda/${session.id}`}>
-                      {isLiveSession ? 'Continuar Roda' : 'Abrir sala'}
+                      {sessionActionLabel}
                     </Link>
                   </div>
                 </article>

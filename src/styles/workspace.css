@@ -6106,13 +6106,15 @@
 
 .workspace-shell--forge .workspace-topbar__status {
   justify-content: flex-start;
+  min-width: 0;
 }
 
 .workspace-shell--forge .workspace-topbar__status-title {
   display: block;
-  flex: 0 1 auto;
+  flex: 1 1 12rem;
+  min-width: 8rem;
   min-height: 32px;
-  max-width: min(34vw, 28rem);
+  max-width: min(28vw, 28rem);
   padding: 0 var(--forge-space-3);
   overflow: hidden;
   line-height: 30px;
@@ -6155,12 +6157,17 @@
 }
 
 .workspace-shell--forge .workspace-topbar__status-pills .mode-pill {
-  max-width: min(16vw, 18rem);
+  max-width: min(12vw, 14rem);
   min-height: 30px;
   padding: 0 var(--forge-space-3);
   overflow: hidden;
   font-size: var(--forge-text-xs);
   text-overflow: ellipsis;
+}
+
+.workspace-shell--forge .workspace-topbar__status-pills {
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 @media (min-width: 1100px) and (max-width: 1535px) {
@@ -7386,6 +7393,30 @@
   font-size: var(--text-small);
 }
 
+.project-detail-page__campfire-story-option em {
+  width: fit-content;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: 999px;
+  padding: 0.1rem 0.48rem;
+  color: var(--forge-text-muted);
+  background: rgba(255,255,255,0.03);
+  font-size: var(--text-micro);
+  font-style: normal;
+  font-weight: 900;
+}
+
+.project-detail-page__campfire-story-option--selected {
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(90deg, rgba(255,145,56,0.1), transparent 72%),
+    rgba(255,255,255,0.025);
+}
+
+.project-detail-page__campfire-story-option--selected em {
+  border-color: rgba(255,145,56,0.38);
+  color: var(--forge-ember);
+}
+
 .project-detail-page__campfire-create-summary {
   display: grid;
   gap: var(--space-3);
@@ -7506,6 +7537,35 @@
 
 .project-detail-page__campfire-session h3 {
   margin: 0;
+}
+
+.planning-poker-dashboard__session-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.planning-poker-dashboard__session-title h3 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.planning-poker-dashboard__session-title span {
+  flex: 0 0 auto;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: 999px;
+  padding: 0.12rem 0.56rem;
+  color: var(--forge-text-secondary);
+  background: rgba(255,255,255,0.035);
+  font-size: var(--text-micro);
+  font-weight: 900;
+}
+
+.planning-poker-dashboard__session-title span.is-live {
+  border-color: var(--forge-border-ember);
+  color: var(--forge-ember);
+  background: rgba(255,145,56,0.08);
 }
 
 .project-detail-page__campfire-session-content {
@@ -7676,6 +7736,107 @@
   gap: var(--space-4);
 }
 
+.planning-poker-dashboard__overview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.planning-poker-dashboard__overview article {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.035), transparent 78%),
+    var(--forge-surface-inset);
+}
+
+.planning-poker-dashboard__overview span {
+  color: var(--forge-text-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.planning-poker-dashboard__overview strong {
+  color: var(--forge-text-primary);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.planning-poker-dashboard__overview p {
+  margin: 0;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.45;
+}
+
+.planning-poker-dashboard__next-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.04), transparent 72%),
+    var(--forge-surface-inset);
+  box-shadow: var(--forge-shadow-soft);
+}
+
+.planning-poker-dashboard__next-action--live {
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(135deg, rgba(255,145,56,0.12), transparent 76%),
+    var(--forge-surface-inset);
+}
+
+.planning-poker-dashboard__next-action--ready {
+  border-color: rgba(88, 190, 139, 0.42);
+  background:
+    linear-gradient(135deg, rgba(88, 190, 139, 0.1), transparent 76%),
+    var(--forge-surface-inset);
+}
+
+.planning-poker-dashboard__next-action--select {
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(135deg, var(--forge-tech-soft), transparent 78%),
+    var(--forge-surface-inset);
+}
+
+.planning-poker-dashboard__next-action div {
+  min-width: 0;
+}
+
+.planning-poker-dashboard__next-action h2,
+.planning-poker-dashboard__next-action p {
+  margin: 0;
+}
+
+.planning-poker-dashboard__next-action h2 {
+  color: var(--forge-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.planning-poker-dashboard__next-action p:not(.projects-page__eyebrow) {
+  max-width: 72ch;
+  color: var(--forge-text-secondary);
+  line-height: 1.55;
+}
+
+.planning-poker-dashboard__next-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
 .planning-poker-dashboard .projects-page__form-card,
 .planning-poker-dashboard .projects-page__list-card {
   overflow: hidden;
@@ -7724,6 +7885,57 @@
   overflow-wrap: anywhere;
 }
 
+.planning-poker-dashboard__advanced,
+.planning-poker-dashboard__readiness {
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.025), transparent 78%),
+    var(--forge-surface-inset);
+}
+
+.planning-poker-dashboard__advanced summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--forge-text-primary);
+  cursor: pointer;
+  font-weight: 900;
+  list-style: none;
+}
+
+.planning-poker-dashboard__advanced summary::-webkit-details-marker {
+  display: none;
+}
+
+.planning-poker-dashboard__advanced summary::after {
+  content: '+';
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: 999px;
+  color: var(--forge-text-secondary);
+  background: rgba(255,255,255,0.035);
+}
+
+.planning-poker-dashboard__advanced[open] summary::after {
+  content: '-';
+}
+
+.planning-poker-dashboard__advanced summary strong {
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+}
+
+.planning-poker-dashboard__advanced[open] .project-detail-page__campfire-options {
+  margin-top: var(--space-3);
+}
+
 .planning-poker-dashboard .project-detail-page__campfire-create-summary {
   padding: var(--space-3);
 }
@@ -7749,6 +7961,110 @@
 
 .planning-poker-dashboard .project-detail-page__campfire-story-actions {
   justify-content: flex-start;
+}
+
+.planning-poker-dashboard__quick-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.planning-poker-dashboard__quick-filters button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  color: var(--forge-text-secondary);
+  background: rgba(255,255,255,0.025);
+  font: inherit;
+  cursor: pointer;
+}
+
+.planning-poker-dashboard__quick-filters button:hover:not(:disabled),
+.planning-poker-dashboard__quick-filters button.is-active {
+  border-color: var(--forge-border-ember);
+  color: var(--forge-text-primary);
+  background: rgba(255,145,56,0.09);
+}
+
+.planning-poker-dashboard__quick-filters button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.planning-poker-dashboard__quick-filters span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--text-small);
+  font-weight: 900;
+}
+
+.planning-poker-dashboard__quick-filters strong {
+  flex: 0 0 auto;
+  color: var(--forge-ember);
+  font-size: var(--text-small);
+}
+
+.planning-poker-dashboard__readiness {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.planning-poker-dashboard__readiness h3,
+.planning-poker-dashboard__readiness p {
+  margin: 0;
+}
+
+.planning-poker-dashboard__readiness h3 {
+  color: var(--forge-text-primary);
+}
+
+.planning-poker-dashboard__readiness p {
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.45;
+}
+
+.planning-poker-dashboard__readiness ul {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.planning-poker-dashboard__readiness li {
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  background: rgba(255,255,255,0.025);
+}
+
+.planning-poker-dashboard__readiness li.is-ready {
+  border-color: rgba(88, 190, 139, 0.36);
+  background: rgba(88, 190, 139, 0.07);
+}
+
+.planning-poker-dashboard__readiness li span {
+  display: block;
+  color: var(--forge-text-muted);
+  font-size: var(--text-micro);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.planning-poker-dashboard__readiness li strong {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--forge-text-primary);
+  font-size: var(--text-small);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 .planning-poker-dashboard .projects-page__empty {
@@ -7777,22 +8093,47 @@
 }
 
 @media (max-width: 1180px) {
+  .planning-poker-dashboard__overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .planning-poker-dashboard__next-action {
+    align-items: flex-start;
+  }
+
   .planning-poker-dashboard .projects-page__layout {
     grid-template-columns: 1fr;
   }
 
   .planning-poker-dashboard .project-detail-page__campfire-grid,
   .planning-poker-dashboard .project-detail-page__campfire-options,
-  .planning-poker-dashboard .project-detail-page__campfire-create-summary dl {
+  .planning-poker-dashboard .project-detail-page__campfire-create-summary dl,
+  .planning-poker-dashboard__quick-filters,
+  .planning-poker-dashboard__readiness ul {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 720px) {
+  .planning-poker-dashboard__overview {
+    grid-template-columns: 1fr;
+  }
+
+  .planning-poker-dashboard__next-action {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .planning-poker-dashboard__next-actions {
+    justify-content: flex-start;
+  }
+
   .planning-poker-dashboard .project-detail-page__campfire-grid,
   .planning-poker-dashboard .project-detail-page__campfire-options,
   .planning-poker-dashboard .project-detail-page__campfire-create-summary dl,
-  .planning-poker-dashboard .project-detail-page__campfire-filters {
+  .planning-poker-dashboard .project-detail-page__campfire-filters,
+  .planning-poker-dashboard__quick-filters,
+  .planning-poker-dashboard__readiness ul {
     grid-template-columns: 1fr;
   }
 
@@ -7851,6 +8192,21 @@
   display: grid;
   gap: var(--space-5);
   min-width: 0;
+}
+
+.workspace-shell--forge .planning-poker-room h1,
+.workspace-shell--forge .planning-poker-room h2,
+.workspace-shell--forge .planning-poker-room h3 {
+  color: var(--forge-text-primary);
+}
+
+.workspace-shell--forge .planning-poker-room .btn:disabled {
+  border-color: var(--forge-border-subtle);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.035)),
+    var(--forge-surface-inset);
+  color: rgba(238, 244, 255, 0.68);
+  opacity: 1;
 }
 
 .planning-poker-room__hero,
@@ -7946,6 +8302,7 @@
 .planning-poker-room__facilitator-copy h3,
 .planning-poker-room__cards-headline h3 {
   margin: 0;
+  color: var(--forge-text-primary);
 }
 
 .planning-poker-room__command-copy p,
@@ -8167,6 +8524,7 @@
 
 .planning-poker-room__story-focus h2 {
   margin: 0;
+  color: var(--forge-text-primary);
   overflow-wrap: anywhere;
 }
 
@@ -8231,6 +8589,48 @@
   font-weight: 900;
 }
 
+.planning-poker-room__deck-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.035), transparent 78%),
+    var(--forge-surface-inset);
+}
+
+.planning-poker-room__deck-state div {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.planning-poker-room__deck-state h3 {
+  margin: 0;
+  color: var(--forge-text-primary);
+}
+
+.planning-poker-room__deck-state p {
+  margin: 0;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+.planning-poker-room__deck-state > span {
+  flex: 0 0 auto;
+  border: 1px solid var(--forge-border-tech);
+  border-radius: 999px;
+  padding: var(--space-1) var(--space-2);
+  color: var(--forge-text-primary);
+  background: var(--forge-tech-soft);
+  font-size: var(--text-small);
+  font-weight: 900;
+}
+
 .planning-poker-room__cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
@@ -8258,8 +8658,9 @@
 }
 
 .planning-poker-room__card:disabled {
+  color: rgba(238, 244, 255, 0.62);
   cursor: not-allowed;
-  opacity: 0.45;
+  opacity: 0.72;
 }
 
 .planning-poker-room__card--muted {
@@ -8301,6 +8702,7 @@
 
 .planning-poker-room__participant-panel-copy h3 {
   margin: 0;
+  color: var(--forge-text-primary);
 }
 
 .planning-poker-room__participant-panel-copy p {
@@ -8340,9 +8742,43 @@
   align-content: start;
 }
 
+.planning-poker-room__guild-summary {
+  margin: var(--space-1) 0 0;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.45;
+}
+
 .planning-poker-room__participant span,
 .planning-poker-room__session-meta span {
   overflow-wrap: anywhere;
+}
+
+.planning-poker-room__participant strong {
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: 999px;
+  padding: 0.18rem 0.48rem;
+  background: rgba(255,255,255,0.035);
+  color: var(--forge-text-secondary);
+  font-size: 0.74rem;
+  line-height: 1.2;
+}
+
+.planning-poker-room__participant--voted strong {
+  border-color: rgba(88, 190, 139, 0.34);
+  background: rgba(88, 190, 139, 0.1);
+  color: var(--forge-text-primary);
+}
+
+.planning-poker-room__participant--waiting strong {
+  border-color: rgba(255, 190, 92, 0.32);
+  background: rgba(255, 190, 92, 0.08);
+  color: var(--forge-text-primary);
+}
+
+.planning-poker-room__participant--observer strong,
+.planning-poker-room__participant--muted strong {
+  color: var(--forge-text-muted);
 }
 
 .planning-poker-room__facilitator {
@@ -8362,6 +8798,33 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+.planning-poker-room__facilitator-state,
+.planning-poker-room__session-state {
+  display: grid;
+  gap: var(--space-1);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.035), transparent 76%),
+    var(--forge-surface-inset);
+}
+
+.planning-poker-room__facilitator-state span,
+.planning-poker-room__session-state strong {
+  color: var(--forge-text-primary);
+  font-size: var(--text-small);
+  font-weight: 900;
+}
+
+.planning-poker-room__facilitator-state p,
+.planning-poker-room__session-state span {
+  margin: 0;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.45;
 }
 
 .planning-poker-room__action-hint {
@@ -8400,6 +8863,7 @@
 .planning-poker-room__consensus h3,
 .planning-poker-room__seal-copy h3 {
   margin: 0;
+  color: var(--forge-text-primary);
 }
 
 .planning-poker-room__consensus p,
@@ -8432,6 +8896,115 @@
   font-size: var(--text-h2);
 }
 
+.planning-poker-room__sealed-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border: 1px solid rgba(88, 190, 139, 0.42);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background:
+    linear-gradient(135deg, rgba(88, 190, 139, 0.12), transparent 82%),
+    var(--forge-surface-inset);
+}
+
+.planning-poker-room__sealed-result div {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.planning-poker-room__sealed-result h3,
+.planning-poker-room__sealed-result p {
+  margin: 0;
+}
+
+.planning-poker-room__sealed-result h3 {
+  color: var(--forge-text-primary);
+  font-size: var(--text-h2);
+}
+
+.planning-poker-room__sealed-result p {
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.45;
+}
+
+.planning-poker-room__sealed-result > span {
+  flex: 0 0 auto;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: 999px;
+  padding: var(--space-1) var(--space-2);
+  color: var(--forge-text-secondary);
+  background: rgba(255,255,255,0.035);
+  font-size: var(--text-small);
+  font-weight: 900;
+}
+
+.planning-poker-room__result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.planning-poker-room__result-details {
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.025), transparent 78%),
+    rgba(255,255,255,0.015);
+}
+
+.planning-poker-room__result-details summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--forge-text-primary);
+  cursor: pointer;
+  font-weight: 900;
+  list-style: none;
+}
+
+.planning-poker-room__result-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.planning-poker-room__result-details summary::after {
+  content: '+';
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: 999px;
+  color: var(--forge-text-secondary);
+  background: rgba(255,255,255,0.035);
+}
+
+.planning-poker-room__result-details[open] summary::after {
+  content: '-';
+}
+
+.planning-poker-room__result-details summary span,
+.planning-poker-room__result-details summary strong {
+  min-width: 0;
+}
+
+.planning-poker-room__result-details summary strong {
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  text-align: right;
+}
+
+.planning-poker-room__result-details[open] .planning-poker-room__summary-grid,
+.planning-poker-room__result-details[open] .planning-poker-room__revealed-votes {
+  margin-top: var(--space-3);
+}
+
 .planning-poker-room__summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -8450,7 +9023,10 @@
 
 .planning-poker-room__revealed-vote,
 .planning-poker-room__participant {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
 }
 
 .planning-poker-room__revealed-votes-header {
@@ -8648,6 +9224,9 @@
   .planning-poker-room__hero,
   .planning-poker-room__hero-actions,
   .planning-poker-room__cards-headline,
+  .planning-poker-room__deck-state,
+  .planning-poker-room__sealed-result,
+  .planning-poker-room__result-details summary,
   .planning-poker-room__revealed-votes-header,
   .planning-poker-room__participant,
   .planning-poker-room__revealed-vote,
