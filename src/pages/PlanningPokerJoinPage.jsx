@@ -10,25 +10,20 @@ import {
 } from '../services/planningPokerService'
 import { listTeamsByProject } from '../services/teamsService'
 import { listStoryHistoryGroups } from '../services/userStoriesService'
+import {
+  LIVE_PLANNING_SESSION_STATUSES,
+  buildPlanningSessionSummaryMarkdown,
+  formatPlanningCount,
+  formatPlanningTimerDuration,
+  getActivePlanningStorySessionByStoryId,
+  getPlanningScoringScaleLabel,
+  getPlanningSessionProgressById,
+  getPlanningSessionSortWeight,
+  getPlanningSessionStatusLabel,
+  getPlanningStorySearchText,
+  getPlanningStoryStatusLabel,
+} from '../utils/planningPokerUtils'
 import { copyTextToClipboard } from '../utils/storyExport'
-
-const PLANNING_SESSION_STATUS_LABELS = {
-  draft: 'Rascunho',
-  active: 'Ativa',
-  voting: 'Em votação',
-  revealed: 'Votos revelados',
-  completed: 'Finalizada',
-  canceled: 'Cancelada',
-}
-
-const PLANNING_STORY_STATUS_LABELS = {
-  pending: 'Pendente',
-  voting: 'Em votação',
-  estimated: 'Estimada',
-  skipped: 'Pulada',
-}
-
-const LIVE_PLANNING_SESSION_STATUSES = ['active', 'voting', 'revealed']
 
 const PLANNING_SESSION_FILTER_OPTIONS = [
   { value: 'all', label: 'Todas' },
@@ -59,12 +54,6 @@ const PLANNING_SCORING_SCALE_FILTER_OPTIONS = [
   { value: 'custom', label: 'Customizada' },
 ]
 
-const PLANNING_SCORING_SCALE_LABELS = {
-  fibonacci: 'Fibonacci',
-  tshirt: 'Tamanho de camiseta',
-  custom: 'Customizada',
-}
-
 function normalizeInviteCode(value) {
   return String(value ?? '')
     .replace(/[^a-zA-Z0-9]/g, '')
@@ -84,75 +73,9 @@ function formatPlanningDateTime(value) {
   }).format(date)
 }
 
-function getPlanningSessionStatusLabel(status) {
-  return PLANNING_SESSION_STATUS_LABELS[status] ?? 'Rascunho'
-}
-
-function getPlanningStoryStatusLabel(status) {
-  return PLANNING_STORY_STATUS_LABELS[status] ?? 'Pendente'
-}
-
-function getPlanningScoringScaleLabel(scoringScale) {
-  return PLANNING_SCORING_SCALE_LABELS[scoringScale] ?? 'Fibonacci'
-}
-
-function formatPlanningCount(count, singular, plural) {
-  return `${count} ${count === 1 ? singular : plural}`
-}
-
-function formatPlanningTimerDuration(seconds) {
-  const numericSeconds = Number(seconds)
-  if (!Number.isFinite(numericSeconds) || numericSeconds <= 0) return 'Sem timer'
-
-  if (numericSeconds < 60) {
-    return formatPlanningCount(numericSeconds, 'segundo', 'segundos')
-  }
-
-  const minutes = Math.round(numericSeconds / 60)
-  return formatPlanningCount(minutes, 'minuto', 'minutos')
-}
-
 function buildPlanningInviteUrl(inviteCode) {
   if (typeof window === 'undefined' || !inviteCode) return ''
   return new URL(`/roda?codigo=${encodeURIComponent(inviteCode)}`, window.location.origin).toString()
-}
-
-function buildPlanningSessionSummaryMarkdown({ progress, session, stories }) {
-  const lines = [
-    '# Roda da Fogueira',
-    '',
-    `**Sessão:** ${session.name}`,
-    `**Status:** ${getPlanningSessionStatusLabel(session.status)}`,
-    `**Código:** ${session.invite_code ?? '-'}`,
-    `**Escala:** ${getPlanningScoringScaleLabel(session.scoring_scale)}`,
-    `**Timer:** ${formatPlanningTimerDuration(session.vote_time_limit_seconds)}`,
-    `**Progresso:** ${progress.label}`,
-    '',
-    '## Histórias',
-  ]
-
-  if (stories.length === 0) {
-    lines.push('- Nenhuma história vinculada.')
-    return lines.join('\n')
-  }
-
-  stories.forEach((story, index) => {
-    const title = story.user_story?.title ?? `História ${index + 1}`
-    const estimate = story.final_estimate ? ` · Final: ${story.final_estimate}` : ''
-    lines.push(`- ${title} · ${getPlanningStoryStatusLabel(story.status)}${estimate}`)
-  })
-
-  return lines.join('\n')
-}
-
-function getPlanningSessionSortWeight(status) {
-  if (status === 'voting') return 0
-  if (status === 'revealed') return 1
-  if (status === 'active') return 2
-  if (status === 'draft') return 3
-  if (status === 'completed') return 4
-  if (status === 'canceled') return 5
-  return 6
 }
 
 function PlanningPokerJoinPage() {
@@ -174,8 +97,10 @@ function PlanningPokerJoinPage() {
   const [planningSessionStoriesBySession, setPlanningSessionStoriesBySession] = useState({})
   const [planningSessionStatusFilter, setPlanningSessionStatusFilter] = useState('all')
   const [planningSessionScaleFilter, setPlanningSessionScaleFilter] = useState('all')
+  const [planningSessionStoryFilter, setPlanningSessionStoryFilter] = useState('all')
   const [planningSessionSearch, setPlanningSessionSearch] = useState('')
   const [readyStorySearch, setReadyStorySearch] = useState('')
+  const [hideActiveSessionStories, setHideActiveSessionStories] = useState(false)
   const [planningSessionName, setPlanningSessionName] = useState('')
   const [planningTeamId, setPlanningTeamId] = useState('')
   const [planningScoringScale, setPlanningScoringScale] = useState('fibonacci')
@@ -187,6 +112,7 @@ function PlanningPokerJoinPage() {
   const [message, setMessage] = useState('')
   const [planningMessage, setPlanningMessage] = useState('')
   const [copyMessage, setCopyMessage] = useState('')
+  const [copyFeedbackBySessionId, setCopyFeedbackBySessionId] = useState({})
   const [isSearching, setIsSearching] = useState(false)
   const [isLoadingProjects, setIsLoadingProjects] = useState(false)
   const [isLoadingProjectContext, setIsLoadingProjectContext] = useState(false)
@@ -256,13 +182,6 @@ function PlanningPokerJoinPage() {
       return searchable.includes(search)
     })
   }, [readyStories, readyStorySearch])
-  const filteredReadyStoriesLabel = useMemo(
-    () =>
-      `${filteredReadyStories.length} ${
-        filteredReadyStories.length === 1 ? 'história visível' : 'histórias visíveis'
-      }`,
-    [filteredReadyStories.length],
-  )
   const planningSessionsLabel = useMemo(
     () =>
       `${planningSessions.length} ${
@@ -324,6 +243,11 @@ function PlanningPokerJoinPage() {
 
     return planningSessions
       .filter((session) => {
+        const sessionStories = planningSessionStoriesBySession[session.id] ?? []
+        const hasEstimatedStory = sessionStories.some((story) => story.status === 'estimated' || story.final_estimate)
+        const hasPendingStory = sessionStories.some((story) => ['pending', 'voting'].includes(story.status))
+        const hasSkippedStory = sessionStories.some((story) => story.status === 'skipped')
+
         if (
           planningSessionStatusFilter === 'active_group' &&
           !LIVE_PLANNING_SESSION_STATUSES.includes(session.status)
@@ -346,6 +270,18 @@ function PlanningPokerJoinPage() {
           return false
         }
 
+        if (planningSessionStoryFilter === 'estimated_group' && !hasEstimatedStory) {
+          return false
+        }
+
+        if (planningSessionStoryFilter === 'pending_group' && !hasPendingStory) {
+          return false
+        }
+
+        if (planningSessionStoryFilter === 'skipped_group' && !hasSkippedStory) {
+          return false
+        }
+
         if (!search) return true
 
         const searchable = [
@@ -354,6 +290,7 @@ function PlanningPokerJoinPage() {
           getPlanningSessionStatusLabel(session.status),
           getPlanningScoringScaleLabel(session.scoring_scale),
           formatPlanningDateTime(session.created_at),
+          ...sessionStories.map(getPlanningStorySearchText),
         ]
           .filter(Boolean)
           .join(' ')
@@ -367,7 +304,14 @@ function PlanningPokerJoinPage() {
 
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       })
-  }, [planningSessionScaleFilter, planningSessionSearch, planningSessionStatusFilter, planningSessions])
+  }, [
+    planningSessionScaleFilter,
+    planningSessionSearch,
+    planningSessionStatusFilter,
+    planningSessionStoriesBySession,
+    planningSessionStoryFilter,
+    planningSessions,
+  ])
   const planningSessionQuickFilters = useMemo(
     () => [
       {
@@ -389,38 +333,73 @@ function PlanningPokerJoinPage() {
     [activePlanningSessionsCount, completedPlanningSessionsCount, planningSessions.length],
   )
   const planningSessionProgressById = useMemo(() => {
-    return planningSessions.reduce((progressById, session) => {
-      const stories = planningSessionStoriesBySession[session.id] ?? []
-      const total = stories.length
-      const estimated = stories.filter((story) => story.status === 'estimated').length
-      const skipped = stories.filter((story) => story.status === 'skipped').length
-      const voting = stories.filter((story) => story.status === 'voting').length
-      const pending = stories.filter((story) => story.status === 'pending').length
-      const resolved = estimated + skipped
-      const progressPercent = total > 0 ? Math.round((resolved / total) * 100) : 0
-
-      progressById[session.id] = {
-        estimated,
-        label:
-          total > 0
-            ? `${formatPlanningCount(resolved, 'história resolvida', 'histórias resolvidas')} de ${total}`
-            : 'Sem histórias vinculadas',
-        pending,
-        progressPercent,
-        skipped,
-        total,
-        voting,
-      }
-
-      return progressById
-    }, {})
+    return getPlanningSessionProgressById(planningSessions, planningSessionStoriesBySession)
   }, [planningSessionStoriesBySession, planningSessions])
+  const activePlanningStorySessionByStoryId = useMemo(() => {
+    return getActivePlanningStorySessionByStoryId(planningSessions, planningSessionStoriesBySession)
+  }, [planningSessionStoriesBySession, planningSessions])
+  const readyStoriesWithoutActiveSession = useMemo(
+    () => readyStories.filter((story) => !activePlanningStorySessionByStoryId[story.id]),
+    [activePlanningStorySessionByStoryId, readyStories],
+  )
+  const visibleReadyStories = useMemo(
+    () =>
+      hideActiveSessionStories
+        ? filteredReadyStories.filter((story) => !activePlanningStorySessionByStoryId[story.id])
+        : filteredReadyStories,
+    [activePlanningStorySessionByStoryId, filteredReadyStories, hideActiveSessionStories],
+  )
+  const readyStoriesInActiveSessionsCount = readyStories.length - readyStoriesWithoutActiveSession.length
+  const visibleReadyStoriesLabel = useMemo(
+    () =>
+      `${visibleReadyStories.length} ${
+        visibleReadyStories.length === 1 ? 'história visível' : 'histórias visíveis'
+      }`,
+    [visibleReadyStories.length],
+  )
+  const readyStoryFilterHint =
+    readyStoriesInActiveSessionsCount > 0
+      ? hideActiveSessionStories
+        ? `${formatPlanningCount(readyStoriesInActiveSessionsCount, 'história ocultada por Roda ativa', 'histórias ocultadas por Rodas ativas')}.`
+        : `${formatPlanningCount(readyStoriesInActiveSessionsCount, 'história já está em Roda ativa', 'histórias já estão em Rodas ativas')}.`
+      : 'Nenhuma história pronta aparece em Roda ativa.'
+  const selectedStoriesInActiveSessions = useMemo(
+    () =>
+      selectedStories
+        .map((story) => ({
+          session: activePlanningStorySessionByStoryId[story.id],
+          story,
+        }))
+        .filter((item) => Boolean(item.session)),
+    [activePlanningStorySessionByStoryId, selectedStories],
+  )
+  const selectedStoriesConflictLabel =
+    selectedStoriesInActiveSessions.length === 1
+      ? '1 história já aparece em uma Roda ativa'
+      : `${selectedStoriesInActiveSessions.length} histórias já aparecem em Rodas ativas`
+  const planningSessionsWithEstimateCount = useMemo(
+    () => planningSessions.filter((session) => (planningSessionProgressById[session.id]?.estimated ?? 0) > 0).length,
+    [planningSessionProgressById, planningSessions],
+  )
+  const planningSessionsWithPendingCount = useMemo(
+    () =>
+      planningSessions.filter((session) => {
+        const progress = planningSessionProgressById[session.id]
+        return (progress?.pending ?? 0) > 0 || (progress?.voting ?? 0) > 0
+      }).length,
+    [planningSessionProgressById, planningSessions],
+  )
+  const planningSessionsWithSkippedCount = useMemo(
+    () => planningSessions.filter((session) => (planningSessionProgressById[session.id]?.skipped ?? 0) > 0).length,
+    [planningSessionProgressById, planningSessions],
+  )
   const canCreatePlanningSession =
     canManageSelectedProject && readyStories.length > 0 && selectedStoryIds.length > 0
   const hasPlanningSessions = planningSessions.length > 0
   const hasActivePlanningSessionFilters =
     planningSessionStatusFilter !== 'all' ||
     planningSessionScaleFilter !== 'all' ||
+    planningSessionStoryFilter !== 'all' ||
     planningSessionSearch.trim().length > 0
   const planningReadinessItems = useMemo(
     () => [
@@ -448,11 +427,30 @@ function PlanningPokerJoinPage() {
               : 'Sem histórias prontas',
         isReady: selectedStoryIds.length > 0,
       },
+      {
+        label: 'Duplicidade',
+        value:
+          selectedStoryIds.length === 0
+            ? 'Aguardando seleção'
+            : selectedStoriesInActiveSessions.length > 0
+              ? selectedStoriesConflictLabel
+              : 'Sem Roda ativa duplicada',
+        isReady: selectedStoryIds.length > 0 && selectedStoriesInActiveSessions.length === 0,
+      },
     ],
-    [canManageSelectedProject, readyStories.length, selectedProject, selectedStoryIds.length],
+    [
+      canManageSelectedProject,
+      readyStories.length,
+      selectedProject,
+      selectedStoriesConflictLabel,
+      selectedStoriesInActiveSessions.length,
+      selectedStoryIds.length,
+    ],
   )
   const planningCreateHint = canCreatePlanningSession
-    ? 'Tudo pronto para abrir a sessão para a guilda.'
+    ? selectedStoriesInActiveSessions.length > 0
+      ? 'Há histórias selecionadas em Rodas ativas. Revise antes de criar outra sessão.'
+      : 'Tudo pronto para abrir a sessão para a guilda.'
     : !selectedProject
       ? 'Selecione um projeto para carregar histórias e permissões.'
       : !canManageSelectedProject
@@ -699,6 +697,7 @@ function PlanningPokerJoinPage() {
   function handleClearPlanningSessionFilters() {
     setPlanningSessionStatusFilter('all')
     setPlanningSessionScaleFilter('all')
+    setPlanningSessionStoryFilter('all')
     setPlanningSessionSearch('')
   }
 
@@ -713,8 +712,14 @@ function PlanningPokerJoinPage() {
 
   function handleSelectVisibleStories() {
     setPlanningMessage('')
-    const visibleStoryIds = filteredReadyStories.map((story) => story.id)
+    const visibleStoryIds = visibleReadyStories.map((story) => story.id)
     setSelectedStoryIds((current) => Array.from(new Set([...current, ...visibleStoryIds])))
+  }
+
+  function handleSelectAvailableStories() {
+    setPlanningMessage('')
+    const availableStoryIds = readyStoriesWithoutActiveSession.map((story) => story.id)
+    setSelectedStoryIds((current) => Array.from(new Set([...current, ...availableStoryIds])))
   }
 
   function handleSelectAllReadyStories() {
@@ -810,10 +815,12 @@ function PlanningPokerJoinPage() {
 
   async function handleCopySessionInvite(session, copyType) {
     setCopyMessage('')
+    setCopyFeedbackBySessionId((current) => ({ ...current, [session?.id]: '' }))
     const safeInviteCode = normalizeInviteCode(session?.invite_code)
 
     if (!safeInviteCode) {
       setCopyMessage('Esta Roda ainda não possui código de convite.')
+      setCopyFeedbackBySessionId((current) => ({ ...current, [session?.id]: 'Convite indisponível' }))
       return
     }
 
@@ -821,27 +828,34 @@ function PlanningPokerJoinPage() {
 
     try {
       await copyTextToClipboard(textToCopy)
-      setCopyMessage(copyType === 'link' ? 'Link de convite copiado.' : 'Código da sala copiado.')
+      const nextMessage = copyType === 'link' ? 'Convite copiado' : 'Código copiado'
+      setCopyMessage(`${nextMessage}.`)
+      setCopyFeedbackBySessionId((current) => ({ ...current, [session.id]: nextMessage }))
     } catch {
       setCopyMessage('Não foi possível copiar o convite agora.')
+      setCopyFeedbackBySessionId((current) => ({ ...current, [session.id]: 'Falha ao copiar' }))
     }
   }
 
   async function handleCopySessionSummary(session, progress) {
     setCopyMessage('')
+    setCopyFeedbackBySessionId((current) => ({ ...current, [session?.id]: '' }))
     if (!session) return
 
     try {
       await copyTextToClipboard(
         buildPlanningSessionSummaryMarkdown({
           progress,
+          projectName: selectedProject?.name ?? '',
           session,
           stories: planningSessionStoriesBySession[session.id] ?? [],
         }),
       )
-      setCopyMessage('Resumo da Roda copiado em Markdown.')
+      setCopyMessage('Resumo copiado.')
+      setCopyFeedbackBySessionId((current) => ({ ...current, [session.id]: 'Resumo copiado' }))
     } catch {
       setCopyMessage('Não foi possível copiar o resumo agora.')
+      setCopyFeedbackBySessionId((current) => ({ ...current, [session.id]: 'Falha ao copiar' }))
     }
   }
 
@@ -1058,7 +1072,7 @@ function PlanningPokerJoinPage() {
                   <h3>Nenhuma história pronta para estimar</h3>
                   <p>Marque histórias do projeto como prontas para estimar antes de criar uma Roda.</p>
                   <Link className="btn btn-secondary btn-small" to={`/projetos/${selectedProjectId}`}>
-                    Abrir projeto
+                    Preparar histórias
                   </Link>
                 </div>
               ) : null}
@@ -1077,14 +1091,30 @@ function PlanningPokerJoinPage() {
                       />
                     </label>
                     <div className="project-detail-page__campfire-story-actions">
-                      <span>{filteredReadyStoriesLabel}</span>
+                      <span>{visibleReadyStoriesLabel}</span>
+                      <button
+                        type="button"
+                        className={`btn btn-ghost btn-small ${hideActiveSessionStories ? 'is-active' : ''}`.trim()}
+                        onClick={() => setHideActiveSessionStories((current) => !current)}
+                        disabled={isCreatingPlanningSession || readyStoriesInActiveSessionsCount === 0}
+                      >
+                        {hideActiveSessionStories ? 'Ver todas' : 'Ocultar em Roda ativa'}
+                      </button>
                       <button
                         type="button"
                         className="btn btn-secondary btn-small"
                         onClick={handleSelectVisibleStories}
-                        disabled={isCreatingPlanningSession || filteredReadyStories.length === 0}
+                        disabled={isCreatingPlanningSession || visibleReadyStories.length === 0}
                       >
                         Selecionar visíveis
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-small"
+                        onClick={handleSelectAvailableStories}
+                        disabled={isCreatingPlanningSession || readyStoriesWithoutActiveSession.length === 0}
+                      >
+                        Selecionar livres
                       </button>
                       <button
                         type="button"
@@ -1104,6 +1134,7 @@ function PlanningPokerJoinPage() {
                       </button>
                     </div>
                   </div>
+                  <p className="planning-poker-dashboard__story-filter-hint">{readyStoryFilterHint}</p>
 
                   {selectedStories.length > 0 ? (
                     <div
@@ -1124,56 +1155,114 @@ function PlanningPokerJoinPage() {
                           Limpar seleção
                         </button>
                       </div>
-                      <div className="planning-poker-dashboard__selected-story-list">
-                        {selectedStories.map((story) => (
-                          <article key={story.id} className="planning-poker-dashboard__selected-story">
-                            <div>
-                              <strong>{story.title ?? 'História sem título'}</strong>
-                              <span>{formatPlanningDateTime(story.created_at)}</span>
-                            </div>
-                            <button
-                              type="button"
-                              className="btn btn-ghost btn-small"
-                              onClick={() => handleRemovePlanningStory(story.id)}
-                              disabled={isCreatingPlanningSession}
+                      {selectedStoriesInActiveSessions.length > 0 ? (
+                        <div className="planning-poker-dashboard__selection-warning" role="status">
+                          <div>
+                            <strong>{selectedStoriesConflictLabel}</strong>
+                            <p>
+                              Você ainda pode criar a sessão, mas vale confirmar se a estimativa não deveria continuar na
+                              Roda já aberta.
+                            </p>
+                          </div>
+                          {selectedStoriesInActiveSessions[0]?.session ? (
+                            <Link
+                              className="btn btn-secondary btn-small"
+                              to={`/projetos/${selectedProjectId}/roda/${selectedStoriesInActiveSessions[0].session.id}`}
                             >
-                              Remover
-                            </button>
-                          </article>
-                        ))}
+                              Abrir Roda ativa
+                            </Link>
+                          ) : null}
+                        </div>
+                      ) : null}
+                      <div className="planning-poker-dashboard__selected-story-list">
+                        {selectedStories.map((story) => {
+                          const activeSession = activePlanningStorySessionByStoryId[story.id]
+
+                          return (
+                            <article
+                              key={story.id}
+                              className={`planning-poker-dashboard__selected-story ${
+                                activeSession ? 'planning-poker-dashboard__selected-story--active-session' : ''
+                              }`.trim()}
+                            >
+                              <div>
+                                <strong>{story.title ?? 'História sem título'}</strong>
+                                <span>
+                                  {activeSession
+                                    ? `Em Roda ativa: ${activeSession.name}`
+                                    : formatPlanningDateTime(story.created_at)}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                className="btn btn-ghost btn-small"
+                                onClick={() => handleRemovePlanningStory(story.id)}
+                                disabled={isCreatingPlanningSession}
+                              >
+                                Remover
+                              </button>
+                            </article>
+                          )
+                        })}
                       </div>
                     </div>
                   ) : null}
 
-                  {filteredReadyStories.length === 0 ? (
+                  {visibleReadyStories.length === 0 ? (
                     <div className="projects-page__empty">
-                      <h3>Nenhuma história encontrada</h3>
-                      <p>Limpe a busca para ver outras histórias prontas deste projeto.</p>
+                      <h3>
+                        {hideActiveSessionStories && filteredReadyStories.length > 0
+                          ? 'Todas as histórias visíveis estão em Rodas ativas'
+                          : 'Nenhuma história encontrada'}
+                      </h3>
+                      <p>
+                        {hideActiveSessionStories && filteredReadyStories.length > 0
+                          ? 'Desative o filtro para visualizar também histórias que já participam de uma Roda em andamento.'
+                          : 'Limpe a busca para ver outras histórias prontas deste projeto.'}
+                      </p>
+                      {hideActiveSessionStories && filteredReadyStories.length > 0 ? (
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-small"
+                          onClick={() => setHideActiveSessionStories(false)}
+                          disabled={isCreatingPlanningSession}
+                        >
+                          Ver todas
+                        </button>
+                      ) : null}
                     </div>
                   ) : (
                     <div className="project-detail-page__campfire-story-list">
-                      {filteredReadyStories.map((story) => (
-                        <label
-                          key={story.id}
-                          className={`project-detail-page__campfire-story-option ${
-                            selectedStoryIds.includes(story.id)
-                              ? 'project-detail-page__campfire-story-option--selected'
-                              : ''
-                          }`.trim()}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedStoryIds.includes(story.id)}
-                            onChange={() => handleTogglePlanningStory(story.id)}
-                            disabled={isCreatingPlanningSession}
-                          />
-                          <span>
-                            <strong>{story.title}</strong>
-                            <small>{formatPlanningDateTime(story.created_at)}</small>
-                            <em>{selectedStoryIds.includes(story.id) ? 'Selecionada' : 'Pronta para estimar'}</em>
-                          </span>
-                        </label>
-                      ))}
+                      {visibleReadyStories.map((story) => {
+                        const isSelected = selectedStoryIds.includes(story.id)
+                        const activeSession = activePlanningStorySessionByStoryId[story.id]
+
+                        return (
+                          <label
+                            key={story.id}
+                            className={[
+                              'project-detail-page__campfire-story-option',
+                              isSelected ? 'project-detail-page__campfire-story-option--selected' : '',
+                              activeSession ? 'project-detail-page__campfire-story-option--active-session' : '',
+                            ]
+                              .filter(Boolean)
+                              .join(' ')}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handleTogglePlanningStory(story.id)}
+                              disabled={isCreatingPlanningSession}
+                            />
+                            <span>
+                              <strong>{story.title}</strong>
+                              <small>{formatPlanningDateTime(story.created_at)}</small>
+                              <em>{isSelected ? 'Selecionada' : activeSession ? 'Já em Roda ativa' : 'Pronta para estimar'}</em>
+                              {activeSession ? <small>Em andamento: {activeSession.name}</small> : null}
+                            </span>
+                          </label>
+                        )
+                      })}
                     </div>
                   )}
                 </>
@@ -1300,6 +1389,27 @@ function PlanningPokerJoinPage() {
                 ))}
               </div>
 
+              <div className="planning-poker-dashboard__quick-filters" aria-label="Filtros rápidos por histórias">
+                {[
+                  { value: 'estimated_group', label: 'Com estimativa', count: planningSessionsWithEstimateCount },
+                  { value: 'pending_group', label: 'Com pendências', count: planningSessionsWithPendingCount },
+                  { value: 'skipped_group', label: 'Puladas', count: planningSessionsWithSkippedCount },
+                ].map((filter) => (
+                  <button
+                    key={filter.value}
+                    type="button"
+                    className={planningSessionStoryFilter === filter.value ? 'is-active' : ''}
+                    onClick={() =>
+                      setPlanningSessionStoryFilter((current) => (current === filter.value ? 'all' : filter.value))
+                    }
+                    disabled={isLoadingProjectContext || filter.count === 0}
+                  >
+                    <span>{filter.label}</span>
+                    <strong>{filter.count}</strong>
+                  </button>
+                ))}
+              </div>
+
               <div className="project-detail-page__campfire-filters" aria-label="Filtros de Rodas da Fogueira">
                 <label className="projects-page__field">
                   <span>Buscar Roda</span>
@@ -1396,6 +1506,7 @@ function PlanningPokerJoinPage() {
                 : session.status === 'completed'
                   ? 'Consultar resultado'
                   : 'Abrir sala'
+              const copyFeedback = copyFeedbackBySessionId[session.id]
 
               return (
                 <article
@@ -1486,6 +1597,7 @@ function PlanningPokerJoinPage() {
                     <Link className="btn btn-secondary btn-small" to={`/projetos/${selectedProjectId}/roda/${session.id}`}>
                       {sessionActionLabel}
                     </Link>
+                    {copyFeedback ? <span className="planning-poker-dashboard__copy-feedback">{copyFeedback}</span> : null}
                   </div>
                 </article>
               )

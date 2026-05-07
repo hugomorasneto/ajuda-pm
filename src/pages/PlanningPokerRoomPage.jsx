@@ -1,7 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, useOutletContext, useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { checkCanManageProject } from '../services/projectsService'
+import { checkCanManageProject, getProjectById } from '../services/projectsService'
+import {
+  buildPlanningSessionSummaryMarkdown,
+  formatPlanningTimerDuration,
+  formatRemainingTime,
+  getPlanningRoundStatusLabel as getRoundStatusLabel,
+  getPlanningScoringScaleLabel as getScoringScaleLabel,
+  getPlanningSessionProgress,
+  getPlanningSessionStatusLabel as getSessionStatusLabel,
+  getPlanningStoryStatusLabel as getStoryStatusLabel,
+  isRoundTimerExpired,
+} from '../utils/planningPokerUtils'
 import { copyTextToClipboard } from '../utils/storyExport'
 import {
   castPlanningPokerVote,
@@ -21,51 +32,6 @@ import {
   subscribeToPlanningPokerSession,
 } from '../services/planningPokerService'
 
-const SESSION_STATUS_LABELS = {
-  draft: 'Rascunho',
-  active: 'Ativa',
-  voting: 'Em votação',
-  revealed: 'Votos revelados',
-  completed: 'Finalizada',
-  canceled: 'Cancelada',
-}
-
-const STORY_STATUS_LABELS = {
-  pending: 'Pendente',
-  voting: 'Em votação',
-  estimated: 'Estimada',
-  skipped: 'Pulada',
-}
-
-const ROUND_STATUS_LABELS = {
-  voting: 'Votação aberta',
-  revealed: 'Runas reveladas',
-  closed: 'Rodada encerrada',
-  canceled: 'Rodada cancelada',
-}
-
-const SCORING_SCALE_LABELS = {
-  fibonacci: 'Fibonacci',
-  tshirt: 'Tamanho de camiseta',
-  custom: 'Customizada',
-}
-
-function getSessionStatusLabel(status) {
-  return SESSION_STATUS_LABELS[status] ?? 'Rascunho'
-}
-
-function getStoryStatusLabel(status) {
-  return STORY_STATUS_LABELS[status] ?? 'Pendente'
-}
-
-function getRoundStatusLabel(status) {
-  return ROUND_STATUS_LABELS[status] ?? 'Sem rodada ativa'
-}
-
-function getScoringScaleLabel(scoringScale) {
-  return SCORING_SCALE_LABELS[scoringScale] ?? 'Fibonacci'
-}
-
 function formatDateTime(value) {
   if (!value) return '-'
   const date = new Date(value)
@@ -77,27 +43,6 @@ function formatDateTime(value) {
     hour: '2-digit',
     minute: '2-digit',
   }).format(date)
-}
-
-function formatRemainingTime(endsAt, currentTime) {
-  if (!endsAt) return 'Sem timer'
-  if (!currentTime) return 'Atualizando timer'
-
-  const remainingMs = new Date(endsAt).getTime() - currentTime
-  if (!Number.isFinite(remainingMs) || remainingMs <= 0) return 'Tempo encerrado'
-
-  const totalSeconds = Math.ceil(remainingMs / 1000)
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-
-  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-}
-
-function isRoundTimerExpired(endsAt, currentTime) {
-  if (!endsAt || !currentTime) return false
-
-  const endsAtMs = new Date(endsAt).getTime()
-  return Number.isFinite(endsAtMs) && currentTime >= endsAtMs
 }
 
 function getParticipantLabel(participant, currentUserId, index) {
@@ -213,6 +158,7 @@ function PlanningPokerRoomPage() {
   const hasJoinedRef = useRef(false)
   const reloadTimerRef = useRef(null)
   const [session, setSession] = useState(null)
+  const [project, setProject] = useState(null)
   const [sessionStories, setSessionStories] = useState([])
   const [participants, setParticipants] = useState([])
   const [rounds, setRounds] = useState([])
@@ -226,6 +172,7 @@ function PlanningPokerRoomPage() {
   const [isActing, setIsActing] = useState(false)
   const [message, setMessage] = useState('')
   const [inviteMessage, setInviteMessage] = useState('')
+  const [roomCopyFeedback, setRoomCopyFeedback] = useState('')
   const [notFound, setNotFound] = useState(false)
   const [nowTick, setNowTick] = useState(() => Date.now())
   const inviteUrl = useMemo(
@@ -431,6 +378,10 @@ function PlanningPokerRoomPage() {
     sessionStories.length > 0 &&
       sessionStories.every((story) => ['estimated', 'skipped'].includes(story.status)),
   )
+  const sessionSummaryProgress = useMemo(
+    () => getPlanningSessionProgress(sessionStories),
+    [sessionStories],
+  )
   const votingExpired = Boolean(
     currentRound?.status === 'voting' && isRoundTimerExpired(currentRound.ends_at, nowTick),
   )
@@ -608,6 +559,39 @@ function PlanningPokerRoomPage() {
       actionLabel: 'Encerrar manualmente',
     }
   }, [allStoriesResolved, roomClosed, sessionCompletionLabel, unresolvedStoriesLabel])
+  const finalSessionPanel = useMemo(() => {
+    if (!session || (!roomClosed && !allStoriesResolved)) return null
+
+    if (session.status === 'canceled') {
+      return {
+        tone: 'canceled',
+        title: 'Sessão cancelada',
+        description: 'A Roda foi encerrada sem novas ações de votação.',
+      }
+    }
+
+    if (session.status === 'completed' && allStoriesResolved) {
+      return {
+        tone: 'completed',
+        title: 'Sessão finalizada automaticamente',
+        description: 'Todas as histórias foram resolvidas e o histórico está pronto para consulta.',
+      }
+    }
+
+    if (session.status === 'completed') {
+      return {
+        tone: 'manual',
+        title: 'Sessão encerrada manualmente',
+        description: 'A Roda foi finalizada antes de resolver todas as histórias.',
+      }
+    }
+
+    return {
+      tone: 'ready',
+      title: 'Todas as histórias foram resolvidas',
+      description: 'Finalize a sessão para bloquear novas ações e manter o histórico consolidado.',
+    }
+  }, [allStoriesResolved, roomClosed, session])
   const revealActionHint =
     currentRound?.status === 'voting'
       ? votingExpired
@@ -993,15 +977,23 @@ function PlanningPokerRoomPage() {
       hasJoinedRef.current = true
     }
 
-    const [storiesResponse, participantsResponse, roundsResponse, resultsResponse, voteStatusResponse, manageResponse] =
-      await Promise.all([
-        listPlanningPokerSessionStories({ sessionId, userId }),
-        listPlanningPokerParticipants({ sessionId, userId }),
-        listPlanningPokerRounds({ sessionId, userId }),
-        listPlanningPokerResults({ sessionId, userId }),
-        listPlanningPokerVoteStatus({ sessionId, userId }),
-        checkCanManageProject({ projectId: nextSession.project_id, userId }),
-      ])
+    const [
+      storiesResponse,
+      participantsResponse,
+      roundsResponse,
+      resultsResponse,
+      voteStatusResponse,
+      manageResponse,
+      projectResponse,
+    ] = await Promise.all([
+      listPlanningPokerSessionStories({ sessionId, userId }),
+      listPlanningPokerParticipants({ sessionId, userId }),
+      listPlanningPokerRounds({ sessionId, userId }),
+      listPlanningPokerResults({ sessionId, userId }),
+      listPlanningPokerVoteStatus({ sessionId, userId }),
+      checkCanManageProject({ projectId: nextSession.project_id, userId }),
+      getProjectById({ projectId: nextSession.project_id, userId }),
+    ])
 
     const nextRounds = roundsResponse.success ? roundsResponse.data ?? [] : []
     const revealedRoundIds = nextRounds
@@ -1012,6 +1004,7 @@ function PlanningPokerRoomPage() {
     )
 
     setSession(nextSession)
+    setProject(projectResponse.success ? projectResponse.data : null)
     setSessionStories(storiesResponse.success ? storiesResponse.data ?? [] : [])
     setParticipants(participantsResponse.success ? participantsResponse.data ?? [] : [])
     setRounds(nextRounds)
@@ -1102,11 +1095,14 @@ function PlanningPokerRoomPage() {
     if (!inviteUrl) return
 
     setInviteMessage('')
+    setRoomCopyFeedback('')
     try {
       await copyTextToClipboard(inviteUrl)
-      setInviteMessage('Link de convite copiado.')
+      setInviteMessage('Convite copiado.')
+      setRoomCopyFeedback('Convite copiado')
     } catch {
       setInviteMessage('Não foi possível copiar o link agora.')
+      setRoomCopyFeedback('Falha ao copiar')
     }
   }
 
@@ -1114,11 +1110,14 @@ function PlanningPokerRoomPage() {
     if (!session?.invite_code) return
 
     setInviteMessage('')
+    setRoomCopyFeedback('')
     try {
       await copyTextToClipboard(session.invite_code)
-      setInviteMessage('Código da sala copiado.')
+      setInviteMessage('Código copiado.')
+      setRoomCopyFeedback('Código copiado')
     } catch {
       setInviteMessage('Não foi possível copiar o código agora.')
+      setRoomCopyFeedback('Falha ao copiar')
     }
   }
 
@@ -1141,6 +1140,29 @@ function PlanningPokerRoomPage() {
       setMessage('Resultado da Roda copiado em Markdown.')
     } catch {
       setMessage('Não foi possível copiar o resultado agora.')
+    }
+  }
+
+  async function handleCopySessionSummary() {
+    if (!session) return
+
+    setMessage('')
+    setRoomCopyFeedback('')
+    try {
+      await copyTextToClipboard(
+        buildPlanningSessionSummaryMarkdown({
+          participantsCount: eligibleVoters.length,
+          progress: sessionSummaryProgress,
+          projectName: project?.name ?? '',
+          session,
+          stories: sessionStories,
+        }),
+      )
+      setMessage('Resumo copiado.')
+      setRoomCopyFeedback('Resumo copiado')
+    } catch {
+      setMessage('Não foi possível copiar o resumo agora.')
+      setRoomCopyFeedback('Falha ao copiar')
     }
   }
 
@@ -1270,7 +1292,7 @@ function PlanningPokerRoomPage() {
                 onClick={handleCopyInviteLink}
                 disabled={!session}
               >
-                Copiar link
+                {roomCopyFeedback === 'Convite copiado' ? 'Convite copiado' : 'Copiar link'}
               </button>
               <button
                 type="button"
@@ -1278,7 +1300,7 @@ function PlanningPokerRoomPage() {
                 onClick={handleCopyInviteCode}
                 disabled={!session?.invite_code}
               >
-                Copiar código
+                {roomCopyFeedback === 'Código copiado' ? 'Código copiado' : 'Copiar código'}
               </button>
             </div>
             {inviteMessage ? <p className="planning-poker-room__invite-message">{inviteMessage}</p> : null}
@@ -1319,6 +1341,64 @@ function PlanningPokerRoomPage() {
               <small>Privacidade</small>
               <strong>{voteVisibilityLabel}</strong>
             </span>
+          </div>
+        </section>
+      ) : null}
+
+      {finalSessionPanel ? (
+        <section
+          className={`panel planning-poker-room__final-summary planning-poker-room__final-summary--${finalSessionPanel.tone}`}
+          aria-label="Resumo final da sessão"
+        >
+          <div className="planning-poker-room__final-summary-copy">
+            <p className="projects-page__eyebrow">Resumo final da sessão</p>
+            <h2>{finalSessionPanel.title}</h2>
+            <p>{finalSessionPanel.description}</p>
+          </div>
+
+          <div className="planning-poker-room__final-summary-grid" aria-label="Indicadores finais da sessão">
+            <span>
+              <small>Estimadas</small>
+              <strong>{sessionSummaryProgress.estimated}</strong>
+            </span>
+            <span>
+              <small>Puladas</small>
+              <strong>{sessionSummaryProgress.skipped}</strong>
+            </span>
+            <span>
+              <small>Pendentes</small>
+              <strong>{sessionSummaryProgress.pending + sessionSummaryProgress.voting}</strong>
+            </span>
+            <span>
+              <small>Votantes</small>
+              <strong>{eligibleVoters.length}</strong>
+            </span>
+            <span>
+              <small>Escala</small>
+              <strong>{scoringScaleLabel}</strong>
+            </span>
+            <span>
+              <small>Timer</small>
+              <strong>{formatPlanningTimerDuration(session?.vote_time_limit_seconds)}</strong>
+            </span>
+            <span>
+              <small>Data</small>
+              <strong>{formatDateTime(session?.completed_at ?? session?.canceled_at ?? session?.updated_at)}</strong>
+            </span>
+          </div>
+
+          <div className="planning-poker-room__final-summary-actions">
+            <button
+              type="button"
+              className="btn btn-secondary btn-small"
+              onClick={handleCopySessionSummary}
+              disabled={!session}
+            >
+              {roomCopyFeedback === 'Resumo copiado' ? 'Resumo copiado' : 'Copiar resumo'}
+            </button>
+            <Link className="btn btn-ghost btn-small" to={`/roda?projectId=${projectId}`}>
+              Voltar para Roda
+            </Link>
           </div>
         </section>
       ) : null}
