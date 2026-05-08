@@ -9624,6 +9624,163 @@
   gap: var(--space-2);
 }
 
+.planning-poker-dashboard__accessible {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.planning-poker-dashboard__accessible-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.planning-poker-dashboard__accessible-header > div {
+  min-width: 0;
+}
+
+.planning-poker-dashboard__accessible-header h2,
+.planning-poker-dashboard__accessible-header p {
+  margin: 0;
+}
+
+.planning-poker-dashboard__accessible-header h2 {
+  color: var(--forge-text-primary);
+}
+
+.planning-poker-dashboard__accessible-header p:not(.projects-page__eyebrow) {
+  max-width: 72ch;
+  color: var(--forge-text-secondary);
+  line-height: 1.55;
+}
+
+.planning-poker-dashboard__accessible-metrics {
+  display: grid;
+  gap: var(--space-1);
+  flex: 0 0 auto;
+  min-width: 180px;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--forge-surface-inset);
+}
+
+.planning-poker-dashboard__accessible-metrics span {
+  color: var(--forge-text-primary);
+  font-weight: 900;
+}
+
+.planning-poker-dashboard__accessible-metrics strong {
+  color: var(--forge-ember);
+  font-size: var(--text-small);
+}
+
+.planning-poker-dashboard__accessible-empty {
+  display: grid;
+  gap: var(--space-1);
+  border: 1px dashed var(--forge-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background: rgba(255,255,255,0.02);
+}
+
+.planning-poker-dashboard__accessible-empty strong {
+  color: var(--forge-text-primary);
+}
+
+.planning-poker-dashboard__accessible-empty p {
+  margin: 0;
+  color: var(--forge-text-secondary);
+  line-height: 1.5;
+}
+
+.planning-poker-dashboard__accessible-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.planning-poker-dashboard__accessible-card {
+  display: grid;
+  align-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.035), transparent 76%),
+    var(--forge-surface-inset);
+}
+
+.planning-poker-dashboard__accessible-card--live {
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(135deg, rgba(255,145,56,0.12), transparent 78%),
+    var(--forge-surface-inset);
+}
+
+.planning-poker-dashboard__accessible-card div {
+  min-width: 0;
+}
+
+.planning-poker-dashboard__accessible-card span {
+  display: block;
+  color: var(--forge-text-muted);
+  font-size: var(--text-micro);
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.planning-poker-dashboard__accessible-card h3 {
+  display: -webkit-box;
+  margin: var(--space-1) 0;
+  color: var(--forge-text-primary);
+  font-size: var(--text-body);
+  line-height: 1.3;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.planning-poker-dashboard__accessible-card p {
+  margin: 0;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.planning-poker-dashboard__accessible-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  background: rgba(255,255,255,0.025);
+}
+
+.planning-poker-dashboard__accessible-progress span {
+  min-width: 0;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  letter-spacing: 0;
+  text-transform: none;
+  overflow-wrap: anywhere;
+}
+
+.planning-poker-dashboard__accessible-progress strong {
+  flex: 0 0 auto;
+  color: var(--forge-text-primary);
+  font-size: var(--text-small);
+}
+
 .planning-poker-dashboard .projects-page__form-card,
 .planning-poker-dashboard .projects-page__list-card {
   overflow: hidden;
@@ -10010,7 +10167,8 @@
 }
 
 @media (max-width: 1180px) {
-  .planning-poker-dashboard__overview {
+  .planning-poker-dashboard__overview,
+  .planning-poker-dashboard__accessible-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -10032,11 +10190,13 @@
 }
 
 @media (max-width: 720px) {
-  .planning-poker-dashboard__overview {
+  .planning-poker-dashboard__overview,
+  .planning-poker-dashboard__accessible-list {
     grid-template-columns: 1fr;
   }
 
-  .planning-poker-dashboard__next-action {
+  .planning-poker-dashboard__next-action,
+  .planning-poker-dashboard__accessible-header {
     flex-direction: column;
     align-items: stretch;
   }

@@ -98,6 +98,8 @@ function PlanningPokerJoinPage() {
   const [inviteCode, setInviteCode] = useState(() => codeFromUrl)
   const [projects, setProjects] = useState([])
   const [selectedProjectId, setSelectedProjectId] = useState(projectIdFromUrl)
+  const [accessiblePlanningSessions, setAccessiblePlanningSessions] = useState([])
+  const [accessiblePlanningStoriesBySession, setAccessiblePlanningStoriesBySession] = useState({})
   const [canManageSelectedProject, setCanManageSelectedProject] = useState(false)
   const [teams, setTeams] = useState([])
   const [readyStories, setReadyStories] = useState([])
@@ -124,6 +126,7 @@ function PlanningPokerJoinPage() {
   const [copyFeedbackBySessionId, setCopyFeedbackBySessionId] = useState({})
   const [isSearching, setIsSearching] = useState(false)
   const [isLoadingProjects, setIsLoadingProjects] = useState(false)
+  const [isLoadingAccessiblePlanningSessions, setIsLoadingAccessiblePlanningSessions] = useState(false)
   const [isLoadingProjectContext, setIsLoadingProjectContext] = useState(false)
   const [isCreatingPlanningSession, setIsCreatingPlanningSession] = useState(false)
 
@@ -213,6 +216,27 @@ function PlanningPokerJoinPage() {
   const latestCompletedPlanningSession = useMemo(
     () => planningSessions.find((session) => session.status === 'completed') ?? null,
     [planningSessions],
+  )
+  const accessibleActivePlanningSessionsCount = useMemo(
+    () => accessiblePlanningSessions.filter((session) => LIVE_PLANNING_SESSION_STATUSES.includes(session.status)).length,
+    [accessiblePlanningSessions],
+  )
+  const accessiblePlanningSessionsPreview = useMemo(
+    () =>
+      accessiblePlanningSessions
+        .filter((session) => LIVE_PLANNING_SESSION_STATUSES.includes(session.status))
+        .concat(accessiblePlanningSessions.filter((session) => !LIVE_PLANNING_SESSION_STATUSES.includes(session.status)))
+        .slice(0, 6),
+    [accessiblePlanningSessions],
+  )
+  const accessiblePlanningSessionsLabel = useMemo(
+    () =>
+      formatPlanningCount(
+        accessiblePlanningSessions.length,
+        'Roda acessível',
+        'Rodas acessíveis',
+      ),
+    [accessiblePlanningSessions.length],
   )
   const dashboardOverviewCards = useMemo(
     () => [
@@ -344,6 +368,9 @@ function PlanningPokerJoinPage() {
   const planningSessionProgressById = useMemo(() => {
     return getPlanningSessionProgressById(planningSessions, planningSessionStoriesBySession)
   }, [planningSessionStoriesBySession, planningSessions])
+  const accessiblePlanningSessionProgressById = useMemo(() => {
+    return getPlanningSessionProgressById(accessiblePlanningSessions, accessiblePlanningStoriesBySession)
+  }, [accessiblePlanningSessions, accessiblePlanningStoriesBySession])
   const activePlanningStorySessionByStoryId = useMemo(() => {
     return getActivePlanningStorySessionByStoryId(planningSessions, planningSessionStoriesBySession)
   }, [planningSessionStoriesBySession, planningSessions])
@@ -657,6 +684,72 @@ function PlanningPokerJoinPage() {
     setIsLoadingProjectContext(false)
   }, [selectedProjectId, userId])
 
+  const loadAccessiblePlanningSessions = useCallback(async () => {
+    if (!userId || projects.length === 0) {
+      setAccessiblePlanningSessions([])
+      setAccessiblePlanningStoriesBySession({})
+      return
+    }
+
+    setIsLoadingAccessiblePlanningSessions(true)
+
+    const sessionResponses = await Promise.all(
+      projects.map(async (project) => {
+        const response = await listPlanningPokerSessionsByProject({ projectId: project.id, userId })
+        return {
+          project,
+          response,
+        }
+      }),
+    )
+
+    const nextSessions = sessionResponses
+      .flatMap(({ project, response }) =>
+        response.success
+          ? (response.data ?? []).map((session) => ({
+              ...session,
+              projectName: project.name,
+            }))
+          : [],
+      )
+      .sort((a, b) => {
+        const weightDiff = getPlanningSessionSortWeight(a.status) - getPlanningSessionSortWeight(b.status)
+        if (weightDiff !== 0) return weightDiff
+
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      })
+
+    setAccessiblePlanningSessions(nextSessions)
+
+    if (nextSessions.length === 0) {
+      setAccessiblePlanningStoriesBySession({})
+      setIsLoadingAccessiblePlanningSessions(false)
+      return
+    }
+
+    const summariesResponse = await listPlanningPokerSessionStorySummaries({
+      sessionIds: nextSessions.map((session) => session.id),
+      userId,
+    })
+
+    if (summariesResponse.success) {
+      const nextStoriesBySession = (summariesResponse.data ?? []).reduce((storiesBySession, story) => {
+        if (!storiesBySession[story.session_id]) {
+          storiesBySession[story.session_id] = []
+        }
+
+        storiesBySession[story.session_id].push(story)
+        return storiesBySession
+      }, {})
+
+      setAccessiblePlanningStoriesBySession(nextStoriesBySession)
+    } else {
+      setAccessiblePlanningStoriesBySession({})
+    }
+
+    setIsLoadingAccessiblePlanningSessions(false)
+  }, [projects, userId])
+
   useEffect(() => {
     const timerId = setTimeout(() => {
       loadProjects()
@@ -672,6 +765,14 @@ function PlanningPokerJoinPage() {
 
     return () => clearTimeout(timerId)
   }, [loadSelectedProjectContext])
+
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      loadAccessiblePlanningSessions()
+    }, 0)
+
+    return () => clearTimeout(timerId)
+  }, [loadAccessiblePlanningSessions])
 
   useEffect(() => {
     const requestedStoryIds = Array.from(
@@ -971,6 +1072,73 @@ function PlanningPokerJoinPage() {
             </Link>
           ) : null}
         </div>
+      </section>
+
+      <section className="panel planning-poker-dashboard__accessible" aria-label="Rodas acessíveis para sua conta">
+        <div className="planning-poker-dashboard__accessible-header">
+          <div>
+            <p className="projects-page__eyebrow">Minha participação</p>
+            <h2>Rodas acessíveis</h2>
+            <p>
+              Quando o facilitador adiciona seu e-mail ao projeto, as Rodas daquele contexto aparecem aqui. O link
+              continua levando direto para a sala.
+            </p>
+          </div>
+          <div className="planning-poker-dashboard__accessible-metrics" aria-label="Resumo das Rodas acessíveis">
+            <span>{accessiblePlanningSessionsLabel}</span>
+            <strong>{formatPlanningCount(accessibleActivePlanningSessionsCount, 'em andamento', 'em andamento')}</strong>
+          </div>
+        </div>
+
+        {isLoadingAccessiblePlanningSessions ? (
+          <p className="projects-page__state">Carregando Rodas acessíveis...</p>
+        ) : null}
+
+        {!isLoadingAccessiblePlanningSessions && accessiblePlanningSessions.length === 0 ? (
+          <div className="planning-poker-dashboard__accessible-empty">
+            <strong>Nenhuma Roda acessível ainda</strong>
+            <p>
+              Peça ao facilitador para adicionar seu e-mail ao projeto da Roda. Depois disso, você pode entrar pelo link,
+              pelo código ou por esta lista.
+            </p>
+          </div>
+        ) : null}
+
+        {!isLoadingAccessiblePlanningSessions && accessiblePlanningSessionsPreview.length > 0 ? (
+          <div className="planning-poker-dashboard__accessible-list">
+            {accessiblePlanningSessionsPreview.map((session) => {
+              const isLiveSession = LIVE_PLANNING_SESSION_STATUSES.includes(session.status)
+              const progress = accessiblePlanningSessionProgressById[session.id] ?? {
+                label: 'Sem histórias vinculadas',
+                progressPercent: 0,
+              }
+
+              return (
+                <article
+                  key={session.id}
+                  className={`planning-poker-dashboard__accessible-card ${
+                    isLiveSession ? 'planning-poker-dashboard__accessible-card--live' : ''
+                  }`.trim()}
+                >
+                  <div>
+                    <span>{session.projectName ?? 'Projeto sem nome'}</span>
+                    <h3>{session.name}</h3>
+                    <p>
+                      {getPlanningSessionStatusLabel(session.status)} · {getPlanningScoringScaleLabel(session.scoring_scale)}
+                    </p>
+                  </div>
+                  <div className="planning-poker-dashboard__accessible-progress" aria-label={`Progresso de ${session.name}`}>
+                    <span>{progress.label}</span>
+                    <strong>{progress.progressPercent}%</strong>
+                  </div>
+                  <Link className="btn btn-secondary btn-small" to={`/projetos/${session.project_id}/roda/${session.id}`}>
+                    {isLiveSession ? 'Entrar na Roda' : 'Consultar Roda'}
+                  </Link>
+                </article>
+              )
+            })}
+          </div>
+        ) : null}
       </section>
 
       <div className="projects-page__layout">
