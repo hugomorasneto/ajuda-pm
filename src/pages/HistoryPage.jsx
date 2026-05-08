@@ -957,7 +957,7 @@ function HistoryPage() {
                   <div className="history-result-card__title-row">
                     <h3>{item.title}</h3>
                     <span className="history-result-card__action">
-                      {isActive ? 'Selecionada' : 'Ver detalhes'}
+                      {isActive ? 'Aberta' : 'Detalhes'}
                     </span>
                   </div>
 

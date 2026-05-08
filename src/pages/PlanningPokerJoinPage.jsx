@@ -87,6 +87,14 @@ function PlanningPokerJoinPage() {
   const codeFromUrl = useMemo(() => normalizeInviteCode(searchParams.get('codigo')), [searchParams])
   const projectIdFromUrl = searchParams.get('projectId') ?? ''
   const storyIdFromUrl = searchParams.get('storyId') ?? ''
+  const storyIdsFromUrl = useMemo(
+    () =>
+      String(searchParams.get('storyIds') ?? '')
+        .split(',')
+        .map((storyId) => storyId.trim())
+        .filter(Boolean),
+    [searchParams],
+  )
   const [inviteCode, setInviteCode] = useState(() => codeFromUrl)
   const [projects, setProjects] = useState([])
   const [selectedProjectId, setSelectedProjectId] = useState(projectIdFromUrl)
@@ -666,27 +674,36 @@ function PlanningPokerJoinPage() {
   }, [loadSelectedProjectContext])
 
   useEffect(() => {
-    if (!storyIdFromUrl || !selectedProjectId || isLoadingProjectContext) return
+    const requestedStoryIds = Array.from(
+      new Set([...storyIdsFromUrl, storyIdFromUrl].filter(Boolean)),
+    )
+    if (requestedStoryIds.length === 0 || !selectedProjectId || isLoadingProjectContext) return
 
     const timerId = window.setTimeout(() => {
-      const storyFromShortcut = readyStories.find((story) => story.id === storyIdFromUrl)
-      if (!storyFromShortcut) {
+      const readyStoryIds = new Set(readyStories.map((story) => story.id))
+      const availableStoryIds = requestedStoryIds.filter((storyId) => readyStoryIds.has(storyId))
+
+      if (availableStoryIds.length === 0) {
         if (readyStories.length > 0) {
-          setPlanningMessage('A história enviada pela Bancada não está disponível entre as histórias prontas deste projeto.')
+          setPlanningMessage('As histórias enviadas pelo Projeto não estão disponíveis entre as histórias prontas deste contexto.')
         }
         return
       }
 
       setSelectedStoryIds((current) =>
-        current.includes(storyIdFromUrl) ? current : [storyIdFromUrl, ...current],
+        Array.from(new Set([...availableStoryIds, ...current])),
       )
       setReadyStorySearch('')
       setHideActiveSessionStories(false)
-      setPlanningMessage('História selecionada para criar a Roda.')
+      setPlanningMessage(
+        availableStoryIds.length === 1
+          ? 'História selecionada para criar a Roda.'
+          : `${availableStoryIds.length} histórias selecionadas para criar a Roda.`,
+      )
     }, 0)
 
     return () => window.clearTimeout(timerId)
-  }, [isLoadingProjectContext, readyStories, selectedProjectId, storyIdFromUrl])
+  }, [isLoadingProjectContext, readyStories, selectedProjectId, storyIdFromUrl, storyIdsFromUrl])
 
   useEffect(() => {
     if (typeof setTopbarStatus !== 'function') return
@@ -716,6 +733,7 @@ function PlanningPokerJoinPage() {
       nextParams.delete('projectId')
     }
     nextParams.delete('storyId')
+    nextParams.delete('storyIds')
     setSearchParams(nextParams, { replace: true })
   }
 

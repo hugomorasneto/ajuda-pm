@@ -4625,6 +4625,12 @@
   min-width: 0;
 }
 
+.history-page *,
+.history-page *::before,
+.history-page *::after {
+  min-width: 0;
+}
+
 .history-page__hero,
 .history-filters,
 .history-results,
@@ -4644,6 +4650,7 @@
   display: grid;
   gap: var(--space-2);
   max-width: 48rem;
+  min-width: 0;
 }
 
 .history-page__eyebrow {
@@ -4712,6 +4719,7 @@
 }
 
 .history-filters__applied strong {
+  display: block;
   overflow: hidden;
   color: var(--color-text-primary);
   font-size: var(--text-small);
@@ -4802,15 +4810,22 @@
 }
 
 .history-filters__advanced summary span {
+  min-width: 0;
   font-size: var(--text-small);
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .history-filters__advanced summary em {
+  overflow: hidden;
+  min-width: 0;
   color: var(--color-text-secondary);
   font-size: var(--text-small);
   font-style: normal;
   font-weight: 600;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .history-filters__advanced[open] summary {
@@ -4855,15 +4870,22 @@
 .history-filter-field select {
   width: 100%;
   padding: 0 var(--space-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .history-page .btn {
   min-height: 36px;
   border-radius: var(--radius-sm);
   padding: 0 var(--space-3);
+  max-width: 100%;
+  overflow: hidden;
   font-size: var(--text-small);
   font-weight: 800;
   letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .history-layout {
@@ -4981,21 +5003,23 @@
 }
 
 .history-result-card__title-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: flex-start;
-  justify-content: space-between;
   gap: var(--space-3);
   min-width: 0;
 }
 
 .history-result-card h3 {
-  flex: 1 1 auto;
+  display: -webkit-box;
   min-width: 0;
   margin-bottom: 0;
   overflow: hidden;
   font-size: 0.98rem;
   line-height: 1.35;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .history-result-card__action,
@@ -5018,6 +5042,8 @@
 
 .history-result-card__action {
   flex: 0 1 auto;
+  justify-content: center;
+  max-width: 7.25rem;
 }
 
 .history-result-card p {
@@ -5027,6 +5053,7 @@
   color: var(--color-text-secondary);
   font-size: var(--text-small);
   line-height: 1.5;
+  overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -5034,6 +5061,10 @@
 .history-result-card__meta {
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+.history-result-card__meta span {
+  max-width: 100%;
 }
 
 .history-result-card__meta .history-badge--active {
@@ -5093,7 +5124,12 @@
 }
 
 .history-preview__copy h2 {
+  display: -webkit-box;
+  overflow: hidden;
   line-height: 1.25;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .history-preview__badges,
@@ -5130,7 +5166,7 @@
 }
 
 .history-preview__actions .btn {
-  white-space: nowrap;
+  flex: 0 1 auto;
 }
 
 .history-copy-message,
@@ -5169,16 +5205,19 @@
 }
 
 .history-preview__facts strong {
+  display: -webkit-box;
   overflow: hidden;
   color: var(--color-text-primary);
   font-size: var(--text-small);
   line-height: 1.35;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .history-preview__project-assignment {
   display: grid;
-  grid-template-columns: minmax(200px, 0.45fr) minmax(0, 1fr);
+  grid-template-columns: minmax(240px, 0.5fr) minmax(0, 1fr);
   gap: var(--space-3);
   align-items: end;
   border: 1px solid var(--color-border);
@@ -5189,6 +5228,7 @@
 
 .history-preview__project-assignment p {
   font-size: var(--text-small);
+  line-height: 1.5;
 }
 
 .history-preview__project-assignment .history-detail__project-message {
@@ -5211,6 +5251,7 @@
   color: var(--color-text-primary);
   background: var(--color-canvas-muted);
   font-weight: 650;
+  overflow-wrap: anywhere;
 }
 
 .history-preview__criteria {
@@ -5220,6 +5261,7 @@
   padding-left: 1.25rem;
   color: var(--color-text-secondary);
   line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .history-preview__criteria li::marker {
@@ -5279,16 +5321,23 @@
 }
 
 .history-advanced-section summary strong {
+  overflow: hidden;
   font-size: var(--text-body);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .history-advanced-section summary em {
   flex: 0 1 auto;
+  overflow: hidden;
+  min-width: 0;
   color: var(--color-text-secondary);
   font-size: var(--text-small);
   font-style: normal;
   font-weight: 700;
   text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .history-advanced-section[open] summary {
@@ -5695,10 +5744,14 @@
 
   .history-filters__primary,
   .history-quick-filters,
-  .history-preview__project-assignment,
   .history-preview__facts,
   .history-inspection {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .history-preview__project-assignment {
+    grid-template-columns: 1fr;
+    align-items: stretch;
   }
 
   .history-preview__actions {
@@ -5707,7 +5760,9 @@
 }
 
 @media (max-width: 620px) {
-  .history-quick-filters {
+  .history-quick-filters,
+  .history-preview__facts,
+  .history-inspection {
     grid-template-columns: 1fr;
   }
 }
@@ -7320,6 +7375,54 @@
   gap: var(--space-3);
 }
 
+.project-detail-page__executive-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.project-detail-page__executive-strip article {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  min-width: 0;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.045), transparent 68%),
+    var(--forge-surface);
+  box-shadow: var(--forge-shadow-sm);
+}
+
+.project-detail-page__executive-strip span {
+  color: var(--forge-text-muted);
+  font-size: var(--text-small);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.project-detail-page__executive-strip strong {
+  color: var(--forge-text-primary);
+  font-size: 1.05rem;
+}
+
+.project-detail-page__executive-strip p {
+  display: -webkit-box;
+  min-height: 3.2rem;
+  margin: 0;
+  overflow: hidden;
+  color: var(--forge-text-secondary);
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.project-detail-page__executive-strip .btn {
+  width: fit-content;
+}
+
 .project-detail-page__ai {
   display: grid;
   gap: var(--space-4);
@@ -7609,6 +7712,103 @@
   margin-top: var(--space-4);
 }
 
+.project-detail-page__story-quick-filters {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.project-detail-page__story-quick-filter {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  color: var(--forge-text-secondary);
+  background: var(--forge-surface-inset);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.project-detail-page__story-quick-filter:hover:not(:disabled),
+.project-detail-page__story-quick-filter.is-active {
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(135deg, var(--forge-ember-soft), transparent 72%),
+    var(--forge-surface-inset);
+}
+
+.project-detail-page__story-quick-filter:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.project-detail-page__story-quick-filter:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.project-detail-page__story-quick-filter span,
+.project-detail-page__story-quick-filter small {
+  overflow-wrap: anywhere;
+}
+
+.project-detail-page__story-quick-filter span {
+  color: var(--forge-text-primary);
+  font-size: var(--text-small);
+  font-weight: 850;
+}
+
+.project-detail-page__story-quick-filter strong {
+  color: var(--forge-ember-hover);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.project-detail-page__story-quick-filter small {
+  color: var(--forge-text-muted);
+  font-size: var(--text-small);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.project-detail-page__story-batch-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  background:
+    linear-gradient(135deg, rgba(44, 144, 255, 0.09), transparent 70%),
+    var(--forge-surface-inset);
+}
+
+.project-detail-page__story-batch-bar strong {
+  color: var(--forge-text-primary);
+}
+
+.project-detail-page__story-batch-bar p {
+  margin: var(--space-1) 0 0;
+  color: var(--forge-text-secondary);
+  line-height: 1.45;
+}
+
+.project-detail-page__story-batch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
 .project-detail-page__story-actions {
   display: flex;
   align-items: end;
@@ -7653,6 +7853,30 @@
   border-radius: var(--radius-md);
   padding: var(--space-4);
   background: var(--forge-surface-inset);
+}
+
+.project-detail-page__story.is-selected {
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(135deg, var(--forge-ember-soft), transparent 74%),
+    var(--forge-surface-inset);
+}
+
+.project-detail-page__story-select {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: fit-content;
+  margin-bottom: var(--space-2);
+  color: var(--forge-tech);
+  font-size: var(--text-small);
+  font-weight: 850;
+}
+
+.project-detail-page__story-select input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--forge-ember-hover);
 }
 
 .project-detail-page__story h3 {
@@ -10297,6 +10521,8 @@
   .project-detail-page__ai-next-step,
   .project-detail-page__ai-history-item,
   .project-detail-page__ai-history-actions,
+  .project-detail-page__story-batch-bar,
+  .project-detail-page__story-batch-actions,
   .project-detail-team__member-form,
   .project-detail-team__member,
   .project-detail-team__member-controls {
@@ -10334,7 +10560,9 @@
   .project-detail-page__campfire-options,
   .project-detail-page__campfire-filters,
   .project-detail-page__campfire-story-tools,
+  .project-detail-page__executive-strip,
   .project-detail-page__ai-grid,
+  .project-detail-page__story-quick-filters,
   .planning-poker-room__command-bar,
   .planning-poker-room__command-metrics,
   .planning-poker-room__consensus,

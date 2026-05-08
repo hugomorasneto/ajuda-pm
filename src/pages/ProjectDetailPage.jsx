@@ -55,6 +55,14 @@ const STORY_ESTIMATION_FILTER_OPTIONS = [
   ...ESTIMATION_STATUS_OPTIONS,
 ]
 
+const STORY_STATUS_QUICK_FILTERS = [
+  { value: 'all', label: 'Todas', hint: 'Visão completa' },
+  { value: 'created', label: 'Criadas', hint: 'Ainda sem preparo' },
+  { value: 'refining', label: 'Em refinamento', hint: 'Ajustes em andamento' },
+  { value: 'ready_for_estimation', label: 'Prontas', hint: 'Disponíveis para Roda' },
+  { value: 'estimated', label: 'Estimadas', hint: 'Já pontuadas' },
+]
+
 function formatProjectDateTime(value) {
   if (!value) return '-'
   const date = new Date(value)
@@ -99,6 +107,13 @@ function ProjectDetailPage() {
   const [projectStories, setProjectStories] = useState([])
   const [projectStoryCount, setProjectStoryCount] = useState(0)
   const [projectStoryFilteredCount, setProjectStoryFilteredCount] = useState(0)
+  const [projectStoryStatusCounts, setProjectStoryStatusCounts] = useState({
+    created: 0,
+    refining: 0,
+    ready_for_estimation: 0,
+    estimated: 0,
+  })
+  const [selectedProjectStoryIds, setSelectedProjectStoryIds] = useState([])
   const [storyEstimationFilter, setStoryEstimationFilter] = useState('all')
   const [projectNameDraft, setProjectNameDraft] = useState('')
   const [projectDescriptionDraft, setProjectDescriptionDraft] = useState('')
@@ -154,6 +169,45 @@ function ProjectDetailPage() {
     !isLoadingStories && projectStoryCount > 0 && projectStories.length === 0
   const shouldShowStoryLimitNotice = projectStoryFilteredCount > projectStories.length
   const canGenerateProjectInsights = Boolean(project && projectStoryCount > 0 && !isGeneratingProjectInsights)
+  const readyStoryCount = projectStoryStatusCounts.ready_for_estimation
+  const refiningStoryCount = projectStoryStatusCounts.refining
+  const estimatedStoryCount = projectStoryStatusCounts.estimated
+  const visibleReadyStories = useMemo(
+    () => projectStories.filter((story) => story.estimation_status === 'ready_for_estimation'),
+    [projectStories],
+  )
+  const selectedReadyStories = useMemo(
+    () => visibleReadyStories.filter((story) => selectedProjectStoryIds.includes(story.id)),
+    [selectedProjectStoryIds, visibleReadyStories],
+  )
+  const selectedReadyStoryIds = selectedReadyStories.map((story) => story.id)
+  const selectedReadyStoriesLabel =
+    selectedReadyStoryIds.length === 1
+      ? '1 história selecionada'
+      : `${selectedReadyStoryIds.length} histórias selecionadas`
+  const selectedReadyStoriesRodaUrl =
+    selectedReadyStoryIds.length > 0
+      ? `/roda?projectId=${projectId}&storyIds=${selectedReadyStoryIds.join(',')}`
+      : `/roda?projectId=${projectId}`
+  const latestProjectNextAction =
+    projectInsights?.next_actions?.[0] ??
+    (projectStoryCount === 0
+      ? 'Forje ou vincule a primeira história para liberar a leitura do projeto.'
+      : 'Gere um diagnóstico para priorizar riscos e próximos passos.')
+  const projectReadinessLabel = readyStoryCount > 0 ? 'Pronto para estimar' : 'Em organização'
+  const projectReadinessText =
+    projectStoryCount === 0
+      ? 'Nenhuma história vinculada ainda.'
+      : readyStoryCount > 0
+      ? `${readyStoryCount} ${readyStoryCount === 1 ? 'história pronta' : 'histórias prontas'} para a Roda.`
+      : `${refiningStoryCount} em refinamento · ${estimatedStoryCount} ${
+          estimatedStoryCount === 1 ? 'estimada' : 'estimadas'
+        }.`
+
+  function getStoryStatusQuickFilterCount(status) {
+    if (status === 'all') return projectStoryCount
+    return projectStoryStatusCounts[status] ?? 0
+  }
 
   const loadProjectStories = useCallback(async () => {
     if (!projectId || !userId) return
@@ -182,10 +236,20 @@ function ProjectDetailPage() {
     setIsLoadingStories(false)
 
     if (storiesResponse.success) {
-      setProjectStories(storiesResponse.data ?? [])
+      const nextStories = storiesResponse.data ?? []
+      const nextVisibleReadyStoryIds = new Set(
+        nextStories
+          .filter((story) => story.estimation_status === 'ready_for_estimation')
+          .map((story) => story.id),
+      )
+      setProjectStories(nextStories)
+      setSelectedProjectStoryIds((current) =>
+        current.filter((storyId) => nextVisibleReadyStoryIds.has(storyId)),
+      )
       setProjectStoryFilteredCount(storiesResponse.totalCount ?? 0)
     } else {
       setProjectStories([])
+      setSelectedProjectStoryIds([])
       setProjectStoryFilteredCount(0)
     }
 
@@ -195,6 +259,30 @@ function ProjectDetailPage() {
       setProjectStoryCount(0)
     }
   }, [projectId, storyEstimationFilter, userId])
+
+  const loadProjectStoryStatusCounts = useCallback(async () => {
+    if (!projectId || !userId) return
+
+    const responses = await Promise.all(
+      ESTIMATION_STATUS_OPTIONS.map((option) =>
+        listStoryHistoryGroups({
+          userId,
+          projectFilter: 'project',
+          projectId,
+          estimationStatus: option.value,
+          page: 1,
+          pageSize: 1,
+        }),
+      ),
+    )
+
+    const nextCounts = ESTIMATION_STATUS_OPTIONS.reduce((accumulator, option, index) => {
+      accumulator[option.value] = responses[index]?.success ? (responses[index].totalCount ?? 0) : 0
+      return accumulator
+    }, {})
+
+    setProjectStoryStatusCounts((current) => ({ ...current, ...nextCounts }))
+  }, [projectId, userId])
 
   const loadProject = useCallback(async () => {
     if (!projectId || !userId) return
@@ -222,6 +310,12 @@ function ProjectDetailPage() {
   const loadProjectInsightHistory = useCallback(async () => {
     if (!projectId || !userId) return
 
+    setProjectInsights(null)
+    setProjectInsightsMessage('')
+    setProjectInsightsCopyFeedback('')
+    setProjectInsightHistory([])
+    setActiveProjectInsightId(null)
+    setIsProjectInsightHistoryUnavailable(false)
     setIsLoadingProjectInsightHistory(true)
     const response = await listProjectAnalyses({ projectId, userId, limit: 3 })
     setIsLoadingProjectInsightHistory(false)
@@ -265,6 +359,14 @@ function ProjectDetailPage() {
 
     return () => clearTimeout(timerId)
   }, [loadProjectStories])
+
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      loadProjectStoryStatusCounts()
+    }, 0)
+
+    return () => clearTimeout(timerId)
+  }, [loadProjectStoryStatusCounts])
 
   useEffect(() => {
     if (typeof setTopbarStatus !== 'function') return
@@ -339,13 +441,36 @@ function ProjectDetailPage() {
         item.id === story.id ? { ...item, estimation_status: nextStatus } : item,
       ),
     )
+    if (nextStatus !== 'ready_for_estimation') {
+      setSelectedProjectStoryIds((current) => current.filter((storyId) => storyId !== story.id))
+    }
     setStoryStatusMessage('Status de estimativa atualizado.')
     await loadProjectStories()
+    await loadProjectStoryStatusCounts()
   }
 
   async function handlePrepareStoryForPlanning(story) {
     if (!story) return
     await handleUpdateStoryEstimationStatus(story, 'ready_for_estimation')
+  }
+
+  function handleToggleProjectStorySelection(storyId) {
+    setStoryStatusMessage('')
+    setSelectedProjectStoryIds((current) =>
+      current.includes(storyId)
+        ? current.filter((currentStoryId) => currentStoryId !== storyId)
+        : [...current, storyId],
+    )
+  }
+
+  function handleSelectVisibleReadyStories() {
+    setStoryStatusMessage('')
+    setSelectedProjectStoryIds(visibleReadyStories.map((story) => story.id))
+  }
+
+  function handleClearProjectStorySelection() {
+    setStoryStatusMessage('')
+    setSelectedProjectStoryIds([])
   }
 
   async function handleGenerateProjectInsights() {
@@ -625,6 +750,49 @@ function ProjectDetailPage() {
         </div>
       </section>
 
+      <section className="project-detail-page__executive-strip" aria-label="Visão executiva do projeto">
+        <article>
+          <span>Diagnóstico</span>
+          <strong>{projectInsights?.health_label ?? 'Sem diagnóstico'}</strong>
+          <p>
+            {projectInsights
+              ? projectInsights.summary
+              : 'Gere uma leitura com IA para resumir riscos, dúvidas e próximos passos.'}
+          </p>
+          <a className="btn btn-secondary btn-small" href="#diagnostico-projeto">
+            {projectInsights ? 'Ver diagnóstico' : 'Gerar diagnóstico'}
+          </a>
+        </article>
+
+        <article>
+          <span>Prontidão</span>
+          <strong>{projectReadinessLabel}</strong>
+          <p>{projectReadinessText}</p>
+          {readyStoryCount > 0 ? (
+            <Link className="btn btn-primary btn-small" to={`/roda?projectId=${projectId}`}>
+              Abrir Roda
+            </Link>
+          ) : projectStoryCount === 0 ? (
+            <Link className="btn btn-primary btn-small" to={`/tool?projectId=${projectId}`}>
+              Forjar história
+            </Link>
+          ) : (
+            <a className="btn btn-secondary btn-small" href="#historias-projeto">
+              Preparar histórias
+            </a>
+          )}
+        </article>
+
+        <article>
+          <span>Próxima ação</span>
+          <strong>Encaminhamento</strong>
+          <p>{latestProjectNextAction}</p>
+          <Link className="btn btn-secondary btn-small" to={`/historico?projectId=${projectId}`}>
+            Ver peças
+          </Link>
+        </article>
+      </section>
+
       <section className="panel project-detail-page__settings" aria-label="Dados do projeto">
         <div className="projects-page__section-header">
           <div>
@@ -677,7 +845,11 @@ function ProjectDetailPage() {
         {projectMessage ? <p className="projects-page__message">{projectMessage}</p> : null}
       </section>
 
-      <section className="panel project-detail-page__ai" aria-label="Diagnóstico com IA do projeto">
+      <section
+        id="diagnostico-projeto"
+        className="panel project-detail-page__ai"
+        aria-label="Diagnóstico com IA do projeto"
+      >
         <div className="projects-page__section-header">
           <div>
             <p className="projects-page__eyebrow">IA do projeto</p>
@@ -871,7 +1043,11 @@ function ProjectDetailPage() {
         </div>
       </section>
 
-      <section className="panel project-detail-page__stories" aria-label="Histórias vinculadas ao projeto">
+      <section
+        id="historias-projeto"
+        className="panel project-detail-page__stories"
+        aria-label="Histórias vinculadas ao projeto"
+      >
         <div className="projects-page__section-header">
           <div>
             <p className="projects-page__eyebrow">Histórias do projeto</p>
@@ -906,6 +1082,68 @@ function ProjectDetailPage() {
           </div>
         </div>
 
+        {hasProjectStories ? (
+          <div className="project-detail-page__story-quick-filters" aria-label="Filtros rápidos de histórias">
+            {STORY_STATUS_QUICK_FILTERS.map((option) => {
+              const isActive = storyEstimationFilter === option.value
+              const count = getStoryStatusQuickFilterCount(option.value)
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`project-detail-page__story-quick-filter${isActive ? ' is-active' : ''}`}
+                  onClick={() => setStoryEstimationFilter(option.value)}
+                  aria-pressed={isActive}
+                  disabled={isLoadingStories}
+                >
+                  <span>{option.label}</span>
+                  <strong>{count}</strong>
+                  <small>{option.hint}</small>
+                </button>
+              )
+            })}
+          </div>
+        ) : null}
+
+        {hasProjectStories ? (
+          <div className="project-detail-page__story-batch-bar">
+            <div>
+              <strong>{selectedReadyStoriesLabel}</strong>
+              <p>
+                Selecione histórias prontas para abrir a Roda da Fogueira com o lote já carregado.
+              </p>
+            </div>
+            <div className="project-detail-page__story-batch-actions">
+              <button
+                type="button"
+                className="btn btn-secondary btn-small"
+                onClick={handleSelectVisibleReadyStories}
+                disabled={visibleReadyStories.length === 0 || isLoadingStories}
+              >
+                Selecionar prontas visíveis
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-small"
+                onClick={handleClearProjectStorySelection}
+                disabled={selectedReadyStoryIds.length === 0 || isLoadingStories}
+              >
+                Limpar seleção
+              </button>
+              {selectedReadyStoryIds.length > 0 ? (
+                <Link className="btn btn-primary btn-small" to={selectedReadyStoriesRodaUrl}>
+                  Abrir Roda com selecionadas
+                </Link>
+              ) : (
+                <button type="button" className="btn btn-primary btn-small" disabled>
+                  Abrir Roda com selecionadas
+                </button>
+              )}
+            </div>
+          </div>
+        ) : null}
+
         {isLoadingStories ? <p className="projects-page__state">Carregando histórias...</p> : null}
         {hasNoProjectStories ? (
           <div className="projects-page__empty">
@@ -928,10 +1166,25 @@ function ProjectDetailPage() {
           {projectStories.map((story) => {
             const canUpdateStoryStatus = canManageProjectMembers || story.user_id === userId
             const isUpdatingStoryStatus = updatingStoryStatusId === story.id
+            const isReadyForPlanning = story.estimation_status === 'ready_for_estimation'
+            const isSelectedForPlanning = selectedProjectStoryIds.includes(story.id)
 
             return (
-              <article key={story.id} className="project-detail-page__story">
+              <article
+                key={story.id}
+                className={`project-detail-page__story${isSelectedForPlanning ? ' is-selected' : ''}`}
+              >
                 <div>
+                  {isReadyForPlanning ? (
+                    <label className="project-detail-page__story-select">
+                      <input
+                        type="checkbox"
+                        checked={isSelectedForPlanning}
+                        onChange={() => handleToggleProjectStorySelection(story.id)}
+                      />
+                      <span>Selecionar para Roda</span>
+                    </label>
+                  ) : null}
                   <h3>{story.title}</h3>
                   <p>{story.input_context || story.user_story || 'Sem descrição.'}</p>
                 </div>
@@ -960,7 +1213,7 @@ function ProjectDetailPage() {
                   <Link className="btn btn-secondary btn-small" to={`/tool?storyId=${story.id}`}>
                     Abrir na Bancada
                   </Link>
-                  {story.estimation_status === 'ready_for_estimation' ? (
+                  {isReadyForPlanning ? (
                     <Link
                       className="btn btn-primary btn-small"
                       to={`/roda?projectId=${projectId}&storyId=${story.id}`}
