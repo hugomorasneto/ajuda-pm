@@ -50,6 +50,42 @@ function formatProjectMetric(value, singular, plural) {
   return `${value} ${value === 1 ? singular : plural}`
 }
 
+function normalizePortfolioSearch(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('pt-BR')
+    .trim()
+}
+
+function getProjectNextAction(project, stats = EMPTY_PROJECT_STATS) {
+  if (stats.storyCount === 0) {
+    return {
+      label: 'Forjar primeira história',
+      href: `/tool?projectId=${project.id}`,
+      description: 'Comece criando a primeira peça neste projeto.',
+    }
+  }
+
+  if (stats.readyStoryCount > 0) {
+    return {
+      label: 'Abrir Roda',
+      href: `/roda?projectId=${project.id}`,
+      description: `${formatProjectMetric(
+        stats.readyStoryCount,
+        'história pronta',
+        'histórias prontas',
+      )} para estimar.`,
+    }
+  }
+
+  return {
+    label: 'Abrir quadro',
+    href: `/projetos/${project.id}`,
+    description: 'Revise o Kanban e prepare histórias para estimativa.',
+  }
+}
+
 function ProjectsPage() {
   const { user } = useAuth()
   const userId = user?.id ?? null
@@ -87,14 +123,14 @@ function ProjectsPage() {
     [projectStatsById, projects],
   )
   const filteredProjects = useMemo(() => {
-    const normalizedSearch = searchInput.trim().toLowerCase()
+    const normalizedSearch = normalizePortfolioSearch(searchInput)
 
     return projects.filter((project) => {
       const stats = projectStatsById[project.id] ?? EMPTY_PROJECT_STATS
+      const projectText = normalizePortfolioSearch([project.name, project.description].join(' '))
       const matchesSearch =
         !normalizedSearch ||
-        project.name?.toLowerCase().includes(normalizedSearch) ||
-        project.description?.toLowerCase().includes(normalizedSearch)
+        projectText.includes(normalizedSearch)
 
       if (!matchesSearch) return false
 
@@ -124,6 +160,39 @@ function ProjectsPage() {
   )
   const hasNoProjectsForFilter =
     !isLoading && projects.length > 0 && filteredProjects.length === 0
+  const emptyProjectCount = useMemo(
+    () =>
+      projects.filter((project) => {
+        const stats = projectStatsById[project.id] ?? EMPTY_PROJECT_STATS
+        return stats.storyCount === 0
+      }).length,
+    [projectStatsById, projects],
+  )
+  const portfolioSummaryItems = useMemo(
+    () => [
+      {
+        label: 'Histórias',
+        value: portfolioTotals.storyCount,
+        detail: 'vinculadas a projetos',
+      },
+      {
+        label: 'Prontas',
+        value: portfolioTotals.readyStoryCount,
+        detail: 'para a Roda',
+      },
+      {
+        label: 'Times',
+        value: portfolioTotals.teamCount,
+        detail: 'vinculados',
+      },
+      {
+        label: 'Sem histórias',
+        value: emptyProjectCount,
+        detail: 'pedem primeira peça',
+      },
+    ],
+    [emptyProjectCount, portfolioTotals.readyStoryCount, portfolioTotals.storyCount, portfolioTotals.teamCount],
+  )
 
   const loadProjectStats = useCallback(
     async (nextProjects) => {
@@ -289,6 +358,7 @@ function ProjectsPage() {
                 onChange={(event) => setName(event.target.value)}
                 placeholder="Ex.: Onboarding de clientes"
                 disabled={isCreating}
+                required
               />
             </label>
 
@@ -306,7 +376,11 @@ function ProjectsPage() {
               />
             </label>
 
-            <button type="submit" className="btn btn-primary projects-page__submit" disabled={isCreating}>
+            <button
+              type="submit"
+              className="btn btn-primary projects-page__submit"
+              disabled={isCreating || !name.trim()}
+            >
               {isCreating ? 'Criando projeto...' : 'Criar projeto'}
             </button>
           </form>
@@ -321,6 +395,18 @@ function ProjectsPage() {
             </div>
             <span className="projects-page__section-count">{filteredProjectCountLabel}</span>
           </div>
+
+          {projects.length > 0 ? (
+            <div className="projects-page__portfolio-strip" aria-label="Resumo do portfólio">
+              {portfolioSummaryItems.map((item) => (
+                <article key={item.label}>
+                  <span>{item.label}</span>
+                  <strong>{item.value}</strong>
+                  <small>{item.detail}</small>
+                </article>
+              ))}
+            </div>
+          ) : null}
 
           <div className="projects-page__filters" aria-label="Filtros dos projetos">
             <label className="projects-page__field projects-page__field--search">
@@ -391,6 +477,7 @@ function ProjectsPage() {
           <div className="projects-page__list">
             {filteredProjects.map((project) => {
               const stats = projectStatsById[project.id] ?? EMPTY_PROJECT_STATS
+              const nextAction = getProjectNextAction(project, stats)
 
               return (
                 <article key={project.id} className="projects-page__item">
@@ -399,11 +486,9 @@ function ProjectsPage() {
                       <span className="projects-page__item-marker" aria-hidden="true" />
                       <h3>{project.name}</h3>
                     </div>
-                    {project.description ? (
-                      <p>{project.description}</p>
-                    ) : (
-                      <p>Sem descrição por enquanto.</p>
-                    )}
+                    <p className="projects-page__item-description">
+                      {project.description || 'Sem descrição por enquanto.'}
+                    </p>
                     <p className="projects-page__item-date">Criado em {formatProjectDate(project.created_at)}</p>
                     <div className="projects-page__item-metrics" aria-label={`Resumo de ${project.name}`}>
                       <span className="projects-page__metric">
@@ -422,21 +507,33 @@ function ProjectsPage() {
                     </div>
                   </div>
                   <div className="projects-page__item-actions">
-                    <Link className="btn btn-secondary btn-small" to={`/projetos/${project.id}`}>
-                      Ver projeto
-                    </Link>
-                    <Link className="btn btn-secondary btn-small" to={`/historico?projectId=${project.id}`}>
-                      Ver histórias
-                    </Link>
-                    <Link className="btn btn-secondary btn-small" to={`/roda?projectId=${project.id}`}>
-                      Abrir Roda
-                    </Link>
-                    <Link className="btn btn-secondary btn-small" to={`/times?projectId=${project.id}`}>
-                      Times
-                    </Link>
-                    <Link className="btn btn-primary btn-small" to={`/tool?projectId=${project.id}`}>
-                      Forjar
-                    </Link>
+                    <div className="projects-page__next-action">
+                      <span>Próxima ação</span>
+                      <p>{nextAction.description}</p>
+                      <Link className="btn btn-primary btn-small" to={nextAction.href}>
+                        {nextAction.label}
+                      </Link>
+                    </div>
+                    <details className="projects-page__item-more">
+                      <summary>Mais ações</summary>
+                      <div>
+                        <Link className="btn btn-secondary btn-small" to={`/projetos/${project.id}`}>
+                          Ver projeto
+                        </Link>
+                        <Link className="btn btn-secondary btn-small" to={`/historico?projectId=${project.id}`}>
+                          Ver histórias
+                        </Link>
+                        <Link className="btn btn-secondary btn-small" to={`/roda?projectId=${project.id}`}>
+                          Abrir Roda
+                        </Link>
+                        <Link className="btn btn-secondary btn-small" to={`/times?projectId=${project.id}`}>
+                          Times
+                        </Link>
+                        <Link className="btn btn-secondary btn-small" to={`/tool?projectId=${project.id}`}>
+                          Forjar
+                        </Link>
+                      </div>
+                    </details>
                   </div>
                 </article>
               )
