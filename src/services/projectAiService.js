@@ -287,6 +287,49 @@ export async function saveProjectAnalysis({
   }
 }
 
+export async function deleteProjectAnalysis({ projectId, diagnosticId, userId }) {
+  try {
+    if (!userId) {
+      return { success: false, unavailable: false, error: new Error('Usuário não autenticado.'), data: null }
+    }
+
+    if (!projectId || !diagnosticId) {
+      return { success: false, unavailable: false, error: new Error('Diagnóstico não informado.'), data: null }
+    }
+
+    const { data, error } = await supabase
+      .from('project_ai_diagnostics')
+      .delete()
+      .eq('id', diagnosticId)
+      .eq('project_id', projectId)
+      .select('id')
+      .maybeSingle()
+
+    if (error) {
+      if (isProjectDiagnosticsUnavailable(error)) {
+        return { success: false, unavailable: true, error, data: null }
+      }
+
+      console.error('Supabase deleteProjectAnalysis error:', error)
+      return { success: false, unavailable: false, error, data: null }
+    }
+
+    if (!data) {
+      return {
+        success: false,
+        unavailable: false,
+        error: new Error('Não foi possível excluir este diagnóstico.'),
+        data: null,
+      }
+    }
+
+    return { success: true, unavailable: false, data }
+  } catch (error) {
+    console.error('Unexpected deleteProjectAnalysis error:', error)
+    return { success: false, unavailable: false, error, data: null }
+  }
+}
+
 export async function analyzeProject({ project, stories, storyCount, memberCount }) {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY

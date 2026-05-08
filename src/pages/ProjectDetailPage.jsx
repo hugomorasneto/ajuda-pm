@@ -17,6 +17,7 @@ import {
 import {
   analyzeProject,
   buildProjectAnalysisMarkdown,
+  deleteProjectAnalysis,
   listProjectAnalyses,
   saveProjectAnalysis,
 } from '../services/projectAiService'
@@ -119,6 +120,8 @@ function ProjectDetailPage() {
   const [projectInsightsMessage, setProjectInsightsMessage] = useState('')
   const [projectInsightsCopyFeedback, setProjectInsightsCopyFeedback] = useState('')
   const [projectInsightHistory, setProjectInsightHistory] = useState([])
+  const [activeProjectInsightId, setActiveProjectInsightId] = useState(null)
+  const [deletingProjectInsightId, setDeletingProjectInsightId] = useState(null)
   const [isLoadingProjectInsightHistory, setIsLoadingProjectInsightHistory] = useState(false)
   const [isProjectInsightHistoryUnavailable, setIsProjectInsightHistoryUnavailable] = useState(false)
   const [isGeneratingProjectInsights, setIsGeneratingProjectInsights] = useState(false)
@@ -224,12 +227,18 @@ function ProjectDetailPage() {
     setIsLoadingProjectInsightHistory(false)
 
     if (response.success) {
-      setProjectInsightHistory(response.data ?? [])
+      const history = response.data ?? []
+      setProjectInsightHistory(history)
+      if (history.length > 0) {
+        setProjectInsights((current) => current ?? history[0].analysis)
+        setActiveProjectInsightId((current) => current ?? history[0].id)
+      }
       setIsProjectInsightHistoryUnavailable(false)
       return
     }
 
     setProjectInsightHistory([])
+    setActiveProjectInsightId(null)
     setIsProjectInsightHistoryUnavailable(Boolean(response.unavailable))
   }, [projectId, userId])
 
@@ -389,12 +398,15 @@ function ProjectDetailPage() {
           saveResponse.data,
           ...current.filter((item) => item.id !== saveResponse.data.id),
         ].slice(0, 3))
+        setActiveProjectInsightId(saveResponse.data.id)
         setIsProjectInsightHistoryUnavailable(false)
         setProjectInsightsMessage('Diagnóstico gerado e salvo no histórico do projeto.')
       } else if (saveResponse.unavailable) {
+        setActiveProjectInsightId(null)
         setIsProjectInsightHistoryUnavailable(true)
         setProjectInsightsMessage('Diagnóstico gerado. O histórico será ativado após aplicar o SQL desta etapa.')
       } else {
+        setActiveProjectInsightId(null)
         setProjectInsightsMessage('Diagnóstico gerado. Não foi possível salvar no histórico agora.')
       }
     } catch (error) {
@@ -410,8 +422,41 @@ function ProjectDetailPage() {
     if (!item?.analysis) return
 
     setProjectInsights(item.analysis)
+    setActiveProjectInsightId(item.id)
     setProjectInsightsCopyFeedback('')
     setProjectInsightsMessage('Diagnóstico reaberto do histórico do projeto.')
+  }
+
+  async function handleDeleteProjectInsightHistoryItem(item) {
+    if (!item?.id) return
+
+    const confirmed = window.confirm(
+      `Excluir o diagnóstico de ${formatProjectDateTime(item.created_at)}?`,
+    )
+    if (!confirmed) return
+
+    setProjectInsightsMessage('')
+    setDeletingProjectInsightId(item.id)
+    const response = await deleteProjectAnalysis({
+      projectId,
+      diagnosticId: item.id,
+      userId,
+    })
+    setDeletingProjectInsightId(null)
+
+    if (!response.success) {
+      setProjectInsightsMessage(response.error?.message ?? 'Não foi possível excluir o diagnóstico agora.')
+      return
+    }
+
+    const remaining = projectInsightHistory.filter((historyItem) => historyItem.id !== item.id)
+    setProjectInsightHistory(remaining)
+    if (activeProjectInsightId === item.id) {
+      const nextCurrent = remaining[0] ?? null
+      setProjectInsights(nextCurrent?.analysis ?? null)
+      setActiveProjectInsightId(nextCurrent?.id ?? null)
+    }
+    setProjectInsightsMessage('Diagnóstico excluído do histórico.')
   }
 
   async function handleCopyProjectInsights() {
@@ -776,17 +821,30 @@ function ProjectDetailPage() {
               {projectInsightHistory.map((item) => (
                 <article key={item.id} className="project-detail-page__ai-history-item">
                   <div>
-                    <span>{formatProjectDateTime(item.created_at)}</span>
+                    <span>
+                      {formatProjectDateTime(item.created_at)}
+                      {activeProjectInsightId === item.id ? ' · Aberto agora' : ''}
+                    </span>
                     <strong>{item.analysis.health_label}</strong>
                     <p>{item.analysis.summary}</p>
                   </div>
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-small"
-                    onClick={() => handleOpenProjectInsightHistoryItem(item)}
-                  >
-                    Reabrir
-                  </button>
+                  <div className="project-detail-page__ai-history-actions">
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-small"
+                      onClick={() => handleOpenProjectInsightHistoryItem(item)}
+                    >
+                      Reabrir
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-small"
+                      onClick={() => handleDeleteProjectInsightHistoryItem(item)}
+                      disabled={deletingProjectInsightId === item.id}
+                    >
+                      {deletingProjectInsightId === item.id ? 'Excluindo...' : 'Excluir'}
+                    </button>
+                  </div>
                 </article>
               ))}
             </div>
