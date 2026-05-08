@@ -4688,6 +4688,43 @@
   line-height: 1.6;
 }
 
+.history-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.history-summary-strip article {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background:
+    linear-gradient(135deg, rgba(44, 144, 255, 0.075), transparent 78%),
+    var(--color-canvas-muted);
+}
+
+.history-summary-strip span,
+.history-summary-strip small {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+  font-weight: 800;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-summary-strip strong {
+  color: var(--color-text-primary);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
 .history-filters {
   display: grid;
   gap: var(--space-3);
@@ -5085,6 +5122,36 @@
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+}
+
+.history-result-card__next {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  background: var(--color-canvas-muted);
+}
+
+.history-result-card__next span {
+  color: var(--color-accent);
+  font-size: var(--text-micro);
+  font-weight: 900;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.history-result-card__next strong {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--color-text-primary);
+  font-size: var(--text-small);
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .history-result-card__context {
@@ -5635,6 +5702,7 @@
 }
 
 .workspace-shell--forge .history-page__hero,
+.workspace-shell--forge .history-summary-strip article,
 .workspace-shell--forge .history-filters,
 .workspace-shell--forge .history-results,
 .workspace-shell--forge .history-preview,
@@ -5654,6 +5722,8 @@
 }
 
 .workspace-shell--forge .history-page__hero p,
+.workspace-shell--forge .history-summary-strip span,
+.workspace-shell--forge .history-summary-strip small,
 .workspace-shell--forge .history-preview p,
 .workspace-shell--forge .history-detail__empty p,
 .workspace-shell--forge .history-results__range,
@@ -5661,6 +5731,7 @@
 .workspace-shell--forge .history-filter-field span,
 .workspace-shell--forge .history-result-card p,
 .workspace-shell--forge .history-result-card__action,
+.workspace-shell--forge .history-result-card__next span,
 .workspace-shell--forge .history-result-card__meta span,
 .workspace-shell--forge .history-quick-filter small,
 .workspace-shell--forge .history-pagination__jump,
@@ -5680,6 +5751,8 @@
 }
 
 .workspace-shell--forge .history-filters__applied strong,
+.workspace-shell--forge .history-summary-strip strong,
+.workspace-shell--forge .history-result-card__next strong,
 .workspace-shell--forge .history-preview__facts strong,
 .workspace-shell--forge .history-preview__next-action strong,
 .workspace-shell--forge .history-copy-message,
@@ -5691,6 +5764,7 @@
 .workspace-shell--forge .history-filter-field select,
 .workspace-shell--forge .history-pagination__jump input,
 .workspace-shell--forge .history-result-card,
+.workspace-shell--forge .history-result-card__next,
 .workspace-shell--forge .history-quick-filter,
 .workspace-shell--forge .history-filters__applied,
 .workspace-shell--forge .history-filters__advanced,
@@ -5954,6 +6028,7 @@
   }
 
   .history-filters__primary,
+  .history-summary-strip,
   .history-quick-filters,
   .history-preview__facts,
   .history-inspection {
@@ -5985,6 +6060,7 @@
 }
 
 @media (max-width: 620px) {
+  .history-summary-strip,
   .history-quick-filters,
   .history-preview__facts,
   .history-inspection {

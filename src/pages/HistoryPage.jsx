@@ -176,6 +176,34 @@ function getStoryPreview(story) {
   return story?.input_context?.trim() || story?.input_requirements?.trim() || story?.user_story?.trim() || ''
 }
 
+function getHistoryItemNextAction(story) {
+  if (!story?.project_id) {
+    return {
+      label: 'Organizar',
+      text: 'Sem projeto',
+    }
+  }
+
+  if (story.estimation_status === 'ready_for_estimation') {
+    return {
+      label: 'Roda',
+      text: 'Pronta para estimar',
+    }
+  }
+
+  if (story.estimation_status === 'estimated') {
+    return {
+      label: 'Estimativa',
+      text: 'Pontuação registrada',
+    }
+  }
+
+  return {
+    label: 'Revisar',
+    text: 'Pode seguir para preparo',
+  }
+}
+
 function HistoryAccordion({ id, eyebrow, title, summary, open, onToggle, children }) {
   return (
     <details
@@ -774,6 +802,31 @@ function HistoryPage() {
   const hasOriginalContext = Boolean(
     selectedStory?.input_context?.trim() || selectedStory?.input_requirements?.trim(),
   )
+  const currentPageWithoutProjectCount = items.filter((item) => !item.project_id).length
+  const currentPageReadyCount = items.filter((item) => item.estimation_status === 'ready_for_estimation').length
+  const currentPageEstimatedCount = items.filter((item) => item.estimation_status === 'estimated').length
+  const historySummaryItems = [
+    {
+      label: 'Recorte',
+      value: totalCount,
+      detail: totalCount === 1 ? 'peça encontrada' : 'peças encontradas',
+    },
+    {
+      label: 'Nesta página',
+      value: items.length,
+      detail: 'visíveis agora',
+    },
+    {
+      label: 'Sem projeto',
+      value: currentPageWithoutProjectCount,
+      detail: 'para organizar',
+    },
+    {
+      label: 'Roda',
+      value: currentPageReadyCount + currentPageEstimatedCount,
+      detail: 'prontas ou estimadas',
+    },
+  ]
   const filterSummaryItems = [
     { label: 'Período', value: getOptionLabel(PERIOD_OPTIONS, period, 'Tudo') },
     { label: 'Status', value: getOptionLabel(STATUS_OPTIONS, status, 'Todos') },
@@ -865,6 +918,18 @@ function HistoryPage() {
           Nova matéria-prima
         </Link>
       </section>
+
+      {totalCount > 0 ? (
+        <section className="history-summary-strip" aria-label="Resumo das peças forjadas">
+          {historySummaryItems.map((item) => (
+            <article key={item.label}>
+              <span>{item.label}</span>
+              <strong>{item.value}</strong>
+              <small>{item.detail}</small>
+            </article>
+          ))}
+        </section>
+      ) : null}
 
       <section className="panel history-filters" aria-label="Filtros das peças forjadas">
         <div className="history-filters__primary">
@@ -1020,6 +1085,7 @@ function HistoryPage() {
               const preview = getStoryPreview(item)
               const versionCount = getVersionCount(item)
               const itemProjectName = item.project_name || 'Sem projeto'
+              const nextAction = getHistoryItemNextAction(item)
 
               return (
                 <button
@@ -1040,6 +1106,11 @@ function HistoryPage() {
                   </div>
 
                   {preview ? <p>{preview}</p> : <p>Peça salva sem resumo de matéria-prima.</p>}
+
+                  <div className="history-result-card__next">
+                    <span>{nextAction.label}</span>
+                    <strong>{nextAction.text}</strong>
+                  </div>
 
                   <div className="history-result-card__context" aria-label="Contexto da peça">
                     <span>{formatDateTime(item.created_at)}</span>
