@@ -36,6 +36,7 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
   )
   const canManageTeamMembers =
     canManageProjectMembers || currentUserTeamRole === 'owner' || currentUserTeamRole === 'admin'
+  const memberCountLabel = `${members.length} ${members.length === 1 ? 'membro' : 'membros'}`
 
   const loadMembers = useCallback(async () => {
     if (!teamId || !userId) return
@@ -171,9 +172,13 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
   return (
     <article className="project-detail-team">
       <div className="project-detail-team__header">
-        <div>
-          <h3>{team.name}</h3>
+        <div className="project-detail-team__title">
+          <h3 title={team.name}>{team.name}</h3>
           {team.description ? <p>{team.description}</p> : <p>Sem descrição.</p>}
+        </div>
+        <div className="project-detail-team__summary" aria-label="Resumo do time">
+          <span>{memberCountLabel}</span>
+          <span>{canManageTeamMembers ? 'Gerenciável' : 'Somente leitura'}</span>
         </div>
       </div>
 
@@ -187,6 +192,7 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
               onChange={(event) => setEmail(event.target.value)}
               placeholder="pessoa@empresa.com"
               disabled={isAdding}
+              required
             />
           </label>
           <label className="projects-page__field">
@@ -199,7 +205,7 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
               ))}
             </select>
           </label>
-          <button type="submit" className="btn btn-secondary btn-small" disabled={isAdding}>
+          <button type="submit" className="btn btn-secondary btn-small" disabled={isAdding || !email.trim()}>
             {isAdding ? 'Adicionando...' : 'Adicionar membro'}
           </button>
         </form>
@@ -213,6 +219,11 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
       {isLoading ? <p className="projects-page__state">Carregando membros...</p> : null}
 
       <div className="project-detail-team__members">
+        {!isLoading && members.length === 0 ? (
+          <div className="project-detail-team__member project-detail-team__member--empty">
+            <span>Nenhum membro cadastrado neste time.</span>
+          </div>
+        ) : null}
         {members.map((member) => {
           const canEditMember =
             canManageTeamMembers && member.role !== 'owner' && member.user_id !== userId
@@ -221,7 +232,10 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
 
           return (
             <div key={member.user_id} className="project-detail-team__member">
-              <span>{member.email}</span>
+              <div className="project-detail-team__member-identity">
+                <span title={member.email}>{member.email}</span>
+                <small>{member.user_id === userId ? 'Você' : 'Pessoa convidada'}</small>
+              </div>
               {canEditMember ? (
                 <div className="project-detail-team__member-controls">
                   <label className="project-detail-team__member-role">
@@ -248,7 +262,9 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
                   </button>
                 </div>
               ) : (
-                <strong>{ROLE_LABELS[member.role] ?? member.role}</strong>
+                <strong className={`project-detail-team__role-badge project-detail-team__role-badge--${member.role}`}>
+                  {ROLE_LABELS[member.role] ?? member.role}
+                </strong>
               )}
             </div>
           )

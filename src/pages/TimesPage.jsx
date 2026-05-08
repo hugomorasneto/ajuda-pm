@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom'
 import TeamMembersPanel from '../components/projects/TeamMembersPanel'
 import { useAuth } from '../hooks/useAuth'
@@ -14,11 +14,14 @@ function TimesPage() {
   const userId = user?.id ?? null
   const { setTopbarStatus } = useOutletContext() ?? {}
   const [searchParams, setSearchParams] = useSearchParams()
+  const createSectionRef = useRef(null)
   const projectIdFromUrl = searchParams.get('projectId') ?? ''
   const [projects, setProjects] = useState([])
   const [teamsByProject, setTeamsByProject] = useState({})
   const [canManageProjectById, setCanManageProjectById] = useState({})
   const [selectedProjectId, setSelectedProjectId] = useState(projectIdFromUrl)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [showOnlySelectedProject, setShowOnlySelectedProject] = useState(Boolean(projectIdFromUrl))
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -41,9 +44,42 @@ function TimesPage() {
     () => formatTeamMetric(teamCount, 'time criado', 'times criados'),
     [teamCount],
   )
+  const visibleProjects = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLocaleLowerCase('pt-BR')
+
+    return projects.filter((project) => {
+      if (showOnlySelectedProject && selectedProjectId && project.id !== selectedProjectId) {
+        return false
+      }
+
+      if (!normalizedSearch) return true
+
+      const projectTeams = teamsByProject[project.id] ?? []
+      const projectText = [project.name, project.description].join(' ').toLocaleLowerCase('pt-BR')
+      const teamsText = projectTeams
+        .map((team) => [team.name, team.description].join(' '))
+        .join(' ')
+        .toLocaleLowerCase('pt-BR')
+
+      return projectText.includes(normalizedSearch) || teamsText.includes(normalizedSearch)
+    })
+  }, [projects, searchTerm, selectedProjectId, showOnlySelectedProject, teamsByProject])
+  const visibleTeamCount = useMemo(
+    () =>
+      visibleProjects.reduce((total, project) => {
+        const projectTeams = teamsByProject[project.id] ?? []
+        return total + projectTeams.length
+      }, 0),
+    [teamsByProject, visibleProjects],
+  )
+  const visibleTeamCountLabel = useMemo(
+    () => formatTeamMetric(visibleTeamCount, 'time exibido', 'times exibidos'),
+    [visibleTeamCount],
+  )
   const canCreateForSelectedProject = Boolean(
     selectedProjectId && canManageProjectById[selectedProjectId],
   )
+  const hasFilteredNoResults = !isLoading && projects.length > 0 && visibleProjects.length === 0
 
   const loadTeams = useCallback(async () => {
     if (!userId) return
@@ -94,11 +130,7 @@ function TimesPage() {
       nextProjects.some((project) => project.id === current) ? current : nextSelectedProjectId,
     )
     setIsLoading(false)
-
-    if (nextProjects.length > 0 && !projectIdFromUrl && fallbackProjectId) {
-      setSearchParams({ projectId: fallbackProjectId }, { replace: true })
-    }
-  }, [projectIdFromUrl, setSearchParams, userId])
+  }, [projectIdFromUrl, userId])
 
   useEffect(() => {
     const timerId = setTimeout(() => {
@@ -130,6 +162,15 @@ function TimesPage() {
     } else {
       setSearchParams({}, { replace: true })
     }
+  }
+
+  function handleSelectProjectForCreation(projectId) {
+    handleProjectSelection(projectId)
+    setShowOnlySelectedProject(true)
+    setMessage('Projeto selecionado para criação do time.')
+    window.requestAnimationFrame(() => {
+      createSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
   }
 
   async function handleCreateTeam(event) {
@@ -193,8 +234,29 @@ function TimesPage() {
         </div>
       </section>
 
+      {projectIdFromUrl && selectedProject ? (
+        <section className="panel teams-page__context" aria-label="Projeto em foco">
+          <div className="teams-page__context-copy">
+            <p className="projects-page__eyebrow">Projeto em foco</p>
+            <h2>{selectedProject.name}</h2>
+            <p>
+              Você entrou a partir de um projeto. Crie ou revise os times deste contexto sem voltar para a tela de
+              detalhe.
+            </p>
+          </div>
+          <div className="teams-page__context-actions">
+            <Link className="btn btn-secondary btn-small" to={`/projetos/${selectedProject.id}`}>
+              Abrir projeto
+            </Link>
+            <Link className="btn btn-secondary btn-small" to={`/roda?projectId=${selectedProject.id}`}>
+              Abrir Roda
+            </Link>
+          </div>
+        </section>
+      ) : null}
+
       <div className="projects-page__layout">
-        <section className="panel projects-page__form-card" aria-label="Criar time">
+        <section ref={createSectionRef} className="panel projects-page__form-card" aria-label="Criar time">
           <div className="projects-page__card-header">
             <p className="projects-page__eyebrow">Novo time</p>
             <h2>Criar time</h2>
@@ -226,6 +288,7 @@ function TimesPage() {
                 onChange={(event) => setName(event.target.value)}
                 placeholder="Ex.: Guilda de Checkout"
                 disabled={isCreating || isLoading || !canCreateForSelectedProject}
+                required
               />
             </label>
 
@@ -243,7 +306,7 @@ function TimesPage() {
             <button
               type="submit"
               className="btn btn-primary"
-              disabled={isCreating || isLoading || !canCreateForSelectedProject}
+              disabled={isCreating || isLoading || !canCreateForSelectedProject || !name.trim()}
             >
               {isCreating ? 'Criando time...' : 'Criar time'}
             </button>
@@ -262,7 +325,30 @@ function TimesPage() {
           <div className="projects-page__section-header">
             <div>
               <p className="projects-page__eyebrow">Times por projeto</p>
-              <h2>{teamCountLabel}</h2>
+              <h2>{visibleTeamCountLabel}</h2>
+            </div>
+            <span className="projects-page__section-count">{teamCountLabel}</span>
+          </div>
+
+          <div className="teams-page__toolbar" aria-label="Filtros de times">
+            <label className="projects-page__field projects-page__field--search">
+              <span>Buscar time ou projeto</span>
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Nome do projeto, time ou descrição"
+              />
+            </label>
+            <div className="teams-page__toolbar-actions">
+              <button
+                type="button"
+                className={`btn btn-secondary btn-small ${showOnlySelectedProject ? 'is-active' : ''}`}
+                disabled={!selectedProjectId}
+                onClick={() => setShowOnlySelectedProject((current) => !current)}
+              >
+                {showOnlySelectedProject ? 'Ver todos os projetos' : 'Ver projeto selecionado'}
+              </button>
             </div>
           </div>
 
@@ -276,28 +362,71 @@ function TimesPage() {
               </Link>
             </div>
           ) : null}
+          {hasFilteredNoResults ? (
+            <div className="projects-page__empty">
+              <h3>Nenhum resultado encontrado</h3>
+              <p>Limpe a busca ou veja todos os projetos para revisar os times disponíveis.</p>
+              <button
+                type="button"
+                className="btn btn-secondary btn-small"
+                onClick={() => {
+                  setSearchTerm('')
+                  setShowOnlySelectedProject(false)
+                }}
+              >
+                Limpar filtros
+              </button>
+            </div>
+          ) : null}
 
           <div className="teams-page__groups">
-            {projects.map((project) => {
+            {visibleProjects.map((project) => {
               const projectTeams = teamsByProject[project.id] ?? []
               const canManageProjectMembers = Boolean(canManageProjectById[project.id])
 
               return (
                 <section key={project.id} className="teams-page__group" aria-label={`Times de ${project.name}`}>
                   <div className="teams-page__group-header">
-                    <div>
+                    <div className="teams-page__group-title">
                       <p className="projects-page__eyebrow">Projeto</p>
                       <h3>{project.name}</h3>
+                      <p>
+                        {formatTeamMetric(projectTeams.length, 'time vinculado', 'times vinculados')} ·{' '}
+                        {canManageProjectMembers ? 'Você pode gerenciar membros' : 'Somente visualização'}
+                      </p>
                     </div>
-                    <Link className="btn btn-secondary btn-small" to={`/projetos/${project.id}`}>
-                      Ver projeto
-                    </Link>
+                    <div className="teams-page__group-actions">
+                      {canManageProjectMembers ? (
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-small"
+                          onClick={() => handleSelectProjectForCreation(project.id)}
+                        >
+                          Criar time aqui
+                        </button>
+                      ) : null}
+                      <Link className="btn btn-secondary btn-small" to={`/projetos/${project.id}`}>
+                        Ver projeto
+                      </Link>
+                      <Link className="btn btn-secondary btn-small" to={`/roda?projectId=${project.id}`}>
+                        Abrir Roda
+                      </Link>
+                    </div>
                   </div>
 
                   {projectTeams.length === 0 ? (
                     <div className="projects-page__empty">
                       <h3>Nenhum time neste projeto</h3>
-                      <p>Use o formulário ao lado para criar o primeiro time quando fizer sentido.</p>
+                      <p>Crie um time quando a organização do projeto pedir colaboração recorrente.</p>
+                      {canManageProjectMembers ? (
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-small"
+                          onClick={() => handleSelectProjectForCreation(project.id)}
+                        >
+                          Preparar primeiro time
+                        </button>
+                      ) : null}
                     </div>
                   ) : (
                     <div className="project-detail-page__teams">

@@ -7936,9 +7936,72 @@
   gap: var(--space-4);
 }
 
+.teams-page__context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-4);
+  background:
+    linear-gradient(135deg, var(--forge-tech-soft), transparent 74%),
+    var(--forge-surface-2);
+}
+
+.teams-page__context-copy,
+.teams-page__group-title {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.teams-page__context-copy h2,
+.teams-page__group-title h3 {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teams-page__context-copy p,
+.teams-page__group-title p {
+  max-width: 48rem;
+  margin: 0;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+.teams-page__context-actions,
+.teams-page__toolbar-actions,
+.teams-page__group-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.teams-page__toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: end;
+}
+
+.teams-page__toolbar .btn.is-active {
+  border-color: var(--forge-border-tech);
+  color: var(--forge-text-primary);
+  background:
+    linear-gradient(90deg, var(--forge-tech-soft), transparent 78%),
+    var(--forge-surface-inset);
+}
+
 .teams-page__group {
   display: grid;
   gap: var(--space-3);
+  min-width: 0;
   border: 1px solid var(--forge-border);
   border-radius: var(--radius-md);
   padding: var(--space-4);
@@ -7949,11 +8012,17 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  min-width: 0;
   gap: var(--space-3);
 }
 
 .teams-page__group-header h3 {
   margin: 0;
+}
+
+.teams-page .project-detail-page__teams {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  align-items: start;
 }
 
 .project-detail-page__teams,
@@ -9013,6 +9082,9 @@
 }
 
 .project-detail-team {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
   border: 1px solid var(--forge-border);
   border-radius: var(--radius-md);
   padding: var(--space-4);
@@ -9020,11 +9092,54 @@
 }
 
 .project-detail-team h3 {
+  overflow: hidden;
+  min-width: 0;
   margin: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-detail-team__title {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.project-detail-team__title p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.project-detail-team__summary {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.project-detail-team__summary span,
+.project-detail-team__role-badge {
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: 999px;
+  padding: 0.18rem 0.58rem;
+  color: var(--forge-text-secondary);
+  background: rgba(255,255,255,0.03);
+  font-size: var(--text-small);
+  font-weight: 850;
+  line-height: 1.2;
 }
 
 .project-detail-team__member-form {
-  margin-top: var(--space-4);
+  margin-top: 0;
+  border-top: 1px solid var(--forge-border-subtle);
+  padding-top: var(--space-3);
   align-items: end;
 }
 
@@ -9033,11 +9148,12 @@
 }
 
 .project-detail-team__members {
-  margin-top: var(--space-3);
+  margin-top: 0;
 }
 
 .project-detail-team__member {
   align-items: center;
+  min-width: 0;
   border: 1px solid var(--forge-border-subtle);
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);
@@ -9045,9 +9161,49 @@
   background: rgba(255,255,255,0.02);
 }
 
-.project-detail-team__member strong {
-  color: var(--forge-tech);
+.project-detail-team__member--empty {
+  justify-content: flex-start;
+  color: var(--forge-text-muted);
+  font-size: var(--text-small);
+}
+
+.project-detail-team__member-identity {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.project-detail-team__member-identity span {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--forge-text-primary);
   font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-detail-team__member-identity small {
+  color: var(--forge-text-muted);
+  font-size: var(--text-micro);
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.project-detail-team__role-badge {
+  flex: 0 0 auto;
+  color: var(--forge-tech);
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(90deg, var(--forge-tech-soft), transparent 76%),
+    var(--forge-surface-inset);
+}
+
+.project-detail-team__role-badge--owner {
+  color: var(--forge-ember-hover);
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(90deg, var(--forge-ember-soft), transparent 76%),
+    var(--forge-surface-inset);
 }
 
 .project-detail-team__member-controls {
@@ -11124,7 +11280,9 @@
   .project-detail-page__member-controls,
   .project-detail-page__story-actions,
   .project-detail-page__campfire-session,
+  .teams-page__context,
   .teams-page__group-header,
+  .teams-page__toolbar,
   .planning-poker-join__hero,
   .planning-poker-join__notes,
   .planning-poker-room__hero,
@@ -11153,6 +11311,9 @@
   .project-detail-page__ai-history-actions,
   .project-detail-page__story-batch-bar,
   .project-detail-page__story-batch-actions,
+  .teams-page__context-actions,
+  .teams-page__toolbar-actions,
+  .teams-page__group-actions,
   .project-detail-team__member-form,
   .project-detail-team__member,
   .project-detail-team__member-controls {
