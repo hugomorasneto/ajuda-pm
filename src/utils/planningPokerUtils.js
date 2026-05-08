@@ -137,6 +137,44 @@ export function getActivePlanningStorySessionByStoryId(sessions = [], storiesByS
   }, {})
 }
 
+export function getPlanningStorySessionIndex(sessions = [], storiesBySession = {}) {
+  const entries = sessions.flatMap((session) =>
+    (storiesBySession[session.id] ?? []).map((story) => {
+      const isLive = LIVE_PLANNING_SESSION_STATUSES.includes(session.status)
+      const hasEstimate = story.status === 'estimated' || Boolean(story.final_estimate)
+
+      return {
+        finalEstimate: story.final_estimate ?? '',
+        isLive,
+        priority: isLive ? 0 : hasEstimate ? 1 : 2,
+        session,
+        story,
+        storyId: story.user_story_id,
+      }
+    }),
+  )
+
+  return entries
+    .filter((entry) => Boolean(entry.storyId))
+    .sort((left, right) => {
+      if (left.priority !== right.priority) return left.priority - right.priority
+
+      const leftDate = new Date(left.story.updated_at ?? left.story.estimated_at ?? left.session.updated_at ?? left.session.created_at ?? 0)
+        .getTime()
+      const rightDate = new Date(right.story.updated_at ?? right.story.estimated_at ?? right.session.updated_at ?? right.session.created_at ?? 0)
+        .getTime()
+
+      return rightDate - leftDate
+    })
+    .reduce((index, entry) => {
+      if (!index[entry.storyId]) {
+        index[entry.storyId] = entry
+      }
+
+      return index
+    }, {})
+}
+
 export function buildPlanningSessionSummaryMarkdown({
   participantsCount = null,
   progress,

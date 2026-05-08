@@ -130,7 +130,7 @@ begin
         us.id,
         us.user_id,
         us.project_id,
-        coalesce(us.story_group_id, us.id) as story_group_key,
+        coalesce(us.story_group_id, us.id) as group_key,
         us.title,
         us.status,
         coalesce(us.estimation_status, 'created') as estimation_status,
@@ -151,7 +151,7 @@ begin
   missing_positions as (
     select
       ls.project_id,
-      ls.story_group_key,
+      ls.group_key,
       pkc.id as column_id,
       row_number() over (
         partition by pkc.id
@@ -164,13 +164,17 @@ begin
       and pkc.status_base = ls.estimation_status
     left join public.project_kanban_story_positions pksp
       on pksp.project_id = ls.project_id
-      and pksp.story_group_key = ls.story_group_key
+      and pksp.story_group_key = ls.group_key
     where pksp.story_group_key is null
   )
   insert into public.project_kanban_story_positions (project_id, story_group_key, column_id, position)
-  select project_id, story_group_key, column_id, position
-  from missing_positions
-  on conflict (project_id, story_group_key) do nothing;
+  select
+    mp.project_id,
+    mp.group_key,
+    mp.column_id,
+    mp.position
+  from missing_positions mp
+  on conflict on constraint project_kanban_story_positions_pkey do nothing;
 
   return query
     with latest_stories as (
@@ -180,7 +184,7 @@ begin
           us.id,
           us.user_id,
           us.project_id,
-          coalesce(us.story_group_id, us.id) as story_group_key,
+          coalesce(us.story_group_id, us.id) as group_key,
           us.title,
           us.status,
           coalesce(us.estimation_status, 'created') as estimation_status,
@@ -205,7 +209,7 @@ begin
       pkc.status_base as column_status_base,
       pkc.is_default as column_is_default,
       ls.id as story_id,
-      ls.story_group_key,
+      ls.group_key as story_group_key,
       pksp.position as story_position,
       ls.title as story_title,
       ls.user_id as story_user_id,
@@ -223,11 +227,11 @@ begin
         select 1
         from latest_stories lst
         where lst.project_id = pksp.project_id
-          and lst.story_group_key = pksp.story_group_key
+          and lst.group_key = pksp.story_group_key
       )
     left join latest_stories ls
       on ls.project_id = pksp.project_id
-      and ls.story_group_key = pksp.story_group_key
+      and ls.group_key = pksp.story_group_key
     where pkc.project_id = p_project_id
     order by
       pkc.position,
@@ -463,7 +467,7 @@ begin
 
   insert into public.project_kanban_story_positions (project_id, story_group_key, column_id, position)
   values (p_project_id, v_story_group_key, p_column_id, v_position)
-  on conflict (project_id, story_group_key) do update
+  on conflict on constraint project_kanban_story_positions_pkey do update
     set column_id = excluded.column_id,
         position = excluded.position;
 

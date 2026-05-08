@@ -6,6 +6,7 @@ import {
   getActivePlanningStorySessionByStoryId,
   getPlanningScoringScaleLabel,
   getPlanningSessionProgress,
+  getPlanningStorySessionIndex,
   getPlanningSessionStatusLabel,
   getPlanningStoryStatusLabel,
   isRoundTimerExpired,
@@ -57,6 +58,22 @@ describe('planningPokerUtils', () => {
 
     expect(getActivePlanningStorySessionByStoryId(sessions, storiesBySession)).toEqual({
       'story-a': sessions[0],
+    })
+  })
+
+  it('prioriza Roda ativa antes de estimativa finalizada no índice por história', () => {
+    const sessions = [
+      { id: 's1', name: 'Roda finalizada', status: 'completed', created_at: '2026-05-07T10:00:00Z' },
+      { id: 's2', name: 'Roda ativa', status: 'voting', created_at: '2026-05-07T11:00:00Z' },
+    ]
+    const storiesBySession = {
+      s1: [{ user_story_id: 'story-a', status: 'estimated', final_estimate: '5' }],
+      s2: [{ user_story_id: 'story-a', status: 'voting' }],
+    }
+
+    expect(getPlanningStorySessionIndex(sessions, storiesBySession)['story-a']).toMatchObject({
+      isLive: true,
+      session: sessions[1],
     })
   })
 

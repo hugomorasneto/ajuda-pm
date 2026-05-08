@@ -23,12 +23,21 @@ import {
   updateProjectKanbanColumn,
 } from '../services/projectKanbanService'
 import {
+  listPlanningPokerSessionStorySummaries,
+  listPlanningPokerSessionsByProject,
+} from '../services/planningPokerService'
+import {
   analyzeProject,
   buildProjectAnalysisMarkdown,
   deleteProjectAnalysis,
   listProjectAnalyses,
   saveProjectAnalysis,
 } from '../services/projectAiService'
+import {
+  LIVE_PLANNING_SESSION_STATUSES,
+  getPlanningSessionStatusLabel,
+  getPlanningStorySessionIndex,
+} from '../utils/planningPokerUtils'
 import { copyTextToClipboard } from '../utils/storyExport'
 
 const PROJECT_MEMBER_ROLES = [
@@ -124,6 +133,8 @@ function ProjectDetailPage() {
   const [projectMembers, setProjectMembers] = useState([])
   const [projectStories, setProjectStories] = useState([])
   const [kanbanColumns, setKanbanColumns] = useState([])
+  const [planningSessions, setPlanningSessions] = useState([])
+  const [planningSessionStoriesBySession, setPlanningSessionStoriesBySession] = useState({})
   const [projectStoryCount, setProjectStoryCount] = useState(0)
   const [projectStoryFilteredCount, setProjectStoryFilteredCount] = useState(0)
   const [projectStoryStatusCounts, setProjectStoryStatusCounts] = useState({
@@ -163,6 +174,7 @@ function ProjectDetailPage() {
   const [projectMessage, setProjectMessage] = useState('')
   const [storyStatusMessage, setStoryStatusMessage] = useState('')
   const [kanbanMessage, setKanbanMessage] = useState('')
+  const [planningSummaryMessage, setPlanningSummaryMessage] = useState('')
   const [memberMessage, setMemberMessage] = useState('')
   const [projectInsights, setProjectInsights] = useState(null)
   const [projectInsightsMessage, setProjectInsightsMessage] = useState('')
@@ -218,6 +230,17 @@ function ProjectDetailPage() {
     () => kanbanColumns.flatMap((column) => column.cards ?? []),
     [kanbanColumns],
   )
+  const planningStorySessionById = useMemo(
+    () => getPlanningStorySessionIndex(planningSessions, planningSessionStoriesBySession),
+    [planningSessionStoriesBySession, planningSessions],
+  )
+  const livePlanningStoryCount = useMemo(
+    () =>
+      Object.values(planningStorySessionById).filter((entry) =>
+        LIVE_PLANNING_SESSION_STATUSES.includes(entry.session?.status),
+      ).length,
+    [planningStorySessionById],
+  )
   const visibleKanbanColumns = useMemo(
     () =>
       kanbanColumns.map((column) => ({
@@ -241,11 +264,21 @@ function ProjectDetailPage() {
     () => visibleReadyStories.filter((story) => selectedProjectStoryIds.includes(story.id)),
     [selectedProjectStoryIds, visibleReadyStories],
   )
+  const selectedReadyStoriesInLiveSessions = useMemo(
+    () => selectedReadyStories.filter((story) => planningStorySessionById[story.id]?.isLive),
+    [planningStorySessionById, selectedReadyStories],
+  )
   const selectedReadyStoryIds = selectedReadyStories.map((story) => story.id)
   const selectedReadyStoriesLabel =
     selectedReadyStoryIds.length === 1
       ? '1 história selecionada'
       : `${selectedReadyStoryIds.length} histórias selecionadas`
+  const selectedReadyStoriesHint =
+    selectedReadyStoriesInLiveSessions.length > 0
+      ? `${selectedReadyStoriesInLiveSessions.length} já ${
+          selectedReadyStoriesInLiveSessions.length === 1 ? 'está' : 'estão'
+        } em Roda ativa.`
+      : 'Selecione histórias prontas no quadro ou na lista para abrir a Roda com o lote já carregado.'
   const selectedReadyStoriesRodaUrl =
     selectedReadyStoryIds.length > 0
       ? `/roda?projectId=${projectId}&storyIds=${selectedReadyStoryIds.join(',')}`
@@ -335,6 +368,50 @@ function ProjectDetailPage() {
       response.error?.message ??
         'O quadro Kanban ficará disponível após aplicar o SQL desta etapa.',
     )
+  }, [projectId, userId])
+
+  const loadProjectPlanningSummaries = useCallback(async () => {
+    if (!projectId || !userId) return
+
+    setPlanningSummaryMessage('')
+    const sessionsResponse = await listPlanningPokerSessionsByProject({ projectId, userId })
+
+    if (!sessionsResponse.success) {
+      setPlanningSessions([])
+      setPlanningSessionStoriesBySession({})
+      setPlanningSummaryMessage('Não foi possível carregar o resumo das Rodas deste projeto.')
+      return
+    }
+
+    const nextSessions = sessionsResponse.data ?? []
+    setPlanningSessions(nextSessions)
+
+    if (nextSessions.length === 0) {
+      setPlanningSessionStoriesBySession({})
+      return
+    }
+
+    const storiesResponse = await listPlanningPokerSessionStorySummaries({
+      sessionIds: nextSessions.map((session) => session.id),
+      userId,
+    })
+
+    if (!storiesResponse.success) {
+      setPlanningSessionStoriesBySession({})
+      setPlanningSummaryMessage('Resumo das Rodas indisponível no momento.')
+      return
+    }
+
+    const nextStoriesBySession = (storiesResponse.data ?? []).reduce((storiesBySession, story) => {
+      if (!storiesBySession[story.session_id]) {
+        storiesBySession[story.session_id] = []
+      }
+
+      storiesBySession[story.session_id].push(story)
+      return storiesBySession
+    }, {})
+
+    setPlanningSessionStoriesBySession(nextStoriesBySession)
   }, [projectId, userId])
 
   const loadProjectStoryStatusCounts = useCallback(async () => {
@@ -447,6 +524,14 @@ function ProjectDetailPage() {
 
   useEffect(() => {
     const timerId = setTimeout(() => {
+      loadProjectPlanningSummaries()
+    }, 0)
+
+    return () => clearTimeout(timerId)
+  }, [loadProjectPlanningSummaries])
+
+  useEffect(() => {
+    const timerId = setTimeout(() => {
       loadProjectStoryStatusCounts()
     }, 0)
 
@@ -462,12 +547,12 @@ function ProjectDetailPage() {
       pills: [
         { text: storiesLabel },
         { text: membersLabel },
-        { text: 'Times e Roda no menu' },
+        { text: livePlanningStoryCount > 0 ? `${livePlanningStoryCount} em Roda ativa` : 'Times e Roda no menu' },
       ],
     })
 
     return () => setTopbarStatus(null)
-  }, [membersLabel, project?.name, setTopbarStatus, storiesLabel])
+  }, [livePlanningStoryCount, membersLabel, project?.name, setTopbarStatus, storiesLabel])
 
   async function handleUpdateProject(event) {
     event.preventDefault()
@@ -530,7 +615,12 @@ function ProjectDetailPage() {
       setSelectedProjectStoryIds((current) => current.filter((storyId) => storyId !== story.id))
     }
     setStoryStatusMessage('Status de estimativa atualizado.')
-    await Promise.all([loadProjectStories(), loadProjectStoryStatusCounts(), loadProjectKanban()])
+    await Promise.all([
+      loadProjectStories(),
+      loadProjectStoryStatusCounts(),
+      loadProjectKanban(),
+      loadProjectPlanningSummaries(),
+    ])
   }
 
   async function handlePrepareStoryForPlanning(story) {
@@ -612,7 +702,12 @@ function ProjectDetailPage() {
 
     handleCancelEditKanbanColumn()
     setKanbanMessage('Coluna atualizada.')
-    await Promise.all([loadProjectKanban(), loadProjectStories(), loadProjectStoryStatusCounts()])
+    await Promise.all([
+      loadProjectKanban(),
+      loadProjectStories(),
+      loadProjectStoryStatusCounts(),
+      loadProjectPlanningSummaries(),
+    ])
   }
 
   async function handleReorderKanbanColumn(column, direction) {
@@ -669,7 +764,12 @@ function ProjectDetailPage() {
       setSelectedProjectStoryIds((current) => current.filter((storyId) => storyId !== story.id))
     }
     setKanbanMessage('História movida e status atualizado.')
-    await Promise.all([loadProjectKanban(), loadProjectStories(), loadProjectStoryStatusCounts()])
+    await Promise.all([
+      loadProjectKanban(),
+      loadProjectStories(),
+      loadProjectStoryStatusCounts(),
+      loadProjectPlanningSummaries(),
+    ])
   }
 
   function handleKanbanDragStart(event, story) {
@@ -1412,9 +1512,7 @@ function ProjectDetailPage() {
           <div className="project-detail-page__story-batch-bar">
             <div>
               <strong>{selectedReadyStoriesLabel}</strong>
-              <p>
-                Selecione histórias prontas no quadro ou na lista para abrir a Roda da Fogueira com o lote já carregado.
-              </p>
+              <p>{selectedReadyStoriesHint}</p>
             </div>
             <div className="project-detail-page__story-batch-actions">
               <button
@@ -1461,6 +1559,7 @@ function ProjectDetailPage() {
         ) : null}
         {storyStatusMessage ? <p className="projects-page__message">{storyStatusMessage}</p> : null}
         {kanbanMessage ? <p className="projects-page__message">{kanbanMessage}</p> : null}
+        {planningSummaryMessage ? <p className="projects-page__message">{planningSummaryMessage}</p> : null}
         {shouldShowStoryLimitNotice ? (
           <p className="projects-page__state">Mostrando as 50 histórias mais recentes deste filtro.</p>
         ) : null}
@@ -1594,6 +1693,14 @@ function ProjectDetailPage() {
                           const isReadyForPlanning = story.estimation_status === 'ready_for_estimation'
                           const isSelectedForPlanning = selectedProjectStoryIds.includes(story.id)
                           const isMovingStory = movingKanbanStoryId === story.id
+                          const planningEntry = planningStorySessionById[story.id]
+                          const planningSession = planningEntry?.session
+                          const planningStory = planningEntry?.story
+                          const isInLivePlanningSession = Boolean(planningEntry?.isLive)
+                          const finalEstimate = planningStory?.final_estimate ?? planningEntry?.finalEstimate
+                          const planningRoomUrl = planningSession
+                            ? `/projetos/${projectId}/roda/${planningSession.id}`
+                            : `/roda?projectId=${projectId}`
 
                           return (
                             <article
@@ -1615,7 +1722,7 @@ function ProjectDetailPage() {
                                     checked={isSelectedForPlanning}
                                     onChange={() => handleToggleProjectStorySelection(story.id)}
                                   />
-                                  <span>Selecionar para Roda</span>
+                                  <span>{isInLivePlanningSession ? 'Já em Roda ativa' : 'Selecionar para Roda'}</span>
                                 </label>
                               ) : null}
 
@@ -1628,7 +1735,28 @@ function ProjectDetailPage() {
                                 <span>{formatProjectDateTime(story.created_at)}</span>
                                 <span>{getStoryVersionLabel(story.version_number)}</span>
                                 <span>{getEstimationStatusLabel(story.estimation_status)}</span>
+                                {finalEstimate ? <span>Final: {finalEstimate}</span> : null}
                               </div>
+
+                              {planningEntry ? (
+                                <div
+                                  className={`project-detail-page__kanban-card-planning${
+                                    isInLivePlanningSession ? ' is-live' : ''
+                                  }`}
+                                >
+                                  <strong>
+                                    {isInLivePlanningSession
+                                      ? 'Em Roda ativa'
+                                      : finalEstimate
+                                        ? 'Estimativa registrada'
+                                        : 'Roda vinculada'}
+                                  </strong>
+                                  <span>
+                                    {planningSession?.name ?? 'Roda da Fogueira'} ·{' '}
+                                    {getPlanningSessionStatusLabel(planningSession?.status)}
+                                  </span>
+                                </div>
+                              ) : null}
 
                               <div className="project-detail-page__kanban-card-actions">
                                 {canMoveKanbanCards ? (
@@ -1650,7 +1778,11 @@ function ProjectDetailPage() {
                                 <Link className="btn btn-secondary btn-small" to={`/tool?storyId=${story.id}`}>
                                   Abrir na Bancada
                                 </Link>
-                                {isReadyForPlanning ? (
+                                {isInLivePlanningSession ? (
+                                  <Link className="btn btn-primary btn-small" to={planningRoomUrl}>
+                                    Continuar Roda
+                                  </Link>
+                                ) : isReadyForPlanning ? (
                                   <Link
                                     className="btn btn-primary btn-small"
                                     to={`/roda?projectId=${projectId}&storyId=${story.id}`}
@@ -1659,8 +1791,8 @@ function ProjectDetailPage() {
                                   </Link>
                                 ) : null}
                                 {story.estimation_status === 'estimated' ? (
-                                  <Link className="btn btn-secondary btn-small" to={`/roda?projectId=${projectId}`}>
-                                    Ver Rodas
+                                  <Link className="btn btn-secondary btn-small" to={planningRoomUrl}>
+                                    Ver estimativa
                                   </Link>
                                 ) : null}
                               </div>
@@ -1683,6 +1815,14 @@ function ProjectDetailPage() {
             const isUpdatingStoryStatus = updatingStoryStatusId === story.id
             const isReadyForPlanning = story.estimation_status === 'ready_for_estimation'
             const isSelectedForPlanning = selectedProjectStoryIds.includes(story.id)
+            const planningEntry = planningStorySessionById[story.id]
+            const planningSession = planningEntry?.session
+            const planningStory = planningEntry?.story
+            const isInLivePlanningSession = Boolean(planningEntry?.isLive)
+            const finalEstimate = planningStory?.final_estimate ?? planningEntry?.finalEstimate
+            const planningRoomUrl = planningSession
+              ? `/projetos/${projectId}/roda/${planningSession.id}`
+              : `/roda?projectId=${projectId}`
 
             return (
               <article
@@ -1692,16 +1832,29 @@ function ProjectDetailPage() {
                 <div>
                   {isReadyForPlanning ? (
                     <label className="project-detail-page__story-select">
-                      <input
-                        type="checkbox"
-                        checked={isSelectedForPlanning}
-                        onChange={() => handleToggleProjectStorySelection(story.id)}
-                      />
-                      <span>Selecionar para Roda</span>
+                        <input
+                          type="checkbox"
+                          checked={isSelectedForPlanning}
+                          onChange={() => handleToggleProjectStorySelection(story.id)}
+                        />
+                      <span>{isInLivePlanningSession ? 'Já em Roda ativa' : 'Selecionar para Roda'}</span>
                     </label>
                   ) : null}
                   <h3>{story.title}</h3>
                   <p>{story.input_context || story.user_story || 'Sem descrição.'}</p>
+                  {planningEntry ? (
+                    <div
+                      className={`project-detail-page__kanban-card-planning${
+                        isInLivePlanningSession ? ' is-live' : ''
+                      }`}
+                    >
+                      <strong>{isInLivePlanningSession ? 'Em Roda ativa' : 'Roda vinculada'}</strong>
+                      <span>
+                        {planningSession?.name ?? 'Roda da Fogueira'}
+                        {finalEstimate ? ` · Final: ${finalEstimate}` : ''}
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
                 <div className="project-detail-page__story-meta">
                   <span>{formatProjectDateTime(story.created_at)}</span>
@@ -1728,7 +1881,11 @@ function ProjectDetailPage() {
                   <Link className="btn btn-secondary btn-small" to={`/tool?storyId=${story.id}`}>
                     Abrir na Bancada
                   </Link>
-                  {isReadyForPlanning ? (
+                  {isInLivePlanningSession ? (
+                    <Link className="btn btn-primary btn-small" to={planningRoomUrl}>
+                      Continuar Roda
+                    </Link>
+                  ) : isReadyForPlanning ? (
                     <Link
                       className="btn btn-primary btn-small"
                       to={`/roda?projectId=${projectId}&storyId=${story.id}`}
@@ -1737,8 +1894,8 @@ function ProjectDetailPage() {
                     </Link>
                   ) : null}
                   {story.estimation_status === 'estimated' ? (
-                    <Link className="btn btn-secondary btn-small" to={`/roda?projectId=${projectId}`}>
-                      Ver Rodas
+                    <Link className="btn btn-secondary btn-small" to={planningRoomUrl}>
+                      Ver estimativa
                     </Link>
                   ) : null}
                   {story.estimation_status !== 'ready_for_estimation' &&
