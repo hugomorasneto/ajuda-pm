@@ -42,9 +42,14 @@ function ProjectContextPanel({
   const isStandalone = !selectedProjectId
   const canOfferGeneratedStoryOrganization =
     hasGeneratedStory && isStandalone && canAssignGeneratedStory
+  const shouldAutoOpenForProject = Boolean(selectedProjectId && !hasGeneratedStory)
   const isOpen = Boolean(
-    isManuallyOpen || selectedProjectId || actionMessage || (canOfferGeneratedStoryOrganization && isCreatingProject),
+    isManuallyOpen || shouldAutoOpenForProject || actionMessage || (canOfferGeneratedStoryOrganization && isCreatingProject),
   )
+  const summaryTitle = isStandalone ? 'Vincular a um projeto (opcional)' : 'Projeto selecionado'
+  const summaryDescription = isStandalone
+    ? 'Use um projeto para organizar histórias por jornada ou iniciativa. Você também pode forjar sem projeto.'
+    : 'Use esta área para trocar o projeto, organizar a história atual ou criar um novo contexto.'
 
   async function handleCreateProject(event) {
     event.preventDefault()
@@ -71,10 +76,8 @@ function ProjectContextPanel({
       >
         <span className="project-context-panel__summary-copy">
           <span className="project-context-panel__eyebrow">Organização opcional</span>
-          <strong>Vincular a um projeto (opcional)</strong>
-          <span>
-            Use um projeto para organizar histórias por jornada ou iniciativa. Você também pode forjar sem projeto.
-          </span>
+          <strong>{summaryTitle}</strong>
+          <span>{summaryDescription}</span>
         </span>
         <span className="project-context-panel__summary-meta">
           <span
