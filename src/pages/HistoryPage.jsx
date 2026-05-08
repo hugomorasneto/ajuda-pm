@@ -763,15 +763,18 @@ function HistoryPage() {
   const hasOriginalContext = Boolean(
     selectedStory?.input_context?.trim() || selectedStory?.input_requirements?.trim(),
   )
-  const filterSummary = [
-    getOptionLabel(PERIOD_OPTIONS, period, 'Tudo'),
-    getOptionLabel(STATUS_OPTIONS, status, 'Todos'),
-    getOptionLabel(ESTIMATION_STATUS_OPTIONS, estimationStatus, 'Todos'),
-    projectFilter === 'project'
-      ? projects.find((project) => project.id === selectedProjectId)?.name ?? 'Projeto'
-      : getOptionLabel(PROJECT_FILTER_OPTIONS, projectFilter, 'Todas'),
-    `${pageSize} por página`,
-  ].join(' · ')
+  const filterSummaryItems = [
+    { label: 'Período', value: getOptionLabel(PERIOD_OPTIONS, period, 'Tudo') },
+    { label: 'Status', value: getOptionLabel(STATUS_OPTIONS, status, 'Todos') },
+    { label: 'Estimativa', value: getOptionLabel(ESTIMATION_STATUS_OPTIONS, estimationStatus, 'Todos') },
+    {
+      label: 'Projeto',
+      value: projectFilter === 'project'
+        ? projects.find((project) => project.id === selectedProjectId)?.name ?? 'Projeto'
+        : getOptionLabel(PROJECT_FILTER_OPTIONS, projectFilter, 'Todas'),
+    },
+    { label: 'Página', value: `${pageSize} por página` },
+  ]
   const isCopying = Boolean(copyTarget)
   const activeQuickFilter = getActiveQuickFilter()
   let planningActionLabel = 'Preparar e abrir Roda'
@@ -810,7 +813,14 @@ function HistoryPage() {
 
           <div className="history-filters__applied" aria-live="polite">
             <span>Recorte atual</span>
-            <strong>{filterSummary}</strong>
+            <div className="history-filters__applied-list">
+              {filterSummaryItems.map((item) => (
+                <span key={item.label} className="history-filters__applied-chip">
+                  <small>{item.label}</small>
+                  <strong>{item.value}</strong>
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -942,6 +952,7 @@ function HistoryPage() {
               const isActive = itemGroupKey === selectedGroupKey
               const preview = getStoryPreview(item)
               const versionCount = getVersionCount(item)
+              const itemProjectName = item.project_name || 'Sem projeto'
 
               return (
                 <button
@@ -963,13 +974,15 @@ function HistoryPage() {
 
                   {preview ? <p>{preview}</p> : <p>Peça salva sem resumo de matéria-prima.</p>}
 
-                  <div className="history-result-card__meta" aria-label="Metadados da peça">
+                  <div className="history-result-card__context" aria-label="Contexto da peça">
                     <span>{formatDateTime(item.created_at)}</span>
-                    <span>{item.project_name || 'Sem projeto'}</span>
+                    <strong>{itemProjectName}</strong>
+                  </div>
+
+                  <div className="history-result-card__meta" aria-label="Metadados da peça">
                     <span>{getVersionLabel(versionCount)}</span>
                     <span>{getStatusLabel(item.status)}</span>
                     <span>{getEstimationStatusLabel(item.estimation_status)}</span>
-                    {isActive ? <span className="history-badge--active">Aberta para inspeção</span> : null}
                   </div>
                 </button>
               )
@@ -977,17 +990,19 @@ function HistoryPage() {
           </div>
 
           <div className="history-pagination" aria-label="Paginação das peças forjadas">
-            <button type="button" className="btn btn-ghost btn-small" onClick={() => goToPage(1)} disabled={page <= 1}>
-              Início
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost btn-small"
-              onClick={() => goToPage(page - 1)}
-              disabled={page <= 1}
-            >
-              Anterior
-            </button>
+            <div className="history-pagination__controls">
+              <button type="button" className="btn btn-ghost btn-small" onClick={() => goToPage(1)} disabled={page <= 1}>
+                Início
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-small"
+                onClick={() => goToPage(page - 1)}
+                disabled={page <= 1}
+              >
+                Anterior
+              </button>
+            </div>
             <form className="history-pagination__jump" onSubmit={handlePageJump}>
               <span>Página</span>
               <input
@@ -1002,22 +1017,24 @@ function HistoryPage() {
                 Ir
               </button>
             </form>
-            <button
-              type="button"
-              className="btn btn-ghost btn-small"
-              onClick={() => goToPage(page + 1)}
-              disabled={totalPages === 0 || page >= totalPages}
-            >
-              Próxima
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost btn-small"
-              onClick={() => goToPage(totalPages)}
-              disabled={totalPages === 0 || page >= totalPages}
-            >
-              Fim
-            </button>
+            <div className="history-pagination__controls">
+              <button
+                type="button"
+                className="btn btn-ghost btn-small"
+                onClick={() => goToPage(page + 1)}
+                disabled={totalPages === 0 || page >= totalPages}
+              >
+                Próxima
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-small"
+                onClick={() => goToPage(totalPages)}
+                disabled={totalPages === 0 || page >= totalPages}
+              >
+                Fim
+              </button>
+            </div>
           </div>
         </section>
 
@@ -1098,33 +1115,43 @@ function HistoryPage() {
                   </div>
                 </div>
 
-                <div className="history-preview__project-assignment">
-                  <label className="history-filter-field">
-                    <span>Vincular projeto</span>
-                    <select
-                      value={selectedStory.project_id ?? ''}
-                      onChange={(event) => handleSelectedStoryProjectChange(event.target.value)}
-                      disabled={!canAssignSelectedStoryProject || isAssigningProject}
-                    >
-                      <option value="">Sem projeto</option>
-                      {projects.map((project) => (
-                        <option key={project.id} value={project.id}>
-                          {project.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <p>
-                    {canAssignSelectedStoryProject
-                      ? 'Use projetos para separar peças antigas por produto, squad ou iniciativa.'
-                      : 'Histórias compartilhadas ficam somente para consulta.'}
-                  </p>
-                  {projectAssignmentMessage ? (
-                    <p className="history-detail__project-message" role="status">
-                      {projectAssignmentMessage}
+                <details className="history-preview__project-assignment">
+                  <summary>
+                    <span>
+                      <small>Organização da peça</small>
+                      <strong>{selectedProjectName}</strong>
+                    </span>
+                    <em>{selectedStory.project_id ? 'Alterar projeto' : 'Vincular projeto'}</em>
+                  </summary>
+
+                  <div className="history-preview__project-assignment-body">
+                    <label className="history-filter-field">
+                      <span>Vincular projeto</span>
+                      <select
+                        value={selectedStory.project_id ?? ''}
+                        onChange={(event) => handleSelectedStoryProjectChange(event.target.value)}
+                        disabled={!canAssignSelectedStoryProject || isAssigningProject}
+                      >
+                        <option value="">Sem projeto</option>
+                        {projects.map((project) => (
+                          <option key={project.id} value={project.id}>
+                            {project.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <p>
+                      {canAssignSelectedStoryProject
+                        ? 'Use projetos para separar peças antigas por produto, squad ou iniciativa.'
+                        : 'Histórias compartilhadas ficam somente para consulta.'}
                     </p>
-                  ) : null}
-                </div>
+                    {projectAssignmentMessage ? (
+                      <p className="history-detail__project-message" role="status">
+                        {projectAssignmentMessage}
+                      </p>
+                    ) : null}
+                  </div>
+                </details>
 
                 <div className="history-preview__content">
                   <section>
