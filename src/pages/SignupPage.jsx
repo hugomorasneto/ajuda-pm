@@ -6,7 +6,7 @@ import { usePageMetadata } from '../hooks/usePageMetadata'
 import '../styles/pages.css'
 import { getAuthErrorMessage, signUpWithEmail } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
-import { getAuthRedirectFromLocation } from '../utils/authRedirect'
+import { buildAuthPath, clearAuthRedirect, getAuthRedirectFromLocation } from '../utils/authRedirect'
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
@@ -18,6 +18,8 @@ function SignupPage() {
   const { user, isAuthLoading } = useAuth()
   const redirectTo = useMemo(() => getAuthRedirectFromLocation(location), [location])
   const isPlanningInvite = redirectTo.includes('/roda')
+  const loginPath = useMemo(() => buildAuthPath('/login', redirectTo), [redirectTo])
+  const checkEmailPath = useMemo(() => buildAuthPath('/check-email', redirectTo), [redirectTo])
   const [email, setEmail] = useState(location.state?.email ?? '')
   const [password, setPassword] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
@@ -37,6 +39,7 @@ function SignupPage() {
 
   useEffect(() => {
     if (!isAuthLoading && user) {
+      clearAuthRedirect()
       navigate(redirectTo, { replace: true })
     }
   }, [isAuthLoading, navigate, redirectTo, user])
@@ -96,6 +99,7 @@ function SignupPage() {
 
     if (data.session) {
       trackEvent({ event_name: 'signup_completed', event_category: 'auth', page_path: '/signup' })
+      clearAuthRedirect()
       navigate(redirectTo, { replace: true })
       return
     }
@@ -106,7 +110,7 @@ function SignupPage() {
       page_path: '/signup',
       metadata: { confirmation_pending: true },
     })
-    navigate('/check-email', {
+    navigate(checkEmailPath, {
       replace: true,
       state: { email: normalizedEmail, from: redirectTo, pendingConfirmation: true },
     })
@@ -216,7 +220,7 @@ function SignupPage() {
 
         <p className="auth-card__switch">
           Já tem conta?{' '}
-          <Link to="/login" className="auth-card__link" state={{ from: redirectTo, email: email.trim() }}>
+          <Link to={loginPath} className="auth-card__link" state={{ from: redirectTo, email: email.trim() }}>
             Entrar
           </Link>
         </p>

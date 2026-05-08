@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { buildAuthPath } from '../utils/authRedirect'
 
 function ProtectedRoute({ children }) {
   const { user, isAuthLoading } = useAuth()
@@ -21,7 +22,7 @@ function ProtectedRoute({ children }) {
 
     return (
       <Navigate
-        to="/login"
+        to={buildAuthPath('/login', from)}
         replace
         state={{
           from,

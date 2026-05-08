@@ -11,7 +11,7 @@ import {
   signInWithEmail,
 } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
-import { getAuthRedirectFromLocation } from '../utils/authRedirect'
+import { buildAuthPath, clearAuthRedirect, getAuthRedirectFromLocation } from '../utils/authRedirect'
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
@@ -31,6 +31,8 @@ function LoginPage() {
   const [canResendConfirmation, setCanResendConfirmation] = useState(false)
 
   const redirectTo = useMemo(() => getAuthRedirectFromLocation(location), [location])
+  const isPlanningInvite = redirectTo.includes('/roda')
+  const signupPath = useMemo(() => buildAuthPath('/signup', redirectTo), [redirectTo])
 
   usePageMetadata({
     title: 'Entrar no ProdForge',
@@ -45,6 +47,7 @@ function LoginPage() {
 
   useEffect(() => {
     if (!isAuthLoading && user) {
+      clearAuthRedirect()
       navigate(redirectTo, { replace: true })
     }
   }, [isAuthLoading, navigate, redirectTo, user])
@@ -98,6 +101,7 @@ function LoginPage() {
     }
 
     trackEvent({ event_name: 'login_completed', event_category: 'auth', page_path: '/login' })
+    clearAuthRedirect()
     navigate(redirectTo, { replace: true })
   }
 
@@ -157,7 +161,9 @@ function LoginPage() {
           <p className="auth-card__eyebrow">Acesso seguro</p>
           <h1 className="auth-card__title">Entre na sua bancada</h1>
           <p className="auth-card__description">
-            Continue refinando suas user stories com histórico, versões e critérios de aceite.
+            {isPlanningInvite
+              ? 'Entre para voltar ao convite da Roda da Fogueira e participar da estimativa.'
+              : 'Continue refinando suas user stories com histórico, versões e critérios de aceite.'}
           </p>
         </div>
 
@@ -231,7 +237,7 @@ function LoginPage() {
         <p className="auth-card__switch">
           Não tem conta?{' '}
           <Link
-            to="/signup"
+            to={signupPath}
             className="auth-card__link"
             state={{ from: redirectTo, email: email.trim() }}
           >

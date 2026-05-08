@@ -6,7 +6,7 @@ import { usePageMetadata } from '../hooks/usePageMetadata'
 import '../styles/pages.css'
 import { getAuthErrorMessage, maskEmail, resendSignupConfirmation } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
-import { getAuthRedirectFromLocation } from '../utils/authRedirect'
+import { buildAuthPath, clearAuthRedirect, getAuthRedirectFromLocation } from '../utils/authRedirect'
 
 function CheckEmailPage() {
   const location = useLocation()
@@ -15,6 +15,7 @@ function CheckEmailPage() {
   const email = typeof location.state?.email === 'string' ? location.state.email.trim() : ''
   const redirectTo = useMemo(() => getAuthRedirectFromLocation(location), [location])
   const isPlanningInvite = redirectTo.includes('/roda')
+  const loginPath = useMemo(() => buildAuthPath('/login', redirectTo), [redirectTo])
   const [feedbackMessage, setFeedbackMessage] = useState('')
   const [feedbackTone, setFeedbackTone] = useState('info')
   const [isResending, setIsResending] = useState(false)
@@ -34,6 +35,7 @@ function CheckEmailPage() {
 
   useEffect(() => {
     if (!isAuthLoading && user) {
+      clearAuthRedirect()
       navigate(redirectTo, { replace: true })
     }
   }, [isAuthLoading, navigate, redirectTo, user])
@@ -134,7 +136,7 @@ function CheckEmailPage() {
           </button>
 
           <Link
-            to="/login"
+            to={loginPath}
             replace
             state={{
               email,

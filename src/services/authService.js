@@ -5,7 +5,10 @@ const ALLOWED_EMAIL_REDIRECT_HOSTS = new Set([
   'localhost',
   '127.0.0.1',
   '::1',
+  'prodforge.techtupa.br',
+  'www.prodforge.techtupa.br',
   'prodforge.techtupa.com.br',
+  'www.prodforge.techtupa.com.br',
 ])
 
 function getRawAuthMessage(error) {
