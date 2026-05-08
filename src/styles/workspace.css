@@ -7320,6 +7320,192 @@
   gap: var(--space-3);
 }
 
+.project-detail-page__ai {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.project-detail-page__ai-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.project-detail-page__ai-empty,
+.project-detail-page__ai-summary,
+.project-detail-page__ai-grid section,
+.project-detail-page__ai-next-step {
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  background: var(--forge-surface-inset);
+}
+
+.project-detail-page__ai-empty {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 48rem;
+}
+
+.project-detail-page__ai-empty strong {
+  color: var(--forge-text-primary);
+}
+
+.project-detail-page__ai-empty p,
+.project-detail-page__ai-summary p,
+.project-detail-page__ai-grid p,
+.project-detail-page__ai-grid li {
+  color: var(--forge-text-secondary);
+  line-height: 1.55;
+}
+
+.project-detail-page__ai-result {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.project-detail-page__ai-summary {
+  display: grid;
+  gap: var(--space-2);
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(135deg, var(--forge-tech-soft), transparent 72%),
+    var(--forge-surface-inset);
+}
+
+.project-detail-page__ai-summary span,
+.project-detail-page__ai-summary small {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid var(--forge-border-tech);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  background: rgba(44, 144, 255, 0.1);
+  color: var(--forge-tech);
+  font-size: var(--text-small);
+  font-weight: 850;
+}
+
+.project-detail-page__ai-summary p {
+  max-width: 62rem;
+  font-size: 1rem;
+}
+
+.project-detail-page__ai-summary small {
+  border-color: var(--forge-border-subtle);
+  background: rgba(255,255,255,0.03);
+  color: var(--forge-text-secondary);
+}
+
+.project-detail-page__ai-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.project-detail-page__ai-grid section {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+}
+
+.project-detail-page__ai-grid h3 {
+  margin: 0;
+  font-size: var(--text-body);
+}
+
+.project-detail-page__ai-grid ul {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.project-detail-page__ai-grid li::marker {
+  color: var(--forge-ember-hover);
+  font-weight: 900;
+}
+
+.project-detail-page__ai-next-step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(135deg, var(--forge-ember-soft), transparent 70%),
+    var(--forge-surface-inset);
+}
+
+.project-detail-page__ai-next-step strong {
+  color: var(--forge-text-primary);
+}
+
+.project-detail-page__ai-next-step p {
+  max-width: 58rem;
+  margin: var(--space-1) 0 0;
+  color: var(--forge-text-secondary);
+  line-height: 1.55;
+}
+
+.project-detail-page__ai-history {
+  display: grid;
+  gap: var(--space-3);
+  border-top: 1px solid var(--forge-border-subtle);
+  padding-top: var(--space-4);
+}
+
+.project-detail-page__ai-history > div:first-child {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.project-detail-page__ai-history strong {
+  color: var(--forge-text-primary);
+}
+
+.project-detail-page__ai-history p {
+  margin: 0;
+  color: var(--forge-text-secondary);
+  line-height: 1.55;
+}
+
+.project-detail-page__ai-history-list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.project-detail-page__ai-history-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  background: rgba(255,255,255,0.025);
+}
+
+.project-detail-page__ai-history-item div {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.project-detail-page__ai-history-item span {
+  color: var(--forge-text-muted);
+  font-size: var(--text-small);
+  font-weight: 800;
+}
+
+.project-detail-page__ai-history-item p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 .teams-page__groups {
   display: grid;
   gap: var(--space-4);
@@ -10100,6 +10286,9 @@
   .planning-poker-room__participant,
   .planning-poker-room__revealed-vote,
   .planning-poker-room__seal,
+  .project-detail-page__ai-actions,
+  .project-detail-page__ai-next-step,
+  .project-detail-page__ai-history-item,
   .project-detail-team__member-form,
   .project-detail-team__member,
   .project-detail-team__member-controls {
@@ -10137,6 +10326,7 @@
   .project-detail-page__campfire-options,
   .project-detail-page__campfire-filters,
   .project-detail-page__campfire-story-tools,
+  .project-detail-page__ai-grid,
   .planning-poker-room__command-bar,
   .planning-poker-room__command-metrics,
   .planning-poker-room__consensus,

@@ -14,6 +14,13 @@ import {
   listStoryHistoryGroups,
   updateUserStoryEstimationStatus,
 } from '../services/userStoriesService'
+import {
+  analyzeProject,
+  buildProjectAnalysisMarkdown,
+  listProjectAnalyses,
+  saveProjectAnalysis,
+} from '../services/projectAiService'
+import { copyTextToClipboard } from '../utils/storyExport'
 
 const PROJECT_MEMBER_ROLES = [
   { value: 'member', label: 'Membro' },
@@ -64,6 +71,23 @@ function getEstimationStatusLabel(status) {
   return ESTIMATION_STATUS_LABELS[status] ?? 'Criada'
 }
 
+function ProjectInsightList({ title, items, emptyText }) {
+  return (
+    <section>
+      <h3>{title}</h3>
+      {items.length > 0 ? (
+        <ul>
+          {items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      ) : (
+        <p>{emptyText}</p>
+      )}
+    </section>
+  )
+}
+
 function ProjectDetailPage() {
   const { projectId } = useParams()
   const { user } = useAuth()
@@ -91,6 +115,13 @@ function ProjectDetailPage() {
   const [projectMessage, setProjectMessage] = useState('')
   const [storyStatusMessage, setStoryStatusMessage] = useState('')
   const [memberMessage, setMemberMessage] = useState('')
+  const [projectInsights, setProjectInsights] = useState(null)
+  const [projectInsightsMessage, setProjectInsightsMessage] = useState('')
+  const [projectInsightsCopyFeedback, setProjectInsightsCopyFeedback] = useState('')
+  const [projectInsightHistory, setProjectInsightHistory] = useState([])
+  const [isLoadingProjectInsightHistory, setIsLoadingProjectInsightHistory] = useState(false)
+  const [isProjectInsightHistoryUnavailable, setIsProjectInsightHistoryUnavailable] = useState(false)
+  const [isGeneratingProjectInsights, setIsGeneratingProjectInsights] = useState(false)
   const [notFound, setNotFound] = useState(false)
 
   const storiesLabel = useMemo(
@@ -119,6 +150,7 @@ function ProjectDetailPage() {
   const hasNoStoriesForFilter =
     !isLoadingStories && projectStoryCount > 0 && projectStories.length === 0
   const shouldShowStoryLimitNotice = projectStoryFilteredCount > projectStories.length
+  const canGenerateProjectInsights = Boolean(project && projectStoryCount > 0 && !isGeneratingProjectInsights)
 
   const loadProjectStories = useCallback(async () => {
     if (!projectId || !userId) return
@@ -184,6 +216,23 @@ function ProjectDetailPage() {
     setCanManageProjectMembers(manageResponse.success ? Boolean(manageResponse.data) : false)
   }, [projectId, userId])
 
+  const loadProjectInsightHistory = useCallback(async () => {
+    if (!projectId || !userId) return
+
+    setIsLoadingProjectInsightHistory(true)
+    const response = await listProjectAnalyses({ projectId, userId, limit: 3 })
+    setIsLoadingProjectInsightHistory(false)
+
+    if (response.success) {
+      setProjectInsightHistory(response.data ?? [])
+      setIsProjectInsightHistoryUnavailable(false)
+      return
+    }
+
+    setProjectInsightHistory([])
+    setIsProjectInsightHistoryUnavailable(Boolean(response.unavailable))
+  }, [projectId, userId])
+
   useEffect(() => {
     const timerId = setTimeout(() => {
       loadProject()
@@ -191,6 +240,14 @@ function ProjectDetailPage() {
 
     return () => clearTimeout(timerId)
   }, [loadProject])
+
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      loadProjectInsightHistory()
+    }, 0)
+
+    return () => clearTimeout(timerId)
+  }, [loadProjectInsightHistory])
 
   useEffect(() => {
     const timerId = setTimeout(() => {
@@ -280,6 +337,102 @@ function ProjectDetailPage() {
   async function handlePrepareStoryForPlanning(story) {
     if (!story) return
     await handleUpdateStoryEstimationStatus(story, 'ready_for_estimation')
+  }
+
+  async function handleGenerateProjectInsights() {
+    if (!project || !userId) return
+
+    setProjectInsightsMessage('')
+    setIsGeneratingProjectInsights(true)
+
+    const storiesResponse = await listStoryHistoryGroups({
+      userId,
+      projectFilter: 'project',
+      projectId,
+      page: 1,
+      pageSize: 30,
+    })
+
+    if (!storiesResponse.success) {
+      setIsGeneratingProjectInsights(false)
+      setProjectInsightsMessage('Não foi possível carregar as histórias do projeto para análise.')
+      return
+    }
+
+    const storiesForAnalysis = storiesResponse.data ?? []
+    if (storiesForAnalysis.length === 0) {
+      setIsGeneratingProjectInsights(false)
+      setProjectInsightsMessage('Forje ou vincule ao menos uma história antes de gerar o diagnóstico.')
+      return
+    }
+
+    try {
+      const analyzedStoryCount = storiesResponse.totalCount ?? storiesForAnalysis.length
+      const analysis = await analyzeProject({
+        project,
+        stories: storiesForAnalysis,
+        storyCount: analyzedStoryCount,
+        memberCount: projectMembers.length,
+      })
+      setProjectInsights(analysis)
+      setProjectInsightsCopyFeedback('')
+
+      const saveResponse = await saveProjectAnalysis({
+        projectId,
+        userId,
+        analysis,
+        storyCount: analyzedStoryCount,
+      })
+
+      if (saveResponse.success && saveResponse.data) {
+        setProjectInsightHistory((current) => [
+          saveResponse.data,
+          ...current.filter((item) => item.id !== saveResponse.data.id),
+        ].slice(0, 3))
+        setIsProjectInsightHistoryUnavailable(false)
+        setProjectInsightsMessage('Diagnóstico gerado e salvo no histórico do projeto.')
+      } else if (saveResponse.unavailable) {
+        setIsProjectInsightHistoryUnavailable(true)
+        setProjectInsightsMessage('Diagnóstico gerado. O histórico será ativado após aplicar o SQL desta etapa.')
+      } else {
+        setProjectInsightsMessage('Diagnóstico gerado. Não foi possível salvar no histórico agora.')
+      }
+    } catch (error) {
+      setProjectInsightsMessage(
+        error?.message ?? 'Não foi possível gerar o diagnóstico do projeto agora.',
+      )
+    } finally {
+      setIsGeneratingProjectInsights(false)
+    }
+  }
+
+  function handleOpenProjectInsightHistoryItem(item) {
+    if (!item?.analysis) return
+
+    setProjectInsights(item.analysis)
+    setProjectInsightsCopyFeedback('')
+    setProjectInsightsMessage('Diagnóstico reaberto do histórico do projeto.')
+  }
+
+  async function handleCopyProjectInsights() {
+    if (!projectInsights) return
+
+    setProjectInsightsCopyFeedback('')
+
+    try {
+      await copyTextToClipboard(
+        buildProjectAnalysisMarkdown({
+          project,
+          analysis: projectInsights,
+          storyCount: projectStoryCount,
+          memberCount: projectMembers.length,
+        }),
+      )
+      setProjectInsightsCopyFeedback('Diagnóstico copiado em Markdown.')
+      window.setTimeout(() => setProjectInsightsCopyFeedback(''), 2600)
+    } catch {
+      setProjectInsightsCopyFeedback('Não foi possível copiar o diagnóstico agora.')
+    }
   }
 
   async function handleAddProjectMember(event) {
@@ -477,6 +630,168 @@ function ProjectDetailPage() {
         ) : null}
 
         {projectMessage ? <p className="projects-page__message">{projectMessage}</p> : null}
+      </section>
+
+      <section className="panel project-detail-page__ai" aria-label="Diagnóstico com IA do projeto">
+        <div className="projects-page__section-header">
+          <div>
+            <p className="projects-page__eyebrow">IA do projeto</p>
+            <h2>Diagnóstico do projeto</h2>
+            <p>
+              Gere uma leitura executiva das histórias vinculadas para encontrar riscos, perguntas de refinamento
+              e próximos passos antes da estimativa.
+            </p>
+          </div>
+          <div className="project-detail-page__ai-actions">
+            {projectInsights ? (
+              <button
+                type="button"
+                className="btn btn-secondary btn-small"
+                onClick={handleCopyProjectInsights}
+              >
+                {projectInsightsCopyFeedback === 'Diagnóstico copiado em Markdown.'
+                  ? 'Diagnóstico copiado'
+                  : 'Copiar diagnóstico'}
+              </button>
+            ) : null}
+            {projectInsights ? (
+              <Link className="btn btn-secondary btn-small" to={`/roda?projectId=${projectId}`}>
+                Levar para Roda
+              </Link>
+            ) : null}
+            <button
+              type="button"
+              className="btn btn-primary btn-small"
+              onClick={handleGenerateProjectInsights}
+              disabled={!canGenerateProjectInsights}
+            >
+              {isGeneratingProjectInsights
+                ? 'Analisando...'
+                : projectInsights
+                  ? 'Atualizar diagnóstico'
+                  : 'Gerar diagnóstico'}
+            </button>
+          </div>
+        </div>
+
+        {projectInsightsMessage ? (
+          <p className="projects-page__message" role="status">
+            {projectInsightsMessage}
+          </p>
+        ) : null}
+        {projectInsightsCopyFeedback ? (
+          <p className="projects-page__message" role="status">
+            {projectInsightsCopyFeedback}
+          </p>
+        ) : null}
+
+        {!projectInsights ? (
+          <div className="project-detail-page__ai-empty">
+            <strong>Leitura sob demanda</strong>
+            <p>
+              O diagnóstico não é salvo no banco nesta versão. Ele usa as histórias atuais do projeto e deve ser
+              revisado pelo PM/PO antes de orientar o time.
+            </p>
+            {projectStoryCount === 0 ? (
+              <p>Este projeto ainda precisa de histórias vinculadas para liberar a análise.</p>
+            ) : null}
+          </div>
+        ) : (
+          <div className="project-detail-page__ai-result">
+            <div className="project-detail-page__ai-summary">
+              <span>{projectInsights.health_label}</span>
+              <p>{projectInsights.summary}</p>
+              <small>
+                {projectInsights.meta.analyzed_stories}{' '}
+                {projectInsights.meta.analyzed_stories === 1 ? 'história analisada' : 'histórias analisadas'}
+              </small>
+            </div>
+
+            <div className="project-detail-page__ai-grid">
+              <ProjectInsightList
+                title="Riscos"
+                items={projectInsights.risks}
+                emptyText="Nenhum risco relevante foi destacado pela IA."
+              />
+              <ProjectInsightList
+                title="Perguntas de refinamento"
+                items={projectInsights.refinement_questions}
+                emptyText="Nenhuma pergunta adicional foi sugerida."
+              />
+              <ProjectInsightList
+                title="Próximos passos"
+                items={projectInsights.next_actions}
+                emptyText="Nenhum próximo passo foi sugerido."
+              />
+              <ProjectInsightList
+                title="Candidatas à estimativa"
+                items={projectInsights.estimation_candidates}
+                emptyText="Nenhuma candidata específica foi destacada."
+              />
+            </div>
+
+            <div className="project-detail-page__ai-next-step">
+              <div>
+                <strong>Próxima ação</strong>
+                <p>
+                  Use o diagnóstico para preparar as histórias, alinhar dúvidas com o time e abrir a Roda da Fogueira
+                  quando houver candidatas prontas para estimar.
+                </p>
+              </div>
+              <Link className="btn btn-primary btn-small" to={`/roda?projectId=${projectId}`}>
+                Abrir Roda da Fogueira
+              </Link>
+            </div>
+          </div>
+        )}
+
+        <div className="project-detail-page__ai-history">
+          <div>
+            <strong>Histórico recente</strong>
+            <p>
+              Reabra os últimos diagnósticos gerados para comparar a evolução do projeto sem executar a IA novamente.
+            </p>
+          </div>
+
+          {isLoadingProjectInsightHistory ? (
+            <p className="projects-page__state">Carregando diagnósticos...</p>
+          ) : null}
+
+          {isProjectInsightHistoryUnavailable ? (
+            <p className="projects-page__state">
+              O histórico ficará disponível após aplicar o SQL <code>supabase/project-ai-diagnostics.sql</code>.
+            </p>
+          ) : null}
+
+          {!isLoadingProjectInsightHistory &&
+          !isProjectInsightHistoryUnavailable &&
+          projectInsightHistory.length === 0 ? (
+            <p className="projects-page__state">
+              Nenhum diagnóstico salvo ainda. Gere o primeiro para criar uma referência do projeto.
+            </p>
+          ) : null}
+
+          {projectInsightHistory.length > 0 ? (
+            <div className="project-detail-page__ai-history-list">
+              {projectInsightHistory.map((item) => (
+                <article key={item.id} className="project-detail-page__ai-history-item">
+                  <div>
+                    <span>{formatProjectDateTime(item.created_at)}</span>
+                    <strong>{item.analysis.health_label}</strong>
+                    <p>{item.analysis.summary}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-small"
+                    onClick={() => handleOpenProjectInsightHistoryItem(item)}
+                  >
+                    Reabrir
+                  </button>
+                </article>
+              ))}
+            </div>
+          ) : null}
+        </div>
       </section>
 
       <section className="panel project-detail-page__collaboration" aria-label="Colaboração e estimativas">
