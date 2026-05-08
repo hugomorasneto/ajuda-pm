@@ -261,6 +261,7 @@ function HistoryPage() {
   const [estimationActionMessage, setEstimationActionMessage] = useState('')
   const [isUpdatingEstimationStatus, setIsUpdatingEstimationStatus] = useState(false)
   const [openAdvancedSections, setOpenAdvancedSections] = useState(INITIAL_ADVANCED_SECTIONS)
+  const [isProjectAssignmentOpen, setIsProjectAssignmentOpen] = useState(false)
 
   const selectedResult = useMemo(() => mapStoryRowToResult(selectedStory), [selectedStory])
   const selectedVersion = useMemo(
@@ -553,6 +554,16 @@ function HistoryPage() {
     resetHistoryPagination()
   }
 
+  function handleOpenProjectAssignment() {
+    setIsProjectAssignmentOpen(true)
+    window.requestAnimationFrame(() => {
+      document.getElementById('history-project-assignment')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      })
+    })
+  }
+
   function goToPage(nextPage) {
     const fallbackTotal = totalPages || 1
     const safePage = Math.min(Math.max(1, nextPage), fallbackTotal)
@@ -783,6 +794,62 @@ function HistoryPage() {
   } else if (selectedStory?.estimation_status === 'ready_for_estimation') {
     planningActionLabel = 'Abrir Roda'
   }
+  const historyNextAction = (() => {
+    if (!selectedStory) return null
+
+    if (selectedStory.user_id !== userId) {
+      return {
+        eyebrow: 'Consulta',
+        title: 'Peça compartilhada',
+        description: 'Você pode revisar e copiar este artefato, mas alterações ficam com quem criou a história.',
+        actionLabel: 'Abrir na bancada',
+        action: () => navigate(`/tool?storyId=${selectedStory.id}`),
+        disabled: false,
+      }
+    }
+
+    if (!selectedStory.project_id) {
+      return {
+        eyebrow: 'Organização',
+        title: 'Vincule a um projeto',
+        description: 'Projetos liberam organização por iniciativa, Kanban e Roda da Fogueira para estimativa.',
+        actionLabel: 'Vincular projeto',
+        action: handleOpenProjectAssignment,
+        disabled: !canAssignSelectedStoryProject,
+      }
+    }
+
+    if (selectedStory.estimation_status === 'estimated') {
+      return {
+        eyebrow: 'Estimativa',
+        title: 'Estimativa registrada',
+        description: 'Consulte as Rodas do projeto ou reabra a peça para revisar o conteúdo antes de encaminhar.',
+        actionLabel: 'Ver estimativa',
+        action: handleOpenPlanningPoker,
+        disabled: isUpdatingEstimationStatus,
+      }
+    }
+
+    if (selectedStory.estimation_status === 'ready_for_estimation') {
+      return {
+        eyebrow: 'Estimativa',
+        title: 'Pronta para a Roda',
+        description: 'Esta peça já está preparada para entrar em uma sessão colaborativa de estimativa.',
+        actionLabel: 'Abrir Roda',
+        action: handleOpenPlanningPoker,
+        disabled: isUpdatingEstimationStatus,
+      }
+    }
+
+    return {
+      eyebrow: 'Próxima ação',
+      title: 'Preparar estimativa',
+      description: 'Marque a peça como pronta e abra a Roda quando o time estiver alinhado para pontuar.',
+      actionLabel: isUpdatingEstimationStatus ? 'Preparando...' : 'Preparar e abrir Roda',
+      action: handleOpenPlanningPoker,
+      disabled: isUpdatingEstimationStatus || !canPrepareSelectedStory,
+    }
+  })()
 
   return (
     <div className="history-page">
@@ -968,7 +1035,7 @@ function HistoryPage() {
                   <div className="history-result-card__title-row">
                     <h3>{item.title}</h3>
                     <span className="history-result-card__action">
-                      {isActive ? 'Aberta' : 'Detalhes'}
+                      {isActive ? 'Aberta' : 'Ver'}
                     </span>
                   </div>
 
@@ -1115,7 +1182,30 @@ function HistoryPage() {
                   </div>
                 </div>
 
-                <details className="history-preview__project-assignment">
+                {historyNextAction ? (
+                  <section className="history-preview__next-action" aria-label="Próxima ação sugerida">
+                    <div>
+                      <span>{historyNextAction.eyebrow}</span>
+                      <strong>{historyNextAction.title}</strong>
+                      <p>{historyNextAction.description}</p>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-small"
+                      onClick={historyNextAction.action}
+                      disabled={historyNextAction.disabled}
+                    >
+                      {historyNextAction.actionLabel}
+                    </button>
+                  </section>
+                ) : null}
+
+                <details
+                  id="history-project-assignment"
+                  className="history-preview__project-assignment"
+                  open={isProjectAssignmentOpen}
+                  onToggle={(event) => setIsProjectAssignmentOpen(event.currentTarget.open)}
+                >
                   <summary>
                     <span>
                       <small>Organização da peça</small>

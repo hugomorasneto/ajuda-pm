@@ -107,6 +107,55 @@ function getStoryPreview(story) {
   return story?.input_context?.trim() || story?.user_story?.trim() || 'Sem descrição.'
 }
 
+function normalizeProjectSearchText(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('pt-BR')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function getProjectStorySearchText(story) {
+  return normalizeProjectSearchText([
+    story?.title,
+    story?.input_context,
+    story?.user_story,
+  ].filter(Boolean).join(' '))
+}
+
+function findProjectInsightCandidateStory(candidate, stories = []) {
+  const normalizedCandidate = normalizeProjectSearchText(candidate)
+  if (!normalizedCandidate) return null
+
+  const candidateTokens = new Set(
+    normalizedCandidate
+      .split(' ')
+      .filter((token) => token.length > 3),
+  )
+
+  return stories
+    .map((story) => {
+      const titleText = normalizeProjectSearchText(story?.title)
+      const storyText = getProjectStorySearchText(story)
+      const exactScore =
+        titleText && (normalizedCandidate.includes(titleText) || titleText.includes(normalizedCandidate))
+          ? 100
+          : storyText.includes(normalizedCandidate) || normalizedCandidate.includes(storyText)
+            ? 80
+            : 0
+      const tokenScore = Array.from(candidateTokens).filter((token) => storyText.includes(token)).length
+
+      return {
+        score: exactScore + tokenScore,
+        story,
+      }
+    })
+    .filter((item) => item.score > 1)
+    .sort((left, right) => right.score - left.score)[0]?.story ?? null
+}
+
 function ProjectInsightList({ title, items, emptyText }) {
   return (
     <section>
@@ -185,6 +234,7 @@ function ProjectDetailPage() {
   const [isLoadingProjectInsightHistory, setIsLoadingProjectInsightHistory] = useState(false)
   const [isProjectInsightHistoryUnavailable, setIsProjectInsightHistoryUnavailable] = useState(false)
   const [isGeneratingProjectInsights, setIsGeneratingProjectInsights] = useState(false)
+  const [isPreparingInsightCandidates, setIsPreparingInsightCandidates] = useState(false)
   const [isKanbanUnavailable, setIsKanbanUnavailable] = useState(false)
   const [notFound, setNotFound] = useState(false)
 
@@ -233,6 +283,35 @@ function ProjectDetailPage() {
   const planningStorySessionById = useMemo(
     () => getPlanningStorySessionIndex(planningSessions, planningSessionStoriesBySession),
     [planningSessionStoriesBySession, planningSessions],
+  )
+  const projectInsightCandidateCards = useMemo(() => {
+    if (!projectInsights?.estimation_candidates?.length) return []
+
+    const storiesById = new Map(
+      [...kanbanStories, ...projectStories].filter(Boolean).map((story) => [story.id, story]),
+    )
+    const searchableStories = Array.from(storiesById.values())
+
+    return projectInsights.estimation_candidates.map((candidate) => {
+      const matchedStory = findProjectInsightCandidateStory(candidate, searchableStories)
+
+      return {
+        candidate,
+        story: matchedStory,
+      }
+    })
+  }, [kanbanStories, projectInsights, projectStories])
+  const actionableInsightCandidateStories = useMemo(
+    () =>
+      projectInsightCandidateCards
+        .map((item) => item.story)
+        .filter(
+          (story, index, stories) =>
+            story &&
+            stories.findIndex((current) => current?.id === story.id) === index &&
+            !['ready_for_estimation', 'estimated'].includes(story.estimation_status),
+        ),
+    [projectInsightCandidateCards],
   )
   const livePlanningStoryCount = useMemo(
     () =>
@@ -594,11 +673,24 @@ function ProjectDetailPage() {
 
     setStoryStatusMessage('')
     setUpdatingStoryStatusId(story.id)
-    const response = await updateUserStoryEstimationStatus({
-      storyId: story.id,
-      estimationStatus: nextStatus,
-      userId,
-    })
+
+    const targetKanbanColumn = canMoveKanbanCards
+      ? kanbanColumns.find((column) => column.status_base === nextStatus)
+      : null
+    const response = targetKanbanColumn
+      ? await moveProjectKanbanStory({
+          projectId,
+          storyId: story.id,
+          columnId: targetKanbanColumn.id,
+          position: getKanbanColumnDropPosition(targetKanbanColumn.id),
+          userId,
+        })
+      : await updateUserStoryEstimationStatus({
+          storyId: story.id,
+          estimationStatus: nextStatus,
+          userId,
+        })
+
     setUpdatingStoryStatusId(null)
 
     if (!response.success) {
@@ -626,6 +718,58 @@ function ProjectDetailPage() {
   async function handlePrepareStoryForPlanning(story) {
     if (!story) return
     await handleUpdateStoryEstimationStatus(story, 'ready_for_estimation')
+  }
+
+  async function handlePrepareInsightCandidates() {
+    if (actionableInsightCandidateStories.length === 0) return
+
+    setProjectInsightsMessage('')
+    setIsPreparingInsightCandidates(true)
+
+    const readyColumn = kanbanColumns.find((column) => column.status_base === 'ready_for_estimation')
+    const responses = []
+
+    for (const story of actionableInsightCandidateStories) {
+      const response = readyColumn
+        ? await moveProjectKanbanStory({
+            projectId,
+            storyId: story.id,
+            columnId: readyColumn.id,
+            position: getKanbanColumnDropPosition(readyColumn.id),
+            userId,
+          })
+        : await updateUserStoryEstimationStatus({
+            storyId: story.id,
+            estimationStatus: 'ready_for_estimation',
+            userId,
+          })
+
+      responses.push({ response, story })
+    }
+
+    setIsPreparingInsightCandidates(false)
+
+    const preparedStoryIds = responses
+      .filter((item) => item.response.success)
+      .map((item) => item.story.id)
+    const failureCount = responses.length - preparedStoryIds.length
+
+    if (preparedStoryIds.length > 0) {
+      setSelectedProjectStoryIds((current) => Array.from(new Set([...current, ...preparedStoryIds])))
+    }
+
+    setProjectInsightsMessage(
+      failureCount > 0
+        ? `${preparedStoryIds.length} candidatas preparadas. ${failureCount} não puderam ser atualizadas agora.`
+        : `${preparedStoryIds.length} candidatas preparadas para estimativa e selecionadas para a Roda.`,
+    )
+
+    await Promise.all([
+      loadProjectStories(),
+      loadProjectStoryStatusCounts(),
+      loadProjectKanban(),
+      loadProjectPlanningSummaries(),
+    ])
   }
 
   function getKanbanColumnDropPosition(columnId) {
@@ -1292,6 +1436,111 @@ function ProjectDetailPage() {
                 emptyText="Nenhuma candidata específica foi destacada."
               />
             </div>
+
+            {projectInsightCandidateCards.length > 0 ? (
+              <div className="project-detail-page__ai-candidates">
+                <div className="project-detail-page__ai-candidates-header">
+                  <div>
+                    <strong>Candidatas acionáveis</strong>
+                    <p>
+                      Sugestões da IA conectadas às histórias do projeto para acelerar preparação e estimativa.
+                    </p>
+                  </div>
+                  {actionableInsightCandidateStories.length > 0 ? (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-small"
+                      onClick={handlePrepareInsightCandidates}
+                      disabled={isPreparingInsightCandidates}
+                    >
+                      {isPreparingInsightCandidates ? 'Preparando...' : 'Preparar candidatas'}
+                    </button>
+                  ) : null}
+                </div>
+
+                <div className="project-detail-page__ai-candidate-list">
+                  {projectInsightCandidateCards.map((item) => {
+                    const story = item.story
+                    const planningEntry = story ? planningStorySessionById[story.id] : null
+                    const planningSession = planningEntry?.session
+                    const finalEstimate = planningEntry?.story?.final_estimate ?? planningEntry?.finalEstimate
+                    const isReadyForPlanning = story?.estimation_status === 'ready_for_estimation'
+                    const isEstimated = story?.estimation_status === 'estimated'
+                    const isInLivePlanningSession = Boolean(planningEntry?.isLive)
+                    const planningRoomUrl = planningSession
+                      ? `/projetos/${projectId}/roda/${planningSession.id}`
+                      : `/roda?projectId=${projectId}${story ? `&storyId=${story.id}` : ''}`
+                    const canPrepareCandidate =
+                      story &&
+                      !isReadyForPlanning &&
+                      !isEstimated &&
+                      (canMoveKanbanCards || canManageProjectMembers || story.user_id === userId)
+
+                    return (
+                      <article
+                        key={`${item.candidate}-${story?.id ?? 'sem-vinculo'}`}
+                        className="project-detail-page__ai-candidate"
+                      >
+                        <div>
+                          <span>Sugestão da IA</span>
+                          <strong>{item.candidate}</strong>
+                          {story ? (
+                            <p>
+                              Vinculada a <b>{story.title ?? 'história sem título'}</b>
+                            </p>
+                          ) : (
+                            <p>Não foi possível vincular automaticamente a uma história do projeto.</p>
+                          )}
+                        </div>
+
+                        <div className="project-detail-page__ai-candidate-meta">
+                          {story ? <span>{getEstimationStatusLabel(story.estimation_status)}</span> : null}
+                          {isInLivePlanningSession ? (
+                            <span>Em Roda ativa</span>
+                          ) : finalEstimate ? (
+                            <span>Final: {finalEstimate}</span>
+                          ) : planningSession ? (
+                            <span>{getPlanningSessionStatusLabel(planningSession.status)}</span>
+                          ) : null}
+                        </div>
+
+                        {story ? (
+                          <div className="project-detail-page__ai-candidate-actions">
+                            <Link className="btn btn-secondary btn-small" to={`/tool?storyId=${story.id}`}>
+                              Abrir
+                            </Link>
+                            {canPrepareCandidate ? (
+                              <button
+                                type="button"
+                                className="btn btn-secondary btn-small"
+                                onClick={() => handlePrepareStoryForPlanning(story)}
+                                disabled={updatingStoryStatusId === story.id}
+                              >
+                                {updatingStoryStatusId === story.id ? 'Preparando...' : 'Preparar'}
+                              </button>
+                            ) : null}
+                            {isReadyForPlanning || isInLivePlanningSession || isEstimated ? (
+                              <Link
+                                className={`btn btn-small ${
+                                  isReadyForPlanning || isInLivePlanningSession ? 'btn-primary' : 'btn-secondary'
+                                }`}
+                                to={planningRoomUrl}
+                              >
+                                {isInLivePlanningSession
+                                  ? 'Continuar Roda'
+                                  : isEstimated
+                                    ? 'Ver estimativa'
+                                    : 'Abrir Roda'}
+                              </Link>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </article>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : null}
 
             <div className="project-detail-page__ai-next-step">
               <div>
