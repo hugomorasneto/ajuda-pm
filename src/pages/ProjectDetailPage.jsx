@@ -277,6 +277,11 @@ function ProjectDetailPage() {
     await loadProjectStories()
   }
 
+  async function handlePrepareStoryForPlanning(story) {
+    if (!story) return
+    await handleUpdateStoryEstimationStatus(story, 'ready_for_estimation')
+  }
+
   async function handleAddProjectMember(event) {
     event.preventDefault()
     setMemberMessage('')
@@ -401,7 +406,10 @@ function ProjectDetailPage() {
         </div>
         <div className="project-detail-page__actions">
           <Link className="btn btn-secondary btn-small" to="/projetos">
-            Voltar para projetos
+            Voltar
+          </Link>
+          <Link className="btn btn-secondary btn-small" to={`/historico?projectId=${projectId}`}>
+            Histórico
           </Link>
           {canManageProjectMembers ? (
             <button
@@ -410,11 +418,11 @@ function ProjectDetailPage() {
               onClick={() => setIsEditingProject((current) => !current)}
               disabled={isSavingProject}
             >
-              {isEditingProject ? 'Fechar edição' : 'Editar projeto'}
+              {isEditingProject ? 'Fechar edição' : 'Editar'}
             </button>
           ) : null}
           <Link className="btn btn-primary btn-small" to={`/tool?projectId=${projectId}`}>
-            Abrir Bancada
+            Bancada
           </Link>
         </div>
       </section>
@@ -579,6 +587,31 @@ function ProjectDetailPage() {
                   <Link className="btn btn-secondary btn-small" to={`/tool?storyId=${story.id}`}>
                     Abrir na Bancada
                   </Link>
+                  {story.estimation_status === 'ready_for_estimation' ? (
+                    <Link
+                      className="btn btn-primary btn-small"
+                      to={`/roda?projectId=${projectId}&storyId=${story.id}`}
+                    >
+                      Abrir Roda
+                    </Link>
+                  ) : null}
+                  {story.estimation_status === 'estimated' ? (
+                    <Link className="btn btn-secondary btn-small" to={`/roda?projectId=${projectId}`}>
+                      Ver Rodas
+                    </Link>
+                  ) : null}
+                  {story.estimation_status !== 'ready_for_estimation' &&
+                  story.estimation_status !== 'estimated' &&
+                  canUpdateStoryStatus ? (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-small"
+                      onClick={() => handlePrepareStoryForPlanning(story)}
+                      disabled={isUpdatingStoryStatus}
+                    >
+                      {isUpdatingStoryStatus ? 'Preparando...' : 'Preparar Roda'}
+                    </button>
+                  ) : null}
                 </div>
               </article>
             )

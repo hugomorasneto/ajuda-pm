@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useOutletContext } from 'react-router-dom'
+import { Link, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import VersionDiffSummary from '../components/workspace/VersionDiffSummary'
 import VersionTimeline from '../components/workspace/VersionTimeline'
 import { getResolvedQualityScore, getScoreMeta } from '../components/workspace/qualityScoreUtils'
@@ -10,6 +10,7 @@ import {
   listStoryHistoryGroups,
   listStoryVersions,
   updateUserStory,
+  updateUserStoryEstimationStatus,
 } from '../services/userStoriesService'
 import { listProjects } from '../services/projectsService'
 import {
@@ -60,6 +61,29 @@ const PROJECT_FILTER_OPTIONS = [
   { value: 'all', label: 'Todas' },
   { value: 'none', label: 'Sem projeto' },
   { value: 'project', label: 'Por projeto' },
+]
+
+const HISTORY_QUICK_FILTERS = [
+  {
+    value: 'all',
+    label: 'Todas',
+    description: 'Peças salvas no histórico.',
+  },
+  {
+    value: 'without_project',
+    label: 'Sem projeto',
+    description: 'Peças avulsas para organizar.',
+  },
+  {
+    value: 'ready_for_estimation',
+    label: 'Prontas para estimar',
+    description: 'Peças preparadas para a Roda.',
+  },
+  {
+    value: 'estimated',
+    label: 'Estimadas',
+    description: 'Peças com pontuação final.',
+  },
 ]
 
 const INITIAL_ADVANCED_SECTIONS = {
@@ -208,14 +232,16 @@ function HistoryPage() {
   const { user } = useAuth()
   const userId = user?.id ?? null
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { setTopbarStatus } = useOutletContext() ?? {}
+  const projectIdFromSearch = searchParams.get('projectId') ?? ''
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [period, setPeriod] = useState('7d')
+  const [period, setPeriod] = useState(projectIdFromSearch ? 'all' : '7d')
   const [status, setStatus] = useState('all')
   const [estimationStatus, setEstimationStatus] = useState('all')
-  const [projectFilter, setProjectFilter] = useState('all')
-  const [selectedProjectId, setSelectedProjectId] = useState('')
+  const [projectFilter, setProjectFilter] = useState(projectIdFromSearch ? 'project' : 'all')
+  const [selectedProjectId, setSelectedProjectId] = useState(projectIdFromSearch)
   const [projects, setProjects] = useState([])
   const [pageSize, setPageSize] = useState(10)
   const [page, setPage] = useState(1)
@@ -232,6 +258,8 @@ function HistoryPage() {
   const [copyTarget, setCopyTarget] = useState(null)
   const [projectAssignmentMessage, setProjectAssignmentMessage] = useState('')
   const [isAssigningProject, setIsAssigningProject] = useState(false)
+  const [estimationActionMessage, setEstimationActionMessage] = useState('')
+  const [isUpdatingEstimationStatus, setIsUpdatingEstimationStatus] = useState(false)
   const [openAdvancedSections, setOpenAdvancedSections] = useState(INITIAL_ADVANCED_SECTIONS)
 
   const selectedResult = useMemo(() => mapStoryRowToResult(selectedStory), [selectedStory])
@@ -250,6 +278,8 @@ function HistoryPage() {
 
       setSelectedStory(story)
       setCopyMessage('')
+      setProjectAssignmentMessage('')
+      setEstimationActionMessage('')
       setIsLoadingVersions(true)
 
       const response = await listStoryVersions({
@@ -387,6 +417,7 @@ function HistoryPage() {
       setSelectedStory(version)
       setCopyMessage('')
       setProjectAssignmentMessage('')
+      setEstimationActionMessage('')
       return
     }
 
@@ -395,6 +426,7 @@ function HistoryPage() {
       setSelectedStory(response.data)
       setCopyMessage('')
       setProjectAssignmentMessage('')
+      setEstimationActionMessage('')
     }
   }
 
@@ -454,10 +486,71 @@ function HistoryPage() {
     })
   }
 
-  function resetPageWith(nextValueSetter, value) {
-    nextValueSetter(value)
+  function resetHistoryPagination() {
     setPage(1)
     setPageJump('1')
+  }
+
+  function resetPageWith(nextValueSetter, value) {
+    nextValueSetter(value)
+    resetHistoryPagination()
+  }
+
+  function getActiveQuickFilter() {
+    if (
+      period === 'all' &&
+      status === 'all' &&
+      estimationStatus === 'all' &&
+      projectFilter === 'all' &&
+      !selectedProjectId &&
+      !searchInput.trim()
+    ) {
+      return 'all'
+    }
+
+    if (estimationStatus === 'all' && projectFilter === 'none') {
+      return 'without_project'
+    }
+
+    if (projectFilter === 'all' && estimationStatus === 'ready_for_estimation') {
+      return 'ready_for_estimation'
+    }
+
+    if (projectFilter === 'all' && estimationStatus === 'estimated') {
+      return 'estimated'
+    }
+
+    return null
+  }
+
+  function handleQuickFilterChange(value) {
+    setStatus('all')
+    setSelectedProjectId('')
+
+    if (value === 'all') {
+      setSearchInput('')
+      setDebouncedSearch('')
+      setPeriod('all')
+      setProjectFilter('all')
+      setEstimationStatus('all')
+    }
+
+    if (value === 'without_project') {
+      setProjectFilter('none')
+      setEstimationStatus('all')
+    }
+
+    if (value === 'ready_for_estimation') {
+      setProjectFilter('all')
+      setEstimationStatus('ready_for_estimation')
+    }
+
+    if (value === 'estimated') {
+      setProjectFilter('all')
+      setEstimationStatus('estimated')
+    }
+
+    resetHistoryPagination()
   }
 
   function goToPage(nextPage) {
@@ -479,20 +572,19 @@ function HistoryPage() {
     } else if (!selectedProjectId && projects[0]?.id) {
       setSelectedProjectId(projects[0].id)
     }
-    setPage(1)
-    setPageJump('1')
+    resetHistoryPagination()
   }
 
   function handleSelectedProjectChange(value) {
     setSelectedProjectId(value)
-    setPage(1)
-    setPageJump('1')
+    resetHistoryPagination()
   }
 
   async function handleSelectedStoryProjectChange(value) {
     if (!selectedStory || !userId) return
 
     setProjectAssignmentMessage('')
+    setEstimationActionMessage('')
 
     if (selectedStory.user_id !== userId) {
       setProjectAssignmentMessage(
@@ -547,6 +639,96 @@ function HistoryPage() {
     )
   }
 
+  async function prepareSelectedStoryForEstimation() {
+    if (!selectedStory?.id || !userId) return false
+
+    setEstimationActionMessage('')
+
+    if (selectedStory.user_id !== userId) {
+      setEstimationActionMessage(
+        'Apenas quem criou esta história pode prepará-la para estimativa.',
+      )
+      return false
+    }
+
+    if (!selectedStory.project_id) {
+      setEstimationActionMessage(
+        'Vincule a história a um projeto antes de prepará-la para a Roda.',
+      )
+      return false
+    }
+
+    if (
+      selectedStory.estimation_status === 'ready_for_estimation' ||
+      selectedStory.estimation_status === 'estimated'
+    ) {
+      return true
+    }
+
+    setIsUpdatingEstimationStatus(true)
+    const response = await updateUserStoryEstimationStatus({
+      storyId: selectedStory.id,
+      estimationStatus: 'ready_for_estimation',
+      userId,
+    })
+    setIsUpdatingEstimationStatus(false)
+
+    if (!response.success) {
+      setEstimationActionMessage(
+        response.error?.message ?? 'Não foi possível preparar esta história agora.',
+      )
+      return false
+    }
+
+    const updatedFields = {
+      estimation_status: response.data?.estimation_status ?? 'ready_for_estimation',
+    }
+
+    setSelectedStory((current) => (current ? { ...current, ...updatedFields } : current))
+    setVersions((currentVersions) =>
+      currentVersions.map((version) =>
+        version.id === selectedStory.id ? { ...version, ...updatedFields } : version,
+      ),
+    )
+    setItems((currentItems) =>
+      currentItems.map((item) => {
+        const sameStory = item.id === selectedStory.id
+        const sameGroup =
+          item.story_group_id && item.story_group_id === selectedStory.story_group_id
+
+        return sameStory || sameGroup ? { ...item, ...updatedFields } : item
+      }),
+    )
+    setEstimationActionMessage('História pronta para estimativa.')
+    return true
+  }
+
+  async function handleOpenPlanningPoker() {
+    if (!selectedStory?.id) return
+
+    setEstimationActionMessage('')
+
+    if (!selectedStory.project_id) {
+      setEstimationActionMessage(
+        'Vincule a história a um projeto antes de abrir a Roda da Fogueira.',
+      )
+      return
+    }
+
+    const isAlreadyReady =
+      selectedStory.estimation_status === 'ready_for_estimation' ||
+      selectedStory.estimation_status === 'estimated'
+    const prepared = isAlreadyReady ? true : await prepareSelectedStoryForEstimation()
+
+    if (!prepared) return
+
+    const query = new URLSearchParams({ projectId: selectedStory.project_id })
+    if (selectedStory.estimation_status !== 'estimated') {
+      query.set('storyId', selectedStory.id)
+    }
+    navigate(`/roda?${query.toString()}`)
+  }
+
   function toggleAdvancedSection(section, isOpen) {
     setOpenAdvancedSections((current) => ({
       ...current,
@@ -569,6 +751,7 @@ function HistoryPage() {
   })
   const selectedGroupKey = selectedStory?.story_group_id ?? selectedStory?.id ?? null
   const canAssignSelectedStoryProject = Boolean(selectedStory?.id && selectedStory.user_id === userId)
+  const canPrepareSelectedStory = Boolean(selectedStory?.id && selectedStory.user_id === userId)
   const selectedProjectName = getProjectName(selectedStory, projects)
   const selectedVersionCount = Math.max(versions.length, getVersionCount(selectedStory))
   const latestVersionDate = formatDateTime(versions[0]?.created_at ?? selectedStory?.created_at)
@@ -590,6 +773,13 @@ function HistoryPage() {
     `${pageSize} por página`,
   ].join(' · ')
   const isCopying = Boolean(copyTarget)
+  const activeQuickFilter = getActiveQuickFilter()
+  let planningActionLabel = 'Preparar e abrir Roda'
+  if (selectedStory?.estimation_status === 'estimated') {
+    planningActionLabel = 'Ver Rodas do projeto'
+  } else if (selectedStory?.estimation_status === 'ready_for_estimation') {
+    planningActionLabel = 'Abrir Roda'
+  }
 
   return (
     <div className="history-page">
@@ -622,6 +812,25 @@ function HistoryPage() {
             <span>Recorte atual</span>
             <strong>{filterSummary}</strong>
           </div>
+        </div>
+
+        <div className="history-quick-filters" aria-label="Filtros rápidos das peças forjadas">
+          {HISTORY_QUICK_FILTERS.map((option) => {
+            const isActive = activeQuickFilter === option.value
+
+            return (
+              <button
+                key={option.value}
+                type="button"
+                className={`history-quick-filter ${isActive ? 'history-quick-filter--active' : ''}`}
+                aria-pressed={isActive}
+                onClick={() => handleQuickFilterChange(option.value)}
+              >
+                <span>{option.label}</span>
+                <small>{option.description}</small>
+              </button>
+            )
+          })}
         </div>
 
         <details className="history-filters__advanced">
@@ -759,6 +968,7 @@ function HistoryPage() {
                     <span>{item.project_name || 'Sem projeto'}</span>
                     <span>{getVersionLabel(versionCount)}</span>
                     <span>{getStatusLabel(item.status)}</span>
+                    <span>{getEstimationStatusLabel(item.estimation_status)}</span>
                     {isActive ? <span className="history-badge--active">Aberta para inspeção</span> : null}
                   </div>
                 </button>
@@ -851,12 +1061,25 @@ function HistoryPage() {
                     >
                       {copyTarget === 'plain' ? 'Copiando...' : 'Copiar artefato'}
                     </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-small"
+                      onClick={handleOpenPlanningPoker}
+                      disabled={!canPrepareSelectedStory || isUpdatingEstimationStatus}
+                    >
+                      {isUpdatingEstimationStatus ? 'Preparando...' : planningActionLabel}
+                    </button>
                   </div>
                 </header>
 
                 {copyMessage ? (
                   <p className="history-copy-message" role="status">
                     {copyMessage}
+                  </p>
+                ) : null}
+                {estimationActionMessage ? (
+                  <p className="history-copy-message" role="status">
+                    {estimationActionMessage}
                   </p>
                 ) : null}
 

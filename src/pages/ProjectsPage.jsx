@@ -11,6 +11,29 @@ const EMPTY_PROJECT_STATS = {
   teamCount: 0,
 }
 
+const PROJECT_PORTFOLIO_FILTERS = [
+  {
+    value: 'all',
+    label: 'Todos',
+    description: 'Projetos cadastrados.',
+  },
+  {
+    value: 'with_ready_stories',
+    label: 'Prontos para Roda',
+    description: 'Com histórias prontas.',
+  },
+  {
+    value: 'with_teams',
+    label: 'Com times',
+    description: 'Colaboração ativa.',
+  },
+  {
+    value: 'without_stories',
+    label: 'Sem histórias',
+    description: 'Ainda sem peças.',
+  },
+]
+
 function formatProjectDate(value) {
   if (!value) return '-'
   const date = new Date(value)
@@ -35,6 +58,8 @@ function ProjectsPage() {
   const [projectStatsById, setProjectStatsById] = useState({})
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  const [portfolioFilter, setPortfolioFilter] = useState('all')
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingStats, setIsLoadingStats] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
@@ -45,6 +70,60 @@ function ProjectsPage() {
     () => `${projects.length} ${projects.length === 1 ? 'projeto' : 'projetos'}`,
     [projects.length],
   )
+  const portfolioTotals = useMemo(
+    () =>
+      projects.reduce(
+        (totals, project) => {
+          const stats = projectStatsById[project.id] ?? EMPTY_PROJECT_STATS
+
+          return {
+            storyCount: totals.storyCount + stats.storyCount,
+            readyStoryCount: totals.readyStoryCount + stats.readyStoryCount,
+            teamCount: totals.teamCount + stats.teamCount,
+          }
+        },
+        { storyCount: 0, readyStoryCount: 0, teamCount: 0 },
+      ),
+    [projectStatsById, projects],
+  )
+  const filteredProjects = useMemo(() => {
+    const normalizedSearch = searchInput.trim().toLowerCase()
+
+    return projects.filter((project) => {
+      const stats = projectStatsById[project.id] ?? EMPTY_PROJECT_STATS
+      const matchesSearch =
+        !normalizedSearch ||
+        project.name?.toLowerCase().includes(normalizedSearch) ||
+        project.description?.toLowerCase().includes(normalizedSearch)
+
+      if (!matchesSearch) return false
+
+      if (portfolioFilter === 'with_ready_stories') {
+        return stats.readyStoryCount > 0
+      }
+
+      if (portfolioFilter === 'with_teams') {
+        return stats.teamCount > 0
+      }
+
+      if (portfolioFilter === 'without_stories') {
+        return stats.storyCount === 0
+      }
+
+      return true
+    })
+  }, [portfolioFilter, projectStatsById, projects, searchInput])
+  const filteredProjectCountLabel = useMemo(
+    () =>
+      formatProjectMetric(
+        filteredProjects.length,
+        'projeto encontrado',
+        'projetos encontrados',
+      ),
+    [filteredProjects.length],
+  )
+  const hasNoProjectsForFilter =
+    !isLoading && projects.length > 0 && filteredProjects.length === 0
 
   const loadProjectStats = useCallback(
     async (nextProjects) => {
@@ -173,6 +252,14 @@ function ProjectsPage() {
               <strong>{projects.length}</strong>
               {projects.length === 1 ? 'projeto' : 'projetos'}
             </span>
+            <span className="projects-page__indicator">
+              <strong>{portfolioTotals.storyCount}</strong>
+              {portfolioTotals.storyCount === 1 ? 'história' : 'histórias'}
+            </span>
+            <span className="projects-page__indicator projects-page__indicator--ready">
+              <strong>{portfolioTotals.readyStoryCount}</strong>
+              {portfolioTotals.readyStoryCount === 1 ? 'pronta para Roda' : 'prontas para Roda'}
+            </span>
             <span className="projects-page__indicator projects-page__indicator--free">
               Bancada continua livre
             </span>
@@ -232,7 +319,40 @@ function ProjectsPage() {
               <p className="projects-page__eyebrow">Portfólio</p>
               <h2>Seus projetos</h2>
             </div>
-            <span className="projects-page__section-count">{projectCountLabel}</span>
+            <span className="projects-page__section-count">{filteredProjectCountLabel}</span>
+          </div>
+
+          <div className="projects-page__filters" aria-label="Filtros dos projetos">
+            <label className="projects-page__field projects-page__field--search">
+              <span>Buscar projeto</span>
+              <input
+                type="search"
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                placeholder="Nome, squad, jornada ou iniciativa"
+              />
+            </label>
+
+            <div className="projects-page__quick-filters" aria-label="Filtros rápidos de projetos">
+              {PROJECT_PORTFOLIO_FILTERS.map((option) => {
+                const isActive = portfolioFilter === option.value
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={`projects-page__quick-filter ${
+                      isActive ? 'projects-page__quick-filter--active' : ''
+                    }`}
+                    aria-pressed={isActive}
+                    onClick={() => setPortfolioFilter(option.value)}
+                  >
+                    <span>{option.label}</span>
+                    <small>{option.description}</small>
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {isLoading ? <p className="projects-page__state">Carregando projetos...</p> : null}
@@ -250,9 +370,26 @@ function ProjectsPage() {
               </button>
             </div>
           ) : null}
+          {hasNoProjectsForFilter ? (
+            <div className="projects-page__empty">
+              <p className="projects-page__eyebrow">Nenhum resultado</p>
+              <h3>Nenhum projeto neste recorte</h3>
+              <p>Ajuste a busca ou escolha outro filtro para voltar ao portfólio completo.</p>
+              <button
+                type="button"
+                className="btn btn-secondary btn-small"
+                onClick={() => {
+                  setSearchInput('')
+                  setPortfolioFilter('all')
+                }}
+              >
+                Limpar filtros
+              </button>
+            </div>
+          ) : null}
 
           <div className="projects-page__list">
-            {projects.map((project) => {
+            {filteredProjects.map((project) => {
               const stats = projectStatsById[project.id] ?? EMPTY_PROJECT_STATS
 
               return (
@@ -287,6 +424,18 @@ function ProjectsPage() {
                   <div className="projects-page__item-actions">
                     <Link className="btn btn-secondary btn-small" to={`/projetos/${project.id}`}>
                       Ver projeto
+                    </Link>
+                    <Link className="btn btn-secondary btn-small" to={`/historico?projectId=${project.id}`}>
+                      Ver histórias
+                    </Link>
+                    <Link className="btn btn-secondary btn-small" to={`/roda?projectId=${project.id}`}>
+                      Abrir Roda
+                    </Link>
+                    <Link className="btn btn-secondary btn-small" to={`/times?projectId=${project.id}`}>
+                      Times
+                    </Link>
+                    <Link className="btn btn-primary btn-small" to={`/tool?projectId=${project.id}`}>
+                      Forjar
                     </Link>
                   </div>
                 </article>

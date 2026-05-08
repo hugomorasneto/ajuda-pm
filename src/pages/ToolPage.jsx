@@ -17,6 +17,13 @@ const TABS = [
   { id: 'revisao', label: 'Inspeção' },
 ]
 
+const ESTIMATION_STATUS_LABELS = {
+  created: 'Criada',
+  refining: 'Em refinamento',
+  ready_for_estimation: 'Pronta para estimar',
+  estimated: 'Estimativa selada',
+}
+
 function InspectionPreviewCard() {
   return (
     <aside className="panel workspace-inspection-preview" aria-label="Prévia da inspeção">
@@ -24,6 +31,69 @@ function InspectionPreviewCard() {
       <h2>A inspeção fica disponível depois da forja.</h2>
       <p>Score, trincas e checklist aparecem com a primeira versão.</p>
     </aside>
+  )
+}
+
+function PostForgeNextSteps({
+  canEdit,
+  isCopying,
+  isOpeningPlanning,
+  isSaving,
+  onCopy,
+  onOpenPlanning,
+  onOrganize,
+  projectLabel,
+  statusLabel,
+}) {
+  return (
+    <section className="post-forge-next-steps panel" aria-label="Próximos passos da peça">
+      <div className="post-forge-next-steps__header">
+        <div>
+          <p className="projects-page__eyebrow">Próximos passos</p>
+          <h2>Leve esta story para o fluxo de produto</h2>
+          <p>Copie para o backlog, organize em projeto ou prepare a Roda da Fogueira quando o time for estimar.</p>
+        </div>
+        <div className="post-forge-next-steps__status" aria-label="Contexto atual da peça">
+          <span>{projectLabel}</span>
+          <strong>{statusLabel}</strong>
+        </div>
+      </div>
+
+      <div className="post-forge-next-steps__actions">
+        <button
+          type="button"
+          className="post-forge-next-steps__action"
+          onClick={onCopy}
+          disabled={isCopying}
+        >
+          <span>1</span>
+          <strong>{isCopying ? 'Copiando...' : 'Copiar para backlog'}</strong>
+          <small>Leve a user story e critérios de aceite para sua ferramenta atual.</small>
+        </button>
+
+        <button
+          type="button"
+          className="post-forge-next-steps__action"
+          onClick={onOrganize}
+          disabled={!canEdit || isSaving}
+        >
+          <span>2</span>
+          <strong>{isSaving ? 'Organizando...' : 'Organizar em projeto'}</strong>
+          <small>Use projetos para agrupar histórias por jornada, iniciativa ou produto.</small>
+        </button>
+
+        <button
+          type="button"
+          className="post-forge-next-steps__action post-forge-next-steps__action--primary"
+          onClick={onOpenPlanning}
+          disabled={!canEdit || isOpeningPlanning || isSaving}
+        >
+          <span>3</span>
+          <strong>{isOpeningPlanning ? 'Preparando...' : 'Preparar Roda'}</strong>
+          <small>Marque a story como pronta e abra o fluxo de estimativa colaborativa.</small>
+        </button>
+      </div>
+    </section>
   )
 }
 
@@ -266,6 +336,27 @@ function ToolPage() {
     navigate(`/roda?${query.toString()}`)
   }
 
+  async function handleOrganizeFromNextSteps() {
+    setMobileTab('entrada')
+
+    if (!selectedStoryId || !canEditSelectedStory) {
+      setProjectActionMessage('Apenas quem criou esta história pode organizar a peça em projeto.')
+      return
+    }
+
+    if (selectedStoryProjectId) {
+      setProjectActionMessage('Esta história já está organizada em um projeto.')
+      return
+    }
+
+    if (selectedProjectId) {
+      await handleAssignToSelectedProject()
+      return
+    }
+
+    setProjectActionMessage('Escolha um projeto existente ou crie um novo para organizar esta história.')
+  }
+
   const hasDraft = Boolean(
     formValues.problemContext.trim() ||
       formValues.requirements.trim() ||
@@ -278,8 +369,12 @@ function ToolPage() {
   const workspaceStatusLabel = isEditing ? 'Peça atual' : 'Nova peça'
   const workspaceStatusTitle = isEditing && activeStoryTitle ? activeStoryTitle : 'Em preparo'
   const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? null
+  const linkedStoryProject = projects.find((project) => project.id === selectedStoryProjectId) ?? null
   const selectedProjectName = selectedProject?.name ?? 'Sem projeto'
+  const linkedStoryProjectName = linkedStoryProject?.name ?? selectedProjectName
   const projectPillText = selectedProject ? selectedProjectName : 'Peça avulsa'
+  const selectedStoryEstimationStatusLabel =
+    ESTIMATION_STATUS_LABELS[selectedStoryEstimationStatus] ?? 'Criada'
   const planningShortcut = reviewStory
     ? {
         description: !canEditSelectedStory
@@ -361,23 +456,36 @@ function ToolPage() {
   ) : showEmptyState ? (
     <WorkspaceEmptyState hasDraft={hasDraft} />
   ) : (
-    <StoryDocument
-      key={selectedStoryId ?? 'workspace-document'}
-      result={result}
-      saveMessage={saveMessage}
-      isLoadingSelectedStory={isLoadingSelection}
-      editDraft={editDraft}
-      baseContext={formValues.problemContext}
-      baseRequirements={formValues.requirements}
-      onEditDraftChange={handleEditDraftChange}
-      onSaveEdits={handleSaveEdits}
-      isSavingEdits={isSavingEdits}
-      canEdit={canEditSelectedStory}
-      onRefineStory={handleRefineStory}
-      isRefining={isSubmitting}
-      refineRequestId={refineRequestId}
-      attentionRequestId={attentionRequestId}
-    />
+    <>
+      <StoryDocument
+        key={selectedStoryId ?? 'workspace-document'}
+        result={result}
+        saveMessage={saveMessage}
+        isLoadingSelectedStory={isLoadingSelection}
+        editDraft={editDraft}
+        baseContext={formValues.problemContext}
+        baseRequirements={formValues.requirements}
+        onEditDraftChange={handleEditDraftChange}
+        onSaveEdits={handleSaveEdits}
+        isSavingEdits={isSavingEdits}
+        canEdit={canEditSelectedStory}
+        onRefineStory={handleRefineStory}
+        isRefining={isSubmitting}
+        refineRequestId={refineRequestId}
+        attentionRequestId={attentionRequestId}
+      />
+      <PostForgeNextSteps
+        canEdit={canEditSelectedStory}
+        isCopying={isCopying}
+        isOpeningPlanning={isOpeningPlanningShortcut}
+        isSaving={isSavingEdits}
+        onCopy={() => handleCopy(reviewStory)}
+        onOpenPlanning={handleOpenPlanningFromWorkspace}
+        onOrganize={handleOrganizeFromNextSteps}
+        projectLabel={selectedStoryProjectId ? linkedStoryProjectName : 'Peça avulsa'}
+        statusLabel={selectedStoryEstimationStatusLabel}
+      />
+    </>
   )
 
   const rightPanel = (
