@@ -7338,6 +7338,14 @@
   color: var(--forge-text-primary);
 }
 
+.projects-page__indicator--warning {
+  border-color: var(--forge-warning);
+  background:
+    linear-gradient(90deg, var(--forge-warning-soft), transparent 78%),
+    var(--forge-surface-inset);
+  color: var(--forge-text-primary);
+}
+
 .projects-page__layout {
   display: grid;
   grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.28fr);
@@ -7677,6 +7685,14 @@
   border-color: var(--forge-border-tech) !important;
   background:
     linear-gradient(90deg, var(--forge-tech-soft), transparent),
+    rgba(255,255,255,0.03) !important;
+  color: var(--forge-text-primary) !important;
+}
+
+.projects-page__metric--warning {
+  border-color: var(--forge-warning) !important;
+  background:
+    linear-gradient(90deg, var(--forge-warning-soft), transparent),
     rgba(255,255,255,0.03) !important;
   color: var(--forge-text-primary) !important;
 }

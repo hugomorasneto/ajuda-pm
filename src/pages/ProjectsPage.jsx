@@ -5,6 +5,7 @@ import { createProject, listProjects } from '../services/projectsService'
 import { listProjectAnalyses } from '../services/projectAiService'
 import { listTeamsByProject } from '../services/teamsService'
 import { listStoryHistoryGroups } from '../services/userStoriesService'
+import { getProjectInsightFreshness } from '../utils/projectInsightsUtils'
 
 const EMPTY_PROJECT_STATS = {
   storyCount: 0,
@@ -13,6 +14,9 @@ const EMPTY_PROJECT_STATS = {
   hasDiagnostic: false,
   diagnosticHealthLabel: '',
   latestDiagnosticAt: null,
+  diagnosticFreshnessLabel: '',
+  diagnosticFreshnessDescription: '',
+  isDiagnosticOutdated: false,
 }
 
 const PROJECT_PORTFOLIO_FILTERS = [
@@ -35,6 +39,11 @@ const PROJECT_PORTFOLIO_FILTERS = [
     value: 'with_diagnostics',
     label: 'Com diagnóstico',
     description: 'Já analisados com IA.',
+  },
+  {
+    value: 'stale_diagnostics',
+    label: 'IA desatualizada',
+    description: 'Pedem nova leitura.',
   },
   {
     value: 'without_stories',
@@ -96,6 +105,14 @@ function getProjectNextAction(project, stats = EMPTY_PROJECT_STATS) {
     }
   }
 
+  if (stats.isDiagnosticOutdated) {
+    return {
+      label: 'Atualizar diagnóstico',
+      href: `/projetos/${project.id}#diagnostico-projeto`,
+      description: stats.diagnosticFreshnessDescription || 'Atualize a leitura de IA com as histórias atuais.',
+    }
+  }
+
   return {
     label: 'Abrir quadro',
     href: `/projetos/${project.id}`,
@@ -134,9 +151,10 @@ function ProjectsPage() {
             readyStoryCount: totals.readyStoryCount + stats.readyStoryCount,
             teamCount: totals.teamCount + stats.teamCount,
             diagnosticCount: totals.diagnosticCount + (stats.hasDiagnostic ? 1 : 0),
+            staleDiagnosticCount: totals.staleDiagnosticCount + (stats.isDiagnosticOutdated ? 1 : 0),
           }
         },
-        { storyCount: 0, readyStoryCount: 0, teamCount: 0, diagnosticCount: 0 },
+        { storyCount: 0, readyStoryCount: 0, teamCount: 0, diagnosticCount: 0, staleDiagnosticCount: 0 },
       ),
     [projectStatsById, projects],
   )
@@ -162,6 +180,10 @@ function ProjectsPage() {
 
       if (portfolioFilter === 'with_diagnostics') {
         return stats.hasDiagnostic
+      }
+
+      if (portfolioFilter === 'stale_diagnostics') {
+        return stats.isDiagnosticOutdated
       }
 
       if (portfolioFilter === 'without_stories') {
@@ -213,6 +235,11 @@ function ProjectsPage() {
         detail: 'com leitura de IA',
       },
       {
+        label: 'IA desatualizada',
+        value: portfolioTotals.staleDiagnosticCount,
+        detail: 'pedem nova leitura',
+      },
+      {
         label: 'Sem histórias',
         value: emptyProjectCount,
         detail: 'pedem primeira peça',
@@ -222,6 +249,7 @@ function ProjectsPage() {
       emptyProjectCount,
       portfolioTotals.diagnosticCount,
       portfolioTotals.readyStoryCount,
+      portfolioTotals.staleDiagnosticCount,
       portfolioTotals.storyCount,
       portfolioTotals.teamCount,
     ],
@@ -257,16 +285,23 @@ function ProjectsPage() {
             listProjectAnalyses({ projectId: project.id, userId, limit: 1 }),
           ])
           const latestDiagnostic = diagnosticsResponse.success ? diagnosticsResponse.data?.[0] : null
+          const storyCount = storiesResponse.success ? storiesResponse.totalCount : 0
+          const diagnosticFreshness = latestDiagnostic
+            ? getProjectInsightFreshness(latestDiagnostic, storyCount)
+            : null
 
           return [
             project.id,
             {
-              storyCount: storiesResponse.success ? storiesResponse.totalCount : 0,
+              storyCount,
               readyStoryCount: readyStoriesResponse.success ? readyStoriesResponse.totalCount : 0,
               teamCount: teamsResponse.success ? (teamsResponse.data?.length ?? 0) : 0,
               hasDiagnostic: Boolean(latestDiagnostic),
               diagnosticHealthLabel: latestDiagnostic?.analysis?.health_label ?? '',
               latestDiagnosticAt: latestDiagnostic?.created_at ?? null,
+              diagnosticFreshnessLabel: diagnosticFreshness?.label ?? '',
+              diagnosticFreshnessDescription: diagnosticFreshness?.description ?? '',
+              isDiagnosticOutdated: Boolean(diagnosticFreshness?.isOutdated),
             },
           ]
         }),
@@ -371,6 +406,14 @@ function ProjectsPage() {
               <strong>{portfolioTotals.diagnosticCount}</strong>
               {portfolioTotals.diagnosticCount === 1 ? 'projeto com diagnóstico' : 'projetos com diagnóstico'}
             </span>
+            {portfolioTotals.staleDiagnosticCount > 0 ? (
+              <span className="projects-page__indicator projects-page__indicator--warning">
+                <strong>{portfolioTotals.staleDiagnosticCount}</strong>
+                {portfolioTotals.staleDiagnosticCount === 1
+                  ? 'diagnóstico desatualizado'
+                  : 'diagnósticos desatualizados'}
+              </span>
+            ) : null}
             <span className="projects-page__indicator projects-page__indicator--free">
               Bancada continua livre
             </span>
@@ -555,6 +598,11 @@ function ProjectsPage() {
                           ? `IA: ${stats.diagnosticHealthLabel || 'diagnóstico'}`
                           : 'Sem diagnóstico'}
                       </span>
+                      {stats.isDiagnosticOutdated ? (
+                        <span className="projects-page__metric projects-page__metric--warning">
+                          {stats.diagnosticFreshnessLabel || 'IA desatualizada'}
+                        </span>
+                      ) : null}
                       {stats.latestDiagnosticAt ? (
                         <span className="projects-page__metric">
                           IA em {formatProjectDate(stats.latestDiagnosticAt)}
