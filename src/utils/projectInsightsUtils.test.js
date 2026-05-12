@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildProjectActionPlanMarkdown,
   findProjectInsightCandidateStory,
   formatProjectStoryCount,
   getProjectInsightFreshness,
@@ -87,5 +88,36 @@ describe('projectInsightsUtils', () => {
     ]
 
     expect(findProjectInsightCandidateStory('Cliente', stories)).toBeNull()
+  })
+
+  it('gera plano de ação Markdown com checklist e candidatas conectadas', () => {
+    const markdown = buildProjectActionPlanMarkdown({
+      project: { name: 'Onboarding B2B' },
+      storyCount: 3,
+      freshness: { label: 'Atualizado', description: 'Base alinhada.' },
+      analysis: {
+        health_label: 'Atenção moderada',
+        summary: 'Projeto precisa alinhar riscos antes da Roda.',
+        next_actions: ['Preparar histórias críticas'],
+        refinement_questions: ['Qual domínio deve ser bloqueado?'],
+        risks: ['Critério de fallback está ausente'],
+      },
+      candidateStories: [
+        {
+          candidate: 'Validação de domínio',
+          story: { title: 'Validação de domínio B2B' },
+        },
+        {
+          candidate: 'Convite externo',
+          story: null,
+        },
+      ],
+    })
+
+    expect(markdown).toContain('# Plano de ação do projeto: Onboarding B2B')
+    expect(markdown).toContain('**Histórias no projeto:** 3 histórias')
+    expect(markdown).toContain('- [ ] Preparar histórias críticas')
+    expect(markdown).toContain('- [ ] Validação de domínio B2B — sugestão da IA: Validação de domínio')
+    expect(markdown).toContain('- [ ] Convite externo — vincular manualmente a uma história do projeto')
   })
 })

@@ -39,6 +39,7 @@ import {
   getPlanningStorySessionIndex,
 } from '../utils/planningPokerUtils'
 import {
+  buildProjectActionPlanMarkdown,
   findProjectInsightCandidateStory,
   getProjectInsightFreshness,
 } from '../utils/projectInsightsUtils'
@@ -1300,6 +1301,28 @@ function ProjectDetailPage() {
     }
   }
 
+  async function handleCopyProjectActionPlan() {
+    if (!projectInsights) return
+
+    setProjectInsightsCopyFeedback('')
+
+    try {
+      await copyTextToClipboard(
+        buildProjectActionPlanMarkdown({
+          project,
+          analysis: projectInsights,
+          candidateStories: projectInsightCandidateCards,
+          freshness: currentProjectInsightFreshness,
+          storyCount: projectStoryCount,
+        }),
+      )
+      setProjectInsightsCopyFeedback('Plano de ação copiado em Markdown.')
+      window.setTimeout(() => setProjectInsightsCopyFeedback(''), 2600)
+    } catch {
+      setProjectInsightsCopyFeedback('Não foi possível copiar o plano de ação agora.')
+    }
+  }
+
   async function handleAddProjectMember(event) {
     event.preventDefault()
     setMemberMessage('')
@@ -1564,6 +1587,17 @@ function ProjectDetailPage() {
                 {projectInsightsCopyFeedback === 'Diagnóstico copiado em Markdown.'
                   ? 'Diagnóstico copiado'
                   : 'Copiar diagnóstico'}
+              </button>
+            ) : null}
+            {projectInsights ? (
+              <button
+                type="button"
+                className="btn btn-secondary btn-small"
+                onClick={handleCopyProjectActionPlan}
+              >
+                {projectInsightsCopyFeedback === 'Plano de ação copiado em Markdown.'
+                  ? 'Plano copiado'
+                  : 'Copiar plano de ação'}
               </button>
             ) : null}
             {projectInsights ? (

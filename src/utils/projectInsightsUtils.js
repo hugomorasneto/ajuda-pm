@@ -72,6 +72,77 @@ export function normalizeProjectSearchText(value) {
     .trim()
 }
 
+function asProjectText(value, fallback = '') {
+  const cleaned = typeof value === 'string' ? value.trim() : ''
+  return cleaned || fallback
+}
+
+function asProjectList(value, fallback = []) {
+  if (!Array.isArray(value)) return fallback
+
+  const cleaned = value.map((item) => String(item).trim()).filter(Boolean)
+  return cleaned.length > 0 ? cleaned : fallback
+}
+
+function formatMarkdownChecklist(items, fallback) {
+  const normalizedItems = asProjectList(items, [])
+  if (normalizedItems.length === 0) return `- [ ] ${fallback}`
+
+  return normalizedItems.map((item) => `- [ ] ${item}`).join('\n')
+}
+
+function formatCandidateStoryLine(item) {
+  const candidate = asProjectText(item?.candidate, 'Candidata sem nome')
+  const storyTitle = asProjectText(item?.story?.title, '')
+
+  if (!storyTitle) {
+    return `- [ ] ${candidate} — vincular manualmente a uma história do projeto`
+  }
+
+  return `- [ ] ${storyTitle} — sugestão da IA: ${candidate}`
+}
+
+export function buildProjectActionPlanMarkdown({
+  project,
+  analysis,
+  candidateStories = [],
+  freshness,
+  storyCount = 0,
+}) {
+  if (!analysis) return ''
+
+  const projectName = asProjectText(project?.name, 'Projeto')
+  const healthLabel = asProjectText(analysis.health_label, 'Em organização')
+  const freshnessLabel = freshness?.label ? `${freshness.label} — ${freshness.description}` : 'Sem referência de atualização.'
+  const candidates = Array.isArray(candidateStories) ? candidateStories : []
+  const candidateLines =
+    candidates.length > 0
+      ? candidates.map(formatCandidateStoryLine).join('\n')
+      : '- [ ] Nenhuma candidata conectada automaticamente pelo diagnóstico.'
+
+  return [
+    `# Plano de ação do projeto: ${projectName}`,
+    `**Saúde do projeto:** ${healthLabel}`,
+    `**Status do diagnóstico:** ${freshnessLabel}`,
+    `**Histórias no projeto:** ${formatProjectStoryCount(storyCount)}`,
+    '',
+    '## Resumo executivo',
+    asProjectText(analysis.summary, 'Nenhum resumo gerado.'),
+    '',
+    '## Próximos passos',
+    formatMarkdownChecklist(analysis.next_actions, 'Definir a próxima ação com o time.'),
+    '',
+    '## Perguntas para refinamento',
+    formatMarkdownChecklist(analysis.refinement_questions, 'Validar dúvidas abertas com PM, PO e time técnico.'),
+    '',
+    '## Riscos para endereçar',
+    formatMarkdownChecklist(analysis.risks, 'Nenhum risco relevante foi destacado.'),
+    '',
+    '## Candidatas para estimativa',
+    candidateLines,
+  ].join('\n')
+}
+
 export function getProjectStorySearchText(story) {
   return normalizeProjectSearchText([
     story?.title,
