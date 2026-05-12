@@ -7399,6 +7399,13 @@
   gap: var(--space-3);
 }
 
+.projects-page__filter-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
+  gap: var(--space-3);
+  align-items: end;
+}
+
 .projects-page__portfolio-strip {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -7461,6 +7468,10 @@
 
 .projects-page__field--search {
   max-width: 100%;
+}
+
+.projects-page__field--sort {
+  min-width: 0;
 }
 
 .projects-page__quick-filters {
@@ -12249,6 +12260,7 @@
   .project-detail-page__ai-snapshot-grid,
   .project-detail-page__ai-grid,
   .project-detail-page__story-quick-filters,
+  .projects-page__filter-row,
   .planning-poker-room__command-bar,
   .planning-poker-room__command-metrics,
   .planning-poker-room__consensus,

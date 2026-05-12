@@ -57,6 +57,21 @@ const PROJECT_PORTFOLIO_FILTERS = [
   },
 ]
 
+const PROJECT_SORT_OPTIONS = [
+  {
+    value: 'recommended',
+    label: 'Próxima ação',
+  },
+  {
+    value: 'recent',
+    label: 'Mais recentes',
+  },
+  {
+    value: 'name',
+    label: 'Nome A-Z',
+  },
+]
+
 function formatProjectDate(value) {
   if (!value) return '-'
   const date = new Date(value)
@@ -79,6 +94,19 @@ function normalizePortfolioSearch(value) {
     .replace(/[\u0300-\u036f]/g, '')
     .toLocaleLowerCase('pt-BR')
     .trim()
+}
+
+function getProjectCreatedTime(project) {
+  const date = new Date(project?.created_at ?? 0)
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime()
+}
+
+function getProjectActionPriority(stats = EMPTY_PROJECT_STATS) {
+  if (stats.storyCount === 0) return 4
+  if (stats.isDiagnosticOutdated) return 0
+  if (stats.readyStoryCount > 0) return 1
+  if (!stats.hasDiagnostic) return 2
+  return 3
 }
 
 function getProjectNextAction(project, stats = EMPTY_PROJECT_STATS) {
@@ -135,6 +163,7 @@ function ProjectsPage() {
   const [description, setDescription] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [portfolioFilter, setPortfolioFilter] = useState('all')
+  const [projectSort, setProjectSort] = useState('recommended')
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingStats, setIsLoadingStats] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
@@ -175,42 +204,63 @@ function ProjectsPage() {
   const filteredProjects = useMemo(() => {
     const normalizedSearch = normalizePortfolioSearch(searchInput)
 
-    return projects.filter((project) => {
-      const stats = projectStatsById[project.id] ?? EMPTY_PROJECT_STATS
-      const projectText = normalizePortfolioSearch([project.name, project.description].join(' '))
-      const matchesSearch =
-        !normalizedSearch ||
-        projectText.includes(normalizedSearch)
+    return projects
+      .filter((project) => {
+        const stats = projectStatsById[project.id] ?? EMPTY_PROJECT_STATS
+        const projectText = normalizePortfolioSearch([project.name, project.description].join(' '))
+        const matchesSearch =
+          !normalizedSearch ||
+          projectText.includes(normalizedSearch)
 
-      if (!matchesSearch) return false
+        if (!matchesSearch) return false
 
-      if (portfolioFilter === 'with_ready_stories') {
-        return stats.readyStoryCount > 0
-      }
+        if (portfolioFilter === 'with_ready_stories') {
+          return stats.readyStoryCount > 0
+        }
 
-      if (portfolioFilter === 'with_teams') {
-        return stats.teamCount > 0
-      }
+        if (portfolioFilter === 'with_teams') {
+          return stats.teamCount > 0
+        }
 
-      if (portfolioFilter === 'with_diagnostics') {
-        return stats.hasDiagnostic
-      }
+        if (portfolioFilter === 'with_diagnostics') {
+          return stats.hasDiagnostic
+        }
 
-      if (portfolioFilter === 'without_diagnostics') {
-        return stats.storyCount > 0 && !stats.hasDiagnostic
-      }
+        if (portfolioFilter === 'without_diagnostics') {
+          return stats.storyCount > 0 && !stats.hasDiagnostic
+        }
 
-      if (portfolioFilter === 'stale_diagnostics') {
-        return stats.isDiagnosticOutdated
-      }
+        if (portfolioFilter === 'stale_diagnostics') {
+          return stats.isDiagnosticOutdated
+        }
 
-      if (portfolioFilter === 'without_stories') {
-        return stats.storyCount === 0
-      }
+        if (portfolioFilter === 'without_stories') {
+          return stats.storyCount === 0
+        }
 
-      return true
-    })
-  }, [portfolioFilter, projectStatsById, projects, searchInput])
+        return true
+      })
+      .sort((leftProject, rightProject) => {
+        const leftStats = projectStatsById[leftProject.id] ?? EMPTY_PROJECT_STATS
+        const rightStats = projectStatsById[rightProject.id] ?? EMPTY_PROJECT_STATS
+
+        if (projectSort === 'name') {
+          return leftProject.name.localeCompare(rightProject.name, 'pt-BR')
+        }
+
+        if (projectSort === 'recent') {
+          return getProjectCreatedTime(rightProject) - getProjectCreatedTime(leftProject)
+        }
+
+        const priorityDiff = getProjectActionPriority(leftStats) - getProjectActionPriority(rightStats)
+        if (priorityDiff !== 0) return priorityDiff
+
+        const readyDiff = rightStats.readyStoryCount - leftStats.readyStoryCount
+        if (readyDiff !== 0) return readyDiff
+
+        return getProjectCreatedTime(rightProject) - getProjectCreatedTime(leftProject)
+      })
+  }, [portfolioFilter, projectSort, projectStatsById, projects, searchInput])
   const filteredProjectCountLabel = useMemo(
     () =>
       formatProjectMetric(
@@ -546,15 +596,32 @@ function ProjectsPage() {
           ) : null}
 
           <div className="projects-page__filters" aria-label="Filtros dos projetos">
-            <label className="projects-page__field projects-page__field--search">
-              <span>Buscar projeto</span>
-              <input
-                type="search"
-                value={searchInput}
-                onChange={(event) => setSearchInput(event.target.value)}
-                placeholder="Nome, squad, jornada ou iniciativa"
-              />
-            </label>
+            <div className="projects-page__filter-row">
+              <label className="projects-page__field projects-page__field--search">
+                <span>Buscar projeto</span>
+                <input
+                  type="search"
+                  value={searchInput}
+                  onChange={(event) => setSearchInput(event.target.value)}
+                  placeholder="Nome, squad, jornada ou iniciativa"
+                />
+              </label>
+
+              <label className="projects-page__field projects-page__field--sort">
+                <span>Ordenar</span>
+                <select
+                  value={projectSort}
+                  onChange={(event) => setProjectSort(event.target.value)}
+                  aria-label="Ordenar projetos"
+                >
+                  {PROJECT_SORT_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
 
             <div className="projects-page__quick-filters" aria-label="Filtros rápidos de projetos">
               {PROJECT_PORTFOLIO_FILTERS.map((option) => {
