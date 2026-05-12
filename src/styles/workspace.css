@@ -8048,6 +8048,107 @@
   font-weight: 900;
 }
 
+.project-detail-page__ai-action-plan {
+  display: grid;
+  gap: var(--space-3);
+  border: 1px solid var(--forge-border-ember);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  background:
+    linear-gradient(135deg, var(--forge-ember-soft), transparent 72%),
+    var(--forge-surface-inset);
+}
+
+.project-detail-page__ai-action-plan-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.project-detail-page__ai-action-plan-header h3,
+.project-detail-page__ai-action-plan-header p {
+  margin: 0;
+}
+
+.project-detail-page__ai-action-plan-header h3 {
+  color: var(--forge-text-primary);
+}
+
+.project-detail-page__ai-action-plan-header p:not(.projects-page__eyebrow) {
+  max-width: 48rem;
+  color: var(--forge-text-secondary);
+  line-height: 1.45;
+}
+
+.project-detail-page__ai-action-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-detail-page__ai-action-list li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: var(--space-3);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  background: rgba(255,255,255,0.035);
+}
+
+.project-detail-page__ai-action-list span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 999px;
+  background: var(--forge-ember-soft);
+  color: var(--forge-ember-hover);
+  font-weight: 900;
+}
+
+.project-detail-page__ai-action-list p {
+  margin: 0;
+  color: var(--forge-text-primary);
+  line-height: 1.5;
+}
+
+.project-detail-page__ai-action-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.project-detail-page__ai-action-stats span {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(255,255,255,0.03);
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  font-weight: 800;
+}
+
+.project-detail-page__ai-action-stats strong {
+  color: var(--forge-text-primary);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.project-detail-page__ai-action-stats small {
+  color: var(--forge-text-muted);
+  font-size: var(--text-micro);
+  font-weight: 800;
+}
+
 .project-detail-page__ai-candidates {
   display: grid;
   gap: var(--space-3);
@@ -11921,6 +12022,7 @@
   .planning-poker-room__participant,
   .planning-poker-room__revealed-vote,
   .planning-poker-room__seal,
+  .project-detail-page__ai-action-plan-header,
   .project-detail-page__ai-actions,
   .project-detail-page__ai-candidates-header,
   .project-detail-page__ai-candidates-actions,
@@ -11977,6 +12079,7 @@
   .project-detail-page__kanban-column-form,
   .project-detail-page__kanban-overview,
   .project-detail-page__executive-strip,
+  .project-detail-page__ai-action-stats,
   .project-detail-page__ai-snapshot-grid,
   .project-detail-page__ai-grid,
   .project-detail-page__story-quick-filters,

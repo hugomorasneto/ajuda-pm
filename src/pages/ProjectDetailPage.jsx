@@ -323,6 +323,42 @@ function ProjectDetailPage() {
       : `${projectInsightCandidateStoryIds.length} candidatas da IA`
   const shouldFocusInsightCandidates =
     isInsightCandidateFilterActive && projectInsightCandidateStoryIds.length > 0
+  const projectActionPlanItems = useMemo(() => {
+    const nextActions = (projectInsights?.next_actions ?? []).map((item) => String(item).trim()).filter(Boolean)
+    return nextActions.length > 0
+      ? nextActions.slice(0, 3)
+      : ['Definir a próxima ação com PM, PO e time antes de abrir estimativas.']
+  }, [projectInsights])
+  const projectActionPlanStats = useMemo(
+    () => [
+      {
+        label: 'Riscos',
+        value: projectInsights?.risks?.length ?? 0,
+        detail: 'para revisar',
+      },
+      {
+        label: 'Perguntas',
+        value: projectInsights?.refinement_questions?.length ?? 0,
+        detail: 'para alinhar',
+      },
+      {
+        label: 'Candidatas',
+        value: projectInsightCandidateStoryIds.length,
+        detail: 'para estimar',
+      },
+      {
+        label: 'Prontas',
+        value: readyInsightCandidateStoryIds.length,
+        detail: 'para Roda',
+      },
+    ],
+    [
+      projectInsightCandidateStoryIds.length,
+      projectInsights?.refinement_questions?.length,
+      projectInsights?.risks?.length,
+      readyInsightCandidateStoryIds.length,
+    ],
+  )
   const livePlanningStoryCount = useMemo(
     () =>
       Object.values(planningStorySessionById).filter((entry) =>
@@ -1715,6 +1751,44 @@ function ProjectDetailPage() {
                 items={projectInsights.estimation_candidates}
                 emptyText="Nenhuma candidata específica foi destacada."
               />
+            </div>
+
+            <div className="project-detail-page__ai-action-plan" aria-label="Plano de ação do diagnóstico">
+              <div className="project-detail-page__ai-action-plan-header">
+                <div>
+                  <p className="projects-page__eyebrow">Plano de ação</p>
+                  <h3>Próximos movimentos</h3>
+                  <p>Roteiro curto para transformar o diagnóstico em preparação, alinhamento e estimativa.</p>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-small"
+                  onClick={handleCopyProjectActionPlan}
+                >
+                  {projectInsightsCopyFeedback === 'Plano de ação copiado em Markdown.'
+                    ? 'Plano copiado'
+                    : 'Copiar plano'}
+                </button>
+              </div>
+
+              <ol className="project-detail-page__ai-action-list">
+                {projectActionPlanItems.map((item, index) => (
+                  <li key={`${item}-${index}`}>
+                    <span>{index + 1}</span>
+                    <p>{item}</p>
+                  </li>
+                ))}
+              </ol>
+
+              <div className="project-detail-page__ai-action-stats">
+                {projectActionPlanStats.map((item) => (
+                  <span key={item.label}>
+                    <strong>{item.value}</strong>
+                    {item.label}
+                    <small>{item.detail}</small>
+                  </span>
+                ))}
+              </div>
             </div>
 
             {projectInsightCandidateCards.length > 0 ? (
