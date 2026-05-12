@@ -7534,6 +7534,45 @@
   color: var(--forge-ember-hover);
 }
 
+.projects-page__active-filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border: 1px solid var(--forge-border-tech);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  background:
+    linear-gradient(135deg, var(--forge-tech-soft), transparent 74%),
+    var(--forge-surface-inset);
+}
+
+.projects-page__active-filter div {
+  min-width: 0;
+}
+
+.projects-page__active-filter span {
+  color: var(--forge-tech);
+  font-size: var(--text-micro);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.projects-page__active-filter p {
+  overflow: hidden;
+  margin: var(--space-1) 0 0;
+  color: var(--forge-text-primary);
+  font-weight: 850;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projects-page__active-filter .btn {
+  flex: 0 0 auto;
+}
+
 .projects-page__item,
 .projects-page__empty {
   border: 1px solid var(--forge-border);
@@ -12161,6 +12200,7 @@
   .project-detail-page__story-ai-focus-actions,
   .project-detail-page__story-batch-bar,
   .project-detail-page__story-batch-actions,
+  .projects-page__active-filter,
   .teams-page__context-actions,
   .teams-page__toolbar-actions,
   .teams-page__group-actions,

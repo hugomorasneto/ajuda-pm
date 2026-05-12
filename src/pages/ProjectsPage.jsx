@@ -220,6 +220,14 @@ function ProjectsPage() {
       ),
     [filteredProjects.length],
   )
+  const activePortfolioFilter = useMemo(
+    () =>
+      PROJECT_PORTFOLIO_FILTERS.find((option) => option.value === portfolioFilter) ??
+      PROJECT_PORTFOLIO_FILTERS[0],
+    [portfolioFilter],
+  )
+  const trimmedSearchInput = searchInput.trim()
+  const hasActivePortfolioRecorte = portfolioFilter !== 'all' || trimmedSearchInput.length > 0
   const hasNoProjectsForFilter =
     !isLoading && projects.length > 0 && filteredProjects.length === 0
   const emptyProjectCount = useMemo(
@@ -568,6 +576,28 @@ function ProjectsPage() {
                 )
               })}
             </div>
+
+            {hasActivePortfolioRecorte ? (
+              <div className="projects-page__active-filter" role="status">
+                <div>
+                  <span>Recorte atual</span>
+                  <p>
+                    {activePortfolioFilter.label}
+                    {trimmedSearchInput ? ` · Busca: "${trimmedSearchInput}"` : ''}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-small"
+                  onClick={() => {
+                    setSearchInput('')
+                    setPortfolioFilter('all')
+                  }}
+                >
+                  Limpar recorte
+                </button>
+              </div>
+            ) : null}
           </div>
 
           {isLoading ? <p className="projects-page__state">Carregando projetos...</p> : null}
