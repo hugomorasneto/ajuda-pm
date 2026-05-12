@@ -7405,7 +7405,7 @@
   gap: var(--space-2);
 }
 
-.projects-page__portfolio-strip article {
+.projects-page__portfolio-card {
   display: grid;
   gap: 0.2rem;
   min-width: 0;
@@ -7415,6 +7415,30 @@
   background:
     linear-gradient(135deg, rgba(44, 144, 255, 0.075), transparent 78%),
     var(--forge-surface-inset);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    transform 0.16s ease;
+}
+
+.projects-page__portfolio-card:hover,
+.projects-page__portfolio-card:focus-visible,
+.projects-page__portfolio-card--active {
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(135deg, rgba(255, 124, 36, 0.12), transparent 74%),
+    var(--forge-surface-inset);
+  transform: translateY(-1px);
+}
+
+.projects-page__portfolio-card:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow:
+    0 0 0 1px var(--forge-focus-ring-offset),
+    0 0 0 4px var(--forge-focus-ring);
 }
 
 .projects-page__portfolio-strip span,

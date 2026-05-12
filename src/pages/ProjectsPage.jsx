@@ -236,36 +236,43 @@ function ProjectsPage() {
         label: 'Histórias',
         value: portfolioTotals.storyCount,
         detail: 'vinculadas a projetos',
+        filter: 'all',
       },
       {
         label: 'Prontas',
         value: portfolioTotals.readyStoryCount,
         detail: 'para a Roda',
+        filter: 'with_ready_stories',
       },
       {
         label: 'Times',
         value: portfolioTotals.teamCount,
         detail: 'vinculados',
+        filter: 'with_teams',
       },
       {
         label: 'Diagnósticos',
         value: portfolioTotals.diagnosticCount,
         detail: 'com leitura de IA',
+        filter: 'with_diagnostics',
       },
       {
         label: 'Sem diagnóstico',
         value: portfolioTotals.missingDiagnosticCount,
         detail: 'com histórias',
+        filter: 'without_diagnostics',
       },
       {
         label: 'IA desatualizada',
         value: portfolioTotals.staleDiagnosticCount,
         detail: 'pedem nova leitura',
+        filter: 'stale_diagnostics',
       },
       {
         label: 'Sem histórias',
         value: emptyProjectCount,
         detail: 'pedem primeira peça',
+        filter: 'without_stories',
       },
     ],
     [
@@ -507,13 +514,26 @@ function ProjectsPage() {
 
           {projects.length > 0 ? (
             <div className="projects-page__portfolio-strip" aria-label="Resumo do portfólio">
-              {portfolioSummaryItems.map((item) => (
-                <article key={item.label}>
-                  <span>{item.label}</span>
-                  <strong>{item.value}</strong>
-                  <small>{item.detail}</small>
-                </article>
-              ))}
+              {portfolioSummaryItems.map((item) => {
+                const isActive = portfolioFilter === item.filter
+
+                return (
+                  <button
+                    key={item.label}
+                    type="button"
+                    className={`projects-page__portfolio-card ${
+                      isActive ? 'projects-page__portfolio-card--active' : ''
+                    }`}
+                    aria-label={`Filtrar por ${item.label}`}
+                    aria-pressed={isActive}
+                    onClick={() => setPortfolioFilter(item.filter)}
+                  >
+                    <span>{item.label}</span>
+                    <strong>{item.value}</strong>
+                    <small>{item.detail}</small>
+                  </button>
+                )
+              })}
             </div>
           ) : null}
 
