@@ -280,6 +280,7 @@ function ProjectDetailPage() {
   const [selectedProjectStoryIds, setSelectedProjectStoryIds] = useState([])
   const [storyEstimationFilter, setStoryEstimationFilter] = useState('all')
   const [storyViewMode, setStoryViewMode] = useState('board')
+  const [isInsightCandidateFilterActive, setIsInsightCandidateFilterActive] = useState(false)
   const [projectNameDraft, setProjectNameDraft] = useState('')
   const [projectDescriptionDraft, setProjectDescriptionDraft] = useState('')
   const [newKanbanColumnName, setNewKanbanColumnName] = useState('')
@@ -353,8 +354,6 @@ function ProjectDetailPage() {
   )
   const hasNoProjectStories = !isLoadingStories && projectStoryCount === 0
   const hasProjectStories = projectStoryCount > 0
-  const hasNoStoriesForFilter =
-    !isLoadingStories && projectStoryCount > 0 && projectStories.length === 0
   const shouldShowStoryLimitNotice =
     storyViewMode === 'list' && projectStoryFilteredCount > projectStories.length
   const canGenerateProjectInsights = Boolean(project && projectStoryCount > 0 && !isGeneratingProjectInsights)
@@ -398,6 +397,35 @@ function ProjectDetailPage() {
         ),
     [projectInsightCandidateCards],
   )
+  const projectInsightCandidateStoryIds = useMemo(
+    () =>
+      projectInsightCandidateCards
+        .map((item) => item.story?.id)
+        .filter((storyId, index, storyIds) => storyId && storyIds.indexOf(storyId) === index),
+    [projectInsightCandidateCards],
+  )
+  const readyInsightCandidateStoryIds = useMemo(
+    () =>
+      projectInsightCandidateCards
+        .map((item) => item.story)
+        .filter((story, index, stories) =>
+          story &&
+          story.estimation_status === 'ready_for_estimation' &&
+          stories.findIndex((current) => current?.id === story.id) === index,
+        )
+        .map((story) => story.id),
+    [projectInsightCandidateCards],
+  )
+  const projectInsightCandidateStoryIdSet = useMemo(
+    () => new Set(projectInsightCandidateStoryIds),
+    [projectInsightCandidateStoryIds],
+  )
+  const insightCandidateFilterLabel =
+    projectInsightCandidateStoryIds.length === 1
+      ? '1 candidata da IA'
+      : `${projectInsightCandidateStoryIds.length} candidatas da IA`
+  const shouldFocusInsightCandidates =
+    isInsightCandidateFilterActive && projectInsightCandidateStoryIds.length > 0
   const livePlanningStoryCount = useMemo(
     () =>
       Object.values(planningStorySessionById).filter((entry) =>
@@ -410,20 +438,31 @@ function ProjectDetailPage() {
       kanbanColumns.map((column) => ({
         ...column,
         cards:
-          storyEstimationFilter === 'all'
-            ? column.cards
-            : column.cards.filter((story) => story.estimation_status === storyEstimationFilter),
+          (column.cards ?? []).filter((story) => {
+            const matchesStatus =
+              storyEstimationFilter === 'all' || story.estimation_status === storyEstimationFilter
+            const matchesInsightCandidate =
+              !shouldFocusInsightCandidates || projectInsightCandidateStoryIdSet.has(story.id)
+            return matchesStatus && matchesInsightCandidate
+          }),
       })),
-    [kanbanColumns, storyEstimationFilter],
+    [kanbanColumns, projectInsightCandidateStoryIdSet, shouldFocusInsightCandidates, storyEstimationFilter],
   )
   const visibleKanbanStories = useMemo(
     () => visibleKanbanColumns.flatMap((column) => column.cards ?? []),
     [visibleKanbanColumns],
   )
+  const visibleProjectStories = useMemo(
+    () =>
+      shouldFocusInsightCandidates
+        ? projectStories.filter((story) => projectInsightCandidateStoryIdSet.has(story.id))
+        : projectStories,
+    [projectInsightCandidateStoryIdSet, projectStories, shouldFocusInsightCandidates],
+  )
   const visibleReadyStories = useMemo(() => {
-    const sourceStories = storyViewMode === 'board' ? visibleKanbanStories : projectStories
+    const sourceStories = storyViewMode === 'board' ? visibleKanbanStories : visibleProjectStories
     return sourceStories.filter((story) => story.estimation_status === 'ready_for_estimation')
-  }, [projectStories, storyViewMode, visibleKanbanStories])
+  }, [storyViewMode, visibleKanbanStories, visibleProjectStories])
   const selectedReadyStories = useMemo(
     () => visibleReadyStories.filter((story) => selectedProjectStoryIds.includes(story.id)),
     [selectedProjectStoryIds, visibleReadyStories],
@@ -456,6 +495,18 @@ function ProjectDetailPage() {
       ? `/roda?projectId=${projectId}&storyIds=${selectedReadyStoryIds.join(',')}`
       : `/roda?projectId=${projectId}`
   const visibleKanbanStoryCount = visibleKanbanStories.length
+  const visibleProjectStoryCount = visibleProjectStories.length
+  const hasNoStoriesForInsightCandidateFilter =
+    !isLoadingStories &&
+    hasProjectStories &&
+    shouldFocusInsightCandidates &&
+    ((storyViewMode === 'board' && visibleKanbanStoryCount === 0) ||
+      (storyViewMode === 'list' && visibleProjectStoryCount === 0))
+  const hasNoStoriesForFilter =
+    !isLoadingStories &&
+    projectStoryCount > 0 &&
+    projectStories.length === 0 &&
+    !hasNoStoriesForInsightCandidateFilter
   const kanbanBoardSummaryItems = useMemo(
     () => [
       {
@@ -1195,6 +1246,18 @@ function ProjectDetailPage() {
     setSelectedProjectStoryIds(visibleReadyStories.map((story) => story.id))
   }
 
+  function handleToggleInsightCandidateFilter() {
+    setStoryStatusMessage('')
+    setIsInsightCandidateFilterActive((current) => !current)
+  }
+
+  function handleSelectReadyInsightCandidates() {
+    setStoryStatusMessage('')
+    setSelectedProjectStoryIds((current) =>
+      Array.from(new Set([...current, ...readyInsightCandidateStoryIds])),
+    )
+  }
+
   function handleClearProjectStorySelection() {
     setStoryStatusMessage('')
     setSelectedProjectStoryIds([])
@@ -1733,16 +1796,34 @@ function ProjectDetailPage() {
                       Sugestões da IA conectadas às histórias do projeto para acelerar preparação e estimativa.
                     </p>
                   </div>
-                  {actionableInsightCandidateStories.length > 0 ? (
+                  <div className="project-detail-page__ai-candidates-actions">
                     <button
                       type="button"
                       className="btn btn-secondary btn-small"
-                      onClick={handlePrepareInsightCandidates}
-                      disabled={isPreparingInsightCandidates}
+                      onClick={handleToggleInsightCandidateFilter}
                     >
-                      {isPreparingInsightCandidates ? 'Preparando...' : 'Preparar candidatas'}
+                      {shouldFocusInsightCandidates ? 'Limpar foco no quadro' : 'Focar no quadro'}
                     </button>
-                  ) : null}
+                    {readyInsightCandidateStoryIds.length > 0 ? (
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-small"
+                        onClick={handleSelectReadyInsightCandidates}
+                      >
+                        Selecionar prontas da IA
+                      </button>
+                    ) : null}
+                    {actionableInsightCandidateStories.length > 0 ? (
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-small"
+                        onClick={handlePrepareInsightCandidates}
+                        disabled={isPreparingInsightCandidates}
+                      >
+                        {isPreparingInsightCandidates ? 'Preparando...' : 'Preparar candidatas'}
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
 
                 <div className="project-detail-page__ai-candidate-list">
@@ -1960,12 +2041,20 @@ function ProjectDetailPage() {
             {hasProjectStories ? (
               <p className="project-detail-page__story-filter-summary">
                 {storyViewMode === 'board'
-                  ? `${visibleKanbanStoryCount} ${
-                      visibleKanbanStoryCount === 1 ? 'card visível' : 'cards visíveis'
-                    } no quadro.`
-                  : storyEstimationFilter === 'all'
-                  ? filteredStoriesLabel
-                  : `${filteredStoriesLabel} em ${currentStoryFilterLabel}.`}
+                  ? shouldFocusInsightCandidates
+                    ? `${visibleKanbanStoryCount} ${
+                        visibleKanbanStoryCount === 1 ? 'card em foco' : 'cards em foco'
+                      } pelo diagnóstico.`
+                    : `${visibleKanbanStoryCount} ${
+                        visibleKanbanStoryCount === 1 ? 'card visível' : 'cards visíveis'
+                      } no quadro.`
+                  : shouldFocusInsightCandidates
+                    ? `${visibleProjectStoryCount} ${
+                        visibleProjectStoryCount === 1 ? 'história em foco' : 'histórias em foco'
+                      } pelo diagnóstico.`
+                    : storyEstimationFilter === 'all'
+                    ? filteredStoriesLabel
+                    : `${filteredStoriesLabel} em ${currentStoryFilterLabel}.`}
               </p>
             ) : null}
           </div>
@@ -2027,6 +2116,39 @@ function ProjectDetailPage() {
                 </button>
               )
             })}
+          </div>
+        ) : null}
+
+        {hasProjectStories && projectInsightCandidateStoryIds.length > 0 ? (
+          <div
+            className={`project-detail-page__story-ai-focus${
+              shouldFocusInsightCandidates ? ' is-active' : ''
+            }`}
+          >
+            <div>
+              <strong>{insightCandidateFilterLabel}</strong>
+              <p>
+                Use o foco da IA para revisar apenas as histórias sugeridas no diagnóstico antes de preparar a Roda.
+              </p>
+            </div>
+            <div className="project-detail-page__story-ai-focus-actions">
+              <button
+                type="button"
+                className="btn btn-secondary btn-small"
+                onClick={handleToggleInsightCandidateFilter}
+              >
+                {shouldFocusInsightCandidates ? 'Mostrar todas' : 'Focar candidatas'}
+              </button>
+              {readyInsightCandidateStoryIds.length > 0 ? (
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-small"
+                  onClick={handleSelectReadyInsightCandidates}
+                >
+                  Selecionar prontas da IA
+                </button>
+              ) : null}
+            </div>
           </div>
         ) : null}
 
@@ -2125,6 +2247,12 @@ function ProjectDetailPage() {
           <div className="projects-page__empty">
             <h3>Nenhuma história neste filtro</h3>
             <p>Troque o status selecionado para ver outras peças vinculadas a este projeto.</p>
+          </div>
+        ) : null}
+        {hasNoStoriesForInsightCandidateFilter ? (
+          <div className="projects-page__empty">
+            <h3>Nenhuma candidata visível neste recorte</h3>
+            <p>Limpe o foco da IA ou troque o status para revisar as histórias sugeridas pelo diagnóstico.</p>
           </div>
         ) : null}
         {storyStatusMessage ? <p className="projects-page__message">{storyStatusMessage}</p> : null}
@@ -2419,7 +2547,7 @@ function ProjectDetailPage() {
 
         {storyViewMode === 'list' ? (
         <div className="project-detail-page__story-list">
-          {projectStories.map((story) => {
+          {visibleProjectStories.map((story) => {
             const canUpdateStoryStatus = canManageProjectMembers || story.user_id === userId
             const isUpdatingStoryStatus = updatingStoryStatusId === story.id
             const isReadyForPlanning = story.estimation_status === 'ready_for_estimation'
