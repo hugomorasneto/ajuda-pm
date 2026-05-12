@@ -11,7 +11,7 @@
     "copy:spell": "node scripts/extract-visible-copy.mjs | cspell --config cspell.config.json --locale pt-BR --language-id plaintext --no-progress stdin://visible-copy.txt",
     "copy:ptbr": "node scripts/check-ptbr-copy.mjs",
     "copy:check": "npm run copy:spell && npm run copy:ptbr",
-    "test:unit": "vitest run src/utils",
+    "test:unit": "vitest run src/utils src/services",
     "quality": "npm run lint && npm run copy:check && npm run test:unit && npm run build",
     "supabase:doctor": "powershell -ExecutionPolicy Bypass -File scripts/supabase-doctor.ps1",
     "supabase:link": "powershell -ExecutionPolicy Bypass -File scripts/supabase-link.ps1",
