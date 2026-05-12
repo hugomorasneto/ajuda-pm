@@ -7330,6 +7330,14 @@
   color: var(--forge-text-primary);
 }
 
+.projects-page__indicator--ai {
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(90deg, var(--forge-tech-soft), transparent 78%),
+    var(--forge-surface-inset);
+  color: var(--forge-text-primary);
+}
+
 .projects-page__layout {
   display: grid;
   grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.28fr);
@@ -7385,7 +7393,7 @@
 
 .projects-page__portfolio-strip {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: var(--space-2);
 }
 
@@ -7425,7 +7433,7 @@
 
 .projects-page__quick-filters {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(136px, 1fr));
   gap: var(--space-2);
 }
 
@@ -7661,6 +7669,14 @@
   border-color: var(--forge-border-ember) !important;
   background:
     linear-gradient(90deg, var(--forge-ember-soft), transparent),
+    rgba(255,255,255,0.03) !important;
+  color: var(--forge-text-primary) !important;
+}
+
+.projects-page__metric--ai {
+  border-color: var(--forge-border-tech) !important;
+  background:
+    linear-gradient(90deg, var(--forge-tech-soft), transparent),
     rgba(255,255,255,0.03) !important;
   color: var(--forge-text-primary) !important;
 }

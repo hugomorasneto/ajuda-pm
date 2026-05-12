@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { createProject, listProjects } from '../services/projectsService'
+import { listProjectAnalyses } from '../services/projectAiService'
 import { listTeamsByProject } from '../services/teamsService'
 import { listStoryHistoryGroups } from '../services/userStoriesService'
 
@@ -9,6 +10,9 @@ const EMPTY_PROJECT_STATS = {
   storyCount: 0,
   readyStoryCount: 0,
   teamCount: 0,
+  hasDiagnostic: false,
+  diagnosticHealthLabel: '',
+  latestDiagnosticAt: null,
 }
 
 const PROJECT_PORTFOLIO_FILTERS = [
@@ -26,6 +30,11 @@ const PROJECT_PORTFOLIO_FILTERS = [
     value: 'with_teams',
     label: 'Com times',
     description: 'Colaboração ativa.',
+  },
+  {
+    value: 'with_diagnostics',
+    label: 'Com diagnóstico',
+    description: 'Já analisados com IA.',
   },
   {
     value: 'without_stories',
@@ -79,6 +88,14 @@ function getProjectNextAction(project, stats = EMPTY_PROJECT_STATS) {
     }
   }
 
+  if (!stats.hasDiagnostic) {
+    return {
+      label: 'Gerar diagnóstico',
+      href: `/projetos/${project.id}#diagnostico-projeto`,
+      description: 'Use a IA do projeto para mapear riscos e próximos passos.',
+    }
+  }
+
   return {
     label: 'Abrir quadro',
     href: `/projetos/${project.id}`,
@@ -116,9 +133,10 @@ function ProjectsPage() {
             storyCount: totals.storyCount + stats.storyCount,
             readyStoryCount: totals.readyStoryCount + stats.readyStoryCount,
             teamCount: totals.teamCount + stats.teamCount,
+            diagnosticCount: totals.diagnosticCount + (stats.hasDiagnostic ? 1 : 0),
           }
         },
-        { storyCount: 0, readyStoryCount: 0, teamCount: 0 },
+        { storyCount: 0, readyStoryCount: 0, teamCount: 0, diagnosticCount: 0 },
       ),
     [projectStatsById, projects],
   )
@@ -140,6 +158,10 @@ function ProjectsPage() {
 
       if (portfolioFilter === 'with_teams') {
         return stats.teamCount > 0
+      }
+
+      if (portfolioFilter === 'with_diagnostics') {
+        return stats.hasDiagnostic
       }
 
       if (portfolioFilter === 'without_stories') {
@@ -186,12 +208,23 @@ function ProjectsPage() {
         detail: 'vinculados',
       },
       {
+        label: 'Diagnósticos',
+        value: portfolioTotals.diagnosticCount,
+        detail: 'com leitura de IA',
+      },
+      {
         label: 'Sem histórias',
         value: emptyProjectCount,
         detail: 'pedem primeira peça',
       },
     ],
-    [emptyProjectCount, portfolioTotals.readyStoryCount, portfolioTotals.storyCount, portfolioTotals.teamCount],
+    [
+      emptyProjectCount,
+      portfolioTotals.diagnosticCount,
+      portfolioTotals.readyStoryCount,
+      portfolioTotals.storyCount,
+      portfolioTotals.teamCount,
+    ],
   )
 
   const loadProjectStats = useCallback(
@@ -204,7 +237,7 @@ function ProjectsPage() {
       setIsLoadingStats(true)
       const entries = await Promise.all(
         nextProjects.map(async (project) => {
-          const [storiesResponse, readyStoriesResponse, teamsResponse] = await Promise.all([
+          const [storiesResponse, readyStoriesResponse, teamsResponse, diagnosticsResponse] = await Promise.all([
             listStoryHistoryGroups({
               userId,
               projectFilter: 'project',
@@ -221,7 +254,9 @@ function ProjectsPage() {
               pageSize: 1,
             }),
             listTeamsByProject({ projectId: project.id, userId }),
+            listProjectAnalyses({ projectId: project.id, userId, limit: 1 }),
           ])
+          const latestDiagnostic = diagnosticsResponse.success ? diagnosticsResponse.data?.[0] : null
 
           return [
             project.id,
@@ -229,6 +264,9 @@ function ProjectsPage() {
               storyCount: storiesResponse.success ? storiesResponse.totalCount : 0,
               readyStoryCount: readyStoriesResponse.success ? readyStoriesResponse.totalCount : 0,
               teamCount: teamsResponse.success ? (teamsResponse.data?.length ?? 0) : 0,
+              hasDiagnostic: Boolean(latestDiagnostic),
+              diagnosticHealthLabel: latestDiagnostic?.analysis?.health_label ?? '',
+              latestDiagnosticAt: latestDiagnostic?.created_at ?? null,
             },
           ]
         }),
@@ -328,6 +366,10 @@ function ProjectsPage() {
             <span className="projects-page__indicator projects-page__indicator--ready">
               <strong>{portfolioTotals.readyStoryCount}</strong>
               {portfolioTotals.readyStoryCount === 1 ? 'pronta para Roda' : 'prontas para Roda'}
+            </span>
+            <span className="projects-page__indicator projects-page__indicator--ai">
+              <strong>{portfolioTotals.diagnosticCount}</strong>
+              {portfolioTotals.diagnosticCount === 1 ? 'projeto com diagnóstico' : 'projetos com diagnóstico'}
             </span>
             <span className="projects-page__indicator projects-page__indicator--free">
               Bancada continua livre
@@ -504,6 +546,20 @@ function ProjectsPage() {
                       <span className="projects-page__metric">
                         {formatProjectMetric(stats.teamCount, 'time', 'times')}
                       </span>
+                      <span
+                        className={`projects-page__metric ${
+                          stats.hasDiagnostic ? 'projects-page__metric--ai' : ''
+                        }`}
+                      >
+                        {stats.hasDiagnostic
+                          ? `IA: ${stats.diagnosticHealthLabel || 'diagnóstico'}`
+                          : 'Sem diagnóstico'}
+                      </span>
+                      {stats.latestDiagnosticAt ? (
+                        <span className="projects-page__metric">
+                          IA em {formatProjectDate(stats.latestDiagnosticAt)}
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                   <div className="projects-page__item-actions">
