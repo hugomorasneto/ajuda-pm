@@ -1763,6 +1763,26 @@ function ProjectDetailPage() {
               ) : null}
             </div>
 
+            {isProjectInsightOutdated ? (
+              <div className="project-detail-page__ai-refresh-callout" role="status">
+                <div>
+                  <strong>Diagnóstico desatualizado</strong>
+                  <p>
+                    {currentProjectInsightFreshness.description} Atualize a leitura antes de usar este diagnóstico
+                    para priorizar refinamento, Roda ou próximas ações.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-small"
+                  onClick={handleGenerateProjectInsights}
+                  disabled={!canGenerateProjectInsights}
+                >
+                  {isGeneratingProjectInsights ? 'Atualizando...' : 'Atualizar agora'}
+                </button>
+              </div>
+            ) : null}
+
             <div className="project-detail-page__ai-grid">
               <ProjectInsightList
                 title="Riscos"

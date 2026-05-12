@@ -8087,6 +8087,39 @@
   color: var(--forge-tech) !important;
 }
 
+.project-detail-page__ai-refresh-callout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border: 1px solid rgba(255, 190, 92, 0.42);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  background:
+    linear-gradient(135deg, rgba(255, 190, 92, 0.12), transparent 72%),
+    var(--forge-surface-inset);
+}
+
+.project-detail-page__ai-refresh-callout div {
+  min-width: 0;
+}
+
+.project-detail-page__ai-refresh-callout strong {
+  display: block;
+  color: var(--forge-text-primary);
+}
+
+.project-detail-page__ai-refresh-callout p {
+  max-width: 58rem;
+  margin: var(--space-1) 0 0;
+  color: var(--forge-text-secondary);
+  line-height: 1.5;
+}
+
+.project-detail-page__ai-refresh-callout .btn {
+  flex: 0 0 auto;
+}
+
 .project-detail-page__ai-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -12096,6 +12129,7 @@
   .project-detail-page__ai-candidates-actions,
   .project-detail-page__ai-candidate,
   .project-detail-page__ai-candidate-actions,
+  .project-detail-page__ai-refresh-callout,
   .project-detail-page__ai-next-step,
   .project-detail-page__ai-history-item,
   .project-detail-page__ai-history-actions,
