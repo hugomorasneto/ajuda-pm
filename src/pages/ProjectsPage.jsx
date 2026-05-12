@@ -283,6 +283,52 @@ function ProjectsPage() {
   )
   const trimmedSearchInput = searchInput.trim()
   const hasActivePortfolioRecorte = portfolioFilter !== 'all' || trimmedSearchInput.length > 0
+  const projectTopbarPills = useMemo(() => {
+    const pills = [
+      { text: hasActivePortfolioRecorte ? filteredProjectCountLabel : projectCountLabel },
+    ]
+
+    if (portfolioTotals.readyStoryCount > 0) {
+      pills.push({
+        text:
+          portfolioTotals.readyStoryCount === 1
+            ? '1 pronta para Roda'
+            : `${portfolioTotals.readyStoryCount} prontas para Roda`,
+      })
+    }
+
+    if (portfolioTotals.staleDiagnosticCount > 0) {
+      pills.push({
+        text:
+          portfolioTotals.staleDiagnosticCount === 1
+            ? '1 diagnóstico desatualizado'
+            : `${portfolioTotals.staleDiagnosticCount} diagnósticos desatualizados`,
+      })
+    } else if (portfolioTotals.missingDiagnosticCount > 0) {
+      pills.push({
+        text:
+          portfolioTotals.missingDiagnosticCount === 1
+            ? '1 sem diagnóstico'
+            : `${portfolioTotals.missingDiagnosticCount} sem diagnóstico`,
+      })
+    } else {
+      pills.push({ text: 'Bancada continua livre' })
+    }
+
+    if (hasActivePortfolioRecorte) {
+      pills.push({ text: `Recorte: ${activePortfolioFilter.label}` })
+    }
+
+    return pills
+  }, [
+    activePortfolioFilter.label,
+    filteredProjectCountLabel,
+    hasActivePortfolioRecorte,
+    portfolioTotals.missingDiagnosticCount,
+    portfolioTotals.readyStoryCount,
+    portfolioTotals.staleDiagnosticCount,
+    projectCountLabel,
+  ])
   const hasNoProjectsForFilter =
     !isLoading && projects.length > 0 && filteredProjects.length === 0
   const emptyProjectCount = useMemo(
@@ -437,14 +483,11 @@ function ProjectsPage() {
     setTopbarStatus({
       label: 'Organização opcional',
       title: 'Projetos',
-      pills: [
-        { text: projectCountLabel },
-        { text: 'Bancada continua livre' },
-      ],
+      pills: projectTopbarPills,
     })
 
     return () => setTopbarStatus(null)
-  }, [projectCountLabel, setTopbarStatus])
+  }, [projectTopbarPills, setTopbarStatus])
 
   async function handleCreateProject(event) {
     event.preventDefault()
