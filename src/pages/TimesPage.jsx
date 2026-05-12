@@ -44,6 +44,22 @@ function TimesPage() {
     () => formatTeamMetric(teamCount, 'time criado', 'times criados'),
     [teamCount],
   )
+  const projectCountLabel = useMemo(
+    () => formatTeamMetric(projects.length, 'projeto disponível', 'projetos disponíveis'),
+    [projects.length],
+  )
+  const projectsWithTeamsCount = useMemo(
+    () =>
+      projects.filter((project) => {
+        const projectTeams = teamsByProject[project.id] ?? []
+        return projectTeams.length > 0
+      }).length,
+    [projects, teamsByProject],
+  )
+  const manageableProjectCount = useMemo(
+    () => projects.filter((project) => canManageProjectById[project.id]).length,
+    [canManageProjectById, projects],
+  )
   const visibleProjects = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLocaleLowerCase('pt-BR')
 
@@ -76,6 +92,13 @@ function TimesPage() {
     () => formatTeamMetric(visibleTeamCount, 'time exibido', 'times exibidos'),
     [visibleTeamCount],
   )
+  const visibleProjectCountLabel = useMemo(
+    () => formatTeamMetric(visibleProjects.length, 'projeto exibido', 'projetos exibidos'),
+    [visibleProjects.length],
+  )
+  const selectedProjectTeamCount = selectedProject
+    ? (teamsByProject[selectedProject.id] ?? []).length
+    : 0
   const canCreateForSelectedProject = Boolean(
     selectedProjectId && canManageProjectById[selectedProjectId],
   )
@@ -148,12 +171,12 @@ function TimesPage() {
       title: 'Times',
       pills: [
         { text: teamCountLabel },
-        { text: formatTeamMetric(projects.length, 'projeto', 'projetos') },
+        { text: projectCountLabel },
       ],
     })
 
     return () => setTopbarStatus(null)
-  }, [projects.length, setTopbarStatus, teamCountLabel])
+  }, [projectCountLabel, setTopbarStatus, teamCountLabel])
 
   function handleProjectSelection(projectId) {
     setSelectedProjectId(projectId)
@@ -215,7 +238,7 @@ function TimesPage() {
           <h1>Times</h1>
           <p>
             Organize as guildas por projeto sem ocupar o detalhe da jornada. Times continuam vinculados a projetos e
-            só entram quando a colaboração fizer sentido.
+            entram como uma camada leve para refino, estimativa e acompanhamento.
           </p>
           <div className="projects-page__hero-indicators" aria-label="Resumo dos times">
             <span className="projects-page__indicator">
@@ -234,14 +257,37 @@ function TimesPage() {
         </div>
       </section>
 
+      <section className="teams-page__overview" aria-label="Resumo operacional de times">
+        <article className="teams-page__overview-card teams-page__overview-card--primary">
+          <span>Colaboração</span>
+          <strong>{teamCount}</strong>
+          <p>{teamCount === 1 ? 'time pronto para organizar pessoas.' : 'times prontos para organizar pessoas.'}</p>
+        </article>
+        <article className="teams-page__overview-card">
+          <span>Projetos com times</span>
+          <strong>{projectsWithTeamsCount}</strong>
+          <p>Projetos que já possuem uma guilda de trabalho vinculada.</p>
+        </article>
+        <article className="teams-page__overview-card">
+          <span>Gestão liberada</span>
+          <strong>{manageableProjectCount}</strong>
+          <p>Projetos onde você pode criar times e administrar membros.</p>
+        </article>
+        <article className="teams-page__overview-card">
+          <span>Fluxo recomendado</span>
+          <strong>Projeto</strong>
+          <p>Crie times apenas quando houver colaboração recorrente no projeto.</p>
+        </article>
+      </section>
+
       {projectIdFromUrl && selectedProject ? (
         <section className="panel teams-page__context" aria-label="Projeto em foco">
           <div className="teams-page__context-copy">
             <p className="projects-page__eyebrow">Projeto em foco</p>
             <h2>{selectedProject.name}</h2>
             <p>
-              Você entrou a partir de um projeto. Crie ou revise os times deste contexto sem voltar para a tela de
-              detalhe.
+              Você entrou a partir de um projeto. Este contexto tem{' '}
+              {formatTeamMetric(selectedProjectTeamCount, 'time vinculado', 'times vinculados')}.
             </p>
           </div>
           <div className="teams-page__context-actions">
@@ -261,6 +307,20 @@ function TimesPage() {
             <p className="projects-page__eyebrow">Novo time</p>
             <h2>Criar time</h2>
             <p>Escolha o projeto e crie um time para colaboração, refinamento e estimativas futuras.</p>
+          </div>
+
+          <div className="teams-page__creation-status" aria-label="Permissão para criar time">
+            <strong>
+              {selectedProject
+                ? canCreateForSelectedProject
+                  ? 'Você pode criar times neste projeto.'
+                  : 'Somente consulta neste projeto.'
+                : 'Selecione um projeto para começar.'}
+            </strong>
+            <p>
+              Times não são obrigatórios para usar a Bancada. Use esta área quando o projeto precisar de organização
+              colaborativa.
+            </p>
           </div>
 
           <form className="projects-page__form" onSubmit={handleCreateTeam}>
@@ -327,7 +387,10 @@ function TimesPage() {
               <p className="projects-page__eyebrow">Times por projeto</p>
               <h2>{visibleTeamCountLabel}</h2>
             </div>
-            <span className="projects-page__section-count">{teamCountLabel}</span>
+            <div className="teams-page__section-metrics" aria-label="Resumo da listagem">
+              <span className="projects-page__section-count">{visibleProjectCountLabel}</span>
+              <span className="projects-page__section-count">{teamCountLabel}</span>
+            </div>
           </div>
 
           <div className="teams-page__toolbar" aria-label="Filtros de times">
@@ -412,6 +475,12 @@ function TimesPage() {
                         Abrir Roda
                       </Link>
                     </div>
+                  </div>
+
+                  <div className="teams-page__group-metrics" aria-label={`Resumo de ${project.name}`}>
+                    <span>{formatTeamMetric(projectTeams.length, 'time vinculado', 'times vinculados')}</span>
+                    <span>{canManageProjectMembers ? 'Gestão de membros liberada' : 'Gestão somente leitura'}</span>
+                    <span>Rodas vinculadas ao projeto</span>
                   </div>
 
                   {projectTeams.length === 0 ? (

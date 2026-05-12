@@ -37,6 +37,7 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
   const canManageTeamMembers =
     canManageProjectMembers || currentUserTeamRole === 'owner' || currentUserTeamRole === 'admin'
   const memberCountLabel = `${members.length} ${members.length === 1 ? 'membro' : 'membros'}`
+  const managementLabel = canManageTeamMembers ? 'Gestão liberada' : 'Somente leitura'
 
   const loadMembers = useCallback(async () => {
     if (!teamId || !userId) return
@@ -178,14 +179,23 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
         </div>
         <div className="project-detail-team__summary" aria-label="Resumo do time">
           <span>{memberCountLabel}</span>
-          <span>{canManageTeamMembers ? 'Gerenciável' : 'Somente leitura'}</span>
+          <span>{managementLabel}</span>
         </div>
+      </div>
+
+      <div className="project-detail-team__guidance">
+        <strong>{canManageTeamMembers ? 'Adicionar pessoas cadastradas' : 'Consulta do time'}</strong>
+        <p>
+          {canManageTeamMembers
+            ? 'Inclua membros que já possuem conta no ProdForge e defina o papel de cada pessoa no time.'
+            : 'Você pode visualizar a composição do time. Alterações ficam com administradores do projeto ou do time.'}
+        </p>
       </div>
 
       {canManageTeamMembers ? (
         <form className="project-detail-team__member-form" onSubmit={handleAddMember}>
           <label className="projects-page__field">
-            <span>E-mail cadastrado</span>
+            <span>E-mail do participante</span>
             <input
               type="email"
               value={email}
@@ -206,7 +216,7 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
             </select>
           </label>
           <button type="submit" className="btn btn-secondary btn-small" disabled={isAdding || !email.trim()}>
-            {isAdding ? 'Adicionando...' : 'Adicionar membro'}
+            {isAdding ? 'Adicionando...' : 'Adicionar ao time'}
           </button>
         </form>
       ) : (
@@ -234,7 +244,7 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
             <div key={member.user_id} className="project-detail-team__member">
               <div className="project-detail-team__member-identity">
                 <span title={member.email}>{member.email}</span>
-                <small>{member.user_id === userId ? 'Você' : 'Pessoa convidada'}</small>
+                <small>{member.user_id === userId ? 'Você' : 'Integrante do time'}</small>
               </div>
               {canEditMember ? (
                 <div className="project-detail-team__member-controls">
