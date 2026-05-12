@@ -115,6 +115,7 @@ function getProjectNextAction(project, stats = EMPTY_PROJECT_STATS) {
       label: 'Forjar primeira história',
       href: `/tool?projectId=${project.id}`,
       description: 'Comece criando a primeira peça neste projeto.',
+      tone: 'empty',
     }
   }
 
@@ -123,6 +124,7 @@ function getProjectNextAction(project, stats = EMPTY_PROJECT_STATS) {
       label: 'Atualizar diagnóstico',
       href: `/projetos/${project.id}#diagnostico-projeto`,
       description: stats.diagnosticFreshnessDescription || 'Atualize a leitura de IA com as histórias atuais.',
+      tone: 'warning',
     }
   }
 
@@ -135,6 +137,7 @@ function getProjectNextAction(project, stats = EMPTY_PROJECT_STATS) {
         'história pronta',
         'histórias prontas',
       )} para estimar.`,
+      tone: 'ready',
     }
   }
 
@@ -143,6 +146,7 @@ function getProjectNextAction(project, stats = EMPTY_PROJECT_STATS) {
       label: 'Gerar diagnóstico',
       href: `/projetos/${project.id}#diagnostico-projeto`,
       description: 'Use a IA do projeto para mapear riscos e próximos passos.',
+      tone: 'ai',
     }
   }
 
@@ -150,6 +154,7 @@ function getProjectNextAction(project, stats = EMPTY_PROJECT_STATS) {
     label: 'Abrir quadro',
     href: `/projetos/${project.id}`,
     description: 'Revise o Kanban e prepare histórias para estimativa.',
+    tone: 'neutral',
   }
 }
 
@@ -752,7 +757,9 @@ function ProjectsPage() {
                     </div>
                   </div>
                   <div className="projects-page__item-actions">
-                    <div className="projects-page__next-action">
+                    <div
+                      className={`projects-page__next-action projects-page__next-action--${nextAction.tone}`}
+                    >
                       <span>Próxima ação</span>
                       <p>{nextAction.description}</p>
                       <Link className="btn btn-primary btn-small" to={nextAction.href}>

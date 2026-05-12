@@ -7685,11 +7685,52 @@
     var(--forge-surface-inset);
 }
 
+.projects-page__next-action--warning {
+  border-color: rgba(255, 190, 92, 0.44);
+  background:
+    linear-gradient(135deg, rgba(255, 190, 92, 0.12), transparent 78%),
+    var(--forge-surface-inset);
+}
+
+.projects-page__next-action--ready {
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(135deg, var(--forge-tech-soft), transparent 78%),
+    var(--forge-surface-inset);
+}
+
+.projects-page__next-action--ai {
+  border-color: rgba(88, 190, 139, 0.4);
+  background:
+    linear-gradient(135deg, rgba(88, 190, 139, 0.1), transparent 78%),
+    var(--forge-surface-inset);
+}
+
+.projects-page__next-action--neutral {
+  border-color: var(--forge-border-subtle);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.045), transparent 78%),
+    var(--forge-surface-inset);
+}
+
 .projects-page__next-action span {
   color: var(--forge-ember-hover);
   font-size: var(--text-label);
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.projects-page__next-action--warning span {
+  color: var(--forge-warning);
+}
+
+.projects-page__next-action--ready span,
+.projects-page__next-action--neutral span {
+  color: var(--forge-tech);
+}
+
+.projects-page__next-action--ai span {
+  color: var(--forge-success);
 }
 
 .projects-page__next-action p {
