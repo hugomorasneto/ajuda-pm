@@ -204,6 +204,13 @@ function getHistoryItemNextAction(story) {
   }
 }
 
+function getHistoryItemTone(story) {
+  if (!story?.project_id) return 'organize'
+  if (story.estimation_status === 'ready_for_estimation') return 'ready'
+  if (story.estimation_status === 'estimated') return 'estimated'
+  return 'review'
+}
+
 function HistoryAccordion({ id, eyebrow, title, summary, open, onToggle, children }) {
   return (
     <details
@@ -799,6 +806,8 @@ function HistoryPage() {
   const acceptanceCriteria = selectedResult?.acceptance_criteria ?? []
   const previewCriteria = acceptanceCriteria.slice(0, 3)
   const hiddenCriteriaCount = Math.max(0, acceptanceCriteria.length - previewCriteria.length)
+  const gapsCount = selectedResult?.gaps?.length ?? 0
+  const qaCount = selectedResult?.qa_checklist?.length ?? 0
   const hasOriginalContext = Boolean(
     selectedStory?.input_context?.trim() || selectedStory?.input_requirements?.trim(),
   )
@@ -903,6 +912,57 @@ function HistoryPage() {
       disabled: isUpdatingEstimationStatus || !canPrepareSelectedStory,
     }
   })()
+  const selectedOperationalCards = selectedStory
+    ? [
+        {
+          label: 'Entrega',
+          title: 'Copiar para backlog',
+          description: 'Use Markdown, texto simples ou formato para Jira sem sair do histórico.',
+          actionLabel: 'Abrir entrega',
+          action: () => openAdvancedSection('delivery'),
+          tone: 'delivery',
+        },
+        {
+          label: 'Organização',
+          title: selectedProjectName,
+          description: selectedStory.project_id
+            ? 'Peça vinculada a um projeto com quadro, IA e Roda disponíveis.'
+            : 'Peça avulsa. Vincule a um projeto para liberar organização e colaboração.',
+          actionLabel: selectedStory.project_id ? 'Abrir projeto' : 'Vincular projeto',
+          to: selectedStory.project_id ? `/projetos/${selectedStory.project_id}` : null,
+          action: selectedStory.project_id ? null : handleOpenProjectAssignment,
+          disabled: !selectedStory.project_id && !canAssignSelectedStoryProject,
+          tone: selectedStory.project_id ? 'project' : 'organize',
+        },
+        {
+          label: 'Estimativa',
+          title: getEstimationStatusLabel(selectedStory.estimation_status),
+          description: selectedStory.project_id
+            ? 'Prepare ou abra a Roda da Fogueira quando a peça estiver pronta para pontuar.'
+            : 'A Roda depende de projeto. Organize a peça antes de estimar com o time.',
+          actionLabel: selectedStory.project_id ? planningActionLabel : 'Vincular projeto',
+          action: selectedStory.project_id ? handleOpenPlanningPoker : handleOpenProjectAssignment,
+          disabled: selectedStory.project_id
+            ? !canPrepareSelectedStory || isUpdatingEstimationStatus
+            : !canAssignSelectedStoryProject,
+          tone: selectedStory.estimation_status === 'estimated'
+            ? 'estimated'
+            : selectedStory.estimation_status === 'ready_for_estimation'
+              ? 'ready'
+              : 'planning',
+        },
+        {
+          label: 'Qualidade',
+          title: `${qualityMeta.label} · ${qualityScore}/100`,
+          description: `${gapsCount} ${gapsCount === 1 ? 'trinca' : 'trincas'} e ${qaCount} ${
+            qaCount === 1 ? 'item de QA' : 'itens de QA'
+          } registrados na inspeção.`,
+          actionLabel: 'Ver inspeção',
+          action: () => openAdvancedSection('inspection'),
+          tone: qualityScore >= 80 ? 'quality' : 'warning',
+        },
+      ]
+    : []
 
   return (
     <div className="history-page">
@@ -1086,12 +1146,15 @@ function HistoryPage() {
               const versionCount = getVersionCount(item)
               const itemProjectName = item.project_name || 'Sem projeto'
               const nextAction = getHistoryItemNextAction(item)
+              const itemTone = getHistoryItemTone(item)
 
               return (
                 <button
                   key={item.id}
                   type="button"
-                  className={`history-result-card ${isActive ? 'history-result-card--active' : ''}`}
+                  className={`history-result-card history-result-card--${itemTone} ${
+                    isActive ? 'history-result-card--active' : ''
+                  }`}
                   aria-pressed={isActive}
                   onClick={() => {
                     setProjectAssignmentMessage('')
@@ -1237,6 +1300,39 @@ function HistoryPage() {
                     {estimationActionMessage}
                   </p>
                 ) : null}
+
+                <div className="history-preview__command-grid" aria-label="Comandos da peça selecionada">
+                  {selectedOperationalCards.map((card) => {
+                    const cardClassName = `history-preview__command-card history-preview__command-card--${card.tone}`
+                    const content = (
+                      <>
+                        <span>{card.label}</span>
+                        <strong>{card.title}</strong>
+                        <p>{card.description}</p>
+                      </>
+                    )
+
+                    return (
+                      <article key={card.label} className={cardClassName}>
+                        {content}
+                        {card.to ? (
+                          <Link className="btn btn-secondary btn-small" to={card.to}>
+                            {card.actionLabel}
+                          </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-small"
+                            onClick={card.action}
+                            disabled={card.disabled}
+                          >
+                            {card.actionLabel}
+                          </button>
+                        )}
+                      </article>
+                    )
+                  })}
+                </div>
 
                 <div className="history-preview__facts">
                   <div>

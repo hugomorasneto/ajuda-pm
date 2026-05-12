@@ -4622,7 +4622,15 @@
 .history-page {
   display: grid;
   gap: var(--space-4);
+  width: min(100%, 1280px);
+  margin-inline: auto;
   min-width: 0;
+}
+
+@media (min-width: 1100px) {
+  .workspace-shell--forge .history-page {
+    max-width: min(1280px, calc(100vw - var(--workspace-sidebar-width, 300px) - var(--space-12)));
+  }
 }
 
 .history-page *,
@@ -5053,11 +5061,28 @@
   background: var(--color-surface);
   color: var(--color-text-secondary);
   padding: var(--space-3);
+  box-shadow: inset 3px 0 0 var(--history-card-signal, transparent);
   text-align: left;
   transition:
     border-color 0.16s ease,
     background 0.16s ease,
     transform 0.16s ease;
+}
+
+.history-result-card--organize {
+  --history-card-signal: rgba(255, 190, 92, 0.78);
+}
+
+.history-result-card--ready {
+  --history-card-signal: rgba(44, 144, 255, 0.84);
+}
+
+.history-result-card--estimated {
+  --history-card-signal: rgba(88, 190, 139, 0.78);
+}
+
+.history-result-card--review {
+  --history-card-signal: rgba(255, 122, 26, 0.58);
 }
 
 .history-result-card:hover,
@@ -5320,6 +5345,63 @@
 .history-detail__project-message {
   color: var(--color-text-primary);
   font-weight: 700;
+}
+
+.history-preview__command-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  gap: var(--space-3);
+}
+
+.history-preview__command-card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: 172px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background:
+    linear-gradient(135deg, rgba(44, 144, 255, 0.07), transparent 76%),
+    var(--color-canvas-muted);
+}
+
+.history-preview__command-card span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-micro);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.history-preview__command-card strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.history-preview__command-card p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.history-preview__command-card .btn {
+  align-self: end;
+  justify-self: start;
+  width: fit-content;
+  margin-top: auto;
 }
 
 .history-preview__facts {
@@ -5737,6 +5819,7 @@
 .workspace-shell--forge .history-pagination__jump,
 .workspace-shell--forge .history-filters__advanced summary em,
 .workspace-shell--forge .history-filters__applied span,
+.workspace-shell--forge .history-preview__command-card span,
 .workspace-shell--forge .history-preview__badges span,
 .workspace-shell--forge .history-preview__facts span,
 .workspace-shell--forge .history-preview__next-action span,
@@ -5753,6 +5836,7 @@
 .workspace-shell--forge .history-filters__applied strong,
 .workspace-shell--forge .history-summary-strip strong,
 .workspace-shell--forge .history-result-card__next strong,
+.workspace-shell--forge .history-preview__command-card strong,
 .workspace-shell--forge .history-preview__facts strong,
 .workspace-shell--forge .history-preview__next-action strong,
 .workspace-shell--forge .history-copy-message,
@@ -5765,6 +5849,7 @@
 .workspace-shell--forge .history-pagination__jump input,
 .workspace-shell--forge .history-result-card,
 .workspace-shell--forge .history-result-card__next,
+.workspace-shell--forge .history-preview__command-card,
 .workspace-shell--forge .history-quick-filter,
 .workspace-shell--forge .history-filters__applied,
 .workspace-shell--forge .history-filters__advanced,
@@ -5848,6 +5933,7 @@
 
 .workspace-shell--forge .history-page__hero .btn-secondary,
 .workspace-shell--forge .history-preview__actions .btn-secondary,
+.workspace-shell--forge .history-preview__command-card .btn-secondary,
 .workspace-shell--forge .history-delivery__actions .btn-secondary {
   background:
     linear-gradient(180deg, rgba(255,255,255,0.032), rgba(255,255,255,0.01)),
@@ -5991,6 +6077,38 @@
   border-color: var(--forge-border-ember);
   background: var(--forge-ember-soft);
   color: var(--forge-ember-hover);
+}
+
+.workspace-shell--forge .history-preview__command-card--delivery,
+.workspace-shell--forge .history-preview__command-card--planning {
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(135deg, var(--forge-ember-soft), transparent 76%),
+    var(--forge-surface-inset);
+}
+
+.workspace-shell--forge .history-preview__command-card--project,
+.workspace-shell--forge .history-preview__command-card--quality,
+.workspace-shell--forge .history-preview__command-card--estimated {
+  border-color: rgba(88, 190, 139, 0.38);
+  background:
+    linear-gradient(135deg, rgba(88, 190, 139, 0.09), transparent 76%),
+    var(--forge-surface-inset);
+}
+
+.workspace-shell--forge .history-preview__command-card--ready {
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(135deg, var(--forge-tech-soft), transparent 76%),
+    var(--forge-surface-inset);
+}
+
+.workspace-shell--forge .history-preview__command-card--organize,
+.workspace-shell--forge .history-preview__command-card--warning {
+  border-color: rgba(255, 190, 92, 0.42);
+  background:
+    linear-gradient(135deg, rgba(255, 190, 92, 0.11), transparent 76%),
+    var(--forge-surface-inset);
 }
 
 .workspace-shell--forge .history-filter-field input:hover,
