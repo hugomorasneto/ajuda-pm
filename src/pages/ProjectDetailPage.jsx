@@ -479,27 +479,52 @@ function ProjectDetailPage() {
             ? `${membersLabel} no projeto. ${projectStoryFilteredCount} no recorte atual.`
             : 'Ainda não há histórias vinculadas a este projeto.',
         tone: projectStoryCount > 0 ? 'ready' : 'idle',
+        action:
+          projectStoryCount > 0
+            ? { label: 'Ver histórias', href: '#historias-projeto' }
+            : { label: 'Forjar história', to: `/tool?projectId=${projectId}` },
       },
       {
         label: 'Preparação',
         value: projectReadinessLabel,
         description: projectReadinessText,
         tone: readyStoryCount > 0 ? 'ready' : projectStoryCount > 0 ? 'attention' : 'idle',
+        action:
+          readyStoryCount > 0
+            ? { label: 'Abrir Roda', to: `/roda?projectId=${projectId}` }
+            : projectStoryCount > 0
+              ? { label: 'Preparar histórias', href: '#historias-projeto' }
+              : { label: 'Criar primeira peça', to: `/tool?projectId=${projectId}` },
       },
       {
         label: 'Estimativa',
         value: operationalEstimateLabel,
         description: operationalEstimateText,
         tone: livePlanningStoryCount > 0 ? 'live' : readyStoryCount > 0 ? 'ready' : 'idle',
+        action:
+          livePlanningStoryCount > 0 || readyStoryCount > 0
+            ? { label: 'Ir para Rodas', to: `/roda?projectId=${projectId}` }
+            : estimatedStoryCount > 0
+              ? { label: 'Ver histórico', to: `/roda?projectId=${projectId}` }
+              : { label: 'Organizar quadro', href: '#historias-projeto' },
       },
       {
         label: 'Próxima ação',
         value: operationalNextActionLabel,
         description: operationalNextActionText,
         tone: readyStoryCount > 0 ? 'ready' : refiningStoryCount > 0 ? 'attention' : 'tech',
+        action:
+          projectStoryCount === 0
+            ? { label: 'Abrir Bancada', to: `/tool?projectId=${projectId}` }
+            : readyStoryCount > 0
+              ? { label: 'Criar Roda', to: `/roda?projectId=${projectId}` }
+              : refiningStoryCount > 0
+                ? { label: 'Ver quadro', href: '#historias-projeto' }
+                : { label: 'Gerar diagnóstico', href: '#diagnostico-projeto' },
       },
     ],
     [
+      estimatedStoryCount,
       livePlanningStoryCount,
       membersLabel,
       operationalEstimateLabel,
@@ -508,6 +533,7 @@ function ProjectDetailPage() {
       operationalNextActionText,
       projectReadinessLabel,
       projectReadinessText,
+      projectId,
       projectStoryCount,
       projectStoryFilteredCount,
       readyStoryCount,
@@ -1558,6 +1584,15 @@ function ProjectDetailPage() {
                 <span>{card.label}</span>
                 <strong>{card.value}</strong>
                 <p>{card.description}</p>
+                {card.action?.to ? (
+                  <Link className="btn btn-secondary btn-small" to={card.action.to}>
+                    {card.action.label}
+                  </Link>
+                ) : card.action?.href ? (
+                  <a className="btn btn-secondary btn-small" href={card.action.href}>
+                    {card.action.label}
+                  </a>
+                ) : null}
               </article>
             ))}
           </div>
@@ -1567,8 +1602,8 @@ function ProjectDetailPage() {
           <div className="project-detail-page__ai-empty">
             <strong>Leitura sob demanda</strong>
             <p>
-              O diagnóstico não é salvo no banco nesta versão. Ele usa as histórias atuais do projeto e deve ser
-              revisado pelo PM/PO antes de orientar o time.
+              O diagnóstico usa as histórias atuais do projeto, fica no histórico recente quando disponível e deve
+              ser revisado pelo PM/PO antes de orientar o time.
             </p>
             {projectStoryCount === 0 ? (
               <p>Este projeto ainda precisa de histórias vinculadas para liberar a análise.</p>
