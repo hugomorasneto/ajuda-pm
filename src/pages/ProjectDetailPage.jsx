@@ -481,8 +481,26 @@ function ProjectDetailPage() {
       projectStoryCount,
     )
   }, [activeProjectInsightRecord, projectInsights, projectStoryCount])
+  const isProjectInsightOutdated = Boolean(currentProjectInsightFreshness?.isOutdated)
+  const projectInsightExecutiveLabel = projectInsights
+    ? isProjectInsightOutdated
+      ? currentProjectInsightFreshness.label
+      : projectInsights.health_label
+    : 'Sem diagnóstico'
+  const projectInsightExecutiveText = projectInsights
+    ? isProjectInsightOutdated
+      ? `${currentProjectInsightFreshness.description} Atualize a leitura antes de orientar o próximo passo.`
+      : projectInsights.summary
+    : 'Gere uma leitura com IA para resumir riscos, dúvidas e próximos passos.'
+  const projectInsightExecutiveActionLabel = projectInsights
+    ? isProjectInsightOutdated
+      ? 'Atualizar diagnóstico'
+      : 'Ver diagnóstico'
+    : 'Gerar diagnóstico'
   const latestProjectNextAction =
-    projectInsights?.next_actions?.[0] ??
+    (isProjectInsightOutdated
+      ? 'Atualize o diagnóstico para alinhar a leitura de IA com as histórias atuais.'
+      : projectInsights?.next_actions?.[0]) ??
     (projectStoryCount === 0
       ? 'Forje ou vincule a primeira história para liberar a leitura do projeto.'
       : 'Gere um diagnóstico para priorizar riscos e próximos passos.')
@@ -568,11 +586,21 @@ function ProjectDetailPage() {
       },
       {
         label: 'Próxima ação',
-        value: operationalNextActionLabel,
-        description: operationalNextActionText,
-        tone: readyStoryCount > 0 ? 'ready' : refiningStoryCount > 0 ? 'attention' : 'tech',
+        value: isProjectInsightOutdated ? 'Atualizar diagnóstico' : operationalNextActionLabel,
+        description: isProjectInsightOutdated
+          ? currentProjectInsightFreshness.description
+          : operationalNextActionText,
+        tone: isProjectInsightOutdated
+          ? 'attention'
+          : readyStoryCount > 0
+            ? 'ready'
+            : refiningStoryCount > 0
+              ? 'attention'
+              : 'tech',
         action:
-          projectStoryCount === 0
+          isProjectInsightOutdated
+            ? { label: 'Atualizar IA', href: '#diagnostico-projeto' }
+            : projectStoryCount === 0
             ? { label: 'Abrir Bancada', to: `/tool?projectId=${projectId}` }
             : readyStoryCount > 0
               ? { label: 'Criar Roda', to: `/roda?projectId=${projectId}` }
@@ -583,6 +611,8 @@ function ProjectDetailPage() {
     ],
     [
       estimatedStoryCount,
+      currentProjectInsightFreshness?.description,
+      isProjectInsightOutdated,
       livePlanningStoryCount,
       membersLabel,
       operationalEstimateLabel,
@@ -1505,16 +1535,19 @@ function ProjectDetailPage() {
       </section>
 
       <section className="project-detail-page__executive-strip" aria-label="Visão executiva do projeto">
-        <article>
+        <article className={isProjectInsightOutdated ? 'project-detail-page__executive-card--attention' : ''}>
           <span>Diagnóstico</span>
-          <strong>{projectInsights?.health_label ?? 'Sem diagnóstico'}</strong>
-          <p>
-            {projectInsights
-              ? projectInsights.summary
-              : 'Gere uma leitura com IA para resumir riscos, dúvidas e próximos passos.'}
-          </p>
+          <strong>{projectInsightExecutiveLabel}</strong>
+          <p>{projectInsightExecutiveText}</p>
+          {currentProjectInsightFreshness ? (
+            <small
+              className={`project-detail-page__executive-status project-detail-page__executive-status--${currentProjectInsightFreshness.tone}`}
+            >
+              {currentProjectInsightFreshness.label}
+            </small>
+          ) : null}
           <a className="btn btn-secondary btn-small" href="#diagnostico-projeto">
-            {projectInsights ? 'Ver diagnóstico' : 'Gerar diagnóstico'}
+            {projectInsightExecutiveActionLabel}
           </a>
         </article>
 

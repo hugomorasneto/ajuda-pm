@@ -7829,6 +7829,13 @@
   box-shadow: var(--forge-shadow-sm);
 }
 
+.project-detail-page__executive-card--attention {
+  border-color: rgba(255, 190, 92, 0.42) !important;
+  background:
+    linear-gradient(135deg, rgba(255, 190, 92, 0.12), transparent 68%),
+    var(--forge-surface) !important;
+}
+
 .project-detail-page__executive-strip span {
   color: var(--forge-text-muted);
   font-size: var(--text-small);
@@ -7855,6 +7862,35 @@
 
 .project-detail-page__executive-strip .btn {
   width: fit-content;
+}
+
+.project-detail-page__executive-status {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-micro);
+  font-weight: 850;
+}
+
+.project-detail-page__executive-status--ready {
+  border-color: rgba(88, 190, 139, 0.42);
+  background: rgba(88, 190, 139, 0.1);
+  color: var(--forge-success);
+}
+
+.project-detail-page__executive-status--attention {
+  border-color: rgba(255, 190, 92, 0.42);
+  background: rgba(255, 190, 92, 0.1);
+  color: var(--forge-warning);
+}
+
+.project-detail-page__executive-status--tech {
+  border-color: var(--forge-border-tech);
+  background: rgba(44, 144, 255, 0.1);
+  color: var(--forge-tech);
 }
 
 .project-detail-page__ai {
