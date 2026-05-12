@@ -513,6 +513,67 @@ function ProjectDetailPage() {
       : `${refiningStoryCount} em refinamento · ${estimatedStoryCount} ${
           estimatedStoryCount === 1 ? 'estimada' : 'estimadas'
         }.`
+  const storyOperationalGuidance = (() => {
+    if (projectStoryCount === 0) {
+      return {
+        title: 'Forje a primeira história',
+        description: 'A Bancada abre com este projeto selecionado para criar a primeira peça do quadro.',
+        cta: 'Abrir Bancada',
+        to: `/tool?projectId=${projectId}`,
+        tone: 'forge',
+      }
+    }
+
+    if (readyStoryCount > 0) {
+      return {
+        title: 'Levar lote pronto para a Roda',
+        description: `${readyStoryCount} ${
+          readyStoryCount === 1 ? 'história já está pronta' : 'histórias já estão prontas'
+        } para estimativa colaborativa.`,
+        cta: 'Abrir Roda',
+        to: `/roda?projectId=${projectId}`,
+        tone: 'ready',
+      }
+    }
+
+    if (isProjectInsightOutdated) {
+      return {
+        title: 'Atualizar diagnóstico antes de priorizar',
+        description: currentProjectInsightFreshness.description,
+        cta: 'Atualizar IA',
+        href: '#diagnostico-projeto',
+        tone: 'warning',
+      }
+    }
+
+    if (refiningStoryCount > 0) {
+      return {
+        title: 'Concluir refinamento',
+        description: 'Revise histórias em refinamento, ajuste critérios e mova o que estiver pronto para estimar.',
+        cta: 'Ver refinamento',
+        href: '#historias-projeto',
+        tone: 'attention',
+      }
+    }
+
+    if (!projectInsights) {
+      return {
+        title: 'Gerar leitura de IA',
+        description: 'Use o diagnóstico do projeto para encontrar riscos e próximas histórias para preparar.',
+        cta: 'Gerar diagnóstico',
+        href: '#diagnostico-projeto',
+        tone: 'ai',
+      }
+    }
+
+    return {
+      title: 'Organizar próximas histórias',
+      description: 'Use o quadro para preparar novas candidatas para estimativa ou revisar peças já estimadas.',
+      cta: 'Revisar quadro',
+      href: '#historias-projeto',
+      tone: 'neutral',
+    }
+  })()
   const operationalEstimateLabel =
     livePlanningStoryCount > 0
       ? 'Roda em andamento'
@@ -629,6 +690,91 @@ function ProjectDetailPage() {
       storiesLabel,
     ],
   )
+  const projectCockpitCards = [
+    {
+      label: 'Bancada',
+      title: projectStoryCount === 0 ? 'Forjar primeira história' : 'Forjar nova história',
+      description:
+        projectStoryCount === 0
+          ? 'Crie a primeira peça já vinculada a este projeto.'
+          : 'Adicione uma nova peça ao quadro mantendo o contexto do projeto.',
+      to: `/tool?projectId=${projectId}`,
+      cta: projectStoryCount === 0 ? 'Começar na Bancada' : 'Nova peça',
+      tone: 'forge',
+    },
+    {
+      label: 'Quadro',
+      title: 'Organizar fluxo',
+      description:
+        readyStoryCount > 0
+          ? `${readyStoryCount} ${readyStoryCount === 1 ? 'história pronta' : 'histórias prontas'} para estimar.`
+          : 'Mova histórias entre colunas e prepare o lote para estimativa.',
+      href: '#historias-projeto',
+      cta: 'Abrir quadro',
+      tone: readyStoryCount > 0 ? 'ready' : 'neutral',
+    },
+    {
+      label: 'IA do projeto',
+      title: projectInsights
+        ? isProjectInsightOutdated
+          ? 'Atualizar diagnóstico'
+          : 'Revisar diagnóstico'
+        : 'Gerar diagnóstico',
+      description: projectInsights
+        ? isProjectInsightOutdated
+          ? currentProjectInsightFreshness.description
+          : 'Use a leitura salva para orientar refinamento e decisões.'
+        : projectStoryCount === 0
+          ? 'A IA libera a leitura depois que houver histórias vinculadas.'
+          : 'Mapeie riscos, dúvidas e próximas ações com IA.',
+      href: '#diagnostico-projeto',
+      cta: projectInsights
+        ? isProjectInsightOutdated
+          ? 'Atualizar IA'
+          : 'Ver leitura'
+        : 'Gerar leitura',
+      tone: isProjectInsightOutdated ? 'warning' : projectInsights ? 'ai' : 'neutral',
+    },
+    {
+      label: 'Roda da Fogueira',
+      title: livePlanningStoryCount > 0 ? 'Continuar estimativas' : 'Abrir estimativa',
+      description:
+        livePlanningStoryCount > 0
+          ? `${livePlanningStoryCount} ${
+              livePlanningStoryCount === 1 ? 'história está' : 'histórias estão'
+            } em Rodas ativas.`
+          : readyStoryCount > 0
+            ? 'Leve as histórias prontas para consenso com o time.'
+            : 'Prepare histórias no quadro antes de abrir a Roda.',
+      to: `/roda?projectId=${projectId}`,
+      cta: livePlanningStoryCount > 0 ? 'Ver Rodas' : 'Abrir Roda',
+      tone: readyStoryCount > 0 || livePlanningStoryCount > 0 ? 'ready' : 'neutral',
+    },
+    {
+      label: 'Histórico',
+      title: 'Consultar peças',
+      description:
+        projectStoryCount > 0
+          ? `${projectStoryCount} ${
+              projectStoryCount === 1 ? 'peça vinculada' : 'peças vinculadas'
+            } para revisar, copiar ou reabrir.`
+          : 'O histórico do projeto aparece depois que houver peças vinculadas.',
+      to: `/historico?projectId=${projectId}`,
+      cta: 'Ver histórico',
+      tone: projectStoryCount > 0 ? 'ready' : 'neutral',
+    },
+    {
+      label: 'Colaboração',
+      title: 'Times e membros',
+      description:
+        projectMembers.length > 0
+          ? `${membersLabel} com acesso ao projeto.`
+          : 'Adicione pessoas quando o projeto pedir colaboração.',
+      to: `/times?projectId=${projectId}`,
+      cta: 'Gerenciar times',
+      tone: projectMembers.length > 0 ? 'team' : 'neutral',
+    },
+  ]
 
   function getStoryStatusQuickFilterCount(status) {
     if (status === 'all') return projectStoryCount
@@ -1581,6 +1727,40 @@ function ProjectDetailPage() {
         </article>
       </section>
 
+      <section className="panel project-detail-page__cockpit" aria-label="Cockpit operacional do projeto">
+        <div className="projects-page__section-header">
+          <div>
+            <p className="projects-page__eyebrow">Cockpit operacional</p>
+            <h2>Próximos movimentos</h2>
+            <p>Use estes atalhos para criar, organizar, diagnosticar e estimar sem perder o contexto do projeto.</p>
+          </div>
+        </div>
+
+        <div className="project-detail-page__cockpit-grid">
+          {projectCockpitCards.map((card) => {
+            const className = `project-detail-page__cockpit-card project-detail-page__cockpit-card--${card.tone}`
+            const content = (
+              <>
+                <span>{card.label}</span>
+                <strong>{card.title}</strong>
+                <p>{card.description}</p>
+                <small>{card.cta}</small>
+              </>
+            )
+
+            return card.to ? (
+              <Link key={card.label} className={className} to={card.to}>
+                {content}
+              </Link>
+            ) : (
+              <a key={card.label} className={className} href={card.href}>
+                {content}
+              </a>
+            )
+          })}
+        </div>
+      </section>
+
       <section className="panel project-detail-page__settings" aria-label="Dados do projeto">
         <div className="projects-page__section-header">
           <div>
@@ -2153,6 +2333,23 @@ function ProjectDetailPage() {
           </div>
         </div>
 
+        <div className={`project-detail-page__story-guidance project-detail-page__story-guidance--${storyOperationalGuidance.tone}`}>
+          <div>
+            <span>Encaminhamento do quadro</span>
+            <strong>{storyOperationalGuidance.title}</strong>
+            <p>{storyOperationalGuidance.description}</p>
+          </div>
+          {storyOperationalGuidance.to ? (
+            <Link className="btn btn-primary btn-small" to={storyOperationalGuidance.to}>
+              {storyOperationalGuidance.cta}
+            </Link>
+          ) : (
+            <a className="btn btn-secondary btn-small" href={storyOperationalGuidance.href}>
+              {storyOperationalGuidance.cta}
+            </a>
+          )}
+        </div>
+
         {hasProjectStories ? (
           <div className="project-detail-page__story-quick-filters" aria-label="Filtros rápidos de histórias">
             {STORY_STATUS_QUICK_FILTERS.map((option) => {
@@ -2299,18 +2496,38 @@ function ProjectDetailPage() {
           <div className="projects-page__empty">
             <h3>Nenhuma história vinculada ainda</h3>
             <p>Abra a Bancada com este projeto selecionado ou organize uma peça avulsa quando fizer sentido.</p>
+            <Link className="btn btn-primary btn-small" to={`/tool?projectId=${projectId}`}>
+              Forjar neste projeto
+            </Link>
           </div>
         ) : null}
         {hasNoStoriesForFilter ? (
           <div className="projects-page__empty">
             <h3>Nenhuma história neste filtro</h3>
             <p>Troque o status selecionado para ver outras peças vinculadas a este projeto.</p>
+            <button
+              type="button"
+              className="btn btn-secondary btn-small"
+              onClick={() => setStoryEstimationFilter('all')}
+            >
+              Ver todas as histórias
+            </button>
           </div>
         ) : null}
         {hasNoStoriesForInsightCandidateFilter ? (
           <div className="projects-page__empty">
             <h3>Nenhuma candidata visível neste recorte</h3>
             <p>Limpe o foco da IA ou troque o status para revisar as histórias sugeridas pelo diagnóstico.</p>
+            <button
+              type="button"
+              className="btn btn-secondary btn-small"
+              onClick={() => {
+                setIsInsightCandidateFilterActive(false)
+                setStoryEstimationFilter('all')
+              }}
+            >
+              Limpar foco da IA
+            </button>
           </div>
         ) : null}
         {storyStatusMessage ? <p className="projects-page__message">{storyStatusMessage}</p> : null}
