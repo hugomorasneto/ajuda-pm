@@ -437,6 +437,84 @@ function ProjectDetailPage() {
       : `${refiningStoryCount} em refinamento · ${estimatedStoryCount} ${
           estimatedStoryCount === 1 ? 'estimada' : 'estimadas'
         }.`
+  const operationalEstimateLabel =
+    livePlanningStoryCount > 0
+      ? 'Roda em andamento'
+      : readyStoryCount > 0
+        ? 'Pronto para Roda'
+        : estimatedStoryCount > 0
+          ? 'Já possui estimativas'
+          : 'Sem lote pronto'
+  const operationalEstimateText =
+    livePlanningStoryCount > 0
+      ? `${livePlanningStoryCount} ${livePlanningStoryCount === 1 ? 'história está' : 'histórias estão'} em Rodas ativas.`
+      : readyStoryCount > 0
+        ? 'Abra a Roda da Fogueira com as histórias prontas ou selecione um lote no quadro.'
+        : estimatedStoryCount > 0
+          ? 'Consulte o histórico das Rodas para revisar decisões já seladas.'
+          : 'Mova histórias para prontas quando o refinamento estiver suficiente.'
+  const operationalNextActionLabel =
+    projectStoryCount === 0
+      ? 'Forjar primeira história'
+      : readyStoryCount > 0
+        ? 'Abrir Roda'
+        : refiningStoryCount > 0
+          ? 'Concluir refinamento'
+          : 'Gerar diagnóstico'
+  const operationalNextActionText =
+    projectStoryCount === 0
+      ? 'Use a Bancada com este projeto selecionado para criar a primeira peça.'
+      : readyStoryCount > 0
+        ? 'Leve o lote pronto para estimativa colaborativa.'
+        : refiningStoryCount > 0
+          ? 'Revise critérios, dúvidas e contexto antes de marcar histórias como prontas.'
+          : 'Use a IA para encontrar riscos e próximos passos do projeto.'
+  const projectOperationalSnapshotCards = useMemo(
+    () => [
+      {
+        label: 'Cobertura',
+        value: storiesLabel,
+        description:
+          projectStoryCount > 0
+            ? `${membersLabel} no projeto. ${projectStoryFilteredCount} no recorte atual.`
+            : 'Ainda não há histórias vinculadas a este projeto.',
+        tone: projectStoryCount > 0 ? 'ready' : 'idle',
+      },
+      {
+        label: 'Preparação',
+        value: projectReadinessLabel,
+        description: projectReadinessText,
+        tone: readyStoryCount > 0 ? 'ready' : projectStoryCount > 0 ? 'attention' : 'idle',
+      },
+      {
+        label: 'Estimativa',
+        value: operationalEstimateLabel,
+        description: operationalEstimateText,
+        tone: livePlanningStoryCount > 0 ? 'live' : readyStoryCount > 0 ? 'ready' : 'idle',
+      },
+      {
+        label: 'Próxima ação',
+        value: operationalNextActionLabel,
+        description: operationalNextActionText,
+        tone: readyStoryCount > 0 ? 'ready' : refiningStoryCount > 0 ? 'attention' : 'tech',
+      },
+    ],
+    [
+      livePlanningStoryCount,
+      membersLabel,
+      operationalEstimateLabel,
+      operationalEstimateText,
+      operationalNextActionLabel,
+      operationalNextActionText,
+      projectReadinessLabel,
+      projectReadinessText,
+      projectStoryCount,
+      projectStoryFilteredCount,
+      readyStoryCount,
+      refiningStoryCount,
+      storiesLabel,
+    ],
+  )
 
   function getStoryStatusQuickFilterCount(status) {
     if (status === 'all') return projectStoryCount
@@ -1459,6 +1537,31 @@ function ProjectDetailPage() {
             {projectInsightsCopyFeedback}
           </p>
         ) : null}
+
+        <div className="project-detail-page__ai-snapshot" aria-label="Leitura operacional do projeto">
+          <div className="project-detail-page__ai-snapshot-header">
+            <div>
+              <p className="projects-page__eyebrow">Leitura operacional</p>
+              <h3>Resumo antes da IA</h3>
+              <p>
+                Indicadores calculados com os dados atuais do projeto para orientar a próxima ação sem consumir
+                análise com IA.
+              </p>
+            </div>
+          </div>
+          <div className="project-detail-page__ai-snapshot-grid">
+            {projectOperationalSnapshotCards.map((card) => (
+              <article
+                key={card.label}
+                className={`project-detail-page__ai-snapshot-card project-detail-page__ai-snapshot-card--${card.tone}`}
+              >
+                <span>{card.label}</span>
+                <strong>{card.value}</strong>
+                <p>{card.description}</p>
+              </article>
+            ))}
+          </div>
+        </div>
 
         {!projectInsights ? (
           <div className="project-detail-page__ai-empty">
