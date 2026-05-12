@@ -133,6 +133,65 @@ function countReadyStories(stories = []) {
   return stories.filter((story) => story.estimation_status === 'ready_for_estimation').length
 }
 
+function formatProjectStoryCount(count) {
+  const safeCount = Number(count ?? 0)
+  return `${safeCount} ${safeCount === 1 ? 'história' : 'histórias'}`
+}
+
+function getProjectInsightFreshness(item, currentStoryCount) {
+  const savedStoryCount = Number(item?.input_story_count ?? item?.analysis?.meta?.analyzed_stories ?? 0)
+  const safeCurrentCount = Number(currentStoryCount ?? 0)
+
+  if (!item) {
+    return {
+      label: 'Sem referência salva',
+      description: 'Gere ou reabra um diagnóstico para comparar com o projeto atual.',
+      tone: 'idle',
+      savedStoryCount: 0,
+      isOutdated: false,
+    }
+  }
+
+  if (savedStoryCount <= 0) {
+    return {
+      label: 'Base não registrada',
+      description: 'Este diagnóstico não informa quantas histórias foram usadas na análise.',
+      tone: 'attention',
+      savedStoryCount,
+      isOutdated: true,
+    }
+  }
+
+  if (safeCurrentCount > savedStoryCount) {
+    const diff = safeCurrentCount - savedStoryCount
+    return {
+      label: 'Desatualizado',
+      description: `${formatProjectStoryCount(diff)} ${diff === 1 ? 'nova' : 'novas'} após este diagnóstico.`,
+      tone: 'attention',
+      savedStoryCount,
+      isOutdated: true,
+    }
+  }
+
+  if (safeCurrentCount < savedStoryCount) {
+    return {
+      label: 'Recorte mudou',
+      description: `Criado com ${formatProjectStoryCount(savedStoryCount)}; o projeto tem ${formatProjectStoryCount(safeCurrentCount)} agora.`,
+      tone: 'tech',
+      savedStoryCount,
+      isOutdated: true,
+    }
+  }
+
+  return {
+    label: 'Atualizado',
+    description: `Base alinhada com as ${formatProjectStoryCount(safeCurrentCount)} atuais do projeto.`,
+    tone: 'ready',
+    savedStoryCount,
+    isOutdated: false,
+  }
+}
+
 function normalizeProjectSearchText(value) {
   return String(value ?? '')
     .normalize('NFD')
@@ -423,6 +482,21 @@ function ProjectDetailPage() {
     [selectedReadyStoryIds.length, visibleKanbanLiveCount, visibleKanbanReadyCount, visibleKanbanStoryCount],
   )
   const shouldShowKanbanLimitNotice = storyViewMode === 'board' && projectStoryCount > kanbanStories.length
+  const activeProjectInsightRecord = useMemo(
+    () => projectInsightHistory.find((item) => item.id === activeProjectInsightId) ?? null,
+    [activeProjectInsightId, projectInsightHistory],
+  )
+  const currentProjectInsightFreshness = useMemo(() => {
+    if (!projectInsights) return null
+
+    return getProjectInsightFreshness(
+      activeProjectInsightRecord ?? {
+        input_story_count: Number(projectInsights?.meta?.analyzed_stories ?? projectStoryCount),
+        analysis: projectInsights,
+      },
+      projectStoryCount,
+    )
+  }, [activeProjectInsightRecord, projectInsights, projectStoryCount])
   const latestProjectNextAction =
     projectInsights?.next_actions?.[0] ??
     (projectStoryCount === 0
@@ -1618,6 +1692,13 @@ function ProjectDetailPage() {
                 {projectInsights.meta.analyzed_stories}{' '}
                 {projectInsights.meta.analyzed_stories === 1 ? 'história analisada' : 'histórias analisadas'}
               </small>
+              {currentProjectInsightFreshness ? (
+                <small
+                  className={`project-detail-page__ai-freshness project-detail-page__ai-freshness--${currentProjectInsightFreshness.tone}`}
+                >
+                  {currentProjectInsightFreshness.label} · {currentProjectInsightFreshness.description}
+                </small>
+              ) : null}
             </div>
 
             <div className="project-detail-page__ai-grid">
@@ -1791,35 +1872,57 @@ function ProjectDetailPage() {
 
           {projectInsightHistory.length > 0 ? (
             <div className="project-detail-page__ai-history-list">
-              {projectInsightHistory.map((item) => (
-                <article key={item.id} className="project-detail-page__ai-history-item">
-                  <div>
-                    <span>
-                      {formatProjectDateTime(item.created_at)}
-                      {activeProjectInsightId === item.id ? ' · Aberto agora' : ''}
-                    </span>
-                    <strong>{item.analysis.health_label}</strong>
-                    <p>{item.analysis.summary}</p>
-                  </div>
-                  <div className="project-detail-page__ai-history-actions">
-                    <button
-                      type="button"
-                      className="btn btn-secondary btn-small"
-                      onClick={() => handleOpenProjectInsightHistoryItem(item)}
-                    >
-                      Reabrir
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-ghost btn-small"
-                      onClick={() => handleDeleteProjectInsightHistoryItem(item)}
-                      disabled={deletingProjectInsightId === item.id}
-                    >
-                      {deletingProjectInsightId === item.id ? 'Excluindo...' : 'Excluir'}
-                    </button>
-                  </div>
-                </article>
-              ))}
+              {projectInsightHistory.map((item) => {
+                const freshness = getProjectInsightFreshness(item, projectStoryCount)
+
+                return (
+                  <article key={item.id} className="project-detail-page__ai-history-item">
+                    <div>
+                      <span>
+                        {formatProjectDateTime(item.created_at)}
+                        {activeProjectInsightId === item.id ? ' · Aberto agora' : ''}
+                      </span>
+                      <strong>{item.analysis.health_label}</strong>
+                      <p>{item.analysis.summary}</p>
+                      <div className="project-detail-page__ai-history-meta">
+                        <span
+                          className={`project-detail-page__ai-freshness project-detail-page__ai-freshness--${freshness.tone}`}
+                        >
+                          {freshness.label}
+                        </span>
+                        <small>{freshness.description}</small>
+                      </div>
+                    </div>
+                    <div className="project-detail-page__ai-history-actions">
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-small"
+                        onClick={() => handleOpenProjectInsightHistoryItem(item)}
+                      >
+                        Reabrir
+                      </button>
+                      {freshness.isOutdated ? (
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-small"
+                          onClick={handleGenerateProjectInsights}
+                          disabled={!canGenerateProjectInsights}
+                        >
+                          Atualizar
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-small"
+                        onClick={() => handleDeleteProjectInsightHistoryItem(item)}
+                        disabled={deletingProjectInsightId === item.id}
+                      >
+                        {deletingProjectInsightId === item.id ? 'Excluindo...' : 'Excluir'}
+                      </button>
+                    </div>
+                  </article>
+                )
+              })}
             </div>
           ) : null}
         </div>
