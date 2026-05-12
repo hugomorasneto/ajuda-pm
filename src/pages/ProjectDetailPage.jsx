@@ -138,20 +138,28 @@ function countReadyStories(stories = []) {
   return stories.filter((story) => story.estimation_status === 'ready_for_estimation').length
 }
 
-function ProjectInsightList({ title, items, emptyText }) {
+function ProjectInsightList({ title, items, emptyText, defaultOpen = false }) {
+  const safeItems = Array.isArray(items) ? items : []
+  const countLabel = safeItems.length === 1 ? '1 item' : `${safeItems.length} itens`
+
   return (
-    <section>
-      <h3>{title}</h3>
-      {items.length > 0 ? (
+    <details className="project-detail-page__ai-detail-card" open={defaultOpen}>
+      <summary>
+        <span>
+          <strong>{title}</strong>
+          <small>{safeItems.length > 0 ? countLabel : 'Sem itens'}</small>
+        </span>
+      </summary>
+      {safeItems.length > 0 ? (
         <ul>
-          {items.map((item) => (
+          {safeItems.map((item) => (
             <li key={item}>{item}</li>
           ))}
         </ul>
       ) : (
         <p>{emptyText}</p>
       )}
-    </section>
+    </details>
   )
 }
 
@@ -773,6 +781,85 @@ function ProjectDetailPage() {
       to: `/times?projectId=${projectId}`,
       cta: 'Gerenciar times',
       tone: projectMembers.length > 0 ? 'team' : 'neutral',
+    },
+  ]
+  const connectedInsightCandidateCount = projectInsightCandidateStoryIds.length
+  const actionableInsightCandidateCount = actionableInsightCandidateStories.length
+  const readyInsightCandidateCount = readyInsightCandidateStoryIds.length
+  const connectedInsightCandidateLabel =
+    connectedInsightCandidateCount === 1 ? '1 conectada' : `${connectedInsightCandidateCount} conectadas`
+  const readyStoriesCommandLabel = readyStoryCount === 1 ? '1 pronta' : `${readyStoryCount} prontas`
+  const estimatedStoriesCommandLabel =
+    estimatedStoryCount === 1 ? '1 estimada' : `${estimatedStoryCount} estimadas`
+  const actionableInsightCandidateLabel =
+    actionableInsightCandidateCount === 1
+      ? '1 ainda pode ser preparada'
+      : `${actionableInsightCandidateCount} ainda podem ser preparadas`
+  const readyInsightCandidateLabel =
+    readyInsightCandidateCount === 1 ? '1 já está pronta' : `${readyInsightCandidateCount} já estão prontas`
+  const projectAiCommandCards = [
+    {
+      label: 'Base atual',
+      title: storiesLabel,
+      description:
+        projectStoryCount > 0
+          ? `${readyStoriesCommandLabel}, ${refiningStoryCount} em refinamento e ${estimatedStoriesCommandLabel}.`
+          : 'Forje ou vincule histórias para liberar diagnóstico e ações guiadas.',
+      tone: projectStoryCount > 0 ? 'tech' : 'neutral',
+      action: projectStoryCount > 0
+        ? { label: 'Ver quadro', href: '#historias-projeto' }
+        : { label: 'Abrir Bancada', to: `/tool?projectId=${projectId}` },
+    },
+    {
+      label: 'Diagnóstico',
+      title: projectInsights
+        ? isProjectInsightOutdated
+          ? 'Precisa atualizar'
+          : currentProjectInsightFreshness?.label ?? 'Atualizado'
+        : 'Ainda não gerado',
+      description: projectInsights
+        ? isProjectInsightOutdated
+          ? currentProjectInsightFreshness.description
+          : 'Leitura disponível para orientar preparação, alinhamento e estimativa.'
+        : 'Gere uma leitura executiva com riscos, perguntas e próximos passos.',
+      tone: isProjectInsightOutdated ? 'warning' : projectInsights ? 'ai' : 'neutral',
+      action: {
+        label: isGeneratingProjectInsights
+          ? 'Analisando...'
+          : projectInsights
+            ? 'Atualizar IA'
+            : 'Gerar diagnóstico',
+        onClick: handleGenerateProjectInsights,
+        disabled: !canGenerateProjectInsights,
+      },
+    },
+    {
+      label: 'Candidatas',
+      title: connectedInsightCandidateCount > 0 ? connectedInsightCandidateLabel : 'Sem foco ativo',
+      description:
+        connectedInsightCandidateCount > 0
+          ? `${actionableInsightCandidateLabel} e ${readyInsightCandidateLabel}.`
+          : projectInsights
+            ? 'A IA não conectou candidatas automaticamente a histórias do projeto.'
+            : 'As candidatas aparecem depois do diagnóstico com IA.',
+      tone: connectedInsightCandidateCount > 0 ? 'ready' : 'neutral',
+      action: connectedInsightCandidateCount > 0
+        ? {
+            label: shouldFocusInsightCandidates ? 'Limpar foco' : 'Focar quadro',
+            onClick: handleToggleInsightCandidateFilter,
+          }
+        : { label: 'Ver histórias', href: '#historias-projeto' },
+    },
+    {
+      label: 'Encaminhamento',
+      title: storyOperationalGuidance.title,
+      description: storyOperationalGuidance.description,
+      tone: storyOperationalGuidance.tone,
+      action: {
+        label: storyOperationalGuidance.cta,
+        to: storyOperationalGuidance.to,
+        href: storyOperationalGuidance.href,
+      },
     },
   ]
 
@@ -1881,11 +1968,57 @@ function ProjectDetailPage() {
           </p>
         ) : null}
 
+        <div className="project-detail-page__ai-command" aria-label="Comando da IA do projeto">
+          <div className="project-detail-page__ai-command-header">
+            <div>
+              <p className="projects-page__eyebrow">Comando de IA</p>
+              <h3>Decisão guiada por contexto</h3>
+              <p>
+                Acompanhe a base atual, a validade do diagnóstico, as candidatas da IA e o próximo encaminhamento do
+                projeto.
+              </p>
+            </div>
+          </div>
+
+          <div className="project-detail-page__ai-command-grid">
+            {projectAiCommandCards.map((card) => {
+              const cardClassName = `project-detail-page__ai-command-card project-detail-page__ai-command-card--${card.tone}`
+              const action = card.action
+
+              return (
+                <article key={card.label} className={cardClassName}>
+                  <span>{card.label}</span>
+                  <strong>{card.title}</strong>
+                  <p>{card.description}</p>
+                  {action?.to ? (
+                    <Link className="btn btn-secondary btn-small" to={action.to}>
+                      {action.label}
+                    </Link>
+                  ) : action?.href ? (
+                    <a className="btn btn-secondary btn-small" href={action.href}>
+                      {action.label}
+                    </a>
+                  ) : action?.onClick ? (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-small"
+                      onClick={action.onClick}
+                      disabled={Boolean(action.disabled)}
+                    >
+                      {action.label}
+                    </button>
+                  ) : null}
+                </article>
+              )
+            })}
+          </div>
+        </div>
+
         <div className="project-detail-page__ai-snapshot" aria-label="Leitura operacional do projeto">
           <div className="project-detail-page__ai-snapshot-header">
             <div>
               <p className="projects-page__eyebrow">Leitura operacional</p>
-              <h3>Resumo antes da IA</h3>
+              <h3>{projectInsights ? 'Base atual comparada ao diagnóstico' : 'Resumo antes da IA'}</h3>
               <p>
                 Indicadores calculados com os dados atuais do projeto para orientar a próxima ação sem consumir
                 análise com IA.
@@ -1969,11 +2102,13 @@ function ProjectDetailPage() {
                 title="Riscos"
                 items={projectInsights.risks}
                 emptyText="Nenhum risco relevante foi destacado pela IA."
+                defaultOpen
               />
               <ProjectInsightList
                 title="Perguntas de refinamento"
                 items={projectInsights.refinement_questions}
                 emptyText="Nenhuma pergunta adicional foi sugerida."
+                defaultOpen
               />
               <ProjectInsightList
                 title="Próximos passos"
