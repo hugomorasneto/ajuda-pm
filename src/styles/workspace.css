@@ -7629,6 +7629,26 @@
   font-size: var(--text-h3);
 }
 
+.projects-page__item-title-row h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.projects-page__item-title-row h3 a:hover,
+.projects-page__item-title-row h3 a:focus-visible {
+  color: var(--forge-ember-hover);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.projects-page__item-title-row h3 a:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow:
+    0 0 0 1px var(--forge-focus-ring-offset),
+    0 0 0 4px var(--forge-focus-ring);
+  border-radius: var(--radius-xs);
+}
+
 .projects-page__item-marker {
   width: 8px;
   height: 28px;

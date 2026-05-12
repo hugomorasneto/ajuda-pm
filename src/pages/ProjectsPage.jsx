@@ -758,7 +758,9 @@ function ProjectsPage() {
                   <div className="projects-page__item-main">
                     <div className="projects-page__item-title-row">
                       <span className="projects-page__item-marker" aria-hidden="true" />
-                      <h3>{project.name}</h3>
+                      <h3>
+                        <Link to={`/projetos/${project.id}`}>{project.name}</Link>
+                      </h3>
                     </div>
                     <p className="projects-page__item-description">
                       {project.description || 'Sem descrição por enquanto.'}
