@@ -1356,6 +1356,7 @@ function ProjectDetailPage() {
         buildProjectAnalysisMarkdown({
           project,
           analysis: projectInsights,
+          freshness: currentProjectInsightFreshness,
           storyCount: projectStoryCount,
           memberCount: projectMembers.length,
         }),

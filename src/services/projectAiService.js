@@ -151,6 +151,7 @@ function formatMarkdownList(items, fallback) {
 export function buildProjectAnalysisMarkdown({
   project,
   analysis,
+  freshness,
   storyCount = 0,
   memberCount = 0,
 }) {
@@ -159,10 +160,14 @@ export function buildProjectAnalysisMarkdown({
   const projectName = asString(project?.name, 'Projeto')
   const projectDescription = asString(project?.description, 'Sem descrição cadastrada.')
   const analyzedStories = Number(analysis?.meta?.analyzed_stories ?? storyCount ?? 0)
+  const freshnessLabel = freshness?.label
+    ? `${freshness.label} - ${freshness.description}`
+    : 'Sem referência de atualização.'
 
   return [
     `# Diagnóstico do projeto: ${projectName}`,
     `**Saúde do projeto:** ${asString(analysis.health_label, 'Em organização')}`,
+    `**Status do diagnóstico:** ${freshnessLabel}`,
     `**Histórias vinculadas:** ${storyCount}`,
     `**Histórias analisadas:** ${analyzedStories}`,
     `**Membros:** ${memberCount}`,
