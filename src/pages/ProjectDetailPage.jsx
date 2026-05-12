@@ -38,6 +38,10 @@ import {
   getPlanningSessionStatusLabel,
   getPlanningStorySessionIndex,
 } from '../utils/planningPokerUtils'
+import {
+  findProjectInsightCandidateStory,
+  getProjectInsightFreshness,
+} from '../utils/projectInsightsUtils'
 import { copyTextToClipboard } from '../utils/storyExport'
 
 const PROJECT_MEMBER_ROLES = [
@@ -131,114 +135,6 @@ function getKanbanColumnEmptyText(statusBase) {
 
 function countReadyStories(stories = []) {
   return stories.filter((story) => story.estimation_status === 'ready_for_estimation').length
-}
-
-function formatProjectStoryCount(count) {
-  const safeCount = Number(count ?? 0)
-  return `${safeCount} ${safeCount === 1 ? 'história' : 'histórias'}`
-}
-
-function getProjectInsightFreshness(item, currentStoryCount) {
-  const savedStoryCount = Number(item?.input_story_count ?? item?.analysis?.meta?.analyzed_stories ?? 0)
-  const safeCurrentCount = Number(currentStoryCount ?? 0)
-
-  if (!item) {
-    return {
-      label: 'Sem referência salva',
-      description: 'Gere ou reabra um diagnóstico para comparar com o projeto atual.',
-      tone: 'idle',
-      savedStoryCount: 0,
-      isOutdated: false,
-    }
-  }
-
-  if (savedStoryCount <= 0) {
-    return {
-      label: 'Base não registrada',
-      description: 'Este diagnóstico não informa quantas histórias foram usadas na análise.',
-      tone: 'attention',
-      savedStoryCount,
-      isOutdated: true,
-    }
-  }
-
-  if (safeCurrentCount > savedStoryCount) {
-    const diff = safeCurrentCount - savedStoryCount
-    return {
-      label: 'Desatualizado',
-      description: `${formatProjectStoryCount(diff)} ${diff === 1 ? 'nova' : 'novas'} após este diagnóstico.`,
-      tone: 'attention',
-      savedStoryCount,
-      isOutdated: true,
-    }
-  }
-
-  if (safeCurrentCount < savedStoryCount) {
-    return {
-      label: 'Recorte mudou',
-      description: `Criado com ${formatProjectStoryCount(savedStoryCount)}; o projeto tem ${formatProjectStoryCount(safeCurrentCount)} agora.`,
-      tone: 'tech',
-      savedStoryCount,
-      isOutdated: true,
-    }
-  }
-
-  return {
-    label: 'Atualizado',
-    description: `Base alinhada com as ${formatProjectStoryCount(safeCurrentCount)} atuais do projeto.`,
-    tone: 'ready',
-    savedStoryCount,
-    isOutdated: false,
-  }
-}
-
-function normalizeProjectSearchText(value) {
-  return String(value ?? '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLocaleLowerCase('pt-BR')
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-function getProjectStorySearchText(story) {
-  return normalizeProjectSearchText([
-    story?.title,
-    story?.input_context,
-    story?.user_story,
-  ].filter(Boolean).join(' '))
-}
-
-function findProjectInsightCandidateStory(candidate, stories = []) {
-  const normalizedCandidate = normalizeProjectSearchText(candidate)
-  if (!normalizedCandidate) return null
-
-  const candidateTokens = new Set(
-    normalizedCandidate
-      .split(' ')
-      .filter((token) => token.length > 3),
-  )
-
-  return stories
-    .map((story) => {
-      const titleText = normalizeProjectSearchText(story?.title)
-      const storyText = getProjectStorySearchText(story)
-      const exactScore =
-        titleText && (normalizedCandidate.includes(titleText) || titleText.includes(normalizedCandidate))
-          ? 100
-          : storyText.includes(normalizedCandidate) || normalizedCandidate.includes(storyText)
-            ? 80
-            : 0
-      const tokenScore = Array.from(candidateTokens).filter((token) => storyText.includes(token)).length
-
-      return {
-        score: exactScore + tokenScore,
-        story,
-      }
-    })
-    .filter((item) => item.score > 1)
-    .sort((left, right) => right.score - left.score)[0]?.story ?? null
 }
 
 function ProjectInsightList({ title, items, emptyText }) {
