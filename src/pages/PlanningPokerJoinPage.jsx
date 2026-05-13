@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { checkCanManageProject, listProjects } from '../services/projectsService'
@@ -84,6 +84,7 @@ function PlanningPokerJoinPage() {
   const userId = user?.id ?? null
   const { setTopbarStatus } = useOutletContext() ?? {}
   const [searchParams, setSearchParams] = useSearchParams()
+  const autoJoinCodeAttemptedRef = useRef('')
   const codeFromUrl = useMemo(() => normalizeInviteCode(searchParams.get('codigo')), [searchParams])
   const projectIdFromUrl = searchParams.get('projectId') ?? ''
   const storyIdFromUrl = searchParams.get('storyId') ?? ''
@@ -110,6 +111,8 @@ function PlanningPokerJoinPage() {
   const [planningSessionScaleFilter, setPlanningSessionScaleFilter] = useState('all')
   const [planningSessionStoryFilter, setPlanningSessionStoryFilter] = useState('all')
   const [planningSessionSearch, setPlanningSessionSearch] = useState('')
+  const [accessiblePlanningStatusFilter, setAccessiblePlanningStatusFilter] = useState('all')
+  const [accessiblePlanningSearch, setAccessiblePlanningSearch] = useState('')
   const [readyStorySearch, setReadyStorySearch] = useState('')
   const [hideActiveSessionStories, setHideActiveSessionStories] = useState(false)
   const [planningSessionName, setPlanningSessionName] = useState('')
@@ -221,12 +224,12 @@ function PlanningPokerJoinPage() {
     () => accessiblePlanningSessions.filter((session) => LIVE_PLANNING_SESSION_STATUSES.includes(session.status)).length,
     [accessiblePlanningSessions],
   )
-  const accessiblePlanningSessionsPreview = useMemo(
-    () =>
-      accessiblePlanningSessions
-        .filter((session) => LIVE_PLANNING_SESSION_STATUSES.includes(session.status))
-        .concat(accessiblePlanningSessions.filter((session) => !LIVE_PLANNING_SESSION_STATUSES.includes(session.status)))
-        .slice(0, 6),
+  const accessibleCompletedPlanningSessionsCount = useMemo(
+    () => accessiblePlanningSessions.filter((session) => session.status === 'completed').length,
+    [accessiblePlanningSessions],
+  )
+  const accessibleCanceledPlanningSessionsCount = useMemo(
+    () => accessiblePlanningSessions.filter((session) => session.status === 'canceled').length,
     [accessiblePlanningSessions],
   )
   const accessiblePlanningSessionsLabel = useMemo(
@@ -238,6 +241,81 @@ function PlanningPokerJoinPage() {
       ),
     [accessiblePlanningSessions.length],
   )
+  const filteredAccessiblePlanningSessions = useMemo(() => {
+    const search = accessiblePlanningSearch.trim().toLocaleLowerCase('pt-BR')
+
+    return accessiblePlanningSessions.filter((session) => {
+      const sessionStories = accessiblePlanningStoriesBySession[session.id] ?? []
+
+      if (
+        accessiblePlanningStatusFilter === 'active_group' &&
+        !LIVE_PLANNING_SESSION_STATUSES.includes(session.status)
+      ) {
+        return false
+      }
+
+      if (
+        accessiblePlanningStatusFilter !== 'all' &&
+        accessiblePlanningStatusFilter !== 'active_group' &&
+        session.status !== accessiblePlanningStatusFilter
+      ) {
+        return false
+      }
+
+      if (!search) return true
+
+      const searchable = [
+        session.name,
+        session.projectName,
+        session.invite_code,
+        getPlanningSessionStatusLabel(session.status),
+        getPlanningScoringScaleLabel(session.scoring_scale),
+        formatPlanningDateTime(session.created_at),
+        ...sessionStories.map(getPlanningStorySearchText),
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLocaleLowerCase('pt-BR')
+
+      return searchable.includes(search)
+    })
+  }, [
+    accessiblePlanningSearch,
+    accessiblePlanningSessions,
+    accessiblePlanningStatusFilter,
+    accessiblePlanningStoriesBySession,
+  ])
+  const accessiblePlanningSessionsPreview = useMemo(
+    () => filteredAccessiblePlanningSessions.slice(0, 8),
+    [filteredAccessiblePlanningSessions],
+  )
+  const accessiblePlanningFilterOptions = useMemo(
+    () => [
+      { value: 'all', label: 'Todas', count: accessiblePlanningSessions.length },
+      { value: 'active_group', label: 'Em andamento', count: accessibleActivePlanningSessionsCount },
+      { value: 'completed', label: 'Finalizadas', count: accessibleCompletedPlanningSessionsCount },
+      { value: 'canceled', label: 'Canceladas', count: accessibleCanceledPlanningSessionsCount },
+    ],
+    [
+      accessibleActivePlanningSessionsCount,
+      accessibleCanceledPlanningSessionsCount,
+      accessibleCompletedPlanningSessionsCount,
+      accessiblePlanningSessions.length,
+    ],
+  )
+  const hasAccessiblePlanningFilters =
+    accessiblePlanningStatusFilter !== 'all' || accessiblePlanningSearch.trim().length > 0
+  const canFilterAccessiblePlanningSessions =
+    !isLoadingAccessiblePlanningSessions && accessiblePlanningSessions.length > 0
+  const hasNoAccessiblePlanningSessions =
+    !isLoadingAccessiblePlanningSessions && accessiblePlanningSessions.length === 0
+  const hasFilteredAccessiblePlanningNoResults =
+    canFilterAccessiblePlanningSessions && filteredAccessiblePlanningSessions.length === 0
+  const hasAccessiblePlanningPreview =
+    !isLoadingAccessiblePlanningSessions && accessiblePlanningSessionsPreview.length > 0
+  const shouldShowAccessiblePlanningLimit =
+    !isLoadingAccessiblePlanningSessions &&
+    filteredAccessiblePlanningSessions.length > accessiblePlanningSessionsPreview.length
   const dashboardOverviewCards = useMemo(
     () => [
       {
@@ -584,6 +662,48 @@ function PlanningPokerJoinPage() {
     selectedStoryIds.length,
   ])
 
+  const openPlanningSessionByCode = useCallback(
+    async (rawCode, { isAutomatic = false } = {}) => {
+      if (!isAutomatic) {
+        setMessage('')
+      }
+
+      const safeInviteCode = normalizeInviteCode(rawCode)
+      if (!safeInviteCode) {
+        setMessage('Informe o código da sala para entrar na Roda.')
+        return false
+      }
+
+      if (!userId) {
+        setMessage('Entre para acessar a Roda da Fogueira.')
+        return false
+      }
+
+      setInviteCode(safeInviteCode)
+      setIsSearching(true)
+
+      const response = await getPlanningPokerSessionByInviteCode({
+        inviteCode: safeInviteCode,
+        userId,
+      })
+
+      setIsSearching(false)
+
+      if (!response.success || !response.data) {
+        setMessage(
+          isAutomatic
+            ? 'Não foi possível abrir este convite automaticamente. Confirme se seu e-mail foi adicionado ao projeto ou tente entrar pelo código.'
+            : 'Não encontramos uma Roda acessível com esse código. Se você recebeu um convite, peça ao facilitador para adicionar seu e-mail ao projeto.',
+        )
+        return false
+      }
+
+      navigate(`/projetos/${response.data.project_id}/roda/${response.data.id}`)
+      return true
+    },
+    [navigate, userId],
+  )
+
   const loadProjects = useCallback(async () => {
     if (!userId) return
 
@@ -775,6 +895,18 @@ function PlanningPokerJoinPage() {
   }, [loadAccessiblePlanningSessions])
 
   useEffect(() => {
+    if (!codeFromUrl || !userId || autoJoinCodeAttemptedRef.current === codeFromUrl || isSearching) return
+
+    const timerId = window.setTimeout(() => {
+      autoJoinCodeAttemptedRef.current = codeFromUrl
+      setMessage('Abrindo convite da Roda...')
+      openPlanningSessionByCode(codeFromUrl, { isAutomatic: true })
+    }, 0)
+
+    return () => window.clearTimeout(timerId)
+  }, [codeFromUrl, isSearching, openPlanningSessionByCode, userId])
+
+  useEffect(() => {
     const requestedStoryIds = Array.from(
       new Set([...storyIdsFromUrl, storyIdFromUrl].filter(Boolean)),
     )
@@ -845,6 +977,11 @@ function PlanningPokerJoinPage() {
     setPlanningSessionSearch('')
   }
 
+  function handleClearAccessiblePlanningFilters() {
+    setAccessiblePlanningStatusFilter('all')
+    setAccessiblePlanningSearch('')
+  }
+
   function handleTogglePlanningStory(storyId) {
     setPlanningMessage('')
     setSelectedStoryIds((current) =>
@@ -883,30 +1020,7 @@ function PlanningPokerJoinPage() {
 
   async function handleJoinByCode(event) {
     event.preventDefault()
-    setMessage('')
-
-    const safeInviteCode = normalizeInviteCode(inviteCode)
-    if (!safeInviteCode) {
-      setMessage('Informe o código da sala para entrar na Roda.')
-      return
-    }
-
-    setInviteCode(safeInviteCode)
-    setIsSearching(true)
-
-    const response = await getPlanningPokerSessionByInviteCode({
-      inviteCode: safeInviteCode,
-      userId,
-    })
-
-    setIsSearching(false)
-
-    if (!response.success || !response.data) {
-      setMessage('Não encontramos uma Roda acessível com esse código. Se você recebeu um convite, peça ao facilitador para adicionar seu e-mail ao projeto.')
-      return
-    }
-
-    navigate(`/projetos/${response.data.project_id}/roda/${response.data.id}`)
+    await openPlanningSessionByCode(inviteCode)
   }
 
   async function handleCreatePlanningSession(event) {
@@ -1034,7 +1148,8 @@ function PlanningPokerJoinPage() {
           </button>
 
           <p className="planning-poker-join__access-note">
-            O código e o link funcionam para pessoas já adicionadas ao projeto da Roda.
+            Links com código tentam abrir a sala automaticamente. O acesso exige que seu e-mail esteja no projeto da
+            Roda.
           </p>
 
           {message ? <p className="projects-page__message">{message}</p> : null}
@@ -1080,21 +1195,78 @@ function PlanningPokerJoinPage() {
             <p className="projects-page__eyebrow">Minha participação</p>
             <h2>Rodas acessíveis</h2>
             <p>
-              Quando o facilitador adiciona seu e-mail ao projeto, as Rodas daquele contexto aparecem aqui. O link
-              continua levando direto para a sala.
+              Quem cria a Roda define a participação adicionando e-mails ao projeto. Depois disso, as sessões aparecem
+              aqui e o link leva direto para a sala.
             </p>
           </div>
           <div className="planning-poker-dashboard__accessible-metrics" aria-label="Resumo das Rodas acessíveis">
             <span>{accessiblePlanningSessionsLabel}</span>
-            <strong>{formatPlanningCount(accessibleActivePlanningSessionsCount, 'em andamento', 'em andamento')}</strong>
+            <strong>{formatPlanningCount(accessibleActivePlanningSessionsCount, 'ativa', 'ativas')}</strong>
           </div>
+        </div>
+
+        <div className="planning-poker-dashboard__access-steps" aria-label="Como funciona o acesso por convite">
+          <article>
+            <span>1</span>
+            <strong>Facilitador adiciona</strong>
+            <p>O e-mail precisa estar no projeto da Roda.</p>
+          </article>
+          <article>
+            <span>2</span>
+            <strong>Convite abre a sala</strong>
+            <p>O link ou código leva para a Roda quando o acesso está liberado.</p>
+          </article>
+          <article>
+            <span>3</span>
+            <strong>Participante acompanha</strong>
+            <p>Rodas acessíveis ficam listadas nesta área.</p>
+          </article>
         </div>
 
         {isLoadingAccessiblePlanningSessions ? (
           <p className="projects-page__state">Carregando Rodas acessíveis...</p>
         ) : null}
 
-        {!isLoadingAccessiblePlanningSessions && accessiblePlanningSessions.length === 0 ? (
+        {canFilterAccessiblePlanningSessions ? (
+          <div className="planning-poker-dashboard__accessible-tools" aria-label="Filtros das Rodas acessíveis">
+            <div className="planning-poker-dashboard__quick-filters">
+              {accessiblePlanningFilterOptions.map((filter) => (
+                <button
+                  key={filter.value}
+                  type="button"
+                  className={accessiblePlanningStatusFilter === filter.value ? 'is-active' : ''}
+                  onClick={() => setAccessiblePlanningStatusFilter(filter.value)}
+                  disabled={filter.count === 0}
+                >
+                  <span>{filter.label}</span>
+                  <strong>{filter.count}</strong>
+                </button>
+              ))}
+            </div>
+
+            <div className="planning-poker-dashboard__accessible-search">
+              <label className="projects-page__field">
+                <span>Buscar nas minhas Rodas</span>
+                <input
+                  type="search"
+                  value={accessiblePlanningSearch}
+                  onChange={(event) => setAccessiblePlanningSearch(event.target.value)}
+                  placeholder="Nome, projeto, código ou história"
+                />
+              </label>
+              <button
+                type="button"
+                className="btn btn-secondary btn-small"
+                onClick={handleClearAccessiblePlanningFilters}
+                disabled={!hasAccessiblePlanningFilters}
+              >
+                Limpar filtros
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {hasNoAccessiblePlanningSessions ? (
           <div className="planning-poker-dashboard__accessible-empty">
             <strong>Nenhuma Roda acessível ainda</strong>
             <p>
@@ -1104,7 +1276,17 @@ function PlanningPokerJoinPage() {
           </div>
         ) : null}
 
-        {!isLoadingAccessiblePlanningSessions && accessiblePlanningSessionsPreview.length > 0 ? (
+        {hasFilteredAccessiblePlanningNoResults ? (
+          <div className="planning-poker-dashboard__accessible-empty">
+            <strong>Nenhuma Roda encontrada</strong>
+            <p>Limpe os filtros para consultar outras Rodas acessíveis para sua conta.</p>
+            <button type="button" className="btn btn-secondary btn-small" onClick={handleClearAccessiblePlanningFilters}>
+              Limpar filtros
+            </button>
+          </div>
+        ) : null}
+
+        {hasAccessiblePlanningPreview ? (
           <div className="planning-poker-dashboard__accessible-list">
             {accessiblePlanningSessionsPreview.map((session) => {
               const isLiveSession = LIVE_PLANNING_SESSION_STATUSES.includes(session.status)
@@ -1138,6 +1320,13 @@ function PlanningPokerJoinPage() {
               )
             })}
           </div>
+        ) : null}
+
+        {shouldShowAccessiblePlanningLimit ? (
+          <p className="projects-page__state">
+            Mostrando {accessiblePlanningSessionsPreview.length} de{' '}
+            {formatPlanningCount(filteredAccessiblePlanningSessions.length, 'Roda acessível', 'Rodas acessíveis')}.
+          </p>
         ) : null}
       </section>
 

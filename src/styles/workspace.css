@@ -10774,6 +10774,73 @@
   font-size: var(--text-small);
 }
 
+.planning-poker-dashboard__access-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.planning-poker-dashboard__access-steps article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-1) var(--space-3);
+  min-width: 0;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background:
+    linear-gradient(135deg, rgba(75,156,255,0.07), transparent 74%),
+    rgba(255,255,255,0.025);
+}
+
+.planning-poker-dashboard__access-steps article span {
+  grid-row: span 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--forge-border-tech);
+  border-radius: 999px;
+  color: var(--forge-tech);
+  background: var(--forge-tech-soft);
+  font-size: var(--text-small);
+  font-weight: 950;
+}
+
+.planning-poker-dashboard__access-steps article strong {
+  min-width: 0;
+  color: var(--forge-text-primary);
+  font-size: var(--text-small);
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.planning-poker-dashboard__access-steps article p {
+  grid-column: 2;
+  margin: 0;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.4;
+}
+
+.planning-poker-dashboard__accessible-tools {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.planning-poker-dashboard__accessible-tools .planning-poker-dashboard__quick-filters {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 0;
+}
+
+.planning-poker-dashboard__accessible-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-3);
+}
+
 .planning-poker-dashboard__accessible-empty {
   display: grid;
   gap: var(--space-1);
@@ -11281,6 +11348,7 @@
   .planning-poker-dashboard .project-detail-page__campfire-options,
   .planning-poker-dashboard .project-detail-page__campfire-create-summary dl,
   .planning-poker-dashboard__quick-filters,
+  .planning-poker-dashboard__accessible-tools .planning-poker-dashboard__quick-filters,
   .planning-poker-dashboard__readiness ul {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -11288,7 +11356,9 @@
 
 @media (max-width: 720px) {
   .planning-poker-dashboard__overview,
-  .planning-poker-dashboard__accessible-list {
+  .planning-poker-dashboard__accessible-list,
+  .planning-poker-dashboard__access-steps,
+  .planning-poker-dashboard__accessible-search {
     grid-template-columns: 1fr;
   }
 
@@ -11307,6 +11377,7 @@
   .planning-poker-dashboard .project-detail-page__campfire-create-summary dl,
   .planning-poker-dashboard .project-detail-page__campfire-filters,
   .planning-poker-dashboard__quick-filters,
+  .planning-poker-dashboard__accessible-tools .planning-poker-dashboard__quick-filters,
   .planning-poker-dashboard__readiness ul {
     grid-template-columns: 1fr;
   }
