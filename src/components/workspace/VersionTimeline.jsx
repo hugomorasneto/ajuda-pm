@@ -1,4 +1,5 @@
 import { formatDateTime } from '../../hooks/useUserStoryWorkspace'
+import { normalizeVersionList } from '../../utils/storyVersionUtils'
 
 function VersionTimeline({ versions, selectedId, isLoading, onSelect }) {
   return (
@@ -25,6 +26,9 @@ function VersionTimeline({ versions, selectedId, isLoading, onSelect }) {
       <div className="version-timeline__list">
         {versions.map((version, index) => {
           const isActive = version.id === selectedId
+          const criteriaCount = normalizeVersionList(version.acceptance_criteria).length
+          const qaCount = normalizeVersionList(version.qa_checklist).length
+          const gapCount = normalizeVersionList(version.gaps).length
 
           return (
             <button
@@ -48,11 +52,19 @@ function VersionTimeline({ versions, selectedId, isLoading, onSelect }) {
 
                 <p className="version-timeline__meta">{formatDateTime(version.created_at)}</p>
 
+                <div className="version-timeline__metrics" aria-label="Resumo da versão">
+                  <span>{criteriaCount} {criteriaCount === 1 ? 'critério' : 'critérios'}</span>
+                  <span>{qaCount} {qaCount === 1 ? 'item de QA' : 'itens de QA'}</span>
+                  <span>{gapCount} {gapCount === 1 ? 'trinca' : 'trincas'}</span>
+                </div>
+
                 {version.regeneration_instruction ? (
                   <p className="version-timeline__instruction">
                     Acabamento aplicado: {version.regeneration_instruction}
                   </p>
-                ) : null}
+                ) : (
+                  <p className="version-timeline__instruction">Primeira estrutura salva para esta peça.</p>
+                )}
               </div>
             </button>
           )

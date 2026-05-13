@@ -1,30 +1,25 @@
-function parseTextList(value) {
-  if (!value) return []
-  return String(value)
-    .split('\n')
-    .map((item) => item.trim())
-    .filter(Boolean)
+import { buildVersionDiff, getVersionDiffLead } from '../../utils/storyVersionUtils'
+
+function DiffList({ title, items, emptyText, tone = 'neutral' }) {
+  return (
+    <article className={`version-diff-summary__block version-diff-summary__block--${tone}`}>
+      <h3>{title}</h3>
+      {items.length > 0 ? (
+        <ul className={`version-diff-summary__list version-diff-summary__list--${tone}`}>
+          {items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      ) : (
+        <p className="version-diff-summary__empty">{emptyText}</p>
+      )}
+    </article>
+  )
 }
 
-function buildDiffSummary(previousVersion, currentVersion) {
-  if (!previousVersion || !currentVersion) return null
-
-  const previousCriteria = parseTextList(previousVersion.acceptance_criteria)
-  const currentCriteria = parseTextList(currentVersion.acceptance_criteria)
-
-  return {
-    titleChanged: previousVersion.title !== currentVersion.title,
-    storyChanged: previousVersion.user_story !== currentVersion.user_story,
-    addedCriteria: currentCriteria.filter((item) => !previousCriteria.includes(item)),
-    removedCriteria: previousCriteria.filter((item) => !currentCriteria.includes(item)),
-    criteriaUnchangedCount: currentCriteria.filter((item) => previousCriteria.includes(item)).length,
-  }
-}
-
-function VersionDiffSummary({ currentVersion, previousVersion }) {
-  const diff = buildDiffSummary(previousVersion, currentVersion)
-  const totalCriteriaChanges =
-    (diff?.addedCriteria?.length ?? 0) + (diff?.removedCriteria?.length ?? 0)
+function VersionDiffSummary({ currentVersion, previousVersion, onCopyComparison, isCopying }) {
+  const diff = buildVersionDiff(previousVersion, currentVersion)
+  const lead = getVersionDiffLead(diff)
 
   return (
     <section className="panel version-diff-summary">
@@ -33,7 +28,7 @@ function VersionDiffSummary({ currentVersion, previousVersion }) {
         <h2>Resumo do refino</h2>
         <p>
           {previousVersion
-            ? `Diferenças entre a versão ativa e a V${previousVersion.version_number}.`
+            ? `Diferenças entre a versão ativa e a ${diff?.previousLabel ?? 'versão anterior'}.`
             : 'A primeira versão da peça ainda não tem comparação anterior.'}
         </p>
       </div>
@@ -44,50 +39,76 @@ function VersionDiffSummary({ currentVersion, previousVersion }) {
         </p>
       ) : (
         <div className="version-diff-summary__content">
-          <p className="version-diff-summary__lead">
-            {totalCriteriaChanges > 0
-              ? `Esta versão trouxe ${totalCriteriaChanges} mudança${totalCriteriaChanges === 1 ? '' : 's'} nos critérios de aceite.`
-              : 'Esta versão manteve a estrutura principal dos critérios de aceite.'}
-          </p>
+          <div className="version-diff-summary__toolbar">
+            <p className="version-diff-summary__lead">{lead}</p>
+            <button
+              type="button"
+              className="btn btn-secondary btn-small"
+              onClick={onCopyComparison}
+              disabled={isCopying}
+            >
+              {isCopying ? 'Copiando...' : 'Copiar comparação'}
+            </button>
+          </div>
 
-          <div className="version-diff-summary__chips">
-            <span className={`version-diff-summary__chip ${diff.titleChanged ? 'version-diff-summary__chip--changed' : ''}`}>
-              {diff.titleChanged ? 'Título alterado' : 'Título mantido'}
+          <div className="version-diff-summary__metrics" aria-label="Resumo da comparação entre versões">
+            <span>
+              <strong>{diff.textChangesCount}</strong>
+              campos alterados
             </span>
-            <span className={`version-diff-summary__chip ${diff.storyChanged ? 'version-diff-summary__chip--changed' : ''}`}>
-              {diff.storyChanged ? 'User story alterada' : 'User story mantida'}
+            <span>
+              <strong>{diff.totalAdded}</strong>
+              itens adicionados
             </span>
-            <span className="version-diff-summary__chip">
-              {diff.criteriaUnchangedCount} critérios mantidos
+            <span>
+              <strong>{diff.totalRemoved}</strong>
+              itens removidos
+            </span>
+            <span>
+              <strong>{diff.acceptanceCriteria.unchangedCount}</strong>
+              critérios mantidos
             </span>
           </div>
 
-          <div className="version-diff-summary__grid">
-            <article className="version-diff-summary__block version-diff-summary__block--positive">
-              <h3>Critérios adicionados</h3>
-              {diff.addedCriteria.length > 0 ? (
-                <ul className="version-diff-summary__list version-diff-summary__list--positive">
-                  {diff.addedCriteria.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="version-diff-summary__empty">Nenhum critério novo nesta versão.</p>
-              )}
-            </article>
+          <div className="version-diff-summary__chips">
+            {diff.fieldChanges.map((field) => (
+              <span
+                key={field.key}
+                className={`version-diff-summary__chip ${field.changed ? 'version-diff-summary__chip--changed' : ''}`}
+              >
+                {field.label} {field.changed ? 'alterado' : 'mantido'}
+              </span>
+            ))}
+          </div>
 
-            <article className="version-diff-summary__block version-diff-summary__block--muted">
-              <h3>Critérios removidos</h3>
-              {diff.removedCriteria.length > 0 ? (
-                <ul className="version-diff-summary__list version-diff-summary__list--muted">
-                  {diff.removedCriteria.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="version-diff-summary__empty">Nenhum critério foi removido.</p>
-              )}
-            </article>
+          <div className="version-diff-summary__grid">
+            <DiffList
+              title="Critérios adicionados"
+              items={diff.acceptanceCriteria.added}
+              emptyText="Nenhum critério novo nesta versão."
+              tone="positive"
+            />
+
+            <DiffList
+              title="Critérios removidos"
+              items={diff.acceptanceCriteria.removed}
+              emptyText="Nenhum critério foi removido."
+              tone="muted"
+            />
+
+            <DiffList
+              title="Regras adicionadas"
+              items={diff.businessRules.added}
+              emptyText="Nenhuma regra nova nesta versão."
+              tone="positive"
+            />
+
+            <DiffList
+              title="QA e trincas adicionados"
+              items={[...diff.qaChecklist.added, ...diff.gaps.added]}
+              emptyText="Nenhum novo item de QA ou ponto de atenção."
+              tone="neutral"
+            />
           </div>
         </div>
       )}

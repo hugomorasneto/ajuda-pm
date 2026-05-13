@@ -19,6 +19,10 @@ import {
   buildStoryPlainText,
   copyTextToClipboard,
 } from '../utils/storyExport'
+import {
+  buildVersionComparisonMarkdown,
+  buildVersionDiff,
+} from '../utils/storyVersionUtils'
 
 const PERIOD_OPTIONS = [
   { value: 'today', label: 'Hoje' },
@@ -350,6 +354,19 @@ function HistoryPage() {
     if (!selectedVersion?.version_number) return null
     return versions.find((item) => item.version_number === selectedVersion.version_number - 1) ?? null
   }, [selectedVersion, versions])
+  const currentVersionForComparison = selectedVersion ?? selectedStory
+  const comparisonDiff = useMemo(
+    () => buildVersionDiff(previousVersion, currentVersionForComparison),
+    [currentVersionForComparison, previousVersion],
+  )
+  const comparisonMarkdown = useMemo(
+    () =>
+      buildVersionComparisonMarkdown({
+        previousVersion,
+        currentVersion: currentVersionForComparison,
+      }),
+    [currentVersionForComparison, previousVersion],
+  )
 
   const selectStory = useCallback(
     async (story) => {
@@ -573,6 +590,16 @@ function HistoryPage() {
       successMessage: option?.successMessage ?? `${deliveryFormatLabel} copiado.`,
       errorMessage: `Não foi possível copiar ${deliveryFormatLabel.toLocaleLowerCase('pt-BR')} agora.`,
       logMessage: 'Falha ao copiar formato de entrega do histórico:',
+    })
+  }
+
+  async function handleCopyVersionComparison() {
+    await copySelectedText({
+      target: 'comparison',
+      value: comparisonMarkdown,
+      successMessage: 'Comparação de versões copiada.',
+      errorMessage: 'Não foi possível copiar a comparação agora.',
+      logMessage: 'Falha ao copiar comparação de versões do histórico:',
     })
   }
 
@@ -904,6 +931,10 @@ function HistoryPage() {
   ]
   const isCopying = Boolean(copyTarget)
   const isCopyingSelectedDeliveryFormat = copyTarget === selectedDeliveryCopyTarget
+  const isCopyingComparison = copyTarget === 'comparison'
+  const comparisonSummaryLabel = comparisonDiff
+    ? `${comparisonDiff.totalChanges} ${comparisonDiff.totalChanges === 1 ? 'mudança detectada' : 'mudanças detectadas'}`
+    : 'Sem comparação real ainda'
   const activeQuickFilter = getActiveQuickFilter()
   const deliveryMetrics = selectedResult
     ? [
@@ -1652,14 +1683,16 @@ function HistoryPage() {
                   id="comparison"
                   eyebrow="Comparação"
                   title="Resumo do refino"
-                  summary={selectedVersionCount > 1 ? 'Diferenças entre versões' : 'Sem comparação real ainda'}
+                  summary={selectedVersionCount > 1 ? comparisonSummaryLabel : 'Sem comparação real ainda'}
                   open={openAdvancedSections.comparison}
                   onToggle={toggleAdvancedSection}
                 >
                   {selectedVersionCount > 1 ? (
                     <VersionDiffSummary
-                      currentVersion={selectedVersion}
+                      currentVersion={currentVersionForComparison}
                       previousVersion={previousVersion}
+                      onCopyComparison={handleCopyVersionComparison}
+                      isCopying={isCopyingComparison}
                     />
                   ) : (
                     <p className="history-status">
@@ -1677,6 +1710,25 @@ function HistoryPage() {
                   onToggle={toggleAdvancedSection}
                 >
                   <div className="history-inspection">
+                    <div className="history-inspection__overview" aria-label="Resumo da inspeção">
+                      <span>
+                        <strong>{qualityScore}/100</strong>
+                        qualidade
+                      </span>
+                      <span>
+                        <strong>{selectedResult.gaps.length}</strong>
+                        {selectedResult.gaps.length === 1 ? 'trinca' : 'trincas'}
+                      </span>
+                      <span>
+                        <strong>{selectedResult.business_rules.length}</strong>
+                        {selectedResult.business_rules.length === 1 ? 'regra' : 'regras'}
+                      </span>
+                      <span>
+                        <strong>{selectedResult.qa_checklist.length}</strong>
+                        {selectedResult.qa_checklist.length === 1 ? 'item de QA' : 'itens de QA'}
+                      </span>
+                    </div>
+
                     <section className="history-inspection__score">
                       <p className="history-page__eyebrow">Qualidade da peça</p>
                       <strong>{qualityScore}/100</strong>

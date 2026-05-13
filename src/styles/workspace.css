@@ -789,6 +789,24 @@
 .version-timeline__title { color: var(--color-text-primary); font-size: var(--text-body); font-weight: 600; }
 .version-timeline__meta,
 .version-timeline__instruction { color: var(--color-text-secondary); font-size: var(--text-small); line-height: 1.55; }
+.version-timeline__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.version-timeline__metrics span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0 var(--space-2);
+  color: var(--color-text-muted);
+  background: var(--color-canvas-muted);
+  font-size: var(--text-small);
+  font-weight: 700;
+  white-space: nowrap;
+}
 .version-timeline__instruction {
   display: inline-flex; align-items: center;
   min-height: 28px; padding: 0 var(--space-3);
@@ -799,6 +817,34 @@
 /* VersionDiffSummary */
 .version-diff-summary__content { display: grid; gap: var(--space-4); margin-top: var(--space-4); }
 .version-diff-summary__lead { margin: 0; color: var(--color-text-secondary); font-size: var(--text-body); line-height: 1.6; }
+.version-diff-summary__toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.version-diff-summary__metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+.version-diff-summary__metrics span {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  color: var(--color-text-secondary);
+  background: var(--color-canvas-muted);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+.version-diff-summary__metrics strong {
+  color: var(--color-text-primary);
+  font-size: var(--text-h3);
+  line-height: 1;
+}
 .version-diff-summary__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .version-diff-summary__grid { display: grid; gap: var(--space-4); }
 .version-diff-summary__block {
@@ -807,6 +853,7 @@
 }
 .version-diff-summary__block--positive { background: var(--color-success-subtle); border-color: rgba(22,163,74,0.2); }
 .version-diff-summary__block--muted { background: var(--color-warning-subtle); border-color: rgba(217,119,6,0.2); }
+.version-diff-summary__block--neutral { background: var(--color-canvas-muted); }
 .version-diff-summary__block h3,
 .story-workspace__versions-placeholder h2,
 .workspace-state h2 { margin: 0; font-size: var(--text-body); font-weight: 600; }
@@ -3231,6 +3278,8 @@
 .workspace-shell--forge .story-document__list,
 .workspace-shell--forge .quality-panel__list,
 .workspace-shell--forge .version-diff-summary__list,
+.workspace-shell--forge .version-diff-summary__metrics span,
+.workspace-shell--forge .history-inspection__overview span,
 .workspace-shell--forge .workspace-state__tip span {
   color: var(--forge-text-secondary);
 }
@@ -3244,6 +3293,7 @@
 .workspace-shell--forge .recent-story-card__preview,
 .workspace-shell--forge .recent-story-card__meta,
 .workspace-shell--forge .version-timeline__meta,
+.workspace-shell--forge .version-timeline__metrics span,
 .workspace-shell--forge .version-timeline__instruction,
 .workspace-shell--forge .version-diff-summary__lead,
 .workspace-shell--forge .version-diff-summary__empty,
@@ -3899,6 +3949,7 @@
 .workspace-shell--forge .version-timeline__count,
 .workspace-shell--forge .recent-story-card__badge,
 .workspace-shell--forge .version-timeline__badge,
+.workspace-shell--forge .version-timeline__metrics span,
 .workspace-shell--forge .version-diff-summary__chip {
   border: 1px solid var(--forge-border);
   background: var(--forge-surface-inset);
@@ -3915,7 +3966,9 @@
 
 .workspace-shell--forge .recent-story-card,
 .workspace-shell--forge .version-timeline__item,
-.workspace-shell--forge .version-diff-summary__block {
+.workspace-shell--forge .version-diff-summary__block,
+.workspace-shell--forge .version-diff-summary__metrics span,
+.workspace-shell--forge .history-inspection__overview span {
   border: 1px solid var(--forge-border);
   background: var(--forge-surface-inset);
   color: var(--forge-text-secondary);
@@ -3963,6 +4016,13 @@
   border-color: var(--forge-warning);
   background:
     linear-gradient(135deg, var(--forge-warning-soft), transparent),
+    var(--forge-surface-inset);
+}
+
+.workspace-shell--forge .version-diff-summary__block--neutral {
+  border-color: var(--forge-border-tech);
+  background:
+    linear-gradient(135deg, var(--forge-tech-soft), transparent),
     var(--forge-surface-inset);
 }
 
@@ -5866,6 +5926,32 @@
   gap: var(--space-4);
 }
 
+.history-inspection__overview {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.history-inspection__overview span {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  color: var(--color-text-secondary);
+  background: var(--color-canvas-muted);
+  font-size: var(--text-small);
+  font-weight: 750;
+}
+
+.history-inspection__overview strong {
+  color: var(--color-text-primary);
+  font-size: var(--text-h3);
+  line-height: 1;
+}
+
 .history-inspection section {
   min-width: 0;
   border-top: 1px solid var(--color-border);
@@ -5969,7 +6055,11 @@
 .workspace-shell--forge .history-preview__next-action span,
 .workspace-shell--forge .history-delivery__preview header em,
 .workspace-shell--forge .history-delivery__metrics span,
+.workspace-shell--forge .history-inspection__overview span,
 .workspace-shell--forge .history-advanced-section summary em,
+.workspace-shell--forge .history-advanced-section .version-timeline__metrics span,
+.workspace-shell--forge .history-advanced-section .version-timeline__instruction,
+.workspace-shell--forge .history-advanced-section .version-diff-summary__metrics span,
 .workspace-shell--forge .history-inspection ul,
 .workspace-shell--forge .history-inspection__context span {
   color: var(--forge-text-secondary);
@@ -5987,6 +6077,8 @@
 .workspace-shell--forge .history-preview__next-action strong,
 .workspace-shell--forge .history-delivery__preview header strong,
 .workspace-shell--forge .history-delivery__metrics strong,
+.workspace-shell--forge .history-inspection__overview strong,
+.workspace-shell--forge .version-diff-summary__metrics strong,
 .workspace-shell--forge .history-copy-message,
 .workspace-shell--forge .history-detail__project-message {
   color: var(--forge-text-primary);
@@ -6013,6 +6105,13 @@
 .workspace-shell--forge .history-delivery__preview header em,
 .workspace-shell--forge .history-delivery__preview pre,
 .workspace-shell--forge .history-delivery__metrics span,
+.workspace-shell--forge .history-inspection__overview span,
+.workspace-shell--forge .history-advanced-section summary em,
+.workspace-shell--forge .history-advanced-section .version-timeline__badge,
+.workspace-shell--forge .history-advanced-section .version-timeline__metrics span,
+.workspace-shell--forge .history-advanced-section .version-timeline__instruction,
+.workspace-shell--forge .history-advanced-section .version-diff-summary__chip,
+.workspace-shell--forge .history-advanced-section .version-diff-summary__metrics span,
 .workspace-shell--forge .history-inspection__score {
   border-color: var(--forge-border);
   background: var(--forge-surface-inset);
@@ -6288,6 +6387,13 @@
   border-color: var(--forge-border-strong);
 }
 
+.workspace-shell--forge .history-advanced-section .version-timeline__badge--active,
+.workspace-shell--forge .history-advanced-section .version-diff-summary__chip--changed {
+  border-color: var(--forge-border-ember);
+  background: var(--forge-ember-soft);
+  color: var(--forge-text-primary);
+}
+
 .workspace-shell--forge .history-filter-field input:focus-visible,
 .workspace-shell--forge .history-filter-field select:focus-visible,
 .workspace-shell--forge .history-pagination__jump input:focus-visible {
@@ -6322,6 +6428,8 @@
   .history-preview__facts,
   .history-delivery__format-grid,
   .history-delivery__metrics,
+  .history-inspection__overview,
+  .version-diff-summary__metrics,
   .history-inspection {
     grid-template-columns: 1fr 1fr;
   }
@@ -6343,6 +6451,14 @@
     flex-direction: column;
   }
 
+  .version-diff-summary__toolbar {
+    flex-direction: column;
+  }
+
+  .version-diff-summary__toolbar .btn {
+    width: 100%;
+  }
+
   .history-advanced-section summary,
   .history-delivery__actions {
     grid-template-columns: 1fr;
@@ -6360,6 +6476,8 @@
   .history-preview__facts,
   .history-delivery__format-grid,
   .history-delivery__metrics,
+  .history-inspection__overview,
+  .version-diff-summary__metrics,
   .history-inspection {
     grid-template-columns: 1fr;
   }
