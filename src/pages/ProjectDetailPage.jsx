@@ -114,6 +114,12 @@ const STORY_STATUS_QUICK_FILTERS = [
   { value: 'estimated', label: 'Estimadas', hint: 'Já pontuadas' },
 ]
 
+const PROJECT_GUIDED_STATUS_LABELS = {
+  complete: 'Concluído',
+  current: 'Agora',
+  next: 'Próximo',
+}
+
 function formatProjectDateTime(value) {
   if (!value) return '-'
   const date = new Date(value)
@@ -727,6 +733,82 @@ function ProjectDetailPage() {
       storiesLabel,
     ],
   )
+  const projectGuidedSteps = useMemo(() => {
+    const hasStories = projectStoryCount > 0
+    const hasReadyOrEstimated = readyStoryCount > 0 || livePlanningStoryCount > 0 || estimatedStoryCount > 0
+    const hasPlanningSession = livePlanningSessionCount > 0 || completedPlanningSessionCount > 0
+    const hasFinalEstimate = estimatedStoryCount > 0 || completedPlanningSessionCount > 0
+    const readyLabel =
+      readyStoryCount === 1 ? '1 história pronta' : `${readyStoryCount} histórias prontas`
+    const estimatedLabel =
+      estimatedStoryCount === 1 ? '1 história estimada' : `${estimatedStoryCount} histórias estimadas`
+
+    return [
+      {
+        id: 'forge',
+        title: 'Forjar história',
+        description: hasStories
+          ? `${projectStoryCount} ${projectStoryCount === 1 ? 'história vinculada' : 'histórias vinculadas'} ao projeto.`
+          : 'Crie a primeira peça com a Bancada já apontada para este projeto.',
+        status: hasStories ? 'complete' : 'current',
+        action: { label: hasStories ? 'Nova história' : 'Abrir Bancada', to: `/tool?projectId=${projectId}` },
+      },
+      {
+        id: 'kanban',
+        title: 'Organizar no Kanban',
+        description: hasStories
+          ? 'Use o quadro para separar o que está criado, em refinamento, pronto ou estimado.'
+          : 'O quadro aparece como base visual assim que houver uma história vinculada.',
+        status: hasStories ? 'complete' : 'next',
+        action: { label: 'Ver quadro', href: '#historias-projeto' },
+      },
+      {
+        id: 'prepare',
+        title: 'Preparar para estimativa',
+        description: hasReadyOrEstimated
+          ? readyStoryCount > 0
+            ? `${readyLabel} para levar à Roda da Fogueira.`
+            : 'O projeto já possui histórias encaminhadas ou estimadas.'
+          : 'Mova histórias refinadas para “Prontas para estimar” quando critérios e dúvidas estiverem claros.',
+        status: hasReadyOrEstimated ? 'complete' : hasStories ? 'current' : 'next',
+        action: { label: 'Preparar histórias', href: '#historias-projeto' },
+      },
+      {
+        id: 'planning',
+        title: 'Abrir Roda',
+        description: hasPlanningSession
+          ? livePlanningSessionCount > 0
+            ? `${livePlanningSessionCount} ${livePlanningSessionCount === 1 ? 'Roda ativa' : 'Rodas ativas'} neste projeto.`
+            : 'O histórico de Rodas já está disponível para consulta.'
+          : 'Crie uma sessão quando houver histórias prontas para discussão com a guilda.',
+        status: hasPlanningSession ? 'complete' : readyStoryCount > 0 ? 'current' : 'next',
+        action: { label: hasPlanningSession ? 'Ver Rodas' : 'Criar Roda', to: `/roda?projectId=${projectId}` },
+      },
+      {
+        id: 'review',
+        title: 'Revisar resultado',
+        description: hasFinalEstimate
+          ? `${estimatedLabel} com decisão registrada para priorização.`
+          : livePlanningSessionCount > 0
+            ? 'Acompanhe a sessão aberta e sele a estimativa final quando houver consenso.'
+            : 'Depois da Roda, revise decisões, pontuação final e próximos ajustes do backlog.',
+        status: hasFinalEstimate ? 'complete' : livePlanningSessionCount > 0 ? 'current' : 'next',
+        action: { label: 'Consultar histórico', to: `/roda?projectId=${projectId}` },
+      },
+    ]
+  }, [
+    completedPlanningSessionCount,
+    estimatedStoryCount,
+    livePlanningSessionCount,
+    livePlanningStoryCount,
+    projectId,
+    projectStoryCount,
+    readyStoryCount,
+  ])
+  const projectGuidedNextStep =
+    projectGuidedSteps.find((step) => step.status === 'current') ??
+    projectGuidedSteps.find((step) => step.status === 'next') ??
+    projectGuidedSteps[projectGuidedSteps.length - 1]
   const storyOperationalGuidance = (() => {
     if (projectStoryCount === 0) {
       return {
@@ -2077,6 +2159,49 @@ function ProjectDetailPage() {
             </article>
           ))}
         </div>
+      </section>
+
+      <section className="panel project-detail-page__guided-flow" aria-label="Trilha guiada do projeto">
+        <div className="project-detail-page__guided-flow-header">
+          <div className="project-detail-page__guided-flow-copy">
+            <p className="projects-page__eyebrow">Trilha guiada</p>
+            <h2>Do briefing à estimativa</h2>
+            <p>
+              Siga uma sequência simples para sair da primeira história até uma decisão de estimativa rastreável.
+            </p>
+          </div>
+          {projectGuidedNextStep ? (
+            <article
+              className={`project-detail-page__guided-next project-detail-page__guided-next--${projectGuidedNextStep.status}`}
+            >
+              <span>Próximo passo</span>
+              <strong>{projectGuidedNextStep.title}</strong>
+              <p>{projectGuidedNextStep.description}</p>
+              {projectGuidedNextStep.action?.to ? (
+                <Link className="btn btn-primary btn-small" to={projectGuidedNextStep.action.to}>
+                  {projectGuidedNextStep.action.label}
+                </Link>
+              ) : projectGuidedNextStep.action?.href ? (
+                <a className="btn btn-primary btn-small" href={projectGuidedNextStep.action.href}>
+                  {projectGuidedNextStep.action.label}
+                </a>
+              ) : null}
+            </article>
+          ) : null}
+        </div>
+
+        <ol className="project-detail-page__guided-steps">
+          {projectGuidedSteps.map((step, index) => (
+            <li key={step.id} className={`project-detail-page__guided-step is-${step.status}`}>
+              <span className="project-detail-page__guided-step-number">{index + 1}</span>
+              <div>
+                <strong>{step.title}</strong>
+                <p>{step.description}</p>
+              </div>
+              <small>{PROJECT_GUIDED_STATUS_LABELS[step.status]}</small>
+            </li>
+          ))}
+        </ol>
       </section>
 
       <section className="project-detail-page__executive-strip" aria-label="Visão executiva do projeto">

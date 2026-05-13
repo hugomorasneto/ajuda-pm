@@ -8596,6 +8596,196 @@
   width: fit-content;
 }
 
+.project-detail-page__guided-flow {
+  display: grid;
+  gap: var(--space-4);
+  border-color: rgba(44, 144, 255, 0.22);
+  background:
+    linear-gradient(135deg, rgba(44, 144, 255, 0.08), transparent 68%),
+    var(--forge-surface);
+}
+
+.project-detail-page__guided-flow-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.42fr);
+  align-items: stretch;
+  gap: var(--space-4);
+}
+
+.project-detail-page__guided-flow-copy {
+  display: grid;
+  align-content: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.project-detail-page__guided-flow-copy h2,
+.project-detail-page__guided-flow-copy p {
+  margin: 0;
+}
+
+.project-detail-page__guided-flow-copy p:not(.projects-page__eyebrow) {
+  max-width: 52rem;
+  color: var(--forge-text-secondary);
+  line-height: 1.55;
+}
+
+.project-detail-page__guided-next {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-width: 0;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  background:
+    linear-gradient(135deg, var(--forge-ember-soft), transparent 76%),
+    var(--forge-surface-inset);
+}
+
+.project-detail-page__guided-next--complete {
+  border-color: rgba(88, 190, 139, 0.34);
+  background:
+    linear-gradient(135deg, rgba(88, 190, 139, 0.1), transparent 76%),
+    var(--forge-surface-inset);
+}
+
+.project-detail-page__guided-next--next {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.05), transparent 76%),
+    var(--forge-surface-inset);
+}
+
+.project-detail-page__guided-next span,
+.project-detail-page__guided-status {
+  color: var(--forge-ember-hover);
+  font-size: var(--text-micro);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.project-detail-page__guided-next strong {
+  color: var(--forge-text-primary);
+  font-size: 1.08rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.project-detail-page__guided-next p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.project-detail-page__guided-next .btn {
+  width: fit-content;
+}
+
+.project-detail-page__guided-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-detail-page__guided-step {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--space-2);
+  min-width: 0;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  background: rgba(255,255,255,0.035);
+}
+
+.project-detail-page__guided-step.is-current {
+  border-color: var(--forge-border-ember);
+  background:
+    linear-gradient(135deg, var(--forge-ember-soft), transparent 76%),
+    rgba(255,255,255,0.035);
+}
+
+.project-detail-page__guided-step.is-complete {
+  border-color: rgba(88, 190, 139, 0.28);
+}
+
+.project-detail-page__guided-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: 999px;
+  background: var(--forge-surface-inset);
+  color: var(--forge-text-primary);
+  font-weight: 900;
+}
+
+.project-detail-page__guided-step.is-current .project-detail-page__guided-step-number {
+  border-color: var(--forge-border-ember);
+  color: var(--forge-ember-hover);
+}
+
+.project-detail-page__guided-step.is-complete .project-detail-page__guided-step-number {
+  border-color: rgba(88, 190, 139, 0.36);
+  color: var(--forge-success);
+}
+
+.project-detail-page__guided-step div {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.project-detail-page__guided-step strong {
+  color: var(--forge-text-primary);
+  font-size: var(--text-small);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.project-detail-page__guided-step p {
+  display: -webkit-box;
+  min-height: 3.6rem;
+  margin: 0;
+  overflow: hidden;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.project-detail-page__guided-step small {
+  width: fit-content;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  color: var(--forge-text-muted);
+  font-size: var(--text-micro);
+  font-weight: 900;
+}
+
+.project-detail-page__guided-step.is-current small {
+  border-color: var(--forge-border-ember);
+  color: var(--forge-ember-hover);
+}
+
+.project-detail-page__guided-step.is-complete small {
+  border-color: rgba(88, 190, 139, 0.34);
+  color: var(--forge-success);
+}
+
 .project-detail-page__executive-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -13463,6 +13653,14 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .project-detail-page__guided-flow-header {
+    grid-template-columns: 1fr;
+  }
+
+  .project-detail-page__guided-steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .projects-page__portfolio-strip,
   .project-detail-page__kanban-overview,
   .teams-page__overview {
@@ -13607,6 +13805,8 @@
   .project-detail-page__ai-grid,
   .project-detail-page__access,
   .project-detail-page__access-list,
+  .project-detail-page__guided-flow-header,
+  .project-detail-page__guided-steps,
   .project-detail-page__metrics-grid,
   .project-detail-page__story-quick-filters,
   .projects-page__filter-row,
