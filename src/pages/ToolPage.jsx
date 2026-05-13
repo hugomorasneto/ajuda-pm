@@ -192,16 +192,12 @@ function ToolPage() {
 
   useEffect(() => {
     const storyIdFromQuery = searchParams.get('storyId')
-    if (!storyIdFromQuery || loadedQueryStoryIdRef.current === storyIdFromQuery) return
+    if (!storyIdFromQuery || !userId || loadedQueryStoryIdRef.current === storyIdFromQuery) return
 
     loadedQueryStoryIdRef.current = storyIdFromQuery
-    const timerId = window.setTimeout(() => {
-      setMobileTab('resultado')
-      handleSelectHistory(storyIdFromQuery)
-    }, 0)
-
-    return () => window.clearTimeout(timerId)
-  }, [handleSelectHistory, searchParams])
+    setMobileTab('resultado')
+    handleSelectHistory(storyIdFromQuery)
+  }, [handleSelectHistory, searchParams, userId])
 
   const reviewStory = useMemo(() => {
     if (!result) return null
