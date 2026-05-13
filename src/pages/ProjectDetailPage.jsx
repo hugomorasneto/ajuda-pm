@@ -43,6 +43,7 @@ import {
   findProjectInsightCandidateStory,
   getProjectInsightFreshness,
 } from '../utils/projectInsightsUtils'
+import { normalizeStorySearchQuery, storyMatchesSearch } from '../utils/storySearchUtils'
 import { copyTextToClipboard } from '../utils/storyExport'
 
 const PROJECT_MEMBER_ROLES = [
@@ -184,6 +185,7 @@ function ProjectDetailPage() {
   })
   const [selectedProjectStoryIds, setSelectedProjectStoryIds] = useState([])
   const [storyEstimationFilter, setStoryEstimationFilter] = useState('all')
+  const [storySearchInput, setStorySearchInput] = useState('')
   const [storyViewMode, setStoryViewMode] = useState('board')
   const [isInsightCandidateFilterActive, setIsInsightCandidateFilterActive] = useState(false)
   const [projectNameDraft, setProjectNameDraft] = useState('')
@@ -257,6 +259,8 @@ function ProjectDetailPage() {
         ?.label ?? 'Todas',
     [storyEstimationFilter],
   )
+  const storySearchQuery = normalizeStorySearchQuery(storySearchInput)
+  const isStorySearchActive = storySearchQuery.length > 0
   const hasNoProjectStories = !isLoadingStories && projectStoryCount === 0
   const hasProjectStories = projectStoryCount > 0
   const shouldShowStoryLimitNotice =
@@ -384,10 +388,17 @@ function ProjectDetailPage() {
               storyEstimationFilter === 'all' || story.estimation_status === storyEstimationFilter
             const matchesInsightCandidate =
               !shouldFocusInsightCandidates || projectInsightCandidateStoryIdSet.has(story.id)
-            return matchesStatus && matchesInsightCandidate
+            const matchesSearch = storyMatchesSearch(story, storySearchQuery)
+            return matchesStatus && matchesInsightCandidate && matchesSearch
           }),
       })),
-    [kanbanColumns, projectInsightCandidateStoryIdSet, shouldFocusInsightCandidates, storyEstimationFilter],
+    [
+      kanbanColumns,
+      projectInsightCandidateStoryIdSet,
+      shouldFocusInsightCandidates,
+      storyEstimationFilter,
+      storySearchQuery,
+    ],
   )
   const visibleKanbanStories = useMemo(
     () => visibleKanbanColumns.flatMap((column) => column.cards ?? []),
@@ -395,10 +406,13 @@ function ProjectDetailPage() {
   )
   const visibleProjectStories = useMemo(
     () =>
-      shouldFocusInsightCandidates
-        ? projectStories.filter((story) => projectInsightCandidateStoryIdSet.has(story.id))
-        : projectStories,
-    [projectInsightCandidateStoryIdSet, projectStories, shouldFocusInsightCandidates],
+      projectStories.filter((story) => {
+        const matchesInsightCandidate =
+          !shouldFocusInsightCandidates || projectInsightCandidateStoryIdSet.has(story.id)
+        const matchesSearch = storyMatchesSearch(story, storySearchQuery)
+        return matchesInsightCandidate && matchesSearch
+      }),
+    [projectInsightCandidateStoryIdSet, projectStories, shouldFocusInsightCandidates, storySearchQuery],
   )
   const visibleReadyStories = useMemo(() => {
     const sourceStories = storyViewMode === 'board' ? visibleKanbanStories : visibleProjectStories
@@ -437,17 +451,30 @@ function ProjectDetailPage() {
       : `/roda?projectId=${projectId}`
   const visibleKanbanStoryCount = visibleKanbanStories.length
   const visibleProjectStoryCount = visibleProjectStories.length
+  const storySearchDisplay = storySearchInput.trim()
+  const storySearchResultCount = storyViewMode === 'board' ? visibleKanbanStoryCount : visibleProjectStoryCount
+  const storySearchResultLabel = `${storySearchResultCount} ${
+    storySearchResultCount === 1 ? 'resultado encontrado' : 'resultados encontrados'
+  }`
   const hasNoStoriesForInsightCandidateFilter =
     !isLoadingStories &&
     hasProjectStories &&
     shouldFocusInsightCandidates &&
     ((storyViewMode === 'board' && visibleKanbanStoryCount === 0) ||
       (storyViewMode === 'list' && visibleProjectStoryCount === 0))
+  const hasNoStoriesForLocalSearch =
+    !isLoadingStories &&
+    hasProjectStories &&
+    isStorySearchActive &&
+    !hasNoStoriesForInsightCandidateFilter &&
+    ((storyViewMode === 'board' && visibleKanbanStoryCount === 0) ||
+      (storyViewMode === 'list' && visibleProjectStoryCount === 0))
   const hasNoStoriesForFilter =
     !isLoadingStories &&
     projectStoryCount > 0 &&
     projectStories.length === 0 &&
-    !hasNoStoriesForInsightCandidateFilter
+    !hasNoStoriesForInsightCandidateFilter &&
+    !hasNoStoriesForLocalSearch
   const kanbanBoardSummaryItems = useMemo(
     () => [
       {
@@ -2413,7 +2440,9 @@ function ProjectDetailPage() {
             <p>Quadro visual para organizar histórias por fluxo, status de estimativa e preparo para a Roda.</p>
             {hasProjectStories ? (
               <p className="project-detail-page__story-filter-summary">
-                {storyViewMode === 'board'
+                {isStorySearchActive
+                  ? `${storySearchResultLabel} para "${storySearchDisplay}".`
+                  : storyViewMode === 'board'
                   ? shouldFocusInsightCandidates
                     ? `${visibleKanbanStoryCount} ${
                         visibleKanbanStoryCount === 1 ? 'card em foco' : 'cards em foco'
@@ -2432,6 +2461,16 @@ function ProjectDetailPage() {
             ) : null}
           </div>
           <div className="project-detail-page__story-actions">
+            <label className="project-detail-page__story-search">
+              <span>Buscar no projeto</span>
+              <input
+                type="search"
+                value={storySearchInput}
+                onChange={(event) => setStorySearchInput(event.target.value)}
+                placeholder="Título, contexto ou user story"
+                disabled={isLoadingStories}
+              />
+            </label>
             <div className="project-detail-page__story-view-toggle" aria-label="Modo de visualização">
               <button
                 type="button"
@@ -2662,6 +2701,22 @@ function ProjectDetailPage() {
               }}
             >
               Limpar foco da IA
+            </button>
+          </div>
+        ) : null}
+        {hasNoStoriesForLocalSearch ? (
+          <div className="projects-page__empty">
+            <h3>Nenhuma história encontrada na busca</h3>
+            <p>
+              A busca atual não encontrou histórias visíveis neste recorte. Limpe o termo ou troque o status para
+              ampliar a lista.
+            </p>
+            <button
+              type="button"
+              className="btn btn-secondary btn-small"
+              onClick={() => setStorySearchInput('')}
+            >
+              Limpar busca
             </button>
           </div>
         ) : null}
