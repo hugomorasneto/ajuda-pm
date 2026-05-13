@@ -444,6 +444,14 @@ function ProjectDetailPage() {
       ).length,
     [planningStorySessionById],
   )
+  const livePlanningSessionCount = useMemo(
+    () => planningSessions.filter((session) => LIVE_PLANNING_SESSION_STATUSES.includes(session.status)).length,
+    [planningSessions],
+  )
+  const completedPlanningSessionCount = useMemo(
+    () => planningSessions.filter((session) => session.status === 'completed').length,
+    [planningSessions],
+  )
   const visibleKanbanColumns = useMemo(
     () =>
       kanbanColumns.map((column) => ({
@@ -630,6 +638,95 @@ function ProjectDetailPage() {
       : `${refiningStoryCount} em refinamento · ${estimatedStoryCount} ${
           estimatedStoryCount === 1 ? 'estimada' : 'estimadas'
         }.`
+  const estimatedProgressPercent =
+    projectStoryCount > 0 ? Math.round((estimatedStoryCount / projectStoryCount) * 100) : 0
+  const readyProgressPercent =
+    projectStoryCount > 0 ? Math.round((readyStoryCount / projectStoryCount) * 100) : 0
+  const latestStoryActivityLabel = useMemo(() => {
+    const dates = [...kanbanStories, ...projectStories]
+      .map((story) => new Date(story?.created_at ?? '').getTime())
+      .filter((timestamp) => Number.isFinite(timestamp))
+
+    if (dates.length === 0) return 'Sem atividade'
+
+    return formatProjectDateTime(Math.max(...dates))
+  }, [kanbanStories, projectStories])
+  const projectMetricsCards = useMemo(
+    () => [
+      {
+        label: 'Histórias',
+        value: storiesLabel,
+        detail:
+          projectStoryCount > 0
+            ? `${refiningStoryCount} em refinamento · ${readyStoryCount} prontas`
+            : 'Forje ou vincule a primeira peça.',
+        progress: projectStoryCount > 0 ? Math.min(100, Math.max(0, readyProgressPercent)) : 0,
+        tone: readyStoryCount > 0 ? 'ready' : projectStoryCount > 0 ? 'attention' : 'idle',
+        action:
+          projectStoryCount > 0
+            ? { label: 'Ver quadro', href: '#historias-projeto' }
+            : { label: 'Forjar história', to: `/tool?projectId=${projectId}` },
+      },
+      {
+        label: 'Estimativas',
+        value: `${estimatedProgressPercent}% estimado`,
+        detail:
+          projectStoryCount > 0
+            ? `${estimatedStoryCount}/${projectStoryCount} histórias com pontuação final`
+            : 'Nenhuma estimativa registrada ainda.',
+        progress: estimatedProgressPercent,
+        tone: estimatedStoryCount > 0 ? 'ready' : readyStoryCount > 0 ? 'attention' : 'idle',
+        action:
+          estimatedStoryCount > 0
+            ? { label: 'Ver Rodas', to: `/roda?projectId=${projectId}` }
+            : { label: 'Preparar lote', href: '#historias-projeto' },
+      },
+      {
+        label: 'Rodas',
+        value:
+          livePlanningSessionCount > 0
+            ? `${livePlanningSessionCount} ${livePlanningSessionCount === 1 ? 'ativa' : 'ativas'}`
+            : `${completedPlanningSessionCount} ${completedPlanningSessionCount === 1 ? 'finalizada' : 'finalizadas'}`,
+        detail:
+          livePlanningStoryCount > 0
+            ? `${livePlanningStoryCount} ${
+                livePlanningStoryCount === 1 ? 'história em sessão ativa' : 'histórias em sessões ativas'
+              }`
+            : 'Sem sessão ativa no momento.',
+        progress: livePlanningSessionCount > 0 ? 100 : completedPlanningSessionCount > 0 ? 70 : 0,
+        tone: livePlanningSessionCount > 0 ? 'live' : completedPlanningSessionCount > 0 ? 'ready' : 'idle',
+        action: {
+          label: livePlanningSessionCount > 0 ? 'Continuar Rodas' : 'Abrir Rodas',
+          to: `/roda?projectId=${projectId}`,
+        },
+      },
+      {
+        label: 'Última peça',
+        value: latestStoryActivityLabel,
+        detail:
+          latestStoryActivityLabel === 'Sem atividade'
+            ? 'Nenhuma história vinculada ao projeto.'
+            : 'História mais recente vinculada ao projeto.',
+        progress: latestStoryActivityLabel === 'Sem atividade' ? 0 : 100,
+        tone: latestStoryActivityLabel === 'Sem atividade' ? 'idle' : 'tech',
+        action: { label: 'Consultar peças', to: `/historico?projectId=${projectId}` },
+      },
+    ],
+    [
+      completedPlanningSessionCount,
+      estimatedProgressPercent,
+      estimatedStoryCount,
+      latestStoryActivityLabel,
+      livePlanningSessionCount,
+      livePlanningStoryCount,
+      projectId,
+      projectStoryCount,
+      readyProgressPercent,
+      readyStoryCount,
+      refiningStoryCount,
+      storiesLabel,
+    ],
+  )
   const storyOperationalGuidance = (() => {
     if (projectStoryCount === 0) {
       return {
@@ -1940,6 +2037,45 @@ function ProjectDetailPage() {
               Consultar histórico
             </Link>
           )}
+        </div>
+      </section>
+
+      <section className="project-detail-page__metrics" aria-label="Métricas operacionais do projeto">
+        <div className="project-detail-page__metrics-header">
+          <div>
+            <p className="projects-page__eyebrow">Métricas do projeto</p>
+            <h2>Pulso operacional</h2>
+            <p>Indicadores rápidos para decidir se o próximo passo é organizar, refinar ou estimar.</p>
+          </div>
+        </div>
+        <div className="project-detail-page__metrics-grid">
+          {projectMetricsCards.map((metric) => (
+            <article
+              key={metric.label}
+              className={`project-detail-page__metric-card project-detail-page__metric-card--${metric.tone}`}
+            >
+              <div className="project-detail-page__metric-copy">
+                <span>{metric.label}</span>
+                <strong>{metric.value}</strong>
+                <p>{metric.detail}</p>
+              </div>
+              <div
+                className="project-detail-page__metric-progress"
+                aria-label={`${metric.label}: ${metric.progress}%`}
+              >
+                <span style={{ width: `${metric.progress}%` }} />
+              </div>
+              {metric.action?.to ? (
+                <Link className="btn btn-secondary btn-small" to={metric.action.to}>
+                  {metric.action.label}
+                </Link>
+              ) : metric.action?.href ? (
+                <a className="btn btn-secondary btn-small" href={metric.action.href}>
+                  {metric.action.label}
+                </a>
+              ) : null}
+            </article>
+          ))}
         </div>
       </section>
 
