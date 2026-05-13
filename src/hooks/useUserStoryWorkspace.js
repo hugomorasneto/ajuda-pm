@@ -354,6 +354,7 @@ export function useUserStoryWorkspace() {
   async function handleSelectVersion(storyId) {
     if (!userId) return
     setIsLoadingSelection(true)
+    setWorkspaceError('')
 
     const response = await getUserStoryById(storyId, userId)
     if (!response.success || !response.data) {
@@ -378,6 +379,7 @@ export function useUserStoryWorkspace() {
     setIsLoadingSelection(true)
     setSaveMessage('')
     setCopyMessage('')
+    setWorkspaceError('')
 
     const response = await getUserStoryById(storyId, userId)
     if (!response.success || !response.data) {

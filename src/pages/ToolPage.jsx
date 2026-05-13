@@ -102,6 +102,7 @@ function ToolPage() {
   const [mobileTab, setMobileTab] = useState('entrada')
   const [searchParams] = useSearchParams()
   const projectIdFromQuery = searchParams.get('projectId')
+  const storyIdFromQuery = searchParams.get('storyId')
   const loadedQueryStoryIdRef = useRef(null)
   const { user } = useAuth()
   const userId = user?.id ?? null
@@ -191,13 +192,12 @@ function ToolPage() {
   }, [projectIdFromQuery, projects, selectedProjectId, selectedStoryId])
 
   useEffect(() => {
-    const storyIdFromQuery = searchParams.get('storyId')
     if (!storyIdFromQuery || !userId || loadedQueryStoryIdRef.current === storyIdFromQuery) return
 
     loadedQueryStoryIdRef.current = storyIdFromQuery
     setMobileTab('resultado')
     handleSelectHistory(storyIdFromQuery)
-  }, [handleSelectHistory, searchParams, userId])
+  }, [handleSelectHistory, storyIdFromQuery, userId])
 
   const reviewStory = useMemo(() => {
     if (!result) return null
@@ -361,6 +361,7 @@ function ToolPage() {
   const showBlockingLoadingState = !reviewStory && (isSubmitting || isLoadingSelection)
   const showBlockingErrorState =
     !reviewStory && Boolean(workspaceError) && !showBlockingLoadingState
+  const showStoryDeepLinkError = Boolean(storyIdFromQuery && showBlockingErrorState)
   const showEmptyState = !reviewStory && !showBlockingLoadingState && !showBlockingErrorState
   const workspaceStatusLabel = isEditing ? 'Peça atual' : 'Nova peça'
   const workspaceStatusTitle = isEditing && activeStoryTitle ? activeStoryTitle : 'Em preparo'
@@ -400,6 +401,19 @@ function ToolPage() {
     : null
 
   const { setTopbarStatus } = useOutletContext() ?? {}
+
+  function handleRetryStoryDeepLink() {
+    if (!storyIdFromQuery) return
+
+    loadedQueryStoryIdRef.current = null
+    setMobileTab('resultado')
+    handleSelectHistory(storyIdFromQuery)
+  }
+
+  function handleGoToHistoryFromStoryError() {
+    loadedQueryStoryIdRef.current = null
+    navigate('/historico')
+  }
 
   useEffect(() => {
     if (typeof setTopbarStatus !== 'function') return
@@ -446,8 +460,23 @@ function ToolPage() {
   ) : showBlockingErrorState ? (
       <WorkspaceErrorState
         message={workspaceError}
-        canRetry={Boolean(formValues.problemContext.trim())}
-        onRetry={handleSubmitWithProject}
+        title={showStoryDeepLinkError ? 'Peça não encontrada ou sem acesso.' : undefined}
+        note={
+          showStoryDeepLinkError
+            ? 'O link pode ter sido removido, pertencer a outro acesso ou apontar para uma peça que você não pode abrir.'
+            : undefined
+        }
+        canRetry={showStoryDeepLinkError || Boolean(formValues.problemContext.trim())}
+        onRetry={showStoryDeepLinkError ? handleRetryStoryDeepLink : handleSubmitWithProject}
+        retryLabel={showStoryDeepLinkError ? 'Tentar carregar novamente' : undefined}
+        secondaryAction={
+          showStoryDeepLinkError
+            ? {
+                label: 'Voltar para peças forjadas',
+                onClick: handleGoToHistoryFromStoryError,
+              }
+            : null
+        }
       />
   ) : showEmptyState ? (
     <WorkspaceEmptyState hasDraft={hasDraft} />
