@@ -9004,6 +9004,208 @@
   gap: var(--space-2);
 }
 
+.project-detail-page__ai-overview {
+  display: grid;
+  gap: var(--space-3);
+  border: 1px solid var(--forge-border-tech);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background:
+    linear-gradient(135deg, var(--forge-tech-soft), transparent 76%),
+    var(--forge-surface-inset);
+}
+
+.project-detail-page__ai-overview-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: var(--space-4);
+}
+
+.project-detail-page__ai-overview-copy {
+  display: grid;
+  align-content: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.project-detail-page__ai-overview-copy h3,
+.project-detail-page__ai-overview-copy p {
+  margin: 0;
+}
+
+.project-detail-page__ai-overview-copy h3 {
+  color: var(--forge-text-primary);
+}
+
+.project-detail-page__ai-overview-copy p:not(.projects-page__eyebrow) {
+  max-width: 48rem;
+  color: var(--forge-text-secondary);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.project-detail-page__ai-overview-card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-width: 0;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.045), transparent 76%),
+    rgba(255,255,255,0.025);
+}
+
+.project-detail-page__ai-overview-card--attention {
+  border-color: rgba(255, 190, 92, 0.44);
+  background:
+    linear-gradient(135deg, rgba(255, 190, 92, 0.12), transparent 76%),
+    rgba(255,255,255,0.025);
+}
+
+.project-detail-page__ai-overview-card span,
+.project-detail-page__ai-overview-card small {
+  display: inline-flex;
+  max-width: 100%;
+  width: fit-content;
+  border: 1px solid var(--forge-border-tech);
+  border-radius: 999px;
+  padding: 0.22rem 0.65rem;
+  background: rgba(44, 144, 255, 0.1);
+  color: var(--forge-tech);
+  font-size: var(--text-small);
+  font-weight: 850;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.project-detail-page__ai-overview-card strong {
+  display: -webkit-box;
+  width: min(100%, 46rem);
+  overflow: hidden;
+  color: var(--forge-text-primary);
+  font-size: clamp(1rem, 1.6vw, 1.22rem);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.project-detail-page__ai-overview-card small {
+  border-color: var(--forge-border-subtle);
+  background: rgba(255,255,255,0.035);
+  color: var(--forge-text-secondary);
+}
+
+.project-detail-page__ai-route-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.project-detail-page__ai-route-card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-width: 0;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  background: rgba(255,255,255,0.03);
+}
+
+.project-detail-page__ai-route-card--forge,
+.project-detail-page__ai-route-card--attention,
+.project-detail-page__ai-route-card--warning {
+  border-color: rgba(255, 145, 56, 0.36);
+  background:
+    linear-gradient(135deg, var(--forge-ember-soft), transparent 78%),
+    rgba(255,255,255,0.025);
+}
+
+.project-detail-page__ai-route-card--ready,
+.project-detail-page__ai-route-card--ai,
+.project-detail-page__ai-route-card--tech {
+  border-color: var(--forge-border-tech);
+}
+
+.project-detail-page__ai-route-card span {
+  color: var(--forge-text-muted);
+  font-size: var(--text-micro);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.project-detail-page__ai-route-card strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--forge-text-primary);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.project-detail-page__ai-route-card p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.project-detail-page__ai-route-card .btn {
+  align-self: end;
+  justify-self: start;
+  width: fit-content;
+  margin-top: auto;
+}
+
+.project-detail-page__ai-fact-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.project-detail-page__ai-fact {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(255,255,255,0.03);
+  color: var(--forge-text-secondary);
+  font-size: var(--text-small);
+  font-weight: 850;
+}
+
+.project-detail-page__ai-fact strong {
+  overflow: hidden;
+  color: var(--forge-text-primary);
+  font-size: 1.1rem;
+  line-height: 1.08;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-detail-page__ai-fact small {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--forge-text-muted);
+  font-size: var(--text-micro);
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 .project-detail-page__ai-command {
   display: grid;
   gap: var(--space-3);
@@ -9333,6 +9535,27 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
+}
+
+.project-detail-page__ai-detail-header {
+  display: grid;
+  gap: var(--space-1);
+  border-top: 1px solid var(--forge-border-subtle);
+  padding-top: var(--space-4);
+}
+
+.project-detail-page__ai-detail-header h3,
+.project-detail-page__ai-detail-header p {
+  margin: 0;
+}
+
+.project-detail-page__ai-detail-header h3 {
+  color: var(--forge-text-primary);
+}
+
+.project-detail-page__ai-detail-header p:not(.projects-page__eyebrow) {
+  color: var(--forge-text-secondary);
+  line-height: 1.45;
 }
 
 .project-detail-page__ai-detail-card {
@@ -13668,6 +13891,8 @@
   }
 
   .project-detail-page__ai-command-grid,
+  .project-detail-page__ai-route-grid,
+  .project-detail-page__ai-fact-grid,
   .project-detail-page__ai-snapshot-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -13736,6 +13961,7 @@
   .project-detail-page__ai-candidates-actions,
   .project-detail-page__ai-candidate,
   .project-detail-page__ai-candidate-actions,
+  .project-detail-page__ai-overview-main,
   .project-detail-page__ai-refresh-callout,
   .project-detail-page__ai-next-step,
   .project-detail-page__ai-history-item,
@@ -13801,6 +14027,8 @@
   .project-detail-page__executive-strip,
   .project-detail-page__ai-action-stats,
   .project-detail-page__ai-command-grid,
+  .project-detail-page__ai-route-grid,
+  .project-detail-page__ai-fact-grid,
   .project-detail-page__ai-snapshot-grid,
   .project-detail-page__ai-grid,
   .project-detail-page__access,

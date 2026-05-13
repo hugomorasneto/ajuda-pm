@@ -628,6 +628,20 @@ function ProjectDetailPage() {
       ? 'Atualizar diagnóstico'
       : 'Ver diagnóstico'
     : 'Gerar diagnóstico'
+  const projectInsightOverviewStatus = projectInsights
+    ? isProjectInsightOutdated
+      ? currentProjectInsightFreshness.label
+      : projectInsights.health_label
+    : 'Diagnóstico sob demanda'
+  const projectInsightOverviewMeta = projectInsights
+    ? `${Number(projectInsights?.meta?.analyzed_stories ?? projectStoryCount)} ${
+        Number(projectInsights?.meta?.analyzed_stories ?? projectStoryCount) === 1
+          ? 'história analisada'
+          : 'histórias analisadas'
+      }`
+    : projectStoryCount > 0
+      ? `${storiesLabel} na base atual`
+      : 'Aguardando histórias vinculadas'
   const latestProjectNextAction =
     (isProjectInsightOutdated
       ? 'Atualize o diagnóstico para alinhar a leitura de IA com as histórias atuais.'
@@ -2404,21 +2418,38 @@ function ProjectDetailPage() {
           </p>
         ) : null}
 
-        <div className="project-detail-page__ai-command" aria-label="Comando da IA do projeto">
-          <div className="project-detail-page__ai-command-header">
-            <div>
-              <p className="projects-page__eyebrow">Comando de IA</p>
-              <h3>Decisão guiada por contexto</h3>
+        <div className="project-detail-page__ai-overview" aria-label="Painel executivo da IA do projeto">
+          <div className="project-detail-page__ai-overview-main">
+            <div className="project-detail-page__ai-overview-copy">
+              <p className="projects-page__eyebrow">Painel executivo de IA</p>
+              <h3>{projectInsights ? 'Leitura pronta para decisão' : 'Diagnóstico preparado sob demanda'}</h3>
               <p>
-                Acompanhe a base atual, a validade do diagnóstico, as candidatas da IA e o próximo encaminhamento do
-                projeto.
+                Use este bloco para decidir se vale atualizar a análise, preparar histórias candidatas ou levar o
+                projeto para uma Roda da Fogueira.
               </p>
             </div>
+
+            <article
+              className={`project-detail-page__ai-overview-card${
+                isProjectInsightOutdated ? ' project-detail-page__ai-overview-card--attention' : ''
+              }`}
+            >
+              <span>{projectInsightOverviewStatus}</span>
+              <strong>{projectInsights ? projectInsights.summary : projectInsightExecutiveText}</strong>
+              <small>{projectInsightOverviewMeta}</small>
+              {currentProjectInsightFreshness ? (
+                <small
+                  className={`project-detail-page__ai-freshness project-detail-page__ai-freshness--${currentProjectInsightFreshness.tone}`}
+                >
+                  {currentProjectInsightFreshness.label} · {currentProjectInsightFreshness.description}
+                </small>
+              ) : null}
+            </article>
           </div>
 
-          <div className="project-detail-page__ai-command-grid">
+          <div className="project-detail-page__ai-route-grid">
             {projectAiCommandCards.map((card) => {
-              const cardClassName = `project-detail-page__ai-command-card project-detail-page__ai-command-card--${card.tone}`
+              const cardClassName = `project-detail-page__ai-route-card project-detail-page__ai-route-card--${card.tone}`
               const action = card.action
 
               return (
@@ -2448,38 +2479,14 @@ function ProjectDetailPage() {
               )
             })}
           </div>
-        </div>
 
-        <div className="project-detail-page__ai-snapshot" aria-label="Leitura operacional do projeto">
-          <div className="project-detail-page__ai-snapshot-header">
-            <div>
-              <p className="projects-page__eyebrow">Leitura operacional</p>
-              <h3>{projectInsights ? 'Base atual comparada ao diagnóstico' : 'Resumo antes da IA'}</h3>
-              <p>
-                Indicadores calculados com os dados atuais do projeto para orientar a próxima ação sem consumir
-                análise com IA.
-              </p>
-            </div>
-          </div>
-          <div className="project-detail-page__ai-snapshot-grid">
-            {projectOperationalSnapshotCards.map((card) => (
-              <article
-                key={card.label}
-                className={`project-detail-page__ai-snapshot-card project-detail-page__ai-snapshot-card--${card.tone}`}
-              >
-                <span>{card.label}</span>
-                <strong>{card.value}</strong>
-                <p>{card.description}</p>
-                {card.action?.to ? (
-                  <Link className="btn btn-secondary btn-small" to={card.action.to}>
-                    {card.action.label}
-                  </Link>
-                ) : card.action?.href ? (
-                  <a className="btn btn-secondary btn-small" href={card.action.href}>
-                    {card.action.label}
-                  </a>
-                ) : null}
-              </article>
+          <div className="project-detail-page__ai-fact-grid" aria-label="Indicadores de apoio da IA">
+            {(projectInsights ? projectActionPlanStats : projectOperationalSnapshotCards).map((item) => (
+              <span key={item.label} className="project-detail-page__ai-fact">
+                <strong>{item.value}</strong>
+                {item.label}
+                <small>{item.detail ?? item.description}</small>
+              </span>
             ))}
           </div>
         </div>
@@ -2497,22 +2504,6 @@ function ProjectDetailPage() {
           </div>
         ) : (
           <div className="project-detail-page__ai-result">
-            <div className="project-detail-page__ai-summary">
-              <span>{projectInsights.health_label}</span>
-              <p>{projectInsights.summary}</p>
-              <small>
-                {projectInsights.meta.analyzed_stories}{' '}
-                {projectInsights.meta.analyzed_stories === 1 ? 'história analisada' : 'histórias analisadas'}
-              </small>
-              {currentProjectInsightFreshness ? (
-                <small
-                  className={`project-detail-page__ai-freshness project-detail-page__ai-freshness--${currentProjectInsightFreshness.tone}`}
-                >
-                  {currentProjectInsightFreshness.label} · {currentProjectInsightFreshness.description}
-                </small>
-              ) : null}
-            </div>
-
             {isProjectInsightOutdated ? (
               <div className="project-detail-page__ai-refresh-callout" role="status">
                 <div>
@@ -2533,18 +2524,24 @@ function ProjectDetailPage() {
               </div>
             ) : null}
 
+            <div className="project-detail-page__ai-detail-header">
+              <div>
+                <p className="projects-page__eyebrow">Detalhes do diagnóstico</p>
+                <h3>Riscos, perguntas e candidatas</h3>
+                <p>Abra apenas o bloco que precisar revisar para manter a leitura principal mais limpa.</p>
+              </div>
+            </div>
+
             <div className="project-detail-page__ai-grid">
               <ProjectInsightList
                 title="Riscos"
                 items={projectInsights.risks}
                 emptyText="Nenhum risco relevante foi destacado pela IA."
-                defaultOpen
               />
               <ProjectInsightList
                 title="Perguntas de refinamento"
                 items={projectInsights.refinement_questions}
                 emptyText="Nenhuma pergunta adicional foi sugerida."
-                defaultOpen
               />
               <ProjectInsightList
                 title="Próximos passos"
