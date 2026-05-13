@@ -135,8 +135,16 @@ function getKanbanColumnEmptyText(statusBase) {
   return texts[statusBase] ?? 'Arraste uma história para esta coluna quando ela entrar neste estágio.'
 }
 
-function countReadyStories(stories = []) {
-  return stories.filter((story) => story.estimation_status === 'ready_for_estimation').length
+function isStoryInLivePlanningSession(story, planningStorySessionById = {}) {
+  return Boolean(planningStorySessionById[story?.id]?.isLive)
+}
+
+function isReadyStoryAvailableForPlanning(story, planningStorySessionById = {}) {
+  return story?.estimation_status === 'ready_for_estimation' && !isStoryInLivePlanningSession(story, planningStorySessionById)
+}
+
+function countAvailableReadyStories(stories = [], planningStorySessionById = {}) {
+  return stories.filter((story) => isReadyStoryAvailableForPlanning(story, planningStorySessionById)).length
 }
 
 function ProjectInsightList({ title, items, emptyText, defaultOpen = false }) {
@@ -418,6 +426,10 @@ function ProjectDetailPage() {
     const sourceStories = storyViewMode === 'board' ? visibleKanbanStories : visibleProjectStories
     return sourceStories.filter((story) => story.estimation_status === 'ready_for_estimation')
   }, [storyViewMode, visibleKanbanStories, visibleProjectStories])
+  const visibleAvailableReadyStories = useMemo(
+    () => visibleReadyStories.filter((story) => isReadyStoryAvailableForPlanning(story, planningStorySessionById)),
+    [planningStorySessionById, visibleReadyStories],
+  )
   const selectedReadyStories = useMemo(
     () => visibleReadyStories.filter((story) => selectedProjectStoryIds.includes(story.id)),
     [selectedProjectStoryIds, visibleReadyStories],
@@ -443,8 +455,10 @@ function ProjectDetailPage() {
     selectedReadyStoriesInLiveSessions.length > 0
       ? `${selectedReadyStoriesInLiveSessions.length} já ${
           selectedReadyStoriesInLiveSessions.length === 1 ? 'está' : 'estão'
-        } em Roda ativa.`
+        } em Roda ativa. Remova do lote antes de abrir uma nova Roda.`
       : 'Selecione histórias prontas no quadro ou na lista para abrir a Roda com o lote já carregado.'
+  const canOpenSelectedReadyStories =
+    selectedReadyStoryIds.length > 0 && selectedReadyStoriesInLiveSessions.length === 0
   const selectedReadyStoriesRodaUrl =
     selectedReadyStoryIds.length > 0
       ? `/roda?projectId=${projectId}&storyIds=${selectedReadyStoryIds.join(',')}`
@@ -1457,6 +1471,14 @@ function ProjectDetailPage() {
 
   function handleToggleProjectStorySelection(storyId) {
     setStoryStatusMessage('')
+    if (
+      !selectedProjectStoryIds.includes(storyId) &&
+      planningStorySessionById[storyId]?.isLive
+    ) {
+      setStoryStatusMessage('Esta história já está em uma Roda ativa. Continue a sessão existente ou escolha uma história livre.')
+      return
+    }
+
     setSelectedProjectStoryIds((current) =>
       current.includes(storyId)
         ? current.filter((currentStoryId) => currentStoryId !== storyId)
@@ -1466,7 +1488,13 @@ function ProjectDetailPage() {
 
   function handleSelectVisibleReadyStories() {
     setStoryStatusMessage('')
-    setSelectedProjectStoryIds(visibleReadyStories.map((story) => story.id))
+    const availableStoryIds = visibleAvailableReadyStories.map((story) => story.id)
+    setSelectedProjectStoryIds(availableStoryIds)
+    setStoryStatusMessage(
+      availableStoryIds.length === 0
+        ? 'Nenhuma história livre visível para selecionar.'
+        : 'Histórias livres visíveis selecionadas para a Roda.',
+    )
   }
 
   function handleToggleInsightCandidateFilter() {
@@ -1488,10 +1516,14 @@ function ProjectDetailPage() {
 
   function handleSelectReadyStoriesInColumn(column) {
     const readyStoryIds = (column?.cards ?? [])
-      .filter((story) => story.estimation_status === 'ready_for_estimation')
+      .filter((story) => isReadyStoryAvailableForPlanning(story, planningStorySessionById))
       .map((story) => story.id)
 
     setStoryStatusMessage('')
+    if (readyStoryIds.length === 0) {
+      setStoryStatusMessage('Esta coluna não possui histórias prontas livres para selecionar.')
+      return
+    }
     setSelectedProjectStoryIds((current) => Array.from(new Set([...current, ...readyStoryIds])))
   }
 
@@ -2628,9 +2660,9 @@ function ProjectDetailPage() {
                 type="button"
                 className="btn btn-secondary btn-small"
                 onClick={handleSelectVisibleReadyStories}
-                disabled={visibleReadyStories.length === 0 || isLoadingStories}
+                disabled={visibleAvailableReadyStories.length === 0 || isLoadingStories}
               >
-                Selecionar prontas visíveis
+                Selecionar livres visíveis
               </button>
               <button
                 type="button"
@@ -2640,7 +2672,7 @@ function ProjectDetailPage() {
               >
                 Limpar seleção
               </button>
-              {selectedReadyStoryIds.length > 0 ? (
+              {canOpenSelectedReadyStories ? (
                 <Link className="btn btn-primary btn-small" to={selectedReadyStoriesRodaUrl}>
                   Abrir Roda com selecionadas
                 </Link>
@@ -2749,7 +2781,10 @@ function ProjectDetailPage() {
                   const isDropTarget = dragOverKanbanColumnId === column.id
                   const columnCards = column.cards ?? []
                   const columnCount = columnCards.length
-                  const readyColumnStoryCount = countReadyStories(columnCards)
+                  const availableReadyColumnStoryCount = countAvailableReadyStories(
+                    columnCards,
+                    planningStorySessionById,
+                  )
 
                   return (
                     <section
@@ -2772,16 +2807,16 @@ function ProjectDetailPage() {
                             {getKanbanColumnIntent(column.status_base)}
                           </small>
                         </div>
-                        {canEditKanbanColumns || readyColumnStoryCount > 0 ? (
+                        {canEditKanbanColumns || availableReadyColumnStoryCount > 0 ? (
                           <div className="project-detail-page__kanban-column-actions">
-                            {readyColumnStoryCount > 0 ? (
+                            {availableReadyColumnStoryCount > 0 ? (
                               <button
                                 type="button"
                                 className="btn btn-secondary btn-small"
                                 onClick={() => handleSelectReadyStoriesInColumn(column)}
                                 disabled={isLoadingStories}
                               >
-                                Selecionar prontas
+                                Selecionar livres
                               </button>
                             ) : null}
                             {canEditKanbanColumns ? (
@@ -2910,6 +2945,7 @@ function ProjectDetailPage() {
                                     type="checkbox"
                                     checked={isSelectedForPlanning}
                                     onChange={() => handleToggleProjectStorySelection(story.id)}
+                                    disabled={isInLivePlanningSession}
                                   />
                                   <span>{isInLivePlanningSession ? 'Já em Roda ativa' : 'Selecionar para Roda'}</span>
                                 </label>
@@ -3038,6 +3074,7 @@ function ProjectDetailPage() {
                           type="checkbox"
                           checked={isSelectedForPlanning}
                           onChange={() => handleToggleProjectStorySelection(story.id)}
+                          disabled={isInLivePlanningSession}
                         />
                       <span>{isInLivePlanningSession ? 'Já em Roda ativa' : 'Selecionar para Roda'}</span>
                     </label>

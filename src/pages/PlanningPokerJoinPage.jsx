@@ -463,6 +463,10 @@ function PlanningPokerJoinPage() {
         : filteredReadyStories,
     [activePlanningStorySessionByStoryId, filteredReadyStories, hideActiveSessionStories],
   )
+  const visibleReadyStoriesWithoutActiveSession = useMemo(
+    () => visibleReadyStories.filter((story) => !activePlanningStorySessionByStoryId[story.id]),
+    [activePlanningStorySessionByStoryId, visibleReadyStories],
+  )
   const readyStoriesInActiveSessionsCount = readyStories.length - readyStoriesWithoutActiveSession.length
   const visibleReadyStoriesLabel = useMemo(
     () =>
@@ -508,7 +512,10 @@ function PlanningPokerJoinPage() {
     [planningSessionProgressById, planningSessions],
   )
   const canCreatePlanningSession =
-    canManageSelectedProject && readyStories.length > 0 && selectedStoryIds.length > 0
+    canManageSelectedProject &&
+    readyStories.length > 0 &&
+    selectedStoryIds.length > 0 &&
+    selectedStoriesInActiveSessions.length === 0
   const hasPlanningSessions = planningSessions.length > 0
   const hasActivePlanningSessionFilters =
     planningSessionStatusFilter !== 'all' ||
@@ -571,6 +578,8 @@ function PlanningPokerJoinPage() {
         ? 'Você pode consultar Rodas, mas não criar novas sessões neste projeto.'
         : readyStories.length === 0
           ? 'Marque histórias deste projeto como prontas para estimar.'
+          : selectedStoriesInActiveSessions.length > 0
+            ? 'Remova histórias que já estão em Rodas ativas ou continue a sessão existente.'
           : 'Selecione ao menos uma história para criar a Roda.'
   const dashboardNextAction = useMemo(() => {
     if (primaryActivePlanningSession && selectedProjectId) {
@@ -914,11 +923,19 @@ function PlanningPokerJoinPage() {
 
     const timerId = window.setTimeout(() => {
       const readyStoryIds = new Set(readyStories.map((story) => story.id))
-      const availableStoryIds = requestedStoryIds.filter((storyId) => readyStoryIds.has(storyId))
+      const freeReadyStoryIds = new Set(readyStoriesWithoutActiveSession.map((story) => story.id))
+      const availableStoryIds = requestedStoryIds.filter((storyId) => freeReadyStoryIds.has(storyId))
+      const blockedStoryCount = requestedStoryIds.filter(
+        (storyId) => readyStoryIds.has(storyId) && !freeReadyStoryIds.has(storyId),
+      ).length
 
       if (availableStoryIds.length === 0) {
         if (readyStories.length > 0) {
-          setPlanningMessage('As histórias enviadas pelo Projeto não estão disponíveis entre as histórias prontas deste contexto.')
+          setPlanningMessage(
+            blockedStoryCount > 0
+              ? 'As histórias enviadas pelo Projeto já estão em Rodas ativas. Continue a sessão existente ou escolha histórias livres.'
+              : 'As histórias enviadas pelo Projeto não estão disponíveis entre as histórias prontas deste contexto.',
+          )
         }
         return
       }
@@ -929,14 +946,23 @@ function PlanningPokerJoinPage() {
       setReadyStorySearch('')
       setHideActiveSessionStories(false)
       setPlanningMessage(
-        availableStoryIds.length === 1
-          ? 'História selecionada para criar a Roda.'
-          : `${availableStoryIds.length} histórias selecionadas para criar a Roda.`,
+        blockedStoryCount > 0
+          ? `${availableStoryIds.length} histórias livres selecionadas. ${blockedStoryCount} já estão em Rodas ativas e ficaram fora do lote.`
+          : availableStoryIds.length === 1
+            ? 'História selecionada para criar a Roda.'
+            : `${availableStoryIds.length} histórias selecionadas para criar a Roda.`,
       )
     }, 0)
 
     return () => window.clearTimeout(timerId)
-  }, [isLoadingProjectContext, readyStories, selectedProjectId, storyIdFromUrl, storyIdsFromUrl])
+  }, [
+    isLoadingProjectContext,
+    readyStories,
+    readyStoriesWithoutActiveSession,
+    selectedProjectId,
+    storyIdFromUrl,
+    storyIdsFromUrl,
+  ])
 
   useEffect(() => {
     if (typeof setTopbarStatus !== 'function') return
@@ -984,6 +1010,14 @@ function PlanningPokerJoinPage() {
 
   function handleTogglePlanningStory(storyId) {
     setPlanningMessage('')
+    if (
+      !selectedStoryIds.includes(storyId) &&
+      activePlanningStorySessionByStoryId[storyId]
+    ) {
+      setPlanningMessage('Esta história já está em uma Roda ativa. Continue a sessão existente ou escolha uma história livre.')
+      return
+    }
+
     setSelectedStoryIds((current) =>
       current.includes(storyId)
         ? current.filter((currentStoryId) => currentStoryId !== storyId)
@@ -993,19 +1027,35 @@ function PlanningPokerJoinPage() {
 
   function handleSelectVisibleStories() {
     setPlanningMessage('')
-    const visibleStoryIds = visibleReadyStories.map((story) => story.id)
+    const visibleStoryIds = visibleReadyStoriesWithoutActiveSession.map((story) => story.id)
     setSelectedStoryIds((current) => Array.from(new Set([...current, ...visibleStoryIds])))
+    setPlanningMessage(
+      visibleStoryIds.length === 0
+        ? 'Nenhuma história livre visível para selecionar.'
+        : 'Histórias livres visíveis selecionadas para a Roda.',
+    )
   }
 
   function handleSelectAvailableStories() {
     setPlanningMessage('')
     const availableStoryIds = readyStoriesWithoutActiveSession.map((story) => story.id)
     setSelectedStoryIds((current) => Array.from(new Set([...current, ...availableStoryIds])))
+    setPlanningMessage(
+      availableStoryIds.length === 0
+        ? 'Nenhuma história livre disponível para selecionar.'
+        : 'Histórias livres do projeto selecionadas para a Roda.',
+    )
   }
 
   function handleSelectAllReadyStories() {
     setPlanningMessage('')
-    setSelectedStoryIds(readyStories.map((story) => story.id))
+    const availableStoryIds = readyStoriesWithoutActiveSession.map((story) => story.id)
+    setSelectedStoryIds(availableStoryIds)
+    setPlanningMessage(
+      readyStoriesInActiveSessionsCount > 0
+        ? 'Histórias livres selecionadas. Histórias em Rodas ativas ficaram fora do lote.'
+        : 'Todas as histórias prontas foram selecionadas para a Roda.',
+    )
   }
 
   function handleClearStorySelection() {
@@ -1039,6 +1089,11 @@ function PlanningPokerJoinPage() {
 
     if (selectedStoryIds.length === 0) {
       setPlanningMessage('Selecione ao menos uma história pronta para estimar.')
+      return
+    }
+
+    if (selectedStoriesInActiveSessions.length > 0) {
+      setPlanningMessage('Remova histórias que já estão em Rodas ativas antes de criar uma nova sessão.')
       return
     }
 
@@ -1508,9 +1563,9 @@ function PlanningPokerJoinPage() {
                         type="button"
                         className="btn btn-secondary btn-small"
                         onClick={handleSelectVisibleStories}
-                        disabled={isCreatingPlanningSession || visibleReadyStories.length === 0}
+                        disabled={isCreatingPlanningSession || visibleReadyStoriesWithoutActiveSession.length === 0}
                       >
-                        Selecionar visíveis
+                        Selecionar livres visíveis
                       </button>
                       <button
                         type="button"
@@ -1524,9 +1579,9 @@ function PlanningPokerJoinPage() {
                         type="button"
                         className="btn btn-secondary btn-small"
                         onClick={handleSelectAllReadyStories}
-                        disabled={isCreatingPlanningSession || readyStories.length === 0}
+                        disabled={isCreatingPlanningSession || readyStoriesWithoutActiveSession.length === 0}
                       >
-                        Selecionar todas
+                        Selecionar todas livres
                       </button>
                       <button
                         type="button"
@@ -1564,8 +1619,7 @@ function PlanningPokerJoinPage() {
                           <div>
                             <strong>{selectedStoriesConflictLabel}</strong>
                             <p>
-                              Você ainda pode criar a sessão, mas vale confirmar se a estimativa não deveria continuar na
-                              Roda já aberta.
+                              Remova essas histórias do lote ou continue a Roda já aberta antes de criar uma nova sessão.
                             </p>
                           </div>
                           {selectedStoriesInActiveSessions[0]?.session ? (
@@ -1656,7 +1710,7 @@ function PlanningPokerJoinPage() {
                               type="checkbox"
                               checked={isSelected}
                               onChange={() => handleTogglePlanningStory(story.id)}
-                              disabled={isCreatingPlanningSession}
+                              disabled={isCreatingPlanningSession || Boolean(activeSession)}
                             />
                             <span>
                               <strong>{story.title}</strong>
