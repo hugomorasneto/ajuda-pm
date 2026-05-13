@@ -16,6 +16,7 @@ import { listProjects } from '../services/projectsService'
 import {
   buildStoryJiraLike,
   buildStoryMarkdown,
+  buildStoryPlainText,
   copyTextToClipboard,
 } from '../utils/storyExport'
 
@@ -93,8 +94,49 @@ const INITIAL_ADVANCED_SECTIONS = {
   inspection: false,
 }
 
+const DELIVERY_FORMAT_OPTIONS = [
+  {
+    value: 'markdown',
+    label: 'Markdown',
+    description: 'Artefato completo para backlog, documentação ou refinamento.',
+    successMessage: 'Artefato em Markdown copiado.',
+  },
+  {
+    value: 'plain',
+    label: 'Texto simples',
+    description: 'User story e critérios de aceite em formato direto.',
+    successMessage: 'Artefato em texto simples copiado.',
+  },
+  {
+    value: 'jira',
+    label: 'Formato Jira',
+    description: 'Texto estruturado para colar em uma issue manualmente.',
+    successMessage: 'Formato textual para Jira copiado. Revise antes de colar na issue.',
+  },
+  {
+    value: 'story',
+    label: 'Somente user story',
+    description: 'A frase principal para compartilhar rapidamente.',
+    successMessage: 'User story copiada.',
+  },
+]
+
 function getStatusLabel(status) {
   return STATUS_LABELS[status] ?? 'Forjado'
+}
+
+function getDeliveryFormatLabel(value) {
+  return DELIVERY_FORMAT_OPTIONS.find((option) => option.value === value)?.label ?? 'Markdown'
+}
+
+function buildDeliveryText(story, format) {
+  if (!story) return ''
+
+  if (format === 'story') return story.user_story ?? ''
+  if (format === 'plain') return buildStoryPlainText(story)
+  if (format === 'jira') return buildStoryJiraLike(story)
+
+  return buildStoryMarkdown(story)
 }
 
 function getEstimationStatusLabel(status) {
@@ -133,19 +175,6 @@ function mapStoryRowToResult(story) {
       ? `Acabamento aplicado: ${story.regeneration_instruction}`
       : `Status: ${getStatusLabel(story.status)}`,
   }
-}
-
-function buildPlainText(story) {
-  const acceptanceCriteria = Array.isArray(story?.acceptance_criteria)
-    ? story.acceptance_criteria
-    : []
-
-  return [
-    `User story: ${story?.user_story ?? '-'}`,
-    '',
-    'Critérios de aceite:',
-    ...acceptanceCriteria.map((item, index) => `${index + 1}. ${item}`),
-  ].join('\n')
 }
 
 function getVisibleRange({ page, pageSize, totalCount, itemCount }) {
@@ -297,8 +326,22 @@ function HistoryPage() {
   const [isUpdatingEstimationStatus, setIsUpdatingEstimationStatus] = useState(false)
   const [openAdvancedSections, setOpenAdvancedSections] = useState(INITIAL_ADVANCED_SECTIONS)
   const [isProjectAssignmentOpen, setIsProjectAssignmentOpen] = useState(false)
+  const [deliveryFormat, setDeliveryFormat] = useState('markdown')
 
   const selectedResult = useMemo(() => mapStoryRowToResult(selectedStory), [selectedStory])
+  const deliveryPreviewText = useMemo(
+    () => buildDeliveryText(selectedResult, deliveryFormat),
+    [deliveryFormat, selectedResult],
+  )
+  const deliveryFormatLabel = useMemo(
+    () => getDeliveryFormatLabel(deliveryFormat),
+    [deliveryFormat],
+  )
+  const deliveryLineCount = useMemo(
+    () => deliveryPreviewText.split('\n').filter(Boolean).length,
+    [deliveryPreviewText],
+  )
+  const selectedDeliveryCopyTarget = `delivery-${deliveryFormat}`
   const selectedVersion = useMemo(
     () => versions.find((item) => item.id === selectedStory?.id) ?? null,
     [selectedStory, versions],
@@ -495,7 +538,7 @@ function HistoryPage() {
   async function handleCopyPlain() {
     await copySelectedText({
       target: 'plain',
-      value: buildPlainText(selectedResult),
+      value: buildStoryPlainText(selectedResult),
       successMessage: 'Artefato copiado.',
       errorMessage: 'Não foi possível copiar o artefato agora.',
       logMessage: 'Falha ao copiar texto simples do histórico:',
@@ -519,6 +562,17 @@ function HistoryPage() {
       successMessage: 'Formato textual para Jira copiado. Revise antes de colar na issue.',
       errorMessage: 'Não foi possível copiar o formato para Jira agora.',
       logMessage: 'Falha ao copiar formato textual para Jira do histórico:',
+    })
+  }
+
+  async function handleCopySelectedDeliveryFormat() {
+    const option = DELIVERY_FORMAT_OPTIONS.find((item) => item.value === deliveryFormat)
+    await copySelectedText({
+      target: selectedDeliveryCopyTarget,
+      value: deliveryPreviewText,
+      successMessage: option?.successMessage ?? `${deliveryFormatLabel} copiado.`,
+      errorMessage: `Não foi possível copiar ${deliveryFormatLabel.toLocaleLowerCase('pt-BR')} agora.`,
+      logMessage: 'Falha ao copiar formato de entrega do histórico:',
     })
   }
 
@@ -849,7 +903,28 @@ function HistoryPage() {
     { label: 'Página', value: `${pageSize} por página` },
   ]
   const isCopying = Boolean(copyTarget)
+  const isCopyingSelectedDeliveryFormat = copyTarget === selectedDeliveryCopyTarget
   const activeQuickFilter = getActiveQuickFilter()
+  const deliveryMetrics = selectedResult
+    ? [
+        {
+          label: 'Critérios',
+          value: selectedResult.acceptance_criteria.length,
+        },
+        {
+          label: 'Regras',
+          value: selectedResult.business_rules.length,
+        },
+        {
+          label: 'Trincas',
+          value: selectedResult.gaps.length,
+        },
+        {
+          label: 'QA',
+          value: selectedResult.qa_checklist.length,
+        },
+      ]
+    : []
   let planningActionLabel = 'Preparar e abrir Roda'
   if (selectedStory?.estimation_status === 'estimated') {
     planningActionLabel = 'Ver Rodas do projeto'
@@ -916,8 +991,8 @@ function HistoryPage() {
     ? [
         {
           label: 'Entrega',
-          title: 'Copiar para backlog',
-          description: 'Use Markdown, texto simples ou formato para Jira sem sair do histórico.',
+          title: 'Preparar cópia',
+          description: `Formato atual: ${deliveryFormatLabel}. Revise a prévia antes de colar no backlog.`,
           actionLabel: 'Abrir entrega',
           action: () => openAdvancedSection('delivery'),
           tone: 'delivery',
@@ -1471,10 +1546,63 @@ function HistoryPage() {
                   onToggle={toggleAdvancedSection}
                 >
                   <div className="history-delivery">
-                    <p>
-                      Copie o artefato para o backlog. O formato para Jira é apenas texto formatado;
-                      o ProdForge não envia dados para Jira nem promete integração externa nesta ação.
-                    </p>
+                    <div className="history-delivery__intro">
+                      <p>
+                        Escolha um formato, revise a prévia e copie o artefato para o backlog. O formato para Jira é
+                        apenas texto estruturado; o ProdForge não envia dados para ferramentas externas nesta ação.
+                      </p>
+                    </div>
+
+                    <div className="history-delivery__format-grid" aria-label="Formatos de entrega">
+                      {DELIVERY_FORMAT_OPTIONS.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          className={`history-delivery__format-card${
+                            deliveryFormat === option.value ? ' history-delivery__format-card--active' : ''
+                          }`}
+                          onClick={() => setDeliveryFormat(option.value)}
+                          aria-pressed={deliveryFormat === option.value}
+                        >
+                          <span>{option.label}</span>
+                          <p>{option.description}</p>
+                        </button>
+                      ))}
+                    </div>
+
+                    <section className="history-delivery__preview" aria-label="Prévia do formato selecionado">
+                      <header>
+                        <div>
+                          <span>Prévia de entrega</span>
+                          <strong>{deliveryFormatLabel}</strong>
+                        </div>
+                        <em>{deliveryLineCount} {deliveryLineCount === 1 ? 'linha' : 'linhas'}</em>
+                      </header>
+
+                      <pre>
+                        <code>{deliveryPreviewText}</code>
+                      </pre>
+
+                      <div className="history-delivery__metrics" aria-label="Conteúdo incluído no artefato">
+                        {deliveryMetrics.map((metric) => (
+                          <span key={metric.label}>
+                            <strong>{metric.value}</strong>
+                            {metric.label}
+                          </span>
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-small"
+                        onClick={handleCopySelectedDeliveryFormat}
+                        disabled={isCopying || !deliveryPreviewText}
+                      >
+                        {isCopyingSelectedDeliveryFormat ? 'Copiando...' : 'Copiar formato selecionado'}
+                      </button>
+                    </section>
+
+                    <p className="history-delivery__shortcut-label">Atalhos rápidos</p>
                     <div className="history-delivery__actions">
                       <button
                         type="button"

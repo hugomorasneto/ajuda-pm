@@ -22,6 +22,23 @@ function joinSections(sections) {
   return sections.filter(Boolean).join('\n\n').trim()
 }
 
+export function buildStoryPlainText(story) {
+  if (!story) return ''
+
+  const acceptanceCriteria = normalizeList(story.acceptance_criteria)
+
+  return [
+    `User story: ${withFallbackText(story.user_story)}`,
+    '',
+    'Critérios de aceite:',
+    acceptanceCriteria.length > 0
+      ? acceptanceCriteria.map((item, index) => `${index + 1}. ${item}`).join('\n')
+      : '-',
+  ]
+    .filter((section) => section !== '')
+    .join('\n')
+}
+
 export function buildStoryMarkdown(story) {
   if (!story) return ''
 
@@ -89,10 +106,16 @@ export async function copyTextToClipboard(text) {
   const textarea = document.createElement('textarea')
   textarea.value = text
   textarea.setAttribute('readonly', 'true')
-  textarea.style.position = 'absolute'
+  textarea.style.position = 'fixed'
+  textarea.style.top = '0'
   textarea.style.left = '-9999px'
+  textarea.style.width = '1px'
+  textarea.style.height = '1px'
+  textarea.style.opacity = '0'
   document.body.appendChild(textarea)
+  textarea.focus()
   textarea.select()
+  textarea.setSelectionRange(0, textarea.value.length)
   const didCopy = document.execCommand('copy')
   document.body.removeChild(textarea)
 
