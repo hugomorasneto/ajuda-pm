@@ -140,7 +140,10 @@ function isStoryInLivePlanningSession(story, planningStorySessionById = {}) {
 }
 
 function isReadyStoryAvailableForPlanning(story, planningStorySessionById = {}) {
-  return story?.estimation_status === 'ready_for_estimation' && !isStoryInLivePlanningSession(story, planningStorySessionById)
+  return (
+    story?.estimation_status === 'ready_for_estimation' &&
+    !isStoryInLivePlanningSession(story, planningStorySessionById)
+  )
 }
 
 function countAvailableReadyStories(stories = [], planningStorySessionById = {}) {
@@ -439,10 +442,8 @@ function ProjectDetailPage() {
     [planningStorySessionById, selectedReadyStories],
   )
   const selectedReadyStoryIds = selectedReadyStories.map((story) => story.id)
-  const visibleKanbanReadyCount = useMemo(
-    () => visibleKanbanStories.filter((story) => story.estimation_status === 'ready_for_estimation').length,
-    [visibleKanbanStories],
-  )
+  const visibleAvailableReadyCount = visibleAvailableReadyStories.length
+  const visibleReadyBlockedCount = Math.max(0, visibleReadyStories.length - visibleAvailableReadyCount)
   const visibleKanbanLiveCount = useMemo(
     () => visibleKanbanStories.filter((story) => planningStorySessionById[story.id]?.isLive).length,
     [planningStorySessionById, visibleKanbanStories],
@@ -456,7 +457,13 @@ function ProjectDetailPage() {
       ? `${selectedReadyStoriesInLiveSessions.length} já ${
           selectedReadyStoriesInLiveSessions.length === 1 ? 'está' : 'estão'
         } em Roda ativa. Remova do lote antes de abrir uma nova Roda.`
-      : 'Selecione histórias prontas no quadro ou na lista para abrir a Roda com o lote já carregado.'
+      : visibleAvailableReadyCount > 0
+        ? `${visibleAvailableReadyCount} ${
+            visibleAvailableReadyCount === 1 ? 'história livre' : 'histórias livres'
+          } para abrir uma nova Roda.`
+        : visibleReadyBlockedCount > 0
+          ? 'As histórias prontas visíveis já estão em Rodas ativas.'
+          : 'Selecione histórias prontas no quadro ou na lista para abrir a Roda com o lote já carregado.'
   const canOpenSelectedReadyStories =
     selectedReadyStoryIds.length > 0 && selectedReadyStoriesInLiveSessions.length === 0
   const selectedReadyStoriesRodaUrl =
@@ -497,9 +504,9 @@ function ProjectDetailPage() {
         detail: visibleKanbanStoryCount === 1 ? 'cartão no quadro' : 'cartões no quadro',
       },
       {
-        label: 'Prontas',
-        value: visibleKanbanReadyCount,
-        detail: 'podem ir para a Roda',
+        label: 'Livres',
+        value: visibleAvailableReadyCount,
+        detail: 'prontas para nova Roda',
       },
       {
         label: 'Selecionadas',
@@ -512,8 +519,14 @@ function ProjectDetailPage() {
         detail: 'sessões ativas',
       },
     ],
-    [selectedReadyStoryIds.length, visibleKanbanLiveCount, visibleKanbanReadyCount, visibleKanbanStoryCount],
+    [selectedReadyStoryIds.length, visibleAvailableReadyCount, visibleKanbanLiveCount, visibleKanbanStoryCount],
   )
+  const kanbanBoardOperationTitle = canMoveKanbanCards
+    ? 'Arraste cartões ou use Mover cartão'
+    : 'Quadro em modo consulta'
+  const kanbanBoardOperationText = canMoveKanbanCards
+    ? 'Mover uma história entre colunas atualiza o status de estimativa. Histórias em Roda ativa ficam bloqueadas para evitar duplicidade.'
+    : 'Seu papel permite acompanhar o fluxo, mas a movimentação fica restrita a membros, administradores e responsáveis.'
   const shouldShowKanbanLimitNotice = storyViewMode === 'board' && projectStoryCount > kanbanStories.length
   const activeProjectInsightRecord = useMemo(
     () => projectInsightHistory.find((item) => item.id === activeProjectInsightId) ?? null,
@@ -1197,6 +1210,12 @@ function ProjectDetailPage() {
     if (!story || story.estimation_status === nextStatus) return
 
     setStoryStatusMessage('')
+
+    if (isStoryInLivePlanningSession(story, planningStorySessionById)) {
+      setStoryStatusMessage('Esta história está em uma Roda ativa. Finalize ou continue a sessão antes de alterar o status.')
+      return
+    }
+
     setUpdatingStoryStatusId(story.id)
 
     const targetKanbanColumn = canMoveKanbanCards
@@ -1408,6 +1427,11 @@ function ProjectDetailPage() {
 
     if (!canMoveKanbanCards) {
       setKanbanMessage('Visualizadores podem consultar o quadro, mas não mover histórias.')
+      return
+    }
+
+    if (isStoryInLivePlanningSession(story, planningStorySessionById)) {
+      setKanbanMessage('Esta história está em uma Roda ativa. Finalize ou continue a sessão antes de mover o card.')
       return
     }
 
@@ -2697,6 +2721,26 @@ function ProjectDetailPage() {
           </div>
         ) : null}
 
+        {hasProjectStories && storyViewMode === 'board' ? (
+          <div className="project-detail-page__kanban-operation">
+            <div>
+              <span>Operação do quadro</span>
+              <strong>{kanbanBoardOperationTitle}</strong>
+              <p>{kanbanBoardOperationText}</p>
+            </div>
+            {visibleAvailableReadyCount > 0 ? (
+              <button
+                type="button"
+                className="btn btn-secondary btn-small"
+                onClick={handleSelectVisibleReadyStories}
+                disabled={isLoadingStories}
+              >
+                Selecionar histórias livres
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+
         {isLoadingStories ? <p className="projects-page__state">Carregando histórias...</p> : null}
         {hasNoProjectStories ? (
           <div className="projects-page__empty">
@@ -2800,9 +2844,17 @@ function ProjectDetailPage() {
                         <div>
                           <span>{getEstimationStatusLabel(column.status_base)}</span>
                           <h3>{column.name}</h3>
-                          <p>
-                            {columnCount} {columnCount === 1 ? 'história' : 'histórias'}
-                          </p>
+                          <div className="project-detail-page__kanban-column-stats">
+                            <small>
+                              {columnCount} {columnCount === 1 ? 'história' : 'histórias'}
+                            </small>
+                            {availableReadyColumnStoryCount > 0 ? (
+                              <small>
+                                {availableReadyColumnStoryCount}{' '}
+                                {availableReadyColumnStoryCount === 1 ? 'livre para Roda' : 'livres para Roda'}
+                              </small>
+                            ) : null}
+                          </div>
                           <small className="project-detail-page__kanban-column-hint">
                             {getKanbanColumnIntent(column.status_base)}
                           </small>
@@ -2821,34 +2873,34 @@ function ProjectDetailPage() {
                             ) : null}
                             {canEditKanbanColumns ? (
                               <>
-                            <button
-                              type="button"
-                              className="btn btn-ghost btn-small"
-                              onClick={() => handleReorderKanbanColumn(column, 'left')}
-                              disabled={columnIndex === 0 || reorderingKanbanColumnId === column.id}
-                              aria-label={`Mover coluna ${column.name} para a esquerda`}
-                            >
-                              ←
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-ghost btn-small"
-                              onClick={() => handleReorderKanbanColumn(column, 'right')}
-                              disabled={
-                                columnIndex === visibleKanbanColumns.length - 1 ||
-                                reorderingKanbanColumnId === column.id
-                              }
-                              aria-label={`Mover coluna ${column.name} para a direita`}
-                            >
-                              →
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-secondary btn-small"
-                              onClick={() => handleStartEditKanbanColumn(column)}
-                            >
-                              Editar
-                            </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-ghost btn-small"
+                                  onClick={() => handleReorderKanbanColumn(column, 'left')}
+                                  disabled={columnIndex === 0 || reorderingKanbanColumnId === column.id}
+                                  aria-label={`Mover coluna ${column.name} para a esquerda`}
+                                >
+                                  ←
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-ghost btn-small"
+                                  onClick={() => handleReorderKanbanColumn(column, 'right')}
+                                  disabled={
+                                    columnIndex === visibleKanbanColumns.length - 1 ||
+                                    reorderingKanbanColumnId === column.id
+                                  }
+                                  aria-label={`Mover coluna ${column.name} para a direita`}
+                                >
+                                  →
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-secondary btn-small"
+                                  onClick={() => handleStartEditKanbanColumn(column)}
+                                >
+                                  Editar
+                                </button>
                               </>
                             ) : null}
                           </div>
@@ -2905,9 +2957,14 @@ function ProjectDetailPage() {
 
                       <div className="project-detail-page__kanban-cards">
                         {columnCards.length === 0 ? (
-                          <p className="project-detail-page__kanban-empty">
-                            {getKanbanColumnEmptyText(column.status_base)}
-                          </p>
+                          <div className="project-detail-page__kanban-empty">
+                            <p>{getKanbanColumnEmptyText(column.status_base)}</p>
+                            {column.status_base === 'created' ? (
+                              <Link className="btn btn-ghost btn-small" to={`/tool?projectId=${projectId}`}>
+                                Forjar história
+                              </Link>
+                            ) : null}
+                          </div>
                         ) : null}
                         {columnCards.map((story) => {
                           const isReadyForPlanning = story.estimation_status === 'ready_for_estimation'
@@ -2922,6 +2979,7 @@ function ProjectDetailPage() {
                           const planningStory = planningEntry?.story
                           const isInLivePlanningSession = Boolean(planningEntry?.isLive)
                           const finalEstimate = planningStory?.final_estimate ?? planningEntry?.finalEstimate
+                          const canDragKanbanStory = canMoveKanbanCards && !isInLivePlanningSession
                           const planningRoomUrl = planningSession
                             ? `/projetos/${projectId}/roda/${planningSession.id}`
                             : `/roda?projectId=${projectId}`
@@ -2931,8 +2989,10 @@ function ProjectDetailPage() {
                               key={story.id}
                               className={`project-detail-page__kanban-card${
                                 isSelectedForPlanning ? ' is-selected' : ''
-                              }${isMovingStory ? ' is-moving' : ''}`}
-                              draggable={canMoveKanbanCards}
+                              }${isMovingStory ? ' is-moving' : ''}${
+                                isInLivePlanningSession ? ' is-live-session' : ''
+                              }`}
+                              draggable={canDragKanbanStory}
                               onDragStart={(event) => handleKanbanDragStart(event, story)}
                               onDragEnd={() => {
                                 setDraggedKanbanStoryId(null)
@@ -2940,7 +3000,11 @@ function ProjectDetailPage() {
                               }}
                             >
                               {isReadyForPlanning ? (
-                                <label className="project-detail-page__story-select">
+                                <label
+                                  className={`project-detail-page__story-select${
+                                    isInLivePlanningSession ? ' is-disabled' : ''
+                                  }`}
+                                >
                                   <input
                                     type="checkbox"
                                     checked={isSelectedForPlanning}
@@ -2984,9 +3048,9 @@ function ProjectDetailPage() {
                               ) : null}
 
                               <div className="project-detail-page__kanban-card-actions">
-                                {canMoveKanbanCards ? (
+                                {canDragKanbanStory ? (
                                   <details className="project-detail-page__kanban-card-tools">
-                                    <summary>Organizar card</summary>
+                                    <summary>Mover cartão</summary>
                                     <label className="project-detail-page__kanban-move">
                                       <span>Mover para</span>
                                       <select
@@ -3069,7 +3133,11 @@ function ProjectDetailPage() {
               >
                 <div>
                   {isReadyForPlanning ? (
-                    <label className="project-detail-page__story-select">
+                    <label
+                      className={`project-detail-page__story-select${
+                        isInLivePlanningSession ? ' is-disabled' : ''
+                      }`}
+                    >
                         <input
                           type="checkbox"
                           checked={isSelectedForPlanning}
@@ -3105,7 +3173,7 @@ function ProjectDetailPage() {
                         onChange={(event) =>
                           handleUpdateStoryEstimationStatus(story, event.target.value)
                         }
-                        disabled={isUpdatingStoryStatus}
+                        disabled={isUpdatingStoryStatus || isInLivePlanningSession}
                       >
                         {ESTIMATION_STATUS_OPTIONS.map((option) => (
                           <option key={option.value} value={option.value}>
