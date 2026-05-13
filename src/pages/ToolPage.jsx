@@ -54,8 +54,8 @@ function PostForgeNextSteps({
           <p>Copie para o backlog, organize em projeto ou prepare a Roda da Fogueira quando o time for estimar.</p>
         </div>
         <div className="post-forge-next-steps__status" aria-label="Contexto atual da peça">
-          <span>{projectLabel}</span>
-          <strong>{statusLabel}</strong>
+          <span title={projectLabel}>{projectLabel}</span>
+          <strong title={statusLabel}>{statusLabel}</strong>
         </div>
       </div>
 

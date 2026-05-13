@@ -42,14 +42,35 @@ function ProjectContextPanel({
   const isStandalone = !selectedProjectId
   const canOfferGeneratedStoryOrganization =
     hasGeneratedStory && isStandalone && canAssignGeneratedStory
+  const isGeneratedAndLinked = hasGeneratedStory && !isStandalone
   const shouldAutoOpenForProject = Boolean(selectedProjectId && !hasGeneratedStory)
   const isOpen = Boolean(
     isManuallyOpen || shouldAutoOpenForProject || actionMessage || (canOfferGeneratedStoryOrganization && isCreatingProject),
   )
-  const summaryTitle = isStandalone ? 'Vincular a um projeto (opcional)' : 'Projeto selecionado'
-  const summaryDescription = isStandalone
-    ? 'Use um projeto para organizar histórias por jornada ou iniciativa. Você também pode forjar sem projeto.'
-    : 'Use esta área para trocar o projeto, organizar a história atual ou criar um novo contexto.'
+  const summaryTitle = hasGeneratedStory
+    ? isStandalone
+      ? 'Peça avulsa'
+      : 'Projeto vinculado'
+    : isStandalone
+      ? 'Vincular a um projeto (opcional)'
+      : 'Projeto selecionado'
+  const summaryDescription = hasGeneratedStory
+    ? isStandalone
+      ? 'Vincule a peça a um projeto para usar Kanban, Roda e colaboração. Ela continua salva se ficar avulsa.'
+      : 'Esta peça já tem contexto de projeto para Kanban, IA e Roda.'
+    : isStandalone
+      ? 'Use um projeto para organizar histórias por jornada ou iniciativa. Você também pode forjar sem projeto.'
+      : 'Use esta área para trocar o projeto, organizar a história atual ou criar um novo contexto.'
+  const hintText = canOfferGeneratedStoryOrganization
+    ? 'Selecione um projeto existente ou crie um novo para liberar Kanban, IA do projeto e Roda da Fogueira.'
+    : isGeneratedAndLinked
+      ? 'Esta peça já está organizada em um projeto. Troque o vínculo apenas se precisar mover a história para outro contexto.'
+      : 'Histórias sem projeto continuam salvas na sua conta e aparecem no histórico como peças avulsas.'
+  const panelClassName = [
+    'project-context-panel panel',
+    isOpen ? 'project-context-panel--open' : '',
+    hasGeneratedStory ? 'project-context-panel--generated' : '',
+  ].filter(Boolean).join(' ')
 
   async function handleCreateProject(event) {
     event.preventDefault()
@@ -67,7 +88,7 @@ function ProjectContextPanel({
   }
 
   return (
-    <section className={`project-context-panel panel ${isOpen ? 'project-context-panel--open' : ''}`} aria-label="Contexto opcional de projeto">
+    <section className={panelClassName} aria-label="Contexto opcional de projeto">
       <button
         type="button"
         className="project-context-panel__summary"
@@ -76,7 +97,7 @@ function ProjectContextPanel({
       >
         <span className="project-context-panel__summary-copy">
           <span className="project-context-panel__eyebrow">Organização opcional</span>
-          <strong>{summaryTitle}</strong>
+          <strong title={summaryTitle}>{summaryTitle}</strong>
           <span>{summaryDescription}</span>
         </span>
         <span className="project-context-panel__summary-meta">
@@ -111,7 +132,7 @@ function ProjectContextPanel({
           </label>
 
           <div className="project-context-panel__actions">
-            {isStandalone ? (
+            {isStandalone && !hasGeneratedStory ? (
               <button
                 type="button"
                 className="btn btn-secondary btn-small"
@@ -137,20 +158,12 @@ function ProjectContextPanel({
               onClick={() => setIsCreatingProject((current) => !current)}
               disabled={isSubmitting}
             >
-              {canOfferGeneratedStoryOrganization ? 'Organizar em projeto' : 'Criar projeto'}
+              {canOfferGeneratedStoryOrganization ? 'Criar novo projeto' : 'Criar projeto'}
             </button>
           </div>
         </div>
 
-        {canOfferGeneratedStoryOrganization ? (
-          <p className="project-context-panel__hint">
-            Quer organizar essa história em um projeto? Crie um projeto agora ou siga com a peça avulsa.
-          </p>
-        ) : (
-          <p className="project-context-panel__hint">
-            Histórias sem projeto continuam salvas na sua conta e aparecem no histórico como peças avulsas.
-          </p>
-        )}
+        <p className="project-context-panel__hint">{hintText}</p>
 
         {isCreatingProject ? (
           <form className="project-context-panel__form" onSubmit={handleCreateProject}>
