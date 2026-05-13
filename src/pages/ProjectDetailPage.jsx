@@ -48,15 +48,43 @@ import { copyTextToClipboard } from '../utils/storyExport'
 
 const PROJECT_MEMBER_ROLES = [
   { value: 'member', label: 'Membro' },
-  { value: 'admin', label: 'Admin' },
+  { value: 'admin', label: 'Administrador' },
   { value: 'viewer', label: 'Visualizador' },
 ]
 
 const ROLE_LABELS = {
-  owner: 'Owner',
-  admin: 'Admin',
+  owner: 'Responsável',
+  admin: 'Administrador',
   member: 'Membro',
   viewer: 'Visualizador',
+}
+
+const PROJECT_ACCESS_DETAILS = {
+  owner: {
+    title: 'Responsável pelo projeto',
+    description: 'Controle completo sobre projeto, membros, colunas, Kanban e Rodas da Fogueira.',
+    nextAction: 'Use este acesso para manter contexto, permissões e estimativas organizados.',
+  },
+  admin: {
+    title: 'Administrador do projeto',
+    description: 'Pode editar o projeto, gerenciar membros, ajustar colunas e criar Rodas da Fogueira.',
+    nextAction: 'Gerencie a operação do projeto sem depender do responsável principal.',
+  },
+  member: {
+    title: 'Membro do projeto',
+    description: 'Pode mover histórias no Kanban, preparar itens para estimativa e acompanhar Rodas.',
+    nextAction: 'Organize histórias e leve itens prontos para discussão com o time.',
+  },
+  viewer: {
+    title: 'Visualizador do projeto',
+    description: 'Pode consultar contexto, histórias, Kanban, membros e histórico sem alterar a operação.',
+    nextAction: 'Solicite papel de membro ou administrador se precisar mover histórias ou criar Rodas.',
+  },
+  none: {
+    title: 'Acesso em validação',
+    description: 'O ProdForge está carregando seu papel neste projeto.',
+    nextAction: 'As ações aparecem assim que as permissões forem confirmadas.',
+  },
 }
 
 const ESTIMATION_STATUS_LABELS = {
@@ -257,6 +285,33 @@ function ProjectDetailPage() {
   }, [project?.owner_id, projectMembers, userId])
   const canEditKanbanColumns = canManageProjectMembers
   const canMoveKanbanCards = ['owner', 'admin', 'member'].includes(currentProjectRole)
+  const currentAccessDetails = PROJECT_ACCESS_DETAILS[currentProjectRole] ?? PROJECT_ACCESS_DETAILS.none
+  const currentProjectRoleLabel = ROLE_LABELS[currentProjectRole] ?? 'Carregando'
+  const projectAccessCapabilities = useMemo(
+    () => [
+      {
+        label: 'Editar projeto e membros',
+        enabled: canManageProjectMembers,
+        detail: canManageProjectMembers ? 'Liberado' : 'Restrito a responsáveis e administradores',
+      },
+      {
+        label: 'Criar e editar colunas',
+        enabled: canEditKanbanColumns,
+        detail: canEditKanbanColumns ? 'Liberado' : 'Somente consulta',
+      },
+      {
+        label: 'Mover histórias no Kanban',
+        enabled: canMoveKanbanCards,
+        detail: canMoveKanbanCards ? 'Liberado' : 'Somente consulta',
+      },
+      {
+        label: 'Criar Rodas da Fogueira',
+        enabled: canManageProjectMembers,
+        detail: canManageProjectMembers ? 'Liberado' : 'Restrito a responsáveis e administradores',
+      },
+    ],
+    [canEditKanbanColumns, canManageProjectMembers, canMoveKanbanCards],
+  )
   const filteredStoriesLabel = useMemo(
     () =>
       `${projectStoryFilteredCount} ${
@@ -1851,6 +1906,43 @@ function ProjectDetailPage() {
         </div>
       </section>
 
+      <section className="project-detail-page__access" aria-label="Seu acesso no projeto">
+        <div className="project-detail-page__access-main">
+          <span>Seu acesso</span>
+          <strong>{currentAccessDetails.title}</strong>
+          <p>{currentAccessDetails.description}</p>
+          <small>{currentAccessDetails.nextAction}</small>
+        </div>
+        <div className="project-detail-page__access-role" aria-label={`Papel atual: ${currentProjectRoleLabel}`}>
+          <span>Papel atual</span>
+          <strong>{currentProjectRoleLabel}</strong>
+        </div>
+        <ul className="project-detail-page__access-list" aria-label="Permissões disponíveis">
+          {projectAccessCapabilities.map((capability) => (
+            <li key={capability.label} className={capability.enabled ? 'is-enabled' : 'is-disabled'}>
+              <strong>{capability.label}</strong>
+              <span>{capability.detail}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="project-detail-page__access-actions">
+          {canMoveKanbanCards ? (
+            <a className="btn btn-secondary btn-small" href="#historias-projeto">
+              Organizar Kanban
+            </a>
+          ) : null}
+          {canManageProjectMembers ? (
+            <a className="btn btn-secondary btn-small" href="#membros-projeto">
+              Gerenciar membros
+            </a>
+          ) : (
+            <Link className="btn btn-secondary btn-small" to={`/historico?projectId=${projectId}`}>
+              Consultar histórico
+            </Link>
+          )}
+        </div>
+      </section>
+
       <section className="project-detail-page__executive-strip" aria-label="Visão executiva do projeto">
         <article className={isProjectInsightOutdated ? 'project-detail-page__executive-card--attention' : ''}>
           <span>Diagnóstico</span>
@@ -3225,7 +3317,7 @@ function ProjectDetailPage() {
         ) : null}
       </section>
 
-      <section className="panel project-detail-page__members" aria-label="Membros do projeto">
+      <section id="membros-projeto" className="panel project-detail-page__members" aria-label="Membros do projeto">
         <div className="projects-page__section-header">
           <div>
             <p className="projects-page__eyebrow">Membros do projeto</p>

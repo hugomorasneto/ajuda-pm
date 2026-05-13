@@ -8365,6 +8365,120 @@
   gap: var(--space-3);
 }
 
+.project-detail-page__access {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.15fr) minmax(180px, 0.45fr) minmax(320px, 1.15fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background:
+    linear-gradient(135deg, rgba(44, 144, 255, 0.08), transparent 72%),
+    var(--forge-surface-inset);
+  box-shadow: var(--forge-shadow-sm);
+}
+
+.project-detail-page__access-main,
+.project-detail-page__access-role {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.project-detail-page__access-main span,
+.project-detail-page__access-role span {
+  color: var(--forge-tech);
+  font-size: var(--text-small);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.project-detail-page__access-main strong,
+.project-detail-page__access-role strong {
+  overflow: hidden;
+  color: var(--forge-text-primary);
+  font-size: 1.05rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-detail-page__access-main p,
+.project-detail-page__access-main small {
+  margin: 0;
+  color: var(--forge-text-secondary);
+  line-height: 1.45;
+}
+
+.project-detail-page__access-main small {
+  color: var(--forge-text-muted);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.project-detail-page__access-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-detail-page__access-list li {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(255,255,255,0.03);
+}
+
+.project-detail-page__access-list li.is-enabled {
+  border-color: rgba(88, 190, 139, 0.34);
+  background:
+    linear-gradient(90deg, rgba(88, 190, 139, 0.08), transparent 76%),
+    rgba(255,255,255,0.03);
+}
+
+.project-detail-page__access-list li.is-disabled {
+  opacity: 0.78;
+}
+
+.project-detail-page__access-list strong,
+.project-detail-page__access-list span {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-detail-page__access-list strong {
+  color: var(--forge-text-primary);
+  font-size: var(--text-small);
+  font-weight: 850;
+}
+
+.project-detail-page__access-list span {
+  color: var(--forge-text-muted);
+  font-size: var(--text-micro);
+  font-weight: 800;
+}
+
+.project-detail-page__access-list li.is-enabled span {
+  color: var(--forge-success);
+}
+
+.project-detail-page__access-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
 .project-detail-page__executive-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -13317,6 +13431,7 @@
   .project-detail-page__story-batch-actions,
   .project-detail-page__story-guidance,
   .project-detail-page__kanban-operation,
+  .project-detail-page__access-actions,
   .projects-page__active-filter,
   .teams-page__context-actions,
   .teams-page__toolbar-actions,
@@ -13372,6 +13487,8 @@
   .project-detail-page__ai-command-grid,
   .project-detail-page__ai-snapshot-grid,
   .project-detail-page__ai-grid,
+  .project-detail-page__access,
+  .project-detail-page__access-list,
   .project-detail-page__story-quick-filters,
   .projects-page__filter-row,
   .planning-poker-room__command-bar,
