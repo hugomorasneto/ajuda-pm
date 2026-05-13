@@ -1262,34 +1262,44 @@ function HistoryPage() {
                     isActive ? 'history-result-card--active' : ''
                   }`}
                   aria-pressed={isActive}
+                  aria-label={`${isActive ? 'Peça aberta' : 'Abrir detalhes da peça'}: ${item.title}`}
                   onClick={() => {
                     setProjectAssignmentMessage('')
                     selectStory(item)
                   }}
                 >
                   <div className="history-result-card__title-row">
-                    <h3>{item.title}</h3>
-                    <span className="history-result-card__action">
+                    <h3 title={item.title}>{item.title}</h3>
+                    <span
+                      className="history-result-card__action"
+                      title={isActive ? 'Peça aberta no preview' : 'Ver detalhes da peça'}
+                    >
                       {isActive ? 'Aberta' : 'Ver'}
                     </span>
                   </div>
 
-                  {preview ? <p>{preview}</p> : <p>Peça salva sem resumo de matéria-prima.</p>}
+                  {preview ? (
+                    <p title={preview}>{preview}</p>
+                  ) : (
+                    <p>Peça salva sem resumo de matéria-prima.</p>
+                  )}
 
                   <div className="history-result-card__next">
                     <span>{nextAction.label}</span>
-                    <strong>{nextAction.text}</strong>
+                    <strong title={nextAction.text}>{nextAction.text}</strong>
                   </div>
 
                   <div className="history-result-card__context" aria-label="Contexto da peça">
                     <span>{formatDateTime(item.created_at)}</span>
-                    <strong>{itemProjectName}</strong>
+                    <strong title={itemProjectName}>{itemProjectName}</strong>
                   </div>
 
                   <div className="history-result-card__meta" aria-label="Metadados da peça">
-                    <span>{getVersionLabel(versionCount)}</span>
-                    <span>{getStatusLabel(item.status)}</span>
-                    <span>{getEstimationStatusLabel(item.estimation_status)}</span>
+                    <span title={getVersionLabel(versionCount)}>{getVersionLabel(versionCount)}</span>
+                    <span title={getStatusLabel(item.status)}>{getStatusLabel(item.status)}</span>
+                    <span title={getEstimationStatusLabel(item.estimation_status)}>
+                      {getEstimationStatusLabel(item.estimation_status)}
+                    </span>
                   </div>
                 </button>
               )
@@ -1352,12 +1362,14 @@ function HistoryPage() {
                 <header className="history-preview__header">
                   <div className="history-preview__copy">
                     <p className="history-page__eyebrow">Preview selecionado</p>
-                    <h2>{selectedStory.title}</h2>
+                    <h2 title={selectedStory.title}>{selectedStory.title}</h2>
                     <div className="history-preview__badges" aria-label="Resumo da peça selecionada">
-                      <span>{getStatusLabel(selectedStory.status)}</span>
-                      <span>{selectedProjectName}</span>
-                      <span>{getVersionLabel(selectedVersionCount)}</span>
-                      <span>{getEstimationStatusLabel(selectedStory.estimation_status)}</span>
+                      <span title={getStatusLabel(selectedStory.status)}>{getStatusLabel(selectedStory.status)}</span>
+                      <span title={selectedProjectName}>{selectedProjectName}</span>
+                      <span title={getVersionLabel(selectedVersionCount)}>{getVersionLabel(selectedVersionCount)}</span>
+                      <span title={getEstimationStatusLabel(selectedStory.estimation_status)}>
+                        {getEstimationStatusLabel(selectedStory.estimation_status)}
+                      </span>
                     </div>
                   </div>
 
@@ -1413,8 +1425,8 @@ function HistoryPage() {
                     const content = (
                       <>
                         <span>{card.label}</span>
-                        <strong>{card.title}</strong>
-                        <p>{card.description}</p>
+                        <strong title={card.title}>{card.title}</strong>
+                        <p title={card.description}>{card.description}</p>
                       </>
                     )
 
@@ -1443,15 +1455,17 @@ function HistoryPage() {
                 <div className="history-preview__facts">
                   <div>
                     <span>Projeto atual</span>
-                    <strong>{selectedProjectName}</strong>
+                    <strong title={selectedProjectName}>{selectedProjectName}</strong>
                   </div>
                   <div>
                     <span>Última versão</span>
-                    <strong>{latestVersionDate}</strong>
+                    <strong title={latestVersionDate}>{latestVersionDate}</strong>
                   </div>
                   <div>
                     <span>Inspeção</span>
-                    <strong>{qualityMeta.label} · {qualityScore}/100</strong>
+                    <strong title={`${qualityMeta.label} · ${qualityScore}/100`}>
+                      {qualityMeta.label} · {qualityScore}/100
+                    </strong>
                   </div>
                 </div>
 
@@ -1482,9 +1496,11 @@ function HistoryPage() {
                   <summary>
                     <span>
                       <small>Organização da peça</small>
-                      <strong>{selectedProjectName}</strong>
+                      <strong title={selectedProjectName}>{selectedProjectName}</strong>
                     </span>
-                    <em>{selectedStory.project_id ? 'Alterar projeto' : 'Vincular projeto'}</em>
+                    <em title={selectedStory.project_id ? 'Alterar projeto' : 'Vincular projeto'}>
+                      {selectedStory.project_id ? 'Alterar projeto' : 'Vincular projeto'}
+                    </em>
                   </summary>
 
                   <div className="history-preview__project-assignment-body">
