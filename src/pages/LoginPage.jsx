@@ -11,7 +11,12 @@ import {
   signInWithEmail,
 } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
-import { buildAuthPath, clearAuthRedirect, getAuthRedirectFromLocation } from '../utils/authRedirect'
+import {
+  buildAuthPath,
+  clearAuthRedirect,
+  getAuthRedirectContext,
+  getAuthRedirectFromLocation,
+} from '../utils/authRedirect'
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
@@ -31,7 +36,8 @@ function LoginPage() {
   const [canResendConfirmation, setCanResendConfirmation] = useState(false)
 
   const redirectTo = useMemo(() => getAuthRedirectFromLocation(location), [location])
-  const isPlanningInvite = redirectTo.includes('/roda')
+  const redirectContext = useMemo(() => getAuthRedirectContext(redirectTo), [redirectTo])
+  const isPlanningInvite = redirectContext.key === 'planning'
   const signupPath = useMemo(() => buildAuthPath('/signup', redirectTo), [redirectTo])
 
   usePageMetadata({
@@ -165,6 +171,12 @@ function LoginPage() {
               ? 'Entre para voltar ao convite da Roda da Fogueira e participar da estimativa.'
               : 'Continue refinando suas user stories com histórico, versões e critérios de aceite.'}
           </p>
+        </div>
+
+        <div className={`auth-card__return-context auth-card__return-context--${redirectContext.key}`}>
+          <span>Destino após o acesso</span>
+          <strong>{redirectContext.label}</strong>
+          <p>{redirectContext.description}</p>
         </div>
 
         {infoMessage ? (

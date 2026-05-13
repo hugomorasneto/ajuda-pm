@@ -6,7 +6,12 @@ import { usePageMetadata } from '../hooks/usePageMetadata'
 import '../styles/pages.css'
 import { getAuthErrorMessage, signUpWithEmail } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
-import { buildAuthPath, clearAuthRedirect, getAuthRedirectFromLocation } from '../utils/authRedirect'
+import {
+  buildAuthPath,
+  clearAuthRedirect,
+  getAuthRedirectContext,
+  getAuthRedirectFromLocation,
+} from '../utils/authRedirect'
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
@@ -17,7 +22,8 @@ function SignupPage() {
   const location = useLocation()
   const { user, isAuthLoading } = useAuth()
   const redirectTo = useMemo(() => getAuthRedirectFromLocation(location), [location])
-  const isPlanningInvite = redirectTo.includes('/roda')
+  const redirectContext = useMemo(() => getAuthRedirectContext(redirectTo), [redirectTo])
+  const isPlanningInvite = redirectContext.key === 'planning'
   const loginPath = useMemo(() => buildAuthPath('/login', redirectTo), [redirectTo])
   const checkEmailPath = useMemo(() => buildAuthPath('/check-email', redirectTo), [redirectTo])
   const [email, setEmail] = useState(location.state?.email ?? '')
@@ -153,6 +159,12 @@ function SignupPage() {
               ? 'Crie sua conta para voltar ao convite da Roda da Fogueira depois da confirmação.'
               : 'Transforme briefings em user stories claras, com critérios de aceite e prontas para backlog.'}
           </p>
+        </div>
+
+        <div className={`auth-card__return-context auth-card__return-context--${redirectContext.key}`}>
+          <span>Destino após confirmação</span>
+          <strong>{redirectContext.label}</strong>
+          <p>{redirectContext.description}</p>
         </div>
 
         <form className="auth-card__form" onSubmit={handleSubmit} noValidate>

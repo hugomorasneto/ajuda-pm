@@ -3,6 +3,7 @@ import {
   DEFAULT_AUTH_REDIRECT_PATH,
   buildAuthPath,
   clearAuthRedirect,
+  getAuthRedirectContext,
   getAuthRedirectFromLocation,
   normalizeAuthRedirect,
   persistAuthRedirect,
@@ -70,5 +71,30 @@ describe('authRedirect', () => {
     expect(getAuthRedirectFromLocation({ pathname: '/check-email', search: '' })).toBe(DEFAULT_AUTH_REDIRECT_PATH)
 
     clearAuthRedirect()
+  })
+
+  it('identifica o contexto de retorno para convites da Roda', () => {
+    expect(getAuthRedirectContext('/roda?codigo=ABC123')).toMatchObject({
+      key: 'planning',
+      label: 'Roda da Fogueira',
+      targetText: 'a Roda da Fogueira',
+    })
+
+    expect(getAuthRedirectContext('/projetos/123/roda/456')).toMatchObject({
+      key: 'planning',
+      label: 'Roda da Fogueira',
+    })
+  })
+
+  it('identifica contexto de projeto e usa Bancada para destino inseguro', () => {
+    expect(getAuthRedirectContext('/projetos/123')).toMatchObject({
+      key: 'project',
+      label: 'Projeto',
+    })
+
+    expect(getAuthRedirectContext('https://example.com/roda')).toMatchObject({
+      key: 'workspace',
+      label: 'Bancada',
+    })
   })
 })

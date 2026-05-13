@@ -6,7 +6,12 @@ import { usePageMetadata } from '../hooks/usePageMetadata'
 import '../styles/pages.css'
 import { getAuthErrorMessage, maskEmail, resendSignupConfirmation } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
-import { buildAuthPath, clearAuthRedirect, getAuthRedirectFromLocation } from '../utils/authRedirect'
+import {
+  buildAuthPath,
+  clearAuthRedirect,
+  getAuthRedirectContext,
+  getAuthRedirectFromLocation,
+} from '../utils/authRedirect'
 
 function CheckEmailPage() {
   const location = useLocation()
@@ -14,7 +19,7 @@ function CheckEmailPage() {
   const { user, isAuthLoading } = useAuth()
   const email = typeof location.state?.email === 'string' ? location.state.email.trim() : ''
   const redirectTo = useMemo(() => getAuthRedirectFromLocation(location), [location])
-  const isPlanningInvite = redirectTo.includes('/roda')
+  const redirectContext = useMemo(() => getAuthRedirectContext(redirectTo), [redirectTo])
   const loginPath = useMemo(() => buildAuthPath('/login', redirectTo), [redirectTo])
   const [feedbackMessage, setFeedbackMessage] = useState('')
   const [feedbackTone, setFeedbackTone] = useState('info')
@@ -103,9 +108,15 @@ function CheckEmailPage() {
 
         <p className="auth-card__info" role="status">
           {maskedEmail
-            ? `E-mail enviado para ${maskedEmail}. Depois de confirmar, você volta para ${isPlanningInvite ? 'a Roda da Fogueira' : 'a Bancada'}.`
-            : `Abra o e-mail usado no cadastro, confirme a conta e depois entre para acessar ${isPlanningInvite ? 'a Roda da Fogueira' : 'a bancada'}.`}
+            ? `E-mail enviado para ${maskedEmail}. Depois de confirmar, você volta para ${redirectContext.targetText}.`
+            : `Abra o e-mail usado no cadastro, confirme a conta e depois entre para acessar ${redirectContext.targetText}.`}
         </p>
+
+        <div className={`auth-card__return-context auth-card__return-context--${redirectContext.key}`}>
+          <span>Destino após confirmação</span>
+          <strong>{redirectContext.label}</strong>
+          <p>{redirectContext.description}</p>
+        </div>
 
         {feedbackMessage ? (
           <p
@@ -141,7 +152,7 @@ function CheckEmailPage() {
             state={{
               email,
               from: redirectTo,
-              message: `Depois de confirmar o e-mail, entre para acessar ${isPlanningInvite ? 'a Roda da Fogueira' : 'a bancada'}.`,
+              message: `Depois de confirmar o e-mail, entre para acessar ${redirectContext.targetText}.`,
             }}
             className="auth-card__submit auth-card__submit--secondary"
           >
