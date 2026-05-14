@@ -12570,6 +12570,10 @@
   margin: 0;
 }
 
+.planning-poker-join__access-request .planning-poker-access-request__manual {
+  grid-column: 1 / -1;
+}
+
 @media (max-width: 1180px) {
   .planning-poker-join__access-request {
     grid-template-columns: minmax(0, 1fr) minmax(220px, 0.45fr);
@@ -12784,12 +12788,91 @@
   margin: 0;
 }
 
+.planning-poker-room__access-request .planning-poker-access-request__manual {
+  grid-column: 1 / -1;
+}
+
+.planning-poker-access-request__manual {
+  min-width: 0;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.026);
+}
+
+.planning-poker-access-request__manual summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  color: var(--forge-text-primary);
+  cursor: pointer;
+  font-size: var(--text-small);
+  font-weight: 900;
+  list-style: none;
+}
+
+.planning-poker-access-request__manual summary::-webkit-details-marker {
+  display: none;
+}
+
+.planning-poker-access-request__manual summary::after {
+  content: '+';
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 1.45rem;
+  width: 1.45rem;
+  height: 1.45rem;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: 999px;
+  color: var(--forge-text-secondary);
+  background: rgba(255,255,255,0.04);
+}
+
+.planning-poker-access-request__manual[open] summary::after {
+  content: '-';
+}
+
+.planning-poker-access-request__manual label {
+  display: grid;
+  gap: var(--space-2);
+  padding: 0 var(--space-3) var(--space-3);
+}
+
+.planning-poker-access-request__manual label span {
+  color: var(--forge-text-muted);
+  font-size: var(--text-micro);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.planning-poker-access-request__manual textarea {
+  width: 100%;
+  min-height: 132px;
+  resize: vertical;
+  border: 1px solid var(--forge-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  color: var(--forge-text-primary);
+  background: var(--forge-surface-inset);
+  font: inherit;
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+.planning-poker-access-request__manual textarea:focus {
+  outline: none;
+  border-color: var(--forge-border-tech);
+  box-shadow: 0 0 0 3px var(--forge-focus-ring);
+}
+
 @media (max-width: 720px) {
   .planning-poker-room__access-request {
     grid-template-columns: 1fr;
   }
 
-  .planning-poker-room__access-request-actions {
+  .planning-poker-room__access-request-actions,
+  .planning-poker-room__access-request .planning-poker-access-request__manual {
     grid-column: auto;
   }
 }

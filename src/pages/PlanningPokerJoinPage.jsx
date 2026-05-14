@@ -1098,7 +1098,7 @@ function PlanningPokerJoinPage() {
       await copyTextToClipboard(accessRequestMessage)
       setAccessRequestFeedback('Mensagem copiada para enviar ao facilitador.')
     } catch {
-      setAccessRequestFeedback('Não foi possível copiar a mensagem agora.')
+      setAccessRequestFeedback('Não foi possível copiar automaticamente. Use a mensagem manual abaixo.')
     }
   }
 
@@ -1279,6 +1279,19 @@ function PlanningPokerJoinPage() {
             </button>
             {accessRequestFeedback ? <p className="projects-page__message">{accessRequestFeedback}</p> : null}
           </div>
+          <details className="planning-poker-access-request__manual">
+            <summary>Copiar manualmente</summary>
+            <label>
+              <span>Mensagem para o facilitador</span>
+              <textarea
+                readOnly
+                rows={5}
+                value={accessRequestMessage}
+                aria-label="Mensagem de pedido de acesso para copiar manualmente"
+                onFocus={(event) => event.target.select()}
+              />
+            </label>
+          </details>
         </section>
       ) : null}
 
