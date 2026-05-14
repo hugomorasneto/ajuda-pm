@@ -116,6 +116,19 @@ describe('planningPokerUtils', () => {
     expect(message).toContain('adicionar meu e-mail ao projeto')
   })
 
+  it('prioriza o link da sala no pedido de acesso quando disponível', () => {
+    const message = buildPlanningAccessRequestMessage({
+      email: 'participante@empresa.com.br',
+      inviteCode: 'ABC123',
+      inviteUrl: 'https://prodforge.techtupa.com.br/projetos/projeto/roda/sessao',
+    })
+
+    expect(message).toContain(
+      'Link da sala: https://prodforge.techtupa.com.br/projetos/projeto/roda/sessao.',
+    )
+    expect(message).not.toContain('Código da Roda: ABC123.')
+  })
+
   it('mantém labels padrão para status e escala', () => {
     expect(getPlanningSessionStatusLabel('completed')).toBe('Finalizada')
     expect(getPlanningStoryStatusLabel('skipped')).toBe('Pulada')

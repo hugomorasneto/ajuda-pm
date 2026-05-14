@@ -3,6 +3,7 @@ import { Link, useOutletContext, useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { addProjectMemberByEmail, checkCanManageProject, getProjectById } from '../services/projectsService'
 import {
+  buildPlanningAccessRequestMessage,
   buildPlanningSessionSummaryMarkdown,
   formatPlanningTimerDuration,
   formatRemainingTime,
@@ -176,11 +177,24 @@ function PlanningPokerRoomPage() {
   const [inviteEmail, setInviteEmail] = useState('')
   const [isAddingInviteMember, setIsAddingInviteMember] = useState(false)
   const [roomCopyFeedback, setRoomCopyFeedback] = useState('')
+  const [accessRequestFeedback, setAccessRequestFeedback] = useState('')
   const [notFound, setNotFound] = useState(false)
   const [nowTick, setNowTick] = useState(() => Date.now())
   const inviteUrl = useMemo(
     () => buildInviteUrl({ inviteCode: session?.invite_code, projectId, sessionId }),
     [projectId, session?.invite_code, sessionId],
+  )
+  const roomAccessUrl = useMemo(() => {
+    if (typeof window === 'undefined') return `/projetos/${projectId}/roda/${sessionId}`
+    return new URL(`/projetos/${projectId}/roda/${sessionId}`, window.location.origin).toString()
+  }, [projectId, sessionId])
+  const roomAccessRequestMessage = useMemo(
+    () =>
+      buildPlanningAccessRequestMessage({
+        email: user?.email ?? '',
+        inviteUrl: roomAccessUrl,
+      }),
+    [roomAccessUrl, user?.email],
   )
 
   const currentParticipant = useMemo(
@@ -1329,6 +1343,16 @@ function PlanningPokerRoomPage() {
     )
   }
 
+  async function handleCopyAccessRequestMessage() {
+    setAccessRequestFeedback('')
+    try {
+      await copyTextToClipboard(roomAccessRequestMessage)
+      setAccessRequestFeedback('Mensagem copiada para enviar ao facilitador.')
+    } catch {
+      setAccessRequestFeedback('Não foi possível copiar a mensagem agora.')
+    }
+  }
+
   if (notFound) {
     return (
       <div className="planning-poker-room">
@@ -1339,6 +1363,26 @@ function PlanningPokerRoomPage() {
             O link da Roda funciona para pessoas adicionadas ao projeto. Peça ao facilitador para incluir seu e-mail
             no projeto e tente abrir o convite novamente.
           </p>
+          <div className="planning-poker-room__access-request">
+            <div className="planning-poker-room__access-request-copy">
+              <span>Acesso pendente</span>
+              <strong>Solicite liberação do projeto</strong>
+              <p>
+                Copie uma mensagem com seu e-mail e o link desta sala para enviar a quem criou a Roda.
+              </p>
+            </div>
+            <div className="planning-poker-room__access-request-card">
+              <span>E-mail da sua conta</span>
+              <strong>{user?.email ?? 'Conta autenticada'}</strong>
+              <p>O facilitador precisa adicionar este e-mail ao projeto da Roda.</p>
+            </div>
+            <div className="planning-poker-room__access-request-actions">
+              <button type="button" className="btn btn-primary btn-small" onClick={handleCopyAccessRequestMessage}>
+                Copiar pedido de acesso
+              </button>
+              {accessRequestFeedback ? <p className="projects-page__message">{accessRequestFeedback}</p> : null}
+            </div>
+          </div>
           <div className="planning-poker-room__final-summary-actions">
             <Link className="btn btn-primary btn-small" to="/roda">
               Entrar por código
