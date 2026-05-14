@@ -12,6 +12,7 @@ import { listTeamsByProject } from '../services/teamsService'
 import { listStoryHistoryGroups } from '../services/userStoriesService'
 import {
   LIVE_PLANNING_SESSION_STATUSES,
+  buildPlanningAccessRequestMessage,
   buildPlanningSessionSummaryMarkdown,
   formatPlanningCount,
   formatPlanningTimerDuration,
@@ -127,6 +128,8 @@ function PlanningPokerJoinPage() {
   const [planningMessage, setPlanningMessage] = useState('')
   const [copyMessage, setCopyMessage] = useState('')
   const [copyFeedbackBySessionId, setCopyFeedbackBySessionId] = useState({})
+  const [accessRequestCode, setAccessRequestCode] = useState('')
+  const [accessRequestFeedback, setAccessRequestFeedback] = useState('')
   const [isSearching, setIsSearching] = useState(false)
   const [isLoadingProjects, setIsLoadingProjects] = useState(false)
   const [isLoadingAccessiblePlanningSessions, setIsLoadingAccessiblePlanningSessions] = useState(false)
@@ -171,6 +174,14 @@ function PlanningPokerJoinPage() {
       planningAllowObservers ? 'Observadores permitidos' : 'Sem observadores',
     ],
     [planningAllowAbstention, planningAllowObservers, planningAllowRevote, planningRevealAfterAll],
+  )
+  const accessRequestMessage = useMemo(
+    () =>
+      buildPlanningAccessRequestMessage({
+        email: user?.email ?? '',
+        inviteCode: accessRequestCode,
+      }),
+    [accessRequestCode, user?.email],
   )
   const readyStoriesLabel = useMemo(
     () =>
@@ -680,6 +691,8 @@ function PlanningPokerJoinPage() {
       const safeInviteCode = normalizeInviteCode(rawCode)
       if (!safeInviteCode) {
         setMessage('Informe o código da sala para entrar na Roda.')
+        setAccessRequestCode('')
+        setAccessRequestFeedback('')
         return false
       }
 
@@ -699,6 +712,8 @@ function PlanningPokerJoinPage() {
       setIsSearching(false)
 
       if (!response.success || !response.data) {
+        setAccessRequestCode(safeInviteCode)
+        setAccessRequestFeedback('')
         setMessage(
           isAutomatic
             ? 'Não foi possível abrir este convite automaticamente. Confirme se seu e-mail foi adicionado ao projeto ou tente entrar pelo código.'
@@ -707,6 +722,8 @@ function PlanningPokerJoinPage() {
         return false
       }
 
+      setAccessRequestCode('')
+      setAccessRequestFeedback('')
       navigate(`/projetos/${response.data.project_id}/roda/${response.data.id}`)
       return true
     },
@@ -1073,6 +1090,18 @@ function PlanningPokerJoinPage() {
     await openPlanningSessionByCode(inviteCode)
   }
 
+  async function handleCopyAccessRequestMessage() {
+    if (!accessRequestCode) return
+
+    setAccessRequestFeedback('')
+    try {
+      await copyTextToClipboard(accessRequestMessage)
+      setAccessRequestFeedback('Mensagem copiada para enviar ao facilitador.')
+    } catch {
+      setAccessRequestFeedback('Não foi possível copiar a mensagem agora.')
+    }
+  }
+
   async function handleCreatePlanningSession(event) {
     event.preventDefault()
     setPlanningMessage('')
@@ -1190,7 +1219,14 @@ function PlanningPokerJoinPage() {
             <input
               type="text"
               value={inviteCode}
-              onChange={(event) => setInviteCode(normalizeInviteCode(event.target.value))}
+              onChange={(event) => {
+                const nextCode = normalizeInviteCode(event.target.value)
+                setInviteCode(nextCode)
+                if (accessRequestCode && nextCode !== accessRequestCode) {
+                  setAccessRequestCode('')
+                  setAccessRequestFeedback('')
+                }
+              }}
               placeholder="Ex.: 136CE7AB2E"
               autoComplete="off"
               className="planning-poker-join__code-input"
@@ -1210,6 +1246,41 @@ function PlanningPokerJoinPage() {
           {message ? <p className="projects-page__message">{message}</p> : null}
         </form>
       </section>
+
+      {accessRequestCode ? (
+        <section className="panel planning-poker-join__access-request" aria-label="Pedido de liberação para a Roda">
+          <div className="planning-poker-join__access-request-copy">
+            <p className="projects-page__eyebrow">Acesso pendente</p>
+            <h2>Peça liberação ao facilitador</h2>
+            <p>
+              O link da Roda confirma o destino, mas a entrada depende do seu e-mail estar no projeto. Copie a mensagem
+              abaixo e envie para quem criou a sessão.
+            </p>
+          </div>
+          <div className="planning-poker-join__access-request-card">
+            <span>Código recebido</span>
+            <strong>{accessRequestCode}</strong>
+            <p>{user?.email ? `E-mail da sua conta: ${user.email}` : 'Use o e-mail cadastrado no ProdForge.'}</p>
+          </div>
+          <div className="planning-poker-join__access-request-actions">
+            <button type="button" className="btn btn-primary btn-small" onClick={handleCopyAccessRequestMessage}>
+              Copiar pedido de acesso
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-small"
+              onClick={() => {
+                setAccessRequestCode('')
+                setAccessRequestFeedback('')
+                setMessage('')
+              }}
+            >
+              Dispensar aviso
+            </button>
+            {accessRequestFeedback ? <p className="projects-page__message">{accessRequestFeedback}</p> : null}
+          </div>
+        </section>
+      ) : null}
 
       <section className="planning-poker-dashboard__overview" aria-label="Resumo operacional da Roda da Fogueira">
         {dashboardOverviewCards.map((card) => (

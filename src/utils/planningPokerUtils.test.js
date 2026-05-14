@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildPlanningSessionSummaryMarkdown,
+  buildPlanningAccessRequestMessage,
   formatPlanningTimerDuration,
   formatRemainingTime,
   getActivePlanningStorySessionByStoryId,
@@ -101,6 +102,18 @@ describe('planningPokerUtils', () => {
     expect(markdown).toContain('**Timer:** 5 minutos')
     expect(markdown).toContain('**Participantes votantes:** 3')
     expect(markdown).toContain('- Filtro avançado · Estimada · Final: 5')
+  })
+
+  it('gera mensagem para pedir liberação de acesso à Roda', () => {
+    const message = buildPlanningAccessRequestMessage({
+      email: 'participante@empresa.com.br',
+      inviteCode: 'abc123',
+    })
+
+    expect(message).toContain('Roda da Fogueira')
+    expect(message).toContain('participante@empresa.com.br')
+    expect(message).toContain('Código da Roda: ABC123.')
+    expect(message).toContain('adicionar meu e-mail ao projeto')
   })
 
   it('mantém labels padrão para status e escala', () => {

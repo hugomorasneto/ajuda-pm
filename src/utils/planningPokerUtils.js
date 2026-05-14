@@ -216,6 +216,21 @@ export function buildPlanningSessionSummaryMarkdown({
   return lines.join('\n')
 }
 
+export function buildPlanningAccessRequestMessage({ email = '', inviteCode = '' } = {}) {
+  const safeEmail = String(email ?? '').trim()
+  const safeInviteCode = String(inviteCode ?? '').trim().toUpperCase() || 'não informado'
+  const emailLine = safeEmail
+    ? `Meu e-mail de acesso é ${safeEmail}.`
+    : 'Meu e-mail de acesso é o mesmo usado no ProdForge.'
+
+  return [
+    'Olá! Estou tentando participar de uma Roda da Fogueira no ProdForge, mas meu acesso ainda não foi liberado.',
+    emailLine,
+    `Código da Roda: ${safeInviteCode}.`,
+    'Você pode adicionar meu e-mail ao projeto da Roda e reenviar o convite?',
+  ].join('\n')
+}
+
 export function getPlanningStorySearchText(story) {
   return [
     story?.user_story?.title,
