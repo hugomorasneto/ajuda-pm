@@ -1,0 +1,22 @@
+[
+  {
+    "name": "clean",
+    "targetUrl": "https://prodforge.techtupa.com.br/",
+    "inspectorUrl": "https://www.linkedin.com/post-inspector/inspect/https:%2F%2Fprodforge.techtupa.com.br%2F",
+    "title": "Post Inspector",
+    "textIncludesProdForge": false,
+    "textIncludesPreview": true,
+    "textSample": " POST INSPECTOR",
+    "screenshot": "C:\\Projetos\\ajuda-pm\\artifacts\\linkedin-launch-qa\\linkedin-inspector-clean.png"
+  },
+  {
+    "name": "utm-post-01",
+    "targetUrl": "https://prodforge.techtupa.com.br/?utm_source=linkedin&utm_medium=organic&utm_campaign=prodforge_mvp_signup&utm_content=post_01_briefing_confuso",
+    "inspectorUrl": "https://www.linkedin.com/post-inspector/inspect/https:%2F%2Fprodforge.techtupa.com.br%2F%3Futm_source%3Dlinkedin%26utm_medium%3Dorganic%26utm_campaign%3Dprodforge_mvp_signup%26utm_content%3Dpost_01_briefing_confuso",
+    "title": "Post Inspector",
+    "textIncludesProdForge": false,
+    "textIncludesPreview": true,
+    "textSample": " POST INSPECTOR",
+    "screenshot": "C:\\Projetos\\ajuda-pm\\artifacts\\linkedin-launch-qa\\linkedin-inspector-utm-post-01.png"
+  }
+]

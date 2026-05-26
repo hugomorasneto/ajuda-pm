@@ -14,6 +14,7 @@ import { getLearningGuidesBySlugs, learningHub } from '../content/learningConten
 import { landingCopy } from '../content/landingCopy'
 import { useAuth } from '../hooks/useAuth'
 import { usePageMetadata } from '../hooks/usePageMetadata'
+import { PRIVACY_CONSENT_CHANGE_EVENT } from '../utils/privacyConsent'
 
 function HomePage() {
   const { user } = useAuth()
@@ -34,21 +35,28 @@ function HomePage() {
 
   useEffect(() => {
     let active = true
+    let landingViewTracked = false
 
     async function trackLandingView() {
       const { trackEvent } = await import('../services/analyticsService')
-      if (!active) return
+      if (!active || landingViewTracked) return
 
-      trackEvent({
+      const response = await trackEvent({
         event_name: 'landing_view',
         event_category: 'public',
       })
+
+      if (response.success) {
+        landingViewTracked = true
+      }
     }
 
     trackLandingView().catch(() => {})
+    window.addEventListener(PRIVACY_CONSENT_CHANGE_EVENT, trackLandingView)
 
     return () => {
       active = false
+      window.removeEventListener(PRIVACY_CONSENT_CHANGE_EVENT, trackLandingView)
     }
   }, [])
 
