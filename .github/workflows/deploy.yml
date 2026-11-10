@@ -8,6 +8,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      backup_manifest_sha256:
+        description: SHA-256 do manifesto da cópia verificada do destino
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -50,16 +55,13 @@ jobs:
           fi
           npm run quality
 
-      - name: Publicar dist/ via FTPS
+      - name: Publicar em duas etapas via FTPS
         if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
-        uses: SamKirkland/FTP-Deploy-Action@8e83cea8672e3fbcbb9fdafff34debf6ae4c5f65 # v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          port: ${{ secrets.FTP_PORT }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          security: strict
-          local-dir: dist/
-          server-dir: ${{ secrets.FTP_REMOTE_DIR }}
-          dangerous-clean-slate: false
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_PORT: ${{ secrets.FTP_PORT }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_REMOTE_DIR: ${{ secrets.FTP_REMOTE_DIR }}
+          BACKUP_MANIFEST_SHA256: ${{ inputs.backup_manifest_sha256 }}
+        run: python3 scripts/ftps-release.py publish dist "$BACKUP_MANIFEST_SHA256"
