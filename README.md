@@ -1,51 +1,41 @@
 # ProdForge
 
-ProdForge is a React + Vite web app for PMs and POs to turn loose product
-context into structured user stories with acceptance criteria, gaps, and QA
-checklists.
+O ProdForge ajuda profissionais de produto a transformar briefings em histórias de usuário, critérios de aceite e checklists de QA. O frontend usa React e Vite. O Supabase oferece autenticação, persistência e funções de backend.
 
-## Local app
+## Instalação
 
-```bash
-npm install
-npm run dev
+Use Git e Node.js **24.22.1**, a versão usada no CI.
+
+```sh
+git clone https://github.com/hugomorasneto/ajuda-pm.git
+cd ajuda-pm
+npm ci
+npm run quality
 ```
 
-## Environment contract
+O comando `quality` executa o lint, verifica o texto visível em português brasileiro, roda os testes unitários e gera o site em `dist/`. Essa validação funciona sem conta no Supabase ou chave de IA.
 
-Copy [`.env.local.example`](C:/Projetos/ajuda-pm/.env.local.example:1) to
-`.env.local` and define:
+## Interface local
+
+Para navegar pelas páginas públicas e revisar a aparência dos formulários, crie um arquivo `.env.local` na raiz com valores fictícios.
 
 ```dotenv
-SUPABASE_PROJECT_REF=your_project_ref
-VITE_SUPABASE_URL=https://your_project_ref.supabase.co
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_ACCESS_TOKEN_ENV=SUPABASE_ACCESS_TOKEN_PRODFORGE
+VITE_SUPABASE_URL=http://127.0.0.1:54321
+VITE_SUPABASE_ANON_KEY=chave-ficticia
 ```
 
-The real access token must stay outside the repo in the env var named by
-`SUPABASE_ACCESS_TOKEN_ENV`.
-
-## Supabase workflow
-
-This repo intentionally ignores the Supabase MCP as the source of truth.
-All Supabase operations are bound to the explicit project context declared in
-the repo and local envs.
-
-Useful commands:
-
-```bash
-npm run supabase:doctor
-npm run supabase:link
-npm run supabase:sql:apply -- supabase/leads-rls.sql
-npm run supabase:functions:serve
-npm run supabase:secrets:set -- GEMINI_API_KEY=YOUR_KEY
-npm run supabase:functions:deploy
+```sh
+npm run dev -- --host 127.0.0.1
 ```
 
-Notes:
+Abra [a página inicial](http://127.0.0.1:5173/) ou [o Campo de Treino](http://127.0.0.1:5173/aprender/). Os valores fictícios servem para revisar a interface. Para testar cadastro, projetos, times, contato ou geração com IA de ponta a ponta, use um ambiente de teste autorizado, com dados fictícios e a revisão correspondente do backend.
 
-- `generate-user-story` is treated as an authenticated function in this repo.
-- The frontend must call it with the logged-in user's access token, not only the anon key.
+Variáveis `VITE_*` podem aparecer no bundle do frontend. Use apenas a URL e a chave pública do projeto de teste. Mantenha tokens administrativos, senhas SMTP, chaves de serviço e chaves de IA fora do Git e do frontend. Veja o [modelo de configuração](.env.local.example) e o [guia do Supabase](supabase/README.md).
 
-More details live in [supabase/README.md](C:/Projetos/ajuda-pm/supabase/README.md:1).
+## Contribuição
+
+Leia o [guia de contribuição](CONTRIBUTING.md) e as [instruções para relatar problemas de segurança](SECURITY.md).
+
+## Licença
+
+O código próprio e a documentação identificados no [escopo da licença](LICENSE-SCOPE.md) estão sob a [licença MIT](LICENSE). A marca ProdForge, os ativos visuais, o conteúdo editorial e os materiais de terceiros têm tratamento separado.
