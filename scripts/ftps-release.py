@@ -15,10 +15,14 @@ from tempfile import TemporaryDirectory
 
 PENDING = ".prodforge-ftps-"
 SHA256 = re.compile(r"[0-9a-f]{64}")
+DISCONNECT_ERRORS = (EOFError, ConnectionError, TimeoutError, ssl.SSLEOFError, ftplib.error_temp)
 
 
 class TransferError(Exception):
     pass
+
+
+TRANSFER_ERRORS = (OSError, ftplib.Error, EOFError, TransferError)
 
 
 def safe_name(name):
@@ -141,12 +145,23 @@ def open_ftps():
         raise
 
 
-def snapshot(ftp, destination):
+def read_remote_inventory():
+    for attempt in range(2):
+        try:
+            with open_ftps() as ftp:
+                return remote_inventory(ftp)
+        except DISCONNECT_ERRORS:
+            if attempt == 1:
+                raise
+
+
+def snapshot(destination):
     destination.mkdir(mode=0o700)
     files = destination / "files"
     files.mkdir(mode=0o700)
-    initial = remote_inventory(ftp, files)
-    if initial != remote_inventory(ftp) or initial != local_inventory(files):
+    with open_ftps() as ftp:
+        initial = remote_inventory(ftp, files)
+    if initial != read_remote_inventory() or initial != local_inventory(files):
         raise TransferError("A cópia divergiu da segunda leitura do servidor ou dos arquivos locais.")
     (destination / "manifest.json").write_bytes(encoded(initial))
     return initial
@@ -200,8 +215,8 @@ def replace_file(ftp, source, name, digest, directories):
         raise TransferError("O hash do arquivo publicado no servidor divergiu.")
 
 
-def restore(ftp, source, original, candidate):
-    current = remote_inventory(ftp)
+def restore(source, original, candidate):
+    current = read_remote_inventory()
     directories = set(current["directories"])
     affected = changes(original, candidate)
     for name, digest in original["files"].items():
@@ -212,36 +227,46 @@ def restore(ftp, source, original, candidate):
         new_digest = candidate["files"][name]
         if current["files"].get(name) not in (old_digest, new_digest):
             raise TransferError("A restauração encontrou um caminho alterado fora desta publicação.")
-    for name in affected:
-        pending = pending_path(name)
-        if pending in current["files"]:
-            ftp.delete(pending)
-            del current["files"][pending]
-    for name in sorted(affected, key=lambda name: (phase(name), name)):
-        old_digest = original["files"].get(name)
-        if old_digest is not None and current["files"].get(name) != old_digest:
-            replace_file(ftp, source, name, old_digest, directories)
-            current["files"][name] = old_digest
-        elif old_digest is None and not name.startswith("assets/") and name in current["files"]:
-            ftp.delete(name)
-            del current["files"][name]
-    added_directories = set(candidate["directories"]) - set(original["directories"])
-    for name in sorted(added_directories & directories, key=lambda path: (-path.count("/"), path)):
-        prefix = name + "/"
-        if not any(path.startswith(prefix) for path in (*current["files"], *directories)):
-            ftp.rmd(name)
-            directories.remove(name)
-    if remote_inventory(ftp) != inventory(current["files"], directories):
+    with open_ftps() as ftp:
+        for name in affected:
+            pending = pending_path(name)
+            if pending in current["files"]:
+                ftp.delete(pending)
+                del current["files"][pending]
+        for name in sorted(affected, key=lambda name: (phase(name), name)):
+            old_digest = original["files"].get(name)
+            if old_digest is not None and current["files"].get(name) != old_digest:
+                replace_file(ftp, source, name, old_digest, directories)
+                current["files"][name] = old_digest
+            elif old_digest is None and not name.startswith("assets/") and name in current["files"]:
+                ftp.delete(name)
+                del current["files"][name]
+        added_directories = set(candidate["directories"]) - set(original["directories"])
+        for name in sorted(added_directories & directories, key=lambda path: (-path.count("/"), path)):
+            prefix = name + "/"
+            if not any(path.startswith(prefix) for path in (*current["files"], *directories)):
+                ftp.rmd(name)
+                directories.remove(name)
+    if read_remote_inventory() != inventory(current["files"], directories):
         raise TransferError("O inventário após a restauração divergiu do resultado esperado.")
 
 
-def publish(ftp, source, candidate, expected):
+def restore_with_retry(source, original, candidate):
+    try:
+        restore(source, original, candidate)
+    except DISCONNECT_ERRORS:
+        # Releia o destino: o último comando pode ter sido executado antes da queda.
+        restore(source, original, candidate)
+
+
+def publish(source, candidate, expected):
     if not SHA256.fullmatch(expected):
         raise TransferError("Informe o SHA-256 do manifesto da cópia verificada.")
     with TemporaryDirectory(prefix="prodforge-ftps-") as temporary:
         preimages = Path(temporary) / "files"
         preimages.mkdir(mode=0o700)
-        original = remote_inventory(ftp, preimages)
+        with open_ftps() as ftp:
+            original = remote_inventory(ftp, preimages)
         if fingerprint(original) != expected or local_inventory(preimages) != original:
             raise TransferError("O destino diverge da cópia aprovada. Nenhum arquivo foi enviado.")
         validate_candidate(candidate, original)
@@ -250,17 +275,16 @@ def publish(ftp, source, candidate, expected):
         directories = set(original["directories"])
         affected = changes(original, candidate)
         try:
-            for name in sorted(affected, key=lambda name: (phase(name), name)):
-                replace_file(ftp, source, name, candidate["files"][name], directories)
+            with open_ftps() as ftp:
+                for name in sorted(affected, key=lambda name: (phase(name), name)):
+                    replace_file(ftp, source, name, candidate["files"][name], directories)
             expected_files = {**original["files"], **candidate["files"]}
-            if remote_inventory(ftp) != inventory(expected_files, directories):
+            if read_remote_inventory() != inventory(expected_files, directories):
                 raise TransferError("O inventário após a publicação divergiu do resultado esperado.")
-        except (OSError, ftplib.Error, TransferError):
-            ftp.close()
+        except TRANSFER_ERRORS:
             try:
-                with open_ftps() as recovery:
-                    restore(recovery, preimages, original, candidate)
-            except (OSError, ftplib.Error, TransferError):
+                restore_with_retry(preimages, original, candidate)
+            except TRANSFER_ERRORS:
                 raise TransferError(
                     "Publicação interrompida. Restauração automática incompleta. "
                     "Use a cópia verificada e o mesmo build para restaurar."
@@ -286,24 +310,21 @@ def main():
     os.umask(0o077)
     try:
         if args.command == "snapshot":
-            with open_ftps() as ftp:
-                result = snapshot(ftp, args.destination)
+            result = snapshot(args.destination)
             print(f"Cópia verificada. Arquivos: {len(result['files'])}. SHA-256: {fingerprint(result)}")
         elif args.command == "publish":
             candidate = local_inventory(args.dist)
-            with open_ftps() as ftp:
-                count = publish(ftp, args.dist, candidate, args.manifest_sha256)
+            count = publish(args.dist, candidate, args.manifest_sha256)
             print(f"Publicação verificada. Arquivos alterados: {count}.")
         else:
             original, candidate = load_backup(args.backup), local_inventory(args.dist)
             validate_candidate(candidate, original)
-            with open_ftps() as ftp:
-                restore(ftp, args.backup / "files", original, candidate)
+            restore_with_retry(args.backup / "files", original, candidate)
             print("Restauração verificada. Ativos das duas versões preservados.")
     except TransferError as error:
         print(error, file=sys.stderr)
         return 1
-    except (OSError, ftplib.Error, ValueError):
+    except (OSError, ftplib.Error, EOFError, ValueError):
         print("A operação FTPS ou a verificação local falhou.", file=sys.stderr)
         return 1
     return 0
