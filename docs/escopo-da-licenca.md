@@ -1,6 +1,6 @@
 # Escopo da licença MIT
 
-A [licença MIT](LICENSE) cobre as partes próprias identificadas abaixo. O titular indicado no aviso é Hugo Cruz da Silva Moraes Neto. Em arquivos que combinam código e outros materiais, a licença cobre somente as partes de código próprio descritas aqui.
+A [licença MIT](../LICENSE) cobre as partes próprias identificadas abaixo. O titular indicado no aviso é Hugo Cruz da Silva Moraes Neto. Em arquivos que combinam código e outros materiais, a licença cobre somente as partes de código próprio descritas aqui.
 
 | Material | Abrangido pela MIT |
 | --- | --- |

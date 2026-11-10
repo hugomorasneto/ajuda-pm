@@ -38,4 +38,4 @@ Leia o [guia de contribuição](CONTRIBUTING.md) e as [instruções para relatar
 
 ## Licença
 
-O código próprio e a documentação identificados no [escopo da licença](LICENSE-SCOPE.md) estão sob a [licença MIT](LICENSE). A marca ProdForge, os ativos visuais, o conteúdo editorial e os materiais de terceiros têm tratamento separado.
+O código próprio e a documentação identificados no [escopo da licença](docs/escopo-da-licenca.md) estão sob a [licença MIT](LICENSE). A marca ProdForge, os ativos visuais, o conteúdo editorial e os materiais de terceiros têm tratamento separado.
