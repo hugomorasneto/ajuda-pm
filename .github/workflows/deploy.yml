@@ -1,16 +1,10 @@
-name: Validar frontend e publicar via FTPS
+name: Verificar FTPS em modo somente leitura
 
 on:
-  pull_request:
-    branches:
-      - main
-  push:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       backup_manifest_sha256:
-        description: SHA-256 do manifesto da cópia verificada do destino
+        description: SHA-256 do manifesto verificado
         required: true
         type: string
 
@@ -18,45 +12,18 @@ permissions:
   contents: read
 
 jobs:
-  build-and-deploy:
+  verify-ftps:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/codex/ftps-verificacao-actions'
     runs-on: ubuntu-latest
-    concurrency:
-      group: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && 'deploy-frontend-production' || format('frontend-{0}', github.run_id) }}
-      cancel-in-progress: false
+    timeout-minutes: 8
     steps:
       - name: Baixar o código
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.sha }}
           persist-credentials: false
 
-      - name: Configurar Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24.22.1'
-          cache: npm
-
-      - name: Conferir versões
-        run: |
-          node -v
-          npm -v
-
-      - name: Instalar dependências do lockfile
-        run: npm ci
-
-      - name: Validar e gerar o frontend
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          PUBLICAR: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
-        run: |
-          if [[ "$PUBLICAR" == "true" ]] && [[ -z "$VITE_SUPABASE_URL" || -z "$VITE_SUPABASE_ANON_KEY" ]]; then
-            echo "::error::Configure a URL e a chave pública do Supabase antes de publicar."
-            exit 1
-          fi
-          npm run quality
-
-      - name: Publicar em duas etapas via FTPS
-        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+      - name: Conferir o inventário por FTPS em modo somente leitura
         env:
           FTP_HOST: ${{ secrets.FTP_HOST }}
           FTP_PORT: ${{ secrets.FTP_PORT }}
@@ -64,4 +31,32 @@ jobs:
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           FTP_REMOTE_DIR: ${{ secrets.FTP_REMOTE_DIR }}
           BACKUP_MANIFEST_SHA256: ${{ inputs.backup_manifest_sha256 }}
-        run: python3 scripts/ftps-release.py publish dist "$BACKUP_MANIFEST_SHA256"
+        run: |
+          python3 - <<'PY'
+          import ftplib
+          import os
+          import runpy
+          import ssl
+
+          release = runpy.run_path("scripts/ftps-release.py")
+          expected = os.environ["BACKUP_MANIFEST_SHA256"]
+          if not release["SHA256"].fullmatch(expected):
+              raise SystemExit("Informe o SHA-256 do manifesto verificado.")
+          try:
+              with release["open_ftps"]() as ftp:
+                  if ftp.pwd() != "/":
+                      raise SystemExit("A conta não abriu a raiz isolada esperada.")
+                  print(f"Login na raiz isolada confirmado com {ftp.sock.version()}.")
+                  result = release["remote_inventory"](ftp)
+          except ssl.SSLCertVerificationError:
+              raise SystemExit("A validação do certificado FTPS falhou.") from None
+          except ftplib.error_perm as error:
+              code = str(error)[:3]
+              raise SystemExit(f"O servidor recusou uma operação de leitura ou login (FTP {code if code.isdigit() else 'sem código'}).") from None
+          except (OSError, EOFError, ftplib.Error, ValueError, release["TransferError"]) as error:
+              raise SystemExit(f"A verificação FTPS falhou ({type(error).__name__}).") from None
+
+          if release["fingerprint"](result) != expected:
+              raise SystemExit("O inventário remoto diverge do manifesto verificado.")
+          print(f"Manifesto confirmado. {len(result['files'])} arquivos e {len(result['directories'])} diretórios.")
+          PY
