@@ -1,4 +1,4 @@
-name: Deploy Frontend (Hostinger FTP)
+name: Validar frontend e publicar via FTPS
 
 on:
   pull_request:
@@ -9,49 +9,57 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && 'deploy-frontend-production' || format('frontend-{0}', github.run_id) }}
+      cancel-in-progress: false
     steps:
-      - name: Checkout repository
+      - name: Baixar o código
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
-      - name: Setup Node.js
+      - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: '24.22.1'
           cache: npm
 
-      - name: Show runtime versions
+      - name: Conferir versões
         run: |
           node -v
           npm -v
 
-      - name: Install dependencies (strict)
-        id: install_strict
-        continue-on-error: true
+      - name: Instalar dependências do lockfile
         run: npm ci
 
-      - name: Install dependencies (fallback)
-        if: steps.install_strict.outcome == 'failure'
-        run: |
-          echo "npm ci falhou; executando fallback controlado com npm install"
-          npm install --no-audit --no-fund
-
-      - name: Quality gate and production bundle
+      - name: Validar e gerar o frontend
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-        run: npm run quality
+          PUBLICAR: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
+        run: |
+          if [[ "$PUBLICAR" == "true" ]] && [[ -z "$VITE_SUPABASE_URL" || -z "$VITE_SUPABASE_ANON_KEY" ]]; then
+            echo "::error::Configure a URL e a chave pública do Supabase antes de publicar."
+            exit 1
+          fi
+          npm run quality
 
-      - name: Deploy dist/ via FTP
-        if: github.event_name != 'pull_request'
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: Publicar dist/ via FTPS
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+        uses: SamKirkland/FTP-Deploy-Action@8e83cea8672e3fbcbb9fdafff34debf6ae4c5f65 # v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
           port: ${{ secrets.FTP_PORT }}
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          security: strict
           local-dir: dist/
           server-dir: ${{ secrets.FTP_REMOTE_DIR }}
           dangerous-clean-slate: false
