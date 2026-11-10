@@ -7,7 +7,7 @@ Comece pela [instalação local](README.md#instalação). Uma primeira contribui
 3. Execute `npm run quality`. Para mudanças na interface, confira a jornada afetada em uma janela de celular e outra de computador. Use capturas e exemplos com dados fictícios.
 4. Abra um pull request com o que mudou, o motivo, os comandos executados e as limitações dos testes. Se a mudança envolver banco, permissões ou hospedagem, descreva as dependências e a ordem de aplicação para revisão. Use um ambiente de teste autorizado para operações que acessem serviços compartilhados.
 
-Envie somente materiais que você tem permissão para compartilhar. Para o código próprio e a documentação abrangidos pela MIT, confirme que você pode disponibilizar sua contribuição sob essa licença. Para incorporar código ou ativos de terceiros, indique a origem e as condições de uso no PR. Veja o [escopo da licença](LICENSE-SCOPE.md).
+Envie somente materiais que você tem permissão para compartilhar. Para o código próprio e a documentação abrangidos pela MIT, confirme que você pode disponibilizar sua contribuição sob essa licença. Para incorporar código ou ativos de terceiros, indique a origem e as condições de uso no PR. Veja o [escopo da licença](docs/escopo-da-licenca.md).
 
 ## Onde encontrar cada parte
 
