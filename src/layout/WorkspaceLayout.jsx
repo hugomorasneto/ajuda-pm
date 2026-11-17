@@ -1,4 +1,5 @@
 import { useCopy } from '../i18n/context'
+import { getPilotPage } from '../i18n/routes'
 import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import WorkspaceSidebar from '../components/workspace/WorkspaceSidebar'
@@ -12,13 +13,7 @@ function WorkspaceLayout() {
   const [topbarStatus, setTopbarStatus] = useState(null)
 
   const isSidebarOpen = sidebarOpenPath === location.pathname
-  const isForgeWorkspace =
-    location.pathname === '/tool' ||
-    location.pathname === '/tool/admin' ||
-    location.pathname === '/historico' ||
-    location.pathname === '/times' ||
-    location.pathname === '/roda' ||
-    location.pathname.startsWith('/projetos')
+  const isForgeWorkspace = Boolean(getPilotPage(location.pathname)?.workspace)
 
   function openSidebar() {
     setSidebarOpenPath(location.pathname)

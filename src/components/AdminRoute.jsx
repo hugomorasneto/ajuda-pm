@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useCopy, useLanguage } from '../i18n/context'
+import { localizeHref } from '../i18n/routes'
 import { buildAuthPath, getAuthDestinationLanguage } from '../utils/authRedirect'
 import { useAuth } from '../hooks/useAuth'
 import { getUserProfile } from '../services/userProfilesService'
@@ -8,7 +9,7 @@ import { getUserProfile } from '../services/userProfilesService'
 function AdminRoute({ children }) {
   const { user, isAuthLoading } = useAuth()
   const t = useCopy('auth')
-  const { preview } = useLanguage()
+  const { language, preview } = useLanguage()
   const { pathname, search, hash } = useLocation()
   const [isChecking, setIsChecking] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -57,7 +58,7 @@ function AdminRoute({ children }) {
   }
 
   if (!isAdmin) {
-    return <Navigate to="/" replace />
+    return <Navigate to={preview ? localizeHref('/', language) : '/'} replace />
   }
 
   return children

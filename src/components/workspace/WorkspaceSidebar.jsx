@@ -1,7 +1,8 @@
 import { useCopy, useLanguage } from '../../i18n/context'
+import LocalizedLink from '../../i18n/LocalizedLink'
 import { localizeHref } from '../../i18n/routes'
 import { useEffect, useState } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC } from '../../constants/app'
 import { useAuth } from '../../hooks/useAuth'
 import { useLearningProgress } from '../../hooks/useLearningProgress'
@@ -251,7 +252,7 @@ function WorkspaceSidebar({ isOpen, onClose }) {
   return (
     <aside className={`workspace-sidebar ${isOpen ? 'workspace-sidebar--open' : ''}`}>
       <div className="workspace-sidebar__header">
-        <Link
+        <LocalizedLink
           to="/tool"
           className="brand-logo workspace-sidebar__brand"
           onClick={onClose}
@@ -262,7 +263,7 @@ function WorkspaceSidebar({ isOpen, onClose }) {
             alt={APP_NAME}
             className="brand-logo__image brand-logo--sidebar"
           />
-        </Link>
+        </LocalizedLink>
 
         <div className="workspace-sidebar__header-actions">
           <button
@@ -325,12 +326,12 @@ function WorkspaceSidebar({ isOpen, onClose }) {
           <div className="workspace-sidebar__account workspace-sidebar__account--guest">
             <p className="workspace-sidebar__account-label">{t('access')}</p>
             <div className="workspace-sidebar__account-links">
-              <Link to="/login" onClick={onClose}>
+              <LocalizedLink to="/login" onClick={onClose}>
                 {t('signIn')}
-              </Link>
-              <Link to="/signup" onClick={onClose}>
+              </LocalizedLink>
+              <LocalizedLink to="/signup" onClick={onClose}>
                 {t('register')}
-              </Link>
+              </LocalizedLink>
             </div>
           </div>
         )}

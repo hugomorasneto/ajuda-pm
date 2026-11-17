@@ -1549,11 +1549,14 @@ async function mockAdmin(context, {
     traffic.push({ pathname, method, body, scope })
 
     if (method === 'HEAD') {
-      const count = endpoint === 'leads'
-        ? 1234
-        : endpoint === 'user_stories' && searchParams.has('user_id')
-          ? (searchParams.get('user_id') === 'eq.access-user' ? 10 : 1)
-          : 2
+      let count = 2
+      if (endpoint === 'leads') {
+        count = 1234
+      } else if (endpoint === 'profiles' && searchParams.has('created_at')) {
+        count = 1
+      } else if (endpoint === 'user_stories' && searchParams.has('user_id')) {
+        count = searchParams.get('user_id') === 'eq.access-user' ? 10 : 1
+      }
       return route.fulfill({ headers: { 'content-range': '*/' + count, 'access-control-expose-headers': 'content-range' } })
     }
     const rows = (data, count = data.length) => {
@@ -1625,6 +1628,8 @@ test('Administração traduz as seis abas e preserva período, busca e detalhe n
   await expect(page).toHaveURL(adminPath + query)
   await expect(page.getByRole('heading', { name: 'Sala de controle da Forja' })).toBeVisible()
   await expect(page.getByText('1.234', { exact: true })).toBeVisible()
+  await expect(page.getByText('Cadastros no período: 1', { exact: true })).toBeVisible()
+  await expect(page.getByText('Usuários únicos: 2', { exact: true })).toBeVisible()
   await page.getByRole('combobox', { name: 'Período analisado' }).selectOption('30d')
   await expect(page.getByText('1.234', { exact: true })).toBeVisible()
   const overview = page.getByRole('tab', { name: 'Visão geral' })
@@ -1656,6 +1661,8 @@ test('Administração traduz as seis abas e preserva período, busca e detalhe n
 
   await page.getByRole('tab', { name: 'Overview' }).click()
   await expect(page.getByText('1,234', { exact: true })).toBeVisible()
+  await expect(page.getByText('Sign-ups this period: 1', { exact: true })).toBeVisible()
+  await expect(page.getByText('Unique users: 2', { exact: true })).toBeVisible()
   await page.getByRole('tab', { name: 'Usage', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Main funnel' })).toBeVisible()
   await expect(page.getByText('66.7%', { exact: true }).first()).toBeVisible()
@@ -1774,8 +1781,13 @@ test('Administração retorna ao link direto em inglês após o login do adminis
 test('Administração redireciona a conta sem papel administrador antes de solicitar dados', async ({ page, context }) => {
   const { traffic } = await mockAdmin(context, { role: 'user' })
   await page.goto('/admin?lang=en')
-  await expect(page).toHaveURL('/')
+  await expect(page).toHaveURL('/en/')
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
   await expect(page.getByRole('heading', { name: 'Forge control room' })).toHaveCount(0)
+
+  await page.goto('/admin?lang=pt-BR')
+  await expect(page).toHaveURL('/')
+  await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR')
   expect(traffic.some(({ pathname }) => /tracking_events|admin_update_user_access|\/leads$/.test(pathname))).toBe(false)
 })
 
@@ -1787,4 +1799,25 @@ test('Administração traduz falha de carregamento sem repetir a consulta', asyn
   await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
   await expect(page.getByRole('alert')).toHaveText('Could not load administration data. Check your permissions and try again.')
   expect(traffic).toHaveLength(before)
+})
+
+test('Links da Bancada preservam o idioma e links logados com barra mantêm o layout', async ({ page, context }) => {
+  await mockWorkspace(context)
+  const path = '/times/?projectId=project-a&lang=en#main-content'
+  await page.goto(path)
+  await expect(page).toHaveURL(path)
+  await expect(page.locator('.workspace-shell')).toHaveClass(/workspace-shell--forge/)
+  await expect(page.getByRole('combobox', { name: 'Project', exact: true })).toHaveValue('project-a')
+  await expect(page.locator('.workspace-sidebar__brand')).toHaveAttribute('href', '/tool?lang=en')
+
+  const website = page.getByRole('link', { name: 'Website', exact: true })
+  await expect(website).toHaveAttribute('href', '/en/')
+  await website.click()
+  await expect(page).toHaveURL('/en/')
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+
+  await page.goto(path.replace('lang=en', 'lang=pt-BR'))
+  await expect(page.locator('.workspace-shell')).toHaveClass(/workspace-shell--forge/)
+  await expect(page.locator('.workspace-sidebar__brand')).toHaveAttribute('href', '/tool?lang=pt-BR')
+  await expect(page.getByRole('link', { name: 'Site', exact: true })).toHaveAttribute('href', '/')
 })
