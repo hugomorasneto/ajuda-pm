@@ -6,8 +6,13 @@
     "privacyNote": "Usamos os dados deste formulário para registrar, encaminhar e responder à sua solicitação. Consulte a <policy>Política de Privacidade</policy> para saber como tratamos esses dados."
   },
   "termsOfUsePage": {
+    "termsOfUsePage_estes_termos_de_uso_regulam": "Hugo Cruz da Silva Moraes Neto é o responsável pelo serviço hospedado ProdForge. Estes Termos de Uso regulam o acesso e o uso do site, cadastro, autenticação, Bancada, recursos com IA, histórico, projetos e materiais de aprendizado. O contato para dúvidas e solicitações é contato@techtupa.com.br.",
+    "termsOfUsePage_ao_acessar_ou_usar_o": "Ao criar uma conta ou aceitar uma nova versão destes Termos, você concorda com as condições apresentadas. Você pode consultar os Termos e a Política de Privacidade pelos links disponíveis antes de aceitar.",
+    "termsOfUsePage_quando_houver_mudancas_relevantes_poderemos": "Mudanças relevantes nos Termos serão informadas na plataforma. Quando exigirem um novo aceite, a nova versão será apresentada no próximo acesso à área logada.",
     "termsOfUsePage_o_produto_foi_pensado_para": "O ProdForge é destinado ao uso profissional por pessoas com 18 anos ou mais, incluindo PMs, POs e times de produto, desenvolvimento e QA.",
-    "termsOfUsePage_ultima_atualizacao": "Status da minuta",
+    "termsOfUsePage_ultima_atualizacao": "Versão local",
+    "termsOfUsePage_vigencia_em_revisao": "2026-11-17-preview.1",
+    "termsOfUsePage_estes_termos_foram_escritos_em": "Versão concluída para validação local. A vigência no serviço publicado começará na data da publicação autorizada desta versão.",
     "termsOfUsePage_a_versao_publicada_nesta_pagina": "Em caso de divergência entre idiomas, a versão em português brasileiro é a referência, respeitados os direitos previstos na legislação aplicável. Recursos específicos podem ter regras complementares quando forem disponibilizados.",
     "termsOfUsePage_a_marca_prodforge_identidade_visual": "O código disponibilizado sob a licença MIT pode ser usado conforme as condições dessa licença. A marca ProdForge, a identidade visual, os materiais editoriais e os demais itens reservados no escopo da licença seguem as permissões aplicáveis a cada material.",
     "termsOfUsePage_esses_conteudos_podem_ser_armazenados": "Podemos armazenar esses conteúdos para manter seu histórico, recuperar contexto, diagnosticar falhas e prevenir abuso, conforme descrito na Política de Privacidade.",
@@ -18,7 +23,14 @@
     "termsOfUsePage_recursos_pagos_podem_depender_de": "Quando uma oferta paga estiver disponível, apresentaremos preço, recursos, limites e condições antes da contratação."
   },
   "privacyPolicyPage": {
-    "privacyPolicyPage_ultima_atualizacao": "Status da minuta",
+    "privacyPolicyPage_ultima_atualizacao": "Versão local",
+    "privacyPolicyPage_vigencia_em_revisao": "2026-11-17-preview.1",
+    "privacyPolicyPage_o_prodforge_e_uma_plataforma": "Hugo Cruz da Silva Moraes Neto é o responsável pelo ProdForge e pelo tratamento dos dados pessoais necessários à operação do serviço. Para dúvidas e pedidos de privacidade, entre em contato por contato@techtupa.com.br.",
+    "privacyPolicyPage_a_politica_foi_escrita_em": "Versão concluída para validação local. A vigência no serviço publicado começará na data da publicação autorizada desta versão.",
+    "privacyPolicyPage_quando_houver_mudancas_relevantes_poderemos": "Mudanças relevantes nesta Política serão informadas na plataforma. A identificação da versão permite consultar o conteúdo apresentado na ocasião do aceite dos Termos. As escolhas de analytics são gerenciadas separadamente nas Preferências de Privacidade.",
+    "privacyPolicyPage_provedores_de_infraestrutura_hospedagem_banco": "Serviços de infraestrutura e hospedagem, Supabase para autenticação e banco de dados e serviço de e-mail configurado para encaminhar mensagens e convites.",
+    "privacyPolicyPage_servicos_de_ia_usados_para": "API Gemini, do Google, para produzir as gerações e análises solicitadas. O contexto enviado pode incluir o briefing, os requisitos e as informações do projeto necessárias à resposta.",
+    "privacyPolicyPage_mantemos_dados_pelo_tempo_necessario": "Mantemos os dados necessários à conta e aos recursos solicitados enquanto houver finalidade para esse tratamento, observados os pedidos de exclusão e as hipóteses legais de conservação. Se algum dado precisar ser conservado após um pedido de exclusão, informaremos a finalidade e o prazo ou critério aplicável. Dados encaminhados aos fornecedores também estão sujeitos às condições de tratamento e retenção desses serviços.",
     "privacyPolicyPage_historico_de_uso_versoes_geradas": "Histórico de uso, versões geradas, contagem de gerações e limites da conta, preferências, projetos, membros convidados e ações realizadas na Bancada.",
     "privacyPolicyPage_enviar_comunicacoes_relacionadas_a_conta": "Enviar comunicações necessárias sobre sua conta e responder às suas solicitações. Enviar novidades do Pro quando você pedir para recebê-las.",
     "privacyPolicyPage_conteudos_salvos_na_bancada_versoes": "Você pode solicitar a exclusão dos seus dados pelo canal de contato indicado nesta Política. Na resposta, informaremos quais dados foram excluídos e quais precisam ser conservados, com o motivo e o prazo aplicável.",

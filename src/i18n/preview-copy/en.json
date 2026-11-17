@@ -6,8 +6,13 @@
     "privacyNote": "We use the information in this form to record your request, route it to our team, and respond. Read our <policy>Privacy Policy</policy> to learn how we handle this information."
   },
   "termsOfUsePage": {
+    "termsOfUsePage_estes_termos_de_uso_regulam": "Hugo Cruz da Silva Moraes Neto is responsible for the hosted ProdForge service. These Terms of Use govern access to and use of the website, registration, authentication, workspace, AI features, history, projects, and learning materials. For questions and requests, contact contato@techtupa.com.br.",
+    "termsOfUsePage_ao_acessar_ou_usar_o": "By creating an account or accepting a new version of these Terms, you agree to the conditions presented. You can read the Terms and Privacy Policy through the links provided before accepting.",
+    "termsOfUsePage_quando_houver_mudancas_relevantes_poderemos": "We will announce significant changes to the Terms in the platform. When a new acceptance is required, the new version will be presented the next time you access the signed-in area.",
     "termsOfUsePage_o_produto_foi_pensado_para": "ProdForge is intended for professional use by people aged 18 or older, including PMs, POs, and product, development, and QA teams.",
-    "termsOfUsePage_ultima_atualizacao": "Draft status",
+    "termsOfUsePage_ultima_atualizacao": "Local version",
+    "termsOfUsePage_vigencia_em_revisao": "2026-11-17-preview.1",
+    "termsOfUsePage_estes_termos_foram_escritos_em": "Version completed for local validation. It will take effect in the published service on the date this version is authorized for publication.",
     "termsOfUsePage_a_versao_publicada_nesta_pagina": "If the language versions differ, the Brazilian Portuguese version is the reference, subject to your rights under applicable law. Specific features may have additional rules when they become available.",
     "termsOfUsePage_a_marca_prodforge_identidade_visual": "The MIT License governs use of the code released under it. The ProdForge brand, visual identity, editorial materials, and other reserved items listed in the license scope are subject to the permissions that apply to each item.",
     "termsOfUsePage_esses_conteudos_podem_ser_armazenados": "We may store this content to maintain your history, recover context, troubleshoot issues, and prevent abuse, as described in the Privacy Policy.",
@@ -18,7 +23,14 @@
     "termsOfUsePage_recursos_pagos_podem_depender_de": "If a paid offer becomes available, we will show its price, features, limits, and terms before you subscribe."
   },
   "privacyPolicyPage": {
-    "privacyPolicyPage_ultima_atualizacao": "Draft status",
+    "privacyPolicyPage_ultima_atualizacao": "Local version",
+    "privacyPolicyPage_vigencia_em_revisao": "2026-11-17-preview.1",
+    "privacyPolicyPage_o_prodforge_e_uma_plataforma": "Hugo Cruz da Silva Moraes Neto is responsible for ProdForge and for processing the personal data needed to operate the service. For privacy questions and requests, contact contato@techtupa.com.br.",
+    "privacyPolicyPage_a_politica_foi_escrita_em": "Version completed for local validation. It will take effect in the published service on the date this version is authorized for publication.",
+    "privacyPolicyPage_quando_houver_mudancas_relevantes_poderemos": "We will announce significant changes to this Policy in the platform. The version identifier lets you look up the content presented when you accepted the Terms. Analytics choices are managed separately in Privacy Preferences.",
+    "privacyPolicyPage_provedores_de_infraestrutura_hospedagem_banco": "Infrastructure and hosting services, Supabase for authentication and the database, and the email service configured to forward messages and invitations.",
+    "privacyPolicyPage_servicos_de_ia_usados_para": "Google's Gemini API to produce the generations and analyses you request. The context sent may include your brief, requirements, and project information needed to produce the response.",
+    "privacyPolicyPage_mantemos_dados_pelo_tempo_necessario": "We keep the data needed for your account and requested features while there is a purpose for that processing, subject to deletion requests and legal grounds for retention. If any data needs to be kept after a deletion request, we will explain the purpose and applicable period or criteria. Data sent to service providers is also subject to their processing and retention terms.",
     "privacyPolicyPage_historico_de_uso_versoes_geradas": "Usage history, generated versions, generation counts and account limits, preferences, projects, invited members, and actions taken in the workspace.",
     "privacyPolicyPage_enviar_comunicacoes_relacionadas_a_conta": "Send necessary communications about your account and respond to your requests. Send Pro updates when you ask to receive them.",
     "privacyPolicyPage_conteudos_salvos_na_bancada_versoes": "You can request deletion of your data through the contact channel listed in this Policy. In our response, we will explain what we deleted, what needs to be kept, why, and for how long.",

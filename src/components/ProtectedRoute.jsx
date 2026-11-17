@@ -3,6 +3,9 @@ import { useCopy, useLanguage } from '../i18n/context'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { buildAuthPath, getAuthDestinationLanguage, getAuthRedirectContext } from '../utils/authRedirect'
+import { lazy } from 'react'
+
+const LegalConsentGate = lazy(() => import('./auth/LegalConsentGate'))
 
 function ProtectedRoute({ children }) {
   const { user, isAuthLoading, signOutDestination } = useAuth()
@@ -40,7 +43,7 @@ function ProtectedRoute({ children }) {
     )
   }
 
-  return children
+  return preview ? <LegalConsentGate key={user.id}>{children}</LegalConsentGate> : children
 }
 
 export default ProtectedRoute

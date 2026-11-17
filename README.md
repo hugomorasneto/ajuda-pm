@@ -67,6 +67,22 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-free-quota-loca
 
 O script cria e remove containers exclusivos, usa contas fictícias, executa a migração e os testes SQL, e testa a função real com PostgREST e PostgreSQL locais. A autenticação e o Gemini são simulados. O teste cobre a última vaga concorrente, repetição de pedidos, falhas, versões, isolamento de contas e limites personalizados. As imagens Docker precisam estar disponíveis ou ser baixadas na primeira execução.
 
+## Termos, Privacidade e aceite na prévia
+
+Os textos legais foram consolidados para a versão local `2026-11-17-preview.1`, com Hugo Cruz da Silva Moraes Neto e `contato@techtupa.com.br` como identificação adotada a partir dos dados disponíveis. A vigência pública começa com a publicação autorizada. As condições operacionais de fornecedores, retenção, exclusão e backups continuam registradas em `revisao-de-textos/`.
+
+Na prévia, o cadastro envia a versão, o resumo SHA-256 e o idioma apresentados. O gatilho de criação da conta valida esses dados e registra o aceite na mesma transação. Contas existentes consultam o registro do servidor e aceitam a versão atual com uma ação antes de continuar no destino original. O aceite dos Termos e a apresentação da Política são registrados juntos. A escolha opcional de analytics segue seu próprio fluxo.
+
+`src/content/legalRelease.json` identifica a versão e o resumo do conteúdo efetivo dos dois documentos nos dois idiomas. A migração `20261117190539_local_legal_acceptance.sql` conserva esse conteúdo como um arquivo imutável. A checagem de catálogos bloqueia alterações no texto que divergirem da versão registrada. Para uma nova edição, crie uma nova identificação, resumo e migração com o novo conteúdo, preservando as versões anteriores.
+
+Para testar o banco isolado, use Docker e execute em PowerShell.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-legal-consent-local.ps1
+```
+
+O teste usa contas fictícias e inclui cadastro, falhas, permissões, isolamento, repetição, quatro solicitações concorrentes e apresentação de uma nova versão. A autenticação nos testes de navegador é simulada. A migração e o frontend precisam ser ativados em conjunto em uma futura implantação autorizada.
+
 ## Contribuição
 
 Leia o [guia de contribuição](CONTRIBUTING.md) e as [instruções para relatar problemas de segurança](SECURITY.md).

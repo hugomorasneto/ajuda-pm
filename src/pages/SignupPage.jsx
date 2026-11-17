@@ -2,7 +2,7 @@ import { Trans } from 'react-i18next'
 import AuthBrandBar from '../components/auth/AuthBrandBar'
 import AuthStoryExample from '../components/auth/AuthStoryExample'
 import { useAuthJourney } from '../hooks/useAuthJourney'
-import { useCopy } from '../i18n/context'
+import { useCopy, useLanguage } from '../i18n/context'
 import AuthReturnContext from '../components/auth/AuthReturnContext'
 import { getAuthErrorKey, isValidAuthEmail } from '../utils/authErrors'
 import { useState } from 'react'
@@ -12,9 +12,11 @@ import { usePageMetadata } from '../hooks/usePageMetadata'
 import '../styles/pages.css'
 import { signUpWithEmail } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
+import { localLegalAssertion } from '../services/legalConsentService'
 
 function SignupPage() {
   const t = useCopy('auth')
+  const { preview } = useLanguage()
   const { context, emailRedirectTo, from, language, location, pathTo, showCheckEmail } = useAuthJourney()
   const isPlanningInvite = context === 'planning'
   const [email, setEmail] = useState(location.state?.email ?? '')
@@ -67,6 +69,7 @@ function SignupPage() {
       email: normalizedEmail,
       password,
       redirectTo: emailRedirectTo,
+      ...(preview ? { legalAcceptance: localLegalAssertion(language) } : {}),
     })
 
     if (error) {

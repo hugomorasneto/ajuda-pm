@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { readFileSync, readdirSync } from 'node:fs'
+import { verifyLegalRelease } from './legal-release.mjs'
 
 const readJson = (url) => JSON.parse(readFileSync(url, 'utf8'))
 const locales = new URL('../src/i18n/locales/', import.meta.url)
@@ -59,3 +60,4 @@ for (const [language, overrides] of [['pt-BR', ptPreview], ['en', enPreview]]) {
 }
 
 console.log('Catálogos do piloto: chaves e parâmetros correspondentes.')
+verifyLegalRelease()

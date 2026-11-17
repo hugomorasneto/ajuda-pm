@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import legalRelease from '../src/content/legalRelease.json' with { type: 'json' }
 
 const user = { id: 'user-a', email: 'owner@example.test', aud: 'authenticated', app_metadata: {}, user_metadata: {} }
 
@@ -55,6 +56,9 @@ async function mockWorkspace(context, activeUser = user, {
       } })
     }
     if (pathname.endsWith('/user')) return route.fulfill({ json: activeUser })
+    if (pathname.endsWith('/get_local_legal_status')) {
+      return route.fulfill({ json: { ...legalRelease, accepted: true, language: 'pt-BR', accepted_at: '2026-11-17T19:00:00Z' } })
+    }
     if (pathname.endsWith('/projects')) {
       if (fail) return route.fulfill({ status: 400, json: { message: 'Project request failed' } })
       return route.fulfill({ json: projects })
@@ -380,7 +384,12 @@ test('cadastro e confirmação preservam o destino codificado e permitem reenvia
   await checkWidth(page)
   await page.getByRole('combobox', { name: 'Language' }).scrollIntoViewIfNeeded()
   await evidence(page, testInfo, 'cadastro-en')
+  const signupRequest = page.waitForRequest((request) =>
+    new URL(request.url()).pathname === '/auth/v1/signup' && request.method() === 'POST')
   await page.getByRole('button', { name: 'Create a free account' }).click()
+  expect((await signupRequest).postDataJSON().data.prodforge_legal_acceptance).toEqual({
+    ...legalRelease, language: 'en',
+  })
   await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible()
   expect(page.url()).not.toContain(encodeURIComponent(user.email))
   expect(new URL(page.url()).searchParams.get('from')).toBe(from)
@@ -425,6 +434,84 @@ test('link expirado permite informar o e-mail e retomar o convite original', asy
   expect(new URL(page.url()).searchParams.get('from')).toBe(from)
   await expect(page.getByText(/Once you confirm your email, sign in to access Planning Poker/)).toBeVisible()
   await expect(page.getByLabel('Email', { exact: true })).toHaveValue(user.email)
+})
+
+test('aceite versionado preserva destino e idioma, permite repetir falha e persiste entre abas', async ({ page, context }) => {
+  await mockWorkspace(context)
+  const target = '/times?projectId=project-a&ref=a%26b&lang=en#main-content'
+  let receipt = null
+  let releaseFailure
+  const waiting = new Promise((resolve) => { releaseFailure = resolve })
+  const writes = []
+  await context.route('**/rest/v1/rpc/get_local_legal_status', (route) => route.fulfill({
+    json: receipt ?? { ...legalRelease, accepted: false },
+  }))
+  await context.route('**/rest/v1/rpc/accept_local_legal_terms', async (route) => {
+    const payload = route.request().postDataJSON()
+    writes.push(payload)
+    if (writes.length === 1) {
+      await waiting
+      return route.fulfill({ status: 400, json: { code: 'P0001', message: 'Local save failure' } })
+    }
+    receipt = {
+      ...legalRelease, accepted: true, language: payload.p_language,
+      accepted_at: '2026-11-17T19:00:00Z',
+    }
+    return route.fulfill({ json: receipt })
+  })
+  await page.goto('/en/')
+  await page.getByRole('button', { name: 'Reject optional' }).click()
+  const consent = await page.evaluate(() => localStorage.getItem('prodforge_privacy_consent_preview'))
+  await page.goto(target)
+  await expect(page.getByRole('heading', { name: 'Review the Terms to continue' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Read the Terms of Use in a new tab' }))
+    .toHaveAttribute('href', '/en/terms-of-use')
+  const accept = page.getByRole('button', { name: 'Accept the Terms and continue' })
+  await accept.focus()
+  await page.keyboard.press('Enter')
+  await expect.poll(() => writes.length).toBe(1)
+  await expect(page.getByRole('button', { name: 'Recording acceptance...' })).toBeDisabled()
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  expect(writes).toEqual([{
+    p_version: legalRelease.version, p_sha256: legalRelease.sha256, p_language: 'en',
+  }])
+  releaseFailure()
+  await expect(page.getByRole('alert')).toHaveText('Não foi possível confirmar o registro do aceite. Tente novamente.')
+  await page.getByRole('button', { name: 'Aceitar os Termos e continuar' }).click()
+  await expect(page.getByRole('combobox', { name: 'Projeto', exact: true })).toHaveValue('project-a')
+  await expect(page).toHaveURL(target.replace('lang=en', 'lang=pt-BR'))
+  expect(writes).toHaveLength(2)
+  expect(writes[1].p_language).toBe('pt-BR')
+  expect(await page.evaluate(() => localStorage.getItem('prodforge_privacy_consent_preview'))).toBe(consent)
+  await page.reload()
+  await expect(page.getByRole('combobox', { name: 'Projeto', exact: true })).toHaveValue('project-a')
+  const second = await context.newPage()
+  await second.goto(target)
+  await expect(second.getByRole('combobox', { name: 'Project', exact: true })).toHaveValue('project-a')
+  expect(writes).toHaveLength(2)
+  await second.close()
+  await checkWidth(page)
+})
+
+test('aceite rejeita versão divergente e consulta novamente sem registrar escolha implícita', async ({ page, context }) => {
+  const traffic = await mockWorkspace(context)
+  let checks = 0
+  await context.route('**/rest/v1/rpc/get_local_legal_status', (route) => {
+    checks++
+    return route.fulfill({ json: checks === 1
+      ? { ...legalRelease, sha256: 'outdated', accepted: true }
+      : { ...legalRelease, accepted: false } })
+  })
+  await page.goto('/times?projectId=project-a&lang=en')
+  await expect(page.getByRole('alert')).toContainText("We couldn't verify this version of the Terms.")
+  expect(traffic.some(({ pathname }) => pathname.endsWith('/projects'))).toBe(false)
+  await page.getByRole('button', { name: 'Check again' }).click()
+  await expect(page.getByRole('button', { name: 'Accept the Terms and continue' })).toBeVisible()
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  await expect(page.getByRole('button', { name: 'Aceitar os Termos e continuar' })).toBeVisible()
+  expect(checks).toBe(2)
+  expect(traffic.some(({ pathname }) => pathname.endsWith('/accept_local_legal_terms'))).toBe(false)
+  await checkWidth(page)
 })
 
 test('rotas públicas abrem diretamente nos dois idiomas com metadados e vínculos equivalentes', async ({ page, request }, testInfo) => {
@@ -474,7 +561,8 @@ test('rotas públicas abrem diretamente nos dois idiomas com metadados e víncul
       await expect(page.locator('#planos-limites-e-recursos')).toContainText('a default allowance of 10 successful, saved generations per account, with no monthly reset')
       await expect(page.locator('#planos-limites-e-recursos')).toContainText('Manual edits, failed attempts, and project diagnostics are outside this allowance.')
       await expect(page.locator('#planos-limites-e-recursos')).toContainText('Deleting a saved story does not restore your allowance.')
-      await expect(page.locator('.privacy-policy-hero__summary-date')).toHaveText('Effective date under review')
+      await expect(page.locator('.privacy-policy-hero__summary-date')).toHaveText(legalRelease.version)
+      await expect(page.locator('#aceitacao-e-escopo')).toContainText('Hugo Cruz da Silva Moraes Neto')
       if (testInfo.project.name === 'celular') {
         await page.setViewportSize({ width: 320, height: 740 })
         await checkWidth(page)
@@ -486,7 +574,8 @@ test('rotas públicas abrem diretamente nos dois idiomas com metadados e víncul
       await expect(page.locator('#direitos-do-titular')).toContainText('a review of decisions made solely by automated means that affect your interests')
       await expect(page.locator('#uso-de-inteligencia-artificial')).toContainText('the context needed to produce a response')
       await expect(page.locator('#quais-dados-podemos-coletar')).toContainText('generation counts and account limits')
-      await expect(page.locator('.privacy-policy-hero__summary-date')).toHaveText('Effective date under review')
+      await expect(page.locator('.privacy-policy-hero__summary-date')).toHaveText(legalRelease.version)
+      await expect(page.locator('#quem-somos')).toContainText('Hugo Cruz da Silva Moraes Neto')
       await expect(page.locator('#retencao-dos-dados')).not.toContainText('90 days')
       await expect(page.locator('#retencao-dos-dados')).toContainText('what needs to be kept, why, and for how long')
       await expect(page.locator('#como-usamos-os-dados')).toContainText('Pro updates when you ask to receive them')
@@ -499,13 +588,13 @@ test('rotas públicas abrem diretamente nos dois idiomas com metadados e víncul
       await expect(page.locator('#aceitacao-e-escopo')).toContainText('a versão em português brasileiro é a referência')
       await expect(page.locator('#o-que-e-o-prodforge')).toContainText('uso profissional por pessoas com 18 anos ou mais')
       await expect(page.locator('#planos-limites-e-recursos')).toContainText('Excluir uma história salva não repõe o saldo.')
-      await expect(page.locator('.privacy-policy-hero__summary-date')).toHaveText('Vigência em revisão')
+      await expect(page.locator('.privacy-policy-hero__summary-date')).toHaveText(legalRelease.version)
     }
     if (portuguese === '/politica-de-privacidade') {
       await expect(page.locator('#direitos-do-titular')).toContainText('Agência Nacional de Proteção de Dados (ANPD)')
       await expect(page.locator('#cookies-e-tecnologias-similares')).toContainText('Cookies de marketing estão desativados.')
       await expect(page.locator('#quais-dados-podemos-coletar')).toContainText('contagem de gerações e limites da conta')
-      await expect(page.locator('.privacy-policy-hero__summary-date')).toHaveText('Vigência em revisão')
+      await expect(page.locator('.privacy-policy-hero__summary-date')).toHaveText(legalRelease.version)
       await expect(page.locator('#retencao-dos-dados')).toContainText('com o motivo e o prazo aplicável')
       await expect(page.locator('#como-usamos-os-dados')).toContainText('novidades do Pro quando você pedir para recebê-las')
     }
@@ -527,10 +616,10 @@ test('rotas públicas abrem diretamente nos dois idiomas com metadados e víncul
   const review = await request.get('/revisao-de-textos/')
   expect(review.ok()).toBe(true)
   const reviewHtml = await review.text()
-  expect(reviewHtml).toContain('base <code>50154be</code>')
+  expect(reviewHtml).toContain('Base <code>efe7a43</code>')
   expect(reviewHtml).toContain('Confirme o custo previsto para as 10 gerações')
   expect(reviewHtml).toContain('Mapa de bases aprovado para validação dos fluxos.')
-  expect(reviewHtml).toContain('O registro confiável e a reapresentação às contas existentes continuam pendentes de implementação.')
+  expect(reviewHtml).toContain('Registro de aceite implementado para validação local.')
   await page.goto('/revisao-de-textos/#privacidade')
   await checkWidth(page)
   await page.getByRole('link', { name: 'Planos', exact: true }).click()
@@ -1082,7 +1171,11 @@ test('Histórico mantém busca, versão, comparação e exportação durante a t
   await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
   await page.getByRole('combobox', { name: 'Language' }).scrollIntoViewIfNeeded()
   await evidence(page, testInfo, 'historico-en')
+  const historyReloaded = page.waitForResponse((response) =>
+    new URL(response.url()).pathname === '/rest/v1/rpc/search_user_story_groups' &&
+    response.request().method() === 'POST' && response.ok())
   await page.reload()
+  await historyReloaded
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
   await expect(page.locator('.history-preview')).toContainText(forgeFixture.user_story)
 })

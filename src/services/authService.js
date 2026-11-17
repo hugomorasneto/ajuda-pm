@@ -40,13 +40,18 @@ export function maskEmail(email) {
   return `${localPart.slice(0, 2)}***@${domain}`
 }
 
-export async function signUpWithEmail({ email, password, redirectTo }) {
+export async function signUpWithEmail({ email, password, redirectTo, legalAcceptance }) {
   const options = buildEmailRedirectOptions(redirectTo)
 
   return supabase.auth.signUp({
     email,
     password,
-    ...(options ? { options } : {}),
+    ...(options || legalAcceptance ? {
+      options: {
+        ...options,
+        ...(legalAcceptance ? { data: { prodforge_legal_acceptance: legalAcceptance } } : {}),
+      },
+    } : {}),
   })
 }
 
