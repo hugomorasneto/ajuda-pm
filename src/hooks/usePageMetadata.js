@@ -65,6 +65,8 @@ export function usePageMetadata({
   type = 'website',
   image = DEFAULT_IMAGE_URL,
   imageAlt = DEFAULT_IMAGE_ALT,
+  imageWidth = '1200',
+  imageHeight = '630',
   ogTitle = title,
   ogDescription = description,
   twitterCard = 'summary_large_image',
@@ -91,8 +93,8 @@ export function usePageMetadata({
     upsertMeta('meta[property="og:image"]', 'property', 'og:image', image)
     upsertMeta('meta[property="og:image:secure_url"]', 'property', 'og:image:secure_url', image)
     upsertMeta('meta[property="og:image:type"]', 'property', 'og:image:type', 'image/png')
-    upsertMeta('meta[property="og:image:width"]', 'property', 'og:image:width', '1200')
-    upsertMeta('meta[property="og:image:height"]', 'property', 'og:image:height', '630')
+    upsertMeta('meta[property="og:image:width"]', 'property', 'og:image:width', imageWidth)
+    upsertMeta('meta[property="og:image:height"]', 'property', 'og:image:height', imageHeight)
     upsertMeta('meta[property="og:image:alt"]', 'property', 'og:image:alt', imageAlt)
 
     upsertMeta('meta[name="twitter:card"]', 'name', 'twitter:card', twitterCard)
@@ -107,6 +109,8 @@ export function usePageMetadata({
     enabled,
     image,
     imageAlt,
+    imageWidth,
+    imageHeight,
     jsonLd,
     language,
     ogDescription,

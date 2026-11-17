@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import Link from '../../i18n/LocalizedLink'
 import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC } from '../../constants/app'
 import { useCopy } from '../../i18n/context'
 

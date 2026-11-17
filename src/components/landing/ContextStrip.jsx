@@ -1,3 +1,4 @@
+import { useCopy } from '../../i18n/context'
 const ICONS = {
   bolt: (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -24,8 +25,9 @@ const ICONS = {
 }
 
 function ContextStrip({ items }) {
+  const t = useCopy('contextStrip')
   return (
-    <div className="context-strip" role="list" aria-label="Destaques do produto">
+    <div className="context-strip" role="list" aria-label={t('contextStrip_destaques_do_produto')}>
       {items.map((item, i) => (
         <article key={item.value} className="context-strip__item forge-panel forge-panel--metal" role="listitem">
           {i > 0 && <span className="context-strip__divider" aria-hidden="true" />}

@@ -1,6 +1,6 @@
 import { buildAuthPath } from '../../utils/authRedirect'
 import { useCopy, useLanguage } from '../../i18n/context'
-import { Link } from 'react-router-dom'
+import Link from '../../i18n/LocalizedLink'
 import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC, HUGO_MORAES_LINKEDIN_URL } from '../../constants/app'
 import { useAuth } from '../../hooks/useAuth'
 

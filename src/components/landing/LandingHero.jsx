@@ -1,9 +1,11 @@
-import { Link } from 'react-router-dom'
+import { useCopy } from '../../i18n/context'
+import Link from '../../i18n/LocalizedLink'
 import HeroTransformationPreview from './HeroTransformationPreview'
 
 function LandingHero({ hero, isAuthenticated, sectionId }) {
+  const t = useCopy('landingHero')
   const primaryCtaPath = isAuthenticated ? '/tool' : '/signup'
-  const primaryCtaLabel = isAuthenticated ? 'Abrir bancada' : 'Criar conta grátis'
+  const primaryCtaLabel = isAuthenticated ? t('landingHero_abrir_bancada') : t('landingHero_criar_conta_gratis')
 
   return (
     <section
@@ -21,14 +23,14 @@ function LandingHero({ hero, isAuthenticated, sectionId }) {
             {primaryCtaLabel}
           </Link>
           <Link className="landing-button forge-button forge-button--metal forge-button--lg" to="/#como-funciona">
-            Ver como funciona
+            {t('landingHero_ver_como_funciona')}
           </Link>
         </div>
 
         {hero.microcopy ? <p className="landing-hero__microcopy">{hero.microcopy}</p> : null}
 
         {hero.trustSignals?.length ? (
-          <ul className="landing-hero__trust-signals" aria-label="Sinais de confiança da ProdForge">
+          <ul className="landing-hero__trust-signals" aria-label={t('landingHero_sinais_de_confianca_da_prodforge')}>
             {hero.trustSignals.map((item) => (
               <li key={item}>{item}</li>
             ))}

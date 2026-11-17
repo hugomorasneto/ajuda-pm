@@ -22,6 +22,15 @@ function compare(pt, en, path) {
 assert.deepEqual(catalogs('pt-BR'), catalogs('en'), 'Different catalog namespaces')
 for (const name of catalogs('pt-BR')) compare(read('pt-BR', name), read('en', name), name)
 
+const content = new URL('../src/content/', import.meta.url)
+const editorialFiles = (lang) => readdirSync(new URL(lang + '/', content))
+  .filter((name) => name.endsWith('.json')).sort()
+assert.deepEqual(editorialFiles('pt-BR'), editorialFiles('en'), 'Different editorial catalogs')
+for (const name of editorialFiles('pt-BR')) {
+  const load = (lang) => JSON.parse(readFileSync(new URL(lang + '/' + name, content), 'utf8'))
+  compare(load('pt-BR'), load('en'), name)
+}
+
 const ptAbout = (await import('../src/content/pt-BR/about.js')).default
 const enAbout = (await import('../src/content/en/about.js')).default
 compare(ptAbout, enAbout, 'about content')

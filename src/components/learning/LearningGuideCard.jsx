@@ -1,7 +1,9 @@
+import { useCopy } from '../../i18n/context'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import Link from '../../i18n/LocalizedLink'
 
 function LearningGuideCard({ guide, variant = 'default', isCompleted = false }) {
+  const t = useCopy('learningTeaser')
   const [isThumbnailUnavailable, setIsThumbnailUnavailable] = useState(false)
   const [thumbnailAttemptIndex, setThumbnailAttemptIndex] = useState(0)
   const hasThumbnail = Boolean(guide.thumbnailSrc)
@@ -29,16 +31,16 @@ function LearningGuideCard({ guide, variant = 'default', isCompleted = false }) 
             <div
               className="learning-card__image-fallback"
               role="img"
-              aria-label={guide.thumbnailAlt ?? `Capa do guia ${guide.title}`}
+              aria-label={guide.thumbnailAlt ?? t('cover', { title: guide.title })}
             >
-              <span className="learning-card__image-badge">Campo de Treino ProdForge</span>
+              <span className="learning-card__image-badge">{t('trainingGround')}</span>
               <strong>{guide.category}</strong>
             </div>
           ) : (
             <img
               className="learning-card__image"
               src={activeThumbnailSrc}
-              alt={guide.thumbnailAlt ?? `Capa do guia ${guide.title}`}
+              alt={guide.thumbnailAlt ?? t('cover', { title: guide.title })}
               loading={variant === 'landing' ? 'eager' : 'lazy'}
               decoding="async"
               fetchPriority={variant === 'landing' ? 'high' : undefined}
@@ -52,11 +54,11 @@ function LearningGuideCard({ guide, variant = 'default', isCompleted = false }) 
         <span>{guide.category}</span>
         <span>{guide.readingTime}</span>
         {isCompleted && (
-          <span className="learning-card__done-badge" aria-label="Módulo concluído">
+          <span className="learning-card__done-badge" aria-label={t('completedModule')}>
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
               <path d="M2 5.5l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Concluído
+            {t('completed')}
           </span>
         )}
       </div>
@@ -70,10 +72,10 @@ function LearningGuideCard({ guide, variant = 'default', isCompleted = false }) 
         <span className="learning-card__level">{guide.level}</span>
         <div className="learning-card__actions">
           <Link to={`/aprender/${guide.slug}`} className="learning-card__action-read">
-            {isCompleted ? 'Reler guia' : 'Ler guia'}
+            {isCompleted ? t('reread') : t('read')}
           </Link>
           <Link to="/signup" className="learning-card__action-practice">
-            Praticar →
+            {t('practice')}
           </Link>
         </div>
       </div>

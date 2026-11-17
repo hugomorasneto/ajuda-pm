@@ -1,3 +1,4 @@
+import { useCopy } from '../../i18n/context'
 import devForgemasterBlade from '../../assets/landing/personas/dev-forgemaster-blade.png'
 import pmStrategistForge from '../../assets/landing/personas/pm-strategist-forge.png'
 import qaGuardianShield from '../../assets/landing/personas/qa-guardian-shield.png'
@@ -9,6 +10,7 @@ const PERSONA_IMAGES = {
 }
 
 function BenefitsStrip({ content }) {
+  const t = useCopy('benefitsStrip')
   return (
     <section className="landing-section landing-benefits">
       <div className="landing-section__intro">
@@ -44,7 +46,7 @@ function BenefitsStrip({ content }) {
               <div className="landing-benefits__body">
                 <h3>{item.title}</h3>
                 <p className="landing-benefits__description">{item.description}</p>
-                <ul className="landing-benefits__list" aria-label={`Benefícios para ${item.role}`}>
+                <ul className="landing-benefits__list" aria-label={t('benefitsStrip_beneficios_para', { p1: item.role })}>
                   {item.benefits.map((benefit) => (
                     <li key={benefit}>{benefit}</li>
                   ))}

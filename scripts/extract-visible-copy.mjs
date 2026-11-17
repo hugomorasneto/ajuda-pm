@@ -370,7 +370,7 @@ export function collectVisibleCopy(language = 'pt-BR') {
       : 'pt-BR'
     if (itemLanguage !== language) return []
 
-    if (relativePath.startsWith('src/i18n/locales/') || relativePath.endsWith('/aboutMetadata.json')) {
+    if (relativePath.startsWith('src/i18n/locales/') || /(?:Metadata|\.i18n)\.json$/.test(relativePath)) {
       function values(object) {
         return Object.values(object).flatMap((value) => typeof value === 'string' ? [value] : values(value))
       }

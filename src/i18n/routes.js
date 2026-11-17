@@ -2,17 +2,31 @@ export const DEFAULT_LANGUAGE = 'pt-BR'
 export const ENGLISH = 'en'
 export const PILOT_MODE = 'i18n-preview'
 
-const pilotPages = [
+export const publicLocalePages = [
+  { id: 'home', 'pt-BR': '/', en: '/en/' },
   { id: 'about', 'pt-BR': '/sobre', en: '/en/about' },
+  { id: 'faq', 'pt-BR': '/faq', en: '/en/faq' },
+  { id: 'contact', 'pt-BR': '/contato', en: '/en/contact' },
+  { id: 'privacyPolicy', 'pt-BR': '/politica-de-privacidade', en: '/en/privacy-policy' },
+  { id: 'preferences', 'pt-BR': '/preferencias-de-privacidade', en: '/en/privacy-preferences' },
+  { id: 'terms', 'pt-BR': '/termos-de-uso', en: '/en/terms-of-use' },
+]
+
+const pilotPages = [
+  ...publicLocalePages,
   { id: 'teams', 'pt-BR': '/times' },
   { id: 'login', 'pt-BR': '/login', auth: true },
   { id: 'signup', 'pt-BR': '/signup', auth: true },
   { id: 'checkEmail', 'pt-BR': '/check-email', auth: true },
 ]
 
+function normalizePath(path) {
+  return path.replace(/\/+$/, '') || '/'
+}
+
 export function getPilotPage(pathname) {
-  const path = pathname.replace(/\/+$/, '') || '/'
-  return pilotPages.find((page) => page[DEFAULT_LANGUAGE] === path || page.en === path)
+  const path = normalizePath(pathname)
+  return pilotPages.find((page) => page[DEFAULT_LANGUAGE] === path || (page.en && normalizePath(page.en) === path))
 }
 
 function normalizeLanguage(value) {
@@ -25,7 +39,7 @@ function normalizeLanguage(value) {
 export function resolveLanguage({ pathname, search, enabled, saved, visitor, browser = [] }) {
   const page = enabled ? getPilotPage(pathname) : undefined
   if (!page) return DEFAULT_LANGUAGE
-  if (page.en) return pathname.startsWith('/en/') ? ENGLISH : DEFAULT_LANGUAGE
+  if (page.en) return normalizePath(pathname) === normalizePath(page.en) ? ENGLISH : DEFAULT_LANGUAGE
 
   return getExplicitLanguage(search) ?? normalizeLanguage(saved) ?? normalizeLanguage(visitor) ??
     browser.map(normalizeLanguage).find(Boolean) ?? DEFAULT_LANGUAGE
@@ -63,4 +77,20 @@ export function preferenceKey(userId) {
 
 export function getOgLocale(language) {
   return language === ENGLISH ? 'en_US' : 'pt_BR'
+}
+
+export function localizeHref(to, language) {
+  if (typeof to !== 'string' || !to.startsWith('/')) return to
+  const pathname = to.split(/[?#]/, 1)[0]
+  const suffix = to.slice(pathname.length)
+  const page = getPilotPage(pathname)
+  if (page?.en) return page[language] + suffix
+  if (!page?.auth) return to
+
+  const hashIndex = suffix.indexOf('#')
+  const search = hashIndex === -1 ? suffix : suffix.slice(0, hashIndex)
+  if (getExplicitLanguage(search)) return to
+  const hash = hashIndex === -1 ? '' : suffix.slice(hashIndex)
+  const next = languageDestination({ pathname, search, hash }, language)
+  return next.pathname + next.search + next.hash
 }

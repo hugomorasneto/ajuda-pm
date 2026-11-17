@@ -21,7 +21,7 @@ function LandingFaq({ content }) {
           const panelId = `${baseId}-panel-${index}`
 
           return (
-            <article className="landing-faq__item forge-panel forge-panel--metal" key={item.question}>
+            <article className="landing-faq__item forge-panel forge-panel--metal" key={triggerId}>
               <button
                 type="button"
                 className="landing-faq__trigger"

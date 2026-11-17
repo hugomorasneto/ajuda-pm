@@ -1,0 +1,39 @@
+{
+  "learningTeaser_ver_trilha_completa": "See the full learning path →",
+  "cover": "Cover for {{title}}",
+  "beginner": "Beginner",
+  "trainingGround": "ProdForge Training Ground",
+  "completedModule": "Module completed",
+  "completed": "Completed",
+  "reread": "Read again",
+  "read": "Read guide",
+  "practice": "Practice →",
+  "guidesInPortuguese": "The full guides are available in Brazilian Portuguese.",
+  "guides": {
+    "fundamentos-produto-agil": {
+      "title": "Agile product fundamentals for new PMs and POs",
+      "excerpt": "What matters early on: the problem, decisions, alignment, and continuous learning.",
+      "category": "Fundamentals"
+    },
+    "user-stories-na-pratica": {
+      "title": "User stories in practice",
+      "excerpt": "Turn loose context into a useful story with an objective, expected behavior, criteria, and refinement questions.",
+      "category": "User stories"
+    },
+    "backlog-e-refinamento": {
+      "title": "Backlog and refinement without the chaos",
+      "excerpt": "Organize priorities, readiness, and team conversations without turning the backlog into a pile of requests.",
+      "category": "Backlog"
+    },
+    "refinamento-e-criterios": {
+      "title": "How to refine stories without wasting meetings",
+      "excerpt": "Prepare context and acceptance criteria so the team can use refinement meetings to make decisions.",
+      "category": "Refinement"
+    },
+    "alinhamento-com-stakeholders": {
+      "title": "How to align with stakeholders",
+      "excerpt": "Clarify what stakeholders need and confirm shared understanding before writing the story.",
+      "category": "Alignment"
+    }
+  }
+}

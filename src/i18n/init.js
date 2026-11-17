@@ -2,11 +2,11 @@ import i18next from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import { DEFAULT_LANGUAGE, ENGLISH } from './routes'
 
-const catalogs = import.meta.glob('./locales/pt-BR/*.json', { eager: true, import: 'default' })
+const catalogs = import.meta.glob(['./locales/pt-BR/*.json', '../content/pt-BR/*.i18n.json'], { eager: true, import: 'default' })
 
 function namespaces(files) {
   return Object.fromEntries(Object.entries(files).map(([path, value]) => [
-    path.split('/').at(-1).replace(/\.json$/, ''),
+    path.split('/').at(-1).replace(/(?:\.i18n)?\.json$/, ''),
     value,
   ]))
 }
@@ -18,7 +18,7 @@ i18next.use(initReactI18next).init({
   resources: {
     [DEFAULT_LANGUAGE]: namespaces(catalogs),
     ...(import.meta.env.MODE === 'i18n-preview' ? {
-      [ENGLISH]: namespaces(import.meta.glob('./locales/en/*.json', { eager: true, import: 'default' })),
+      [ENGLISH]: namespaces(import.meta.glob(['./locales/en/*.json', '../content/en/*.i18n.json'], { eager: true, import: 'default' })),
     } : {}),
   },
   interpolation: { escapeValue: false },

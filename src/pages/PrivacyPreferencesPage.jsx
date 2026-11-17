@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { APP_NAME } from '../constants/app'
-import { usePageMetadata } from '../hooks/usePageMetadata'
+import { useCopy, useLanguage } from '../i18n/context'
+import { useState } from 'react'
+import Link from '../i18n/LocalizedLink'
+import { usePublicPageMetadata } from '../hooks/usePublicPageMetadata'
 import {
   clearPrivacyConsent,
   getPrivacyConsent,
@@ -12,68 +12,64 @@ import {
   setPrivacyConsentPreferences,
 } from '../utils/privacyConsent'
 
-const STATUS_COPY = {
+const getStatuses = (t) => ({
   [PRIVACY_CONSENT_STATUS.accepted]: {
-    label: 'Todos aceitos',
+    label: t('privacyPreferencesPage_todos_aceitos'),
     tone: 'accepted',
-    description: 'Você autorizou tecnologias essenciais, analíticas e de marketing neste navegador.',
+    description: t('privacyPreferencesPage_voce_autorizou_tecnologias_essenciais_analiticas'),
   },
   [PRIVACY_CONSENT_STATUS.essentialOnly]: {
-    label: 'Apenas essenciais',
+    label: t('privacyPreferencesPage_apenas_essenciais'),
     tone: 'essential',
-    description: 'Você autorizou somente tecnologias necessárias para o funcionamento básico.',
+    description: t('privacyPreferencesPage_voce_autorizou_somente_tecnologias_necessarias'),
   },
   [PRIVACY_CONSENT_STATUS.custom]: {
-    label: 'Preferência personalizada',
+    label: t('privacyPreferencesPage_preferencia_personalizada'),
     tone: 'custom',
-    description: 'Você definiu manualmente quais tecnologias opcionais podem ser usadas.',
+    description: t('privacyPreferencesPage_voce_definiu_manualmente_quais_tecnologias'),
   },
   none: {
-    label: 'Nenhuma escolha registrada',
+    label: t('privacyPreferencesPage_nenhuma_escolha_registrada'),
     tone: 'empty',
-    description: 'Ainda não há uma decisão de consentimento salva neste navegador.',
+    description: t('privacyPreferencesPage_ainda_nao_ha_uma_decisao'),
   },
-}
+})
 
-const cookieCategories = [
+const getCookieCategories = (t) => [
   {
     id: PRIVACY_CONSENT_CATEGORIES.essential,
-    title: 'Cookies essenciais',
-    badge: 'Sempre ativos',
+    title: t('privacyPreferencesPage_cookies_essenciais'),
+    badge: t('privacyPreferencesPage_sempre_ativos'),
     description:
-      'Necessários para login, segurança e funcionamento básico do ProdForge.',
+      t('privacyPreferencesPage_necessarios_para_login_seguranca_e'),
     locked: true,
   },
   {
     id: PRIVACY_CONSENT_CATEGORIES.analytics,
-    title: 'Cookies analíticos',
-    badge: 'Opcional',
+    title: t('privacyPreferencesPage_cookies_analiticos'),
+    badge: t('privacyPreferencesPage_opcional'),
     description:
-      'Ajudam a entender uso, identificar pontos de fricção e melhorar o produto.',
+      t('privacyPreferencesPage_ajudam_a_entender_uso_identificar'),
   },
   {
     id: PRIVACY_CONSENT_CATEGORIES.marketing,
-    title: 'Cookies de marketing',
-    badge: 'Opcional',
+    title: t('privacyPreferencesPage_cookies_de_marketing'),
+    badge: t('privacyPreferencesPage_opcional'),
     description:
-      'Usados futuramente para campanhas e mensuração. Se ainda não houver recursos opcionais ativos, a escolha fica registrada para uso futuro.',
+      t('privacyPreferencesPage_usados_futuramente_para_campanhas_e'),
   },
 ]
 
-function formatConsentDate(timestamp) {
-  if (!timestamp) return 'Não registrada'
+function formatConsentDate(timestamp, language, t) {
+  if (!timestamp) return t('privacyPreferencesPage_nao_registrada')
 
   const date = new Date(timestamp)
-  if (Number.isNaN(date.getTime())) return 'Data indisponível'
+  if (Number.isNaN(date.getTime())) return t('privacyPreferencesPage_data_indisponivel')
 
-  return new Intl.DateTimeFormat('pt-BR', {
+  return new Intl.DateTimeFormat(language, {
     dateStyle: 'short',
     timeStyle: 'short',
   }).format(date)
-}
-
-function getStatusCopy(consent) {
-  return consent?.status && STATUS_COPY[consent.status] ? STATUS_COPY[consent.status] : STATUS_COPY.none
 }
 
 function getPreferenceFormState(consent) {
@@ -88,53 +84,29 @@ function getPreferenceFormState(consent) {
   }
 }
 
-function getCategoryStatusLabel(consent, categoryId) {
-  if (categoryId === PRIVACY_CONSENT_CATEGORIES.essential) return 'Sempre ativos'
-  if (!PRIVACY_CONSENT_CATEGORY_AVAILABILITY[categoryId]) return 'Indisponíveis'
-  return consent?.categories?.[categoryId] ? 'Autorizados' : 'Recusados'
+function getCategoryStatusLabel(consent, categoryId, t) {
+  if (categoryId === PRIVACY_CONSENT_CATEGORIES.essential) return t('privacyPreferencesPage_sempre_ativos')
+  if (!PRIVACY_CONSENT_CATEGORY_AVAILABILITY[categoryId]) return t('privacyPreferencesPage_indisponiveis')
+  return consent?.categories?.[categoryId] ? t('privacyPreferencesPage_autorizados') : t('privacyPreferencesPage_recusados')
 }
 
 function PrivacyPreferencesPage() {
+  const t = useCopy('privacyPreferencesPage')
+  const cookieCategories = getCookieCategories(t)
   const [consent, setConsent] = useState(() => getPrivacyConsent())
   const [selectedCategories, setSelectedCategories] = useState(() => getPreferenceFormState(consent))
   const [feedbackMessage, setFeedbackMessage] = useState('')
-  const currentStatus = getStatusCopy(consent)
+  const { language } = useLanguage()
+  const statuses = getStatuses(t)
+  const currentStatus = statuses[consent?.status] ?? statuses.none
 
-  const consentDetails = useMemo(
-    () => [
-      { label: 'Status atual', value: currentStatus.label },
-      { label: 'Última escolha', value: consent ? formatConsentDate(consent.timestamp) : 'Não registrada' },
-      { label: 'Versão do consentimento', value: consent?.version ?? 'Não registrada' },
-    ],
-    [consent, currentStatus.label],
-  )
+  const consentDetails = [
+    { label: t('privacyPreferencesPage_status_atual'), value: currentStatus.label },
+    { label: t('privacyPreferencesPage_ultima_escolha'), value: formatConsentDate(consent?.timestamp, language, t) },
+    { label: t('privacyPreferencesPage_versao_do_consentimento'), value: consent?.version ?? t('privacyPreferencesPage_nao_registrada') },
+  ]
 
-  const pageDescription =
-    'Revise, altere ou redefina sua escolha de consentimento de privacidade salva neste navegador para o ProdForge.'
-
-  usePageMetadata({
-    title: 'Preferências de Privacidade | ProdForge',
-    description: pageDescription,
-    path: '/preferencias-de-privacidade',
-    ogTitle: 'Preferências de Privacidade | ProdForge',
-    ogDescription: pageDescription,
-    twitterTitle: 'Preferências de Privacidade | ProdForge',
-    twitterDescription: pageDescription,
-    robots: 'noindex,follow',
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'WebPage',
-      name: 'Preferências de Privacidade',
-      description: pageDescription,
-      inLanguage: 'pt-BR',
-      isPartOf: {
-        '@type': 'WebSite',
-        name: APP_NAME,
-        url: 'https://prodforge.techtupa.com.br/',
-      },
-      dateModified: '2026-05-06',
-    },
-  })
+  usePublicPageMetadata('preferences')
 
   function syncConsent(nextConsent) {
     setConsent(nextConsent)
@@ -145,15 +117,15 @@ function PrivacyPreferencesPage() {
     const nextConsent = setPrivacyConsent(status)
 
     if (!nextConsent) {
-      setFeedbackMessage('Não foi possível salvar sua preferência neste navegador.')
+      setFeedbackMessage('privacyPreferencesPage_nao_foi_possivel_salvar_sua')
       return
     }
 
     syncConsent(nextConsent)
     setFeedbackMessage(
       status === PRIVACY_CONSENT_STATUS.accepted
-        ? 'Preferência atualizada: cookies analíticos e de marketing foram aceitos.'
-        : 'Preferência atualizada: cookies analíticos e de marketing foram recusados.',
+        ? 'privacyPreferencesPage_preferencia_atualizada_cookies_analiticos_e'
+        : 'privacyPreferencesPage_preferencia_atualizada_cookies_analiticos_e_35',
     )
   }
 
@@ -175,50 +147,49 @@ function PrivacyPreferencesPage() {
     const nextConsent = setPrivacyConsentPreferences(selectedCategories)
 
     if (!nextConsent) {
-      setFeedbackMessage('Não foi possível salvar sua preferência neste navegador.')
+      setFeedbackMessage('privacyPreferencesPage_nao_foi_possivel_salvar_sua')
       return
     }
 
     syncConsent(nextConsent)
-    setFeedbackMessage('Preferências salvas para este navegador e dispositivo.')
+    setFeedbackMessage('privacyPreferencesPage_preferencias_salvas_para_este_navegador')
   }
 
   function handleClearConsent() {
     const wasCleared = clearPrivacyConsent()
 
     if (!wasCleared) {
-      setFeedbackMessage('Não foi possível redefinir sua escolha neste navegador.')
+      setFeedbackMessage('privacyPreferencesPage_nao_foi_possivel_redefinir_sua')
       return
     }
 
     setConsent(null)
     setSelectedCategories(getPreferenceFormState(null))
-    setFeedbackMessage('Escolha redefinida. O aviso voltará a aparecer em outras rotas públicas.')
+    setFeedbackMessage('privacyPreferencesPage_escolha_redefinida_o_aviso_voltara')
   }
 
   return (
     <div className="page privacy-policy-page privacy-preferences-page">
       <section className="privacy-policy-hero forge-panel forge-panel--metal forge-texture-layer">
         <div className="privacy-policy-hero__copy">
-          <p className="privacy-policy-page__eyebrow forge-badge forge-badge--ember">Controle de privacidade</p>
-          <h1>Preferências de Privacidade</h1>
+          <p className="privacy-policy-page__eyebrow forge-badge forge-badge--ember">{t('privacyPreferencesPage_controle_de_privacidade')}</p>
+          <h1>{t('privacyPreferencesPage_preferencias_de_privacidade')}</h1>
           <p>
-            Revise ou altere sua escolha de consentimento do ProdForge. A preferência fica salva
-            apenas neste navegador e neste dispositivo.
+            {t('privacyPreferencesPage_revise_ou_altere_sua_escolha')}
           </p>
 
           <div className="privacy-policy-hero__actions">
             <Link className="forge-button forge-button--metal forge-button--md" to="/politica-de-privacidade">
-              Política de Privacidade
+              {t('privacyPreferencesPage_politica_de_privacidade')}
             </Link>
             <Link className="forge-button forge-button--ghost forge-button--md" to="/termos-de-uso">
-              Termos de Uso
+              {t('privacyPreferencesPage_termos_de_uso')}
             </Link>
           </div>
         </div>
 
-        <aside className="privacy-policy-hero__summary" aria-label="Resumo das preferências">
-          <p className="privacy-policy-hero__summary-label">Status atual</p>
+        <aside className="privacy-policy-hero__summary" aria-label={t('privacyPreferencesPage_resumo_das_preferencias')}>
+          <p className="privacy-policy-hero__summary-label">{t('privacyPreferencesPage_status_atual')}</p>
           <p className={`privacy-preferences-status privacy-preferences-status--${currentStatus.tone}`}>
             {currentStatus.label}
           </p>
@@ -232,11 +203,10 @@ function PrivacyPreferencesPage() {
           aria-labelledby="privacy-preferences-current-title"
         >
           <div className="privacy-preferences-card__header">
-            <p className="privacy-policy-page__eyebrow forge-badge forge-badge--tech">Escolha salva</p>
-            <h2 id="privacy-preferences-current-title">Preferência registrada neste navegador</h2>
+            <p className="privacy-policy-page__eyebrow forge-badge forge-badge--tech">{t('privacyPreferencesPage_escolha_salva')}</p>
+            <h2 id="privacy-preferences-current-title">{t('privacyPreferencesPage_preferencia_registrada_neste_navegador')}</h2>
             <p>
-              Consulte a decisão atual, veja o status por categoria ou remova a escolha salva para
-              exibir o aviso novamente.
+              {t('privacyPreferencesPage_consulte_a_decisao_atual_veja')}
             </p>
           </div>
 
@@ -249,18 +219,18 @@ function PrivacyPreferencesPage() {
             ))}
           </dl>
 
-          <div className="privacy-preferences-category-status" aria-label="Status por categoria">
+          <div className="privacy-preferences-category-status" aria-label={t('privacyPreferencesPage_status_por_categoria')}>
             {cookieCategories.map((category) => (
               <p key={category.id}>
                 <span>{category.title}</span>
-                <strong>{getCategoryStatusLabel(consent, category.id)}</strong>
+                <strong>{getCategoryStatusLabel(consent, category.id, t)}</strong>
               </p>
             ))}
           </div>
 
           {feedbackMessage ? (
             <p className="privacy-preferences-feedback" role="status" aria-live="polite">
-              {feedbackMessage}
+              {t(feedbackMessage)}
             </p>
           ) : null}
         </section>
@@ -270,12 +240,12 @@ function PrivacyPreferencesPage() {
           aria-labelledby="privacy-preferences-actions-title"
         >
           <div className="privacy-preferences-card__header">
-            <p className="privacy-policy-page__eyebrow forge-badge forge-badge--ember">Ajuste rápido</p>
-            <h2 id="privacy-preferences-actions-title">Alterar preferência</h2>
-            <p>Escolha como o ProdForge pode usar cookies e tecnologias similares neste navegador.</p>
+            <p className="privacy-policy-page__eyebrow forge-badge forge-badge--ember">{t('privacyPreferencesPage_ajuste_rapido')}</p>
+            <h2 id="privacy-preferences-actions-title">{t('privacyPreferencesPage_alterar_preferencia')}</h2>
+            <p>{t('privacyPreferencesPage_escolha_como_o_prodforge_pode')}</p>
           </div>
 
-          <div className="privacy-preferences-options" aria-label="Categorias de cookies">
+          <div className="privacy-preferences-options" aria-label={t('privacyPreferencesPage_categorias_de_cookies')}>
             {cookieCategories.map((category) => {
               const inputId = `privacy-preferences-${category.id}`
               const isDisabled =
@@ -317,34 +287,34 @@ function PrivacyPreferencesPage() {
             })}
           </div>
 
-          <div className="privacy-preferences-actions" aria-label="Ações de preferências de privacidade">
+          <div className="privacy-preferences-actions" aria-label={t('privacyPreferencesPage_acoes_de_preferencias_de_privacidade')}>
             <button
               type="button"
               className="forge-button forge-button--ember forge-button--md"
               onClick={handleSavePreferences}
             >
-              Salvar preferências
+              {t('privacyPreferencesPage_salvar_preferencias')}
             </button>
             <button
               type="button"
               className="forge-button forge-button--metal forge-button--md"
               onClick={() => handleSetConsent(PRIVACY_CONSENT_STATUS.accepted)}
             >
-              Aceitar todos
+              {t('privacyPreferencesPage_aceitar_todos')}
             </button>
             <button
               type="button"
               className="forge-button forge-button--tech forge-button--md"
               onClick={() => handleSetConsent(PRIVACY_CONSENT_STATUS.essentialOnly)}
             >
-              Recusar opcionais
+              {t('privacyPreferencesPage_recusar_opcionais')}
             </button>
             <button
               type="button"
               className="forge-button forge-button--ghost forge-button--md"
               onClick={handleClearConsent}
             >
-              Redefinir escolha
+              {t('privacyPreferencesPage_redefinir_escolha')}
             </button>
           </div>
         </section>
@@ -354,31 +324,27 @@ function PrivacyPreferencesPage() {
           aria-labelledby="privacy-preferences-info-title"
         >
           <div className="privacy-preferences-card__header">
-            <p className="privacy-policy-page__eyebrow forge-badge forge-badge--neutral">Como funciona</p>
-            <h2 id="privacy-preferences-info-title">O que esta escolha controla</h2>
+            <p className="privacy-policy-page__eyebrow forge-badge forge-badge--neutral">{t('privacyPreferencesPage_como_funciona')}</p>
+            <h2 id="privacy-preferences-info-title">{t('privacyPreferencesPage_o_que_esta_escolha_controla')}</h2>
           </div>
 
           <div className="privacy-preferences-explainer">
             <article>
-              <h3>Cookies essenciais</h3>
+              <h3>{t('privacyPreferencesPage_cookies_essenciais')}</h3>
               <p>
-                São necessários para login, segurança, sessão e funcionamento básico do ProdForge.
-                Eles não são bloqueados por esta preferência.
+                {t('privacyPreferencesPage_sao_necessarios_para_login_seguranca')}
               </p>
             </article>
             <article>
-              <h3>Cookies analíticos</h3>
+              <h3>{t('privacyPreferencesPage_cookies_analiticos')}</h3>
               <p>
-                Ajudam a entender uso, desempenho, erros e oportunidades de melhoria. Eles só devem
-                ser usados quando autorizados neste navegador.
+                {t('privacyPreferencesPage_ajudam_a_entender_uso_desempenho')}
               </p>
             </article>
             <article>
-              <h3>Cookies de marketing</h3>
+              <h3>{t('privacyPreferencesPage_cookies_de_marketing')}</h3>
               <p>
-                São usados futuramente para campanhas e mensuração. Se ainda não houver recursos
-                opcionais ativos nessa categoria, a escolha apenas deixa sua preferência registrada
-                para uso futuro.
+                {t('privacyPreferencesPage_sao_usados_futuramente_para_campanhas')}
               </p>
             </article>
           </div>

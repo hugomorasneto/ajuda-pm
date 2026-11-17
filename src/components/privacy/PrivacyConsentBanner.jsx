@@ -1,6 +1,8 @@
 import { useCopy } from '../../i18n/context'
 import { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import Link from '../../i18n/LocalizedLink'
+import { getPilotPage } from '../../i18n/routes'
 import {
   getPrivacyConsent,
   PRIVACY_CONSENT_CHANGE_EVENT,
@@ -20,6 +22,7 @@ const CONSENT_PUBLIC_BLOCKLIST = [
 ]
 
 function isPublicConsentPath(pathname) {
+  if (getPilotPage(pathname)?.id === 'preferences') return false
   return !CONSENT_PUBLIC_BLOCKLIST.some((path) =>
     pathname === path || pathname.startsWith(`${path}/`)
   )

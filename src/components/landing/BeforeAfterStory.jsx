@@ -1,4 +1,6 @@
+import { useCopy } from '../../i18n/context'
 function BeforeAfterStory({ content }) {
+  const t = useCopy('beforeAfterStory')
   return (
     <section className="landing-section landing-before-after" id="antes-depois">
       <div className="landing-section__intro">
@@ -40,24 +42,24 @@ function BeforeAfterStory({ content }) {
           </div>
           <h3>{content.after.title}</h3>
 
-          <ul className="landing-before-after__indicators" aria-label="Indicadores da user story estruturada">
+          <ul className="landing-before-after__indicators" aria-label={t('beforeAfterStory_indicadores_da_user_story_estruturada')}>
             {content.after.indicators.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>
 
           <div className="landing-before-after__section">
-            <strong>Objetivo</strong>
+            <strong>{t('beforeAfterStory_objetivo')}</strong>
             <p>{content.after.objective}</p>
           </div>
 
           <div className="landing-before-after__section">
-            <strong>User story</strong>
+            <strong>{t('beforeAfterStory_user_story')}</strong>
             <p>{content.after.story}</p>
           </div>
 
           <div className="landing-before-after__section">
-            <strong>Critérios de aceite</strong>
+            <strong>{t('beforeAfterStory_criterios_de_aceite')}</strong>
             <ul>
               {content.after.criteria.map((item) => (
                 <li key={item}>{item}</li>
@@ -67,9 +69,9 @@ function BeforeAfterStory({ content }) {
 
           <p className="landing-before-after__note">{content.after.notes}</p>
 
-          <div className="landing-before-after__score" aria-label="Indicador de qualidade">
+          <div className="landing-before-after__score" aria-label={t('beforeAfterStory_indicador_de_qualidade')}>
             <div className="landing-before-after__score-copy">
-              <span>Clareza da user story</span>
+              <span>{t('beforeAfterStory_clareza_da_user_story')}</span>
               <strong>{content.after.scoreLabel}</strong>
             </div>
             <div className="forge-metric-bar forge-metric-bar--tech" style={{ '--forge-metric-value': content.after.scoreValue }}>

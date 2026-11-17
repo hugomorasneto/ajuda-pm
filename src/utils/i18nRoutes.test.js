@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isLocalPreview, languageDestination, preferenceKey, resolveLanguage } from '../i18n/routes'
+import { isLocalPreview, languageDestination, localizeHref, preferenceKey, resolveLanguage } from '../i18n/routes'
 
 describe('pilot language resolution', () => {
   const teams = { pathname: '/times', search: '', enabled: true }
@@ -39,4 +39,14 @@ describe('pilot language resolution', () => {
       .toBe('?from=%2Froda%3Fcodigo%3DABC&lang=en')
     expect(languageDestination({ pathname: '/projetos' }, 'en')).toBeNull()
   })
+
+  it('maps public links without changing encoded parameters, anchors or out-of-scope guides', () => {
+    expect(localizeHref('/#como-funciona', 'en')).toBe('/en/#como-funciona')
+    expect(localizeHref('/en/contact?ref=a%26b#formulario-contato', 'pt-BR'))
+      .toBe('/contato?ref=a%26b#formulario-contato')
+    expect(localizeHref('/aprender/user-stories-na-pratica', 'en')).toBe('/aprender/user-stories-na-pratica')
+    expect(localizeHref('/login?from=%2Ftimes&lang=pt-BR', 'en')).toBe('/login?from=%2Ftimes&lang=pt-BR')
+    expect(resolveLanguage({ pathname: '/en', enabled: true })).toBe('en')
+  })
+
 })

@@ -12,6 +12,7 @@
   "dictionaries": [
     "prodforge-terms"
   ],
+  "words": ["anonymization", "waitlist"],
   "patterns": [
     {
       "name": "copy-source-marker",

@@ -6,17 +6,10 @@ import '../styles/public.css'
 
 function PublicLayout() {
   const location = useLocation()
-  const isHomeRoute = location.pathname === '/'
+  const page = getPilotPage(location.pathname)
+  const isHomeRoute = page?.id === 'home'
   const isLearningRoute = location.pathname.startsWith('/aprender')
-  const isContactRoute = location.pathname === '/contato' || location.pathname === '/contato/'
-  const isLegalRoute = getPilotPage(location.pathname)?.id === 'about' || [
-    '/sobre',
-    '/faq',
-    '/politica-de-privacidade',
-    '/preferencias-de-privacidade',
-    '/preferencias-de-cookies',
-    '/termos-de-uso',
-  ].includes(location.pathname) || isContactRoute
+  const isLegalRoute = Boolean(page?.en && !isHomeRoute)
   const layoutClassName = [
     'page-shell',
     'public-layout',

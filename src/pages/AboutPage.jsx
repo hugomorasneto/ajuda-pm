@@ -1,10 +1,9 @@
 import { buildAuthPath } from '../utils/authRedirect'
 import { getAboutContent } from '../content/about'
-import { getAboutMetadata } from '../i18n/aboutMetadata'
 import { useCopy, useLanguage } from '../i18n/context'
-import { Link } from 'react-router-dom'
+import Link from '../i18n/LocalizedLink'
 import { useAuth } from '../hooks/useAuth'
-import { usePageMetadata } from '../hooks/usePageMetadata'
+import { usePublicPageMetadata } from '../hooks/usePublicPageMetadata'
 
 function AboutSection({ section, index }) {
   return (
@@ -36,7 +35,7 @@ function AboutPage() {
     new Date('2026-05-05T00:00:00Z'),
   )
 
-  usePageMetadata(getAboutMetadata(language))
+  usePublicPageMetadata('about')
 
   return (
     <div className="page privacy-policy-page about-page">

@@ -1,7 +1,8 @@
+import { publicLocalePages } from './i18n/routes'
 import { Suspense, lazy } from 'react'
 import LanguageSwitcher from './i18n/LanguageSwitcher'
 import { useCopy, useLanguage } from './i18n/context'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import AdminRoute from './components/AdminRoute'
 import ProtectedRoute from './components/ProtectedRoute'
 import PrivacyConsentBanner from './components/privacy/PrivacyConsentBanner'
@@ -76,6 +77,21 @@ function RouteFallback() {
   )
 }
 
+const publicComponents = {
+  home: HomePage,
+  about: AboutPage,
+  faq: FaqPage,
+  contact: ContactPage,
+  privacyPolicy: PrivacyPolicyPage,
+  preferences: PrivacyPreferencesPage,
+  terms: TermsOfUsePage,
+}
+
+function PrivacyPreferencesAlias() {
+  const { search, hash } = useLocation()
+  return <Navigate to={{ pathname: '/preferencias-de-privacidade', search, hash }} replace />
+}
+
 function App() {
   const { preview } = useLanguage()
   return (
@@ -90,20 +106,17 @@ function App() {
           </Route>
 
           <Route element={<PublicLayout />}>
-            <Route path="/" element={<HomePage />} />
+            {publicLocalePages.flatMap((page) => {
+              const Page = publicComponents[page.id]
+              const paths = preview ? [page['pt-BR'], page.en] : [page['pt-BR']]
+              return paths.map((path) => <Route key={path} path={path} element={<Page />} />)
+            })}
             <Route path="/aprender" element={<LearningHubPage />} />
             <Route path="/aprender/:slug" element={<LearningGuidePage />} />
-            <Route path="/sobre" element={<AboutPage />} />
-            {preview && <Route path="/en/about" element={<AboutPage />} />}
-            <Route path="/contato" element={<ContactPage />} />
-            <Route path="/faq" element={<FaqPage />} />
-            <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
-            <Route path="/preferencias-de-privacidade" element={<PrivacyPreferencesPage />} />
             <Route
               path="/preferencias-de-cookies"
-              element={<Navigate to="/preferencias-de-privacidade" replace />}
+              element={<PrivacyPreferencesAlias />}
             />
-            <Route path="/termos-de-uso" element={<TermsOfUsePage />} />
             <Route
               path="/fundamentos"
               element={<Navigate to="/aprender/fundamentos-produto-agil" replace />}

@@ -2,7 +2,9 @@ import { buildAuthPath } from '../../utils/authRedirect'
 import LanguageSwitcher from '../../i18n/LanguageSwitcher'
 import { useCopy, useLanguage } from '../../i18n/context'
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import Link from '../../i18n/LocalizedLink'
+import { getPilotPage } from '../../i18n/routes'
 import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC } from '../../constants/app'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -19,7 +21,7 @@ function isItemActive(item, pathname) {
   }
 
   return item.activeOn.some((activePath) =>
-    activePath === '/' ? pathname === '/' : pathname.startsWith(activePath)
+    activePath === '/' ? getPilotPage(pathname)?.id === 'home' : pathname.startsWith(activePath)
   )
 }
 
@@ -52,7 +54,8 @@ function PublicHeader({ isHomeRoute = false, isLearningRoute = false, isLegalRou
   const location = useLocation()
   const { user } = useAuth()
   const [menuOpenPath, setMenuOpenPath] = useState(null)
-  const isMenuOpen = menuOpenPath === location.pathname
+  const navPage = getPilotPage(location.pathname)?.id ?? location.pathname
+  const isMenuOpen = menuOpenPath === navPage
   const isForgeHeader = isHomeRoute || isLearningRoute || isLegalRoute
   const navItems = publicNavItems(t)
   const headerClassName = ['public-header', isForgeHeader ? 'public-header--forge-home' : '']
@@ -118,7 +121,7 @@ function PublicHeader({ isHomeRoute = false, isLearningRoute = false, isLegalRou
           type="button"
           className={menuButtonClassName}
           onClick={() =>
-            setMenuOpenPath((currentPath) => (currentPath === location.pathname ? null : location.pathname))
+            setMenuOpenPath((currentPath) => (currentPath === navPage ? null : navPage))
           }
           aria-expanded={isMenuOpen}
           aria-label={isMenuOpen ? t('closeNav') : t('openNav')}

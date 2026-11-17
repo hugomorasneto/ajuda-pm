@@ -364,7 +364,7 @@ test('cadastro e confirmação preservam o destino codificado e permitem reenvia
   await expect(page.locator('input[type="password"]')).toBeFocused()
   await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
   await expect(page.getByText('Use at least 6 characters.', { exact: true })).toBeVisible()
-  await expect(page.locator('#uso-de-dados').getByRole('link', { name: 'Terms of Use' })).toHaveAttribute('href', '/termos-de-uso')
+  await expect(page.locator('#uso-de-dados').getByRole('link', { name: 'Terms of Use' })).toHaveAttribute('href', '/en/terms-of-use')
   await expect(page.locator('input[type="password"]')).toHaveValue('short')
   await expect(page.getByLabel('Email', { exact: true })).toHaveValue(user.email)
   await expect(page).toHaveTitle('Create a ProdForge account')
@@ -418,4 +418,146 @@ test('link expirado permite informar o e-mail e retomar o convite original', asy
   expect(new URL(page.url()).searchParams.get('from')).toBe(from)
   await expect(page.getByText(/Once you confirm your email, sign in to access Planning Poker/)).toBeVisible()
   await expect(page.getByLabel('Email', { exact: true })).toHaveValue(user.email)
+})
+
+test('rotas públicas abrem diretamente nos dois idiomas com metadados e vínculos equivalentes', async ({ page, request }, testInfo) => {
+  const entries = [
+    ['/en/', '/', 'Turn unclear briefs into clear user stories.', 'Transforme briefings confusos em user stories claras.'],
+    ['/en/faq', '/faq', 'Frequently asked questions', 'Perguntas Frequentes'],
+    ['/en/contact', '/contato', 'Contact ProdForge', 'Fale com o ProdForge'],
+    ['/en/privacy-policy', '/politica-de-privacidade', 'Privacy Policy', 'Política de Privacidade'],
+    ['/en/privacy-preferences', '/preferencias-de-privacidade', 'Privacy Preferences', 'Preferências de Privacidade'],
+    ['/en/terms-of-use', '/termos-de-uso', 'Terms of Use', 'Termos de Uso'],
+  ]
+  for (const [english, portuguese, enHeading, ptHeading] of entries) {
+    const response = await request.get(english)
+    expect(response.ok()).toBe(true)
+    const html = await response.text()
+    expect(html).toContain('<html lang="en">')
+    expect(html).toContain('content="noindex,follow"')
+    expect(html).toContain('href="https://prodforge.techtupa.com.br' + english + '"')
+    expect(html).not.toContain('{{')
+    expect(html).not.toContain('hreflang=')
+    await page.goto(english)
+    await expect(page.getByRole('heading', { level: 1, name: enHeading, exact: true })).toBeVisible()
+    await expect(page.getByRole('combobox', { name: 'Language' })).toBeVisible()
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+    await expect(page.locator('meta[property="og:locale"]')).toHaveAttribute('content', 'en_US')
+    if (english === '/en/faq') {
+      const schema = page.locator('script[type="application/ld+json"]')
+      await expect(schema).toHaveCount(1)
+      expect(JSON.parse(await schema.textContent()).mainEntity.length).toBeGreaterThan(5)
+    }
+    if (english === '/en/terms-of-use' && testInfo.project.name === 'celular') {
+      await page.setViewportSize({ width: 320, height: 740 })
+      await checkWidth(page)
+      await page.getByRole('combobox', { name: 'Language' }).scrollIntoViewIfNeeded()
+      await evidence(page, testInfo, 'termos-en')
+    }
+    await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+    await expect(page).toHaveURL(portuguese)
+    await expect(page.getByRole('heading', { level: 1, name: ptHeading, exact: true })).toBeVisible()
+  }
+
+  await page.goto('/preferencias-de-cookies?utm_source=old#privacy-preferences-info-title')
+  await expect(page).toHaveURL('/preferencias-de-privacidade?utm_source=old#privacy-preferences-info-title')
+  await page.goto('http://127.0.0.1:4176/en/contact')
+  await expect(page).toHaveURL('http://127.0.0.1:4176/')
+  await expect(page.getByRole('combobox', { name: 'Idioma' })).toHaveCount(0)
+})
+
+test('home mantém rascunho, âncora e validação da lista de interesse ao traduzir', async ({ page, context }, testInfo) => {
+  const sent = []
+  await context.route((url) => url.origin === 'http://127.0.0.1:54321' && url.pathname === '/rest/v1/leads', async (route) => {
+    sent.push(route.request().postDataJSON())
+    await route.fulfill({ status: 201, json: [] })
+  })
+  await page.goto('/?utm_source=demo#lead-capture-title')
+  await page.getByRole('button', { name: 'Recusar opcionais' }).click()
+  await page.locator('#lead-name').fill('Nome de teste')
+  await page.getByRole('button', { name: 'Avise quando abrir' }).click()
+  await expect(page.locator('#lead-email-error')).toHaveText('Informe seu e-mail.')
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await expect(page).toHaveURL('/en/?utm_source=demo#lead-capture-title')
+  await expect(page.locator('#lead-name')).toHaveValue('Nome de teste')
+  await expect(page.locator('#lead-email-error')).toHaveText('Enter your email address.')
+  expect(sent).toHaveLength(0)
+  await expect(page.getByRole('link', { name: 'See the full learning path' })).toHaveAttribute('hreflang', 'pt-BR')
+  await page.locator('#lead-email').fill('test@example.test')
+  await page.getByRole('button', { name: 'Notify me when it opens' }).click()
+  await expect(page.getByText('You are on the list. We will let you know when there are updates.')).toBeVisible()
+  expect(sent).toEqual([[{ name: 'Nome de teste', email: 'test@example.test' }]])
+  await page.reload()
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await expect(page.getByRole('combobox', { name: 'Language' })).toHaveValue('en')
+  await page.goto('/en/')
+  await expect(page.getByRole('heading', { level: 1, name: 'Turn unclear briefs into clear user stories.' })).toBeInViewport()
+  await expect.poll(() => page.locator('.hero-transformation-preview__image').evaluate((img) => img.naturalWidth)).toBeGreaterThan(0)
+  await checkWidth(page)
+  await evidence(page, testInfo, 'home-en')
+})
+
+test('contato preserva dados e categoria, traduz erro do servidor e envia só por ação explícita', async ({ page, context }) => {
+  const sent = []
+  await context.route('http://127.0.0.1:54321/functions/v1/contact-message', async (route) => {
+    sent.push(route.request().postDataJSON())
+    if (sent.length === 1) {
+      return route.fulfill({
+        status: 400,
+        json: { error: 'Validation failed', field_errors: { subject: 'Informe o assunto.' } },
+      })
+    }
+    return route.fulfill({ json: { success: true } })
+  })
+  await page.goto('/contato?utm_source=demo#formulario-contato')
+  await page.getByRole('button', { name: 'Recusar opcionais' }).click()
+  await page.locator('#contact-name').fill('Nome de teste')
+  await page.locator('#contact-email').fill('test@example.test')
+  await page.locator('#contact-category').selectOption('privacidade')
+  await page.locator('#contact-subject').fill('Assunto de teste')
+  await page.locator('#contact-message').fill('Mensagem escrita em português.')
+  await page.locator('.contact-page__submit').click()
+  await expect(page.locator('#contact-subject-error')).toHaveText('Informe o assunto.')
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await expect(page).toHaveURL('/en/contact?utm_source=demo#formulario-contato')
+  await expect(page.locator('#contact-name')).toHaveValue('Nome de teste')
+  await expect(page.locator('#contact-email')).toHaveValue('test@example.test')
+  await expect(page.locator('#contact-category')).toHaveValue('privacidade')
+  await expect(page.locator('#contact-subject')).toHaveValue('Assunto de teste')
+  await expect(page.locator('#contact-message')).toHaveValue('Mensagem escrita em português.')
+  await expect(page.locator('#contact-subject-error')).toHaveText('Enter a subject.')
+  expect(sent).toHaveLength(1)
+  await page.locator('.contact-page__submit').click()
+  await expect(page.getByText('Message sent. We will review it and reply to the email address you provided.')).toBeVisible()
+  expect(sent).toHaveLength(2)
+  expect(sent[1]).toMatchObject({ category: 'privacidade', subject: 'Assunto de teste', message: 'Mensagem escrita em português.' })
+})
+
+test('consentimento, alterações pendentes e idioma ficam independentes', async ({ page }, testInfo) => {
+  const key = 'prodforge_privacy_consent'
+  await page.goto('/en/')
+  await expect(page.getByRole('link', { name: 'Manage preferences' })).toHaveAttribute('href', '/en/privacy-preferences')
+  await page.getByRole('link', { name: 'Manage preferences' }).click()
+  await expect(page).toHaveURL('/en/privacy-preferences')
+  await expect(page.getByRole('heading', { name: 'Control optional data' })).toHaveCount(0)
+  await page.locator('#privacy-preferences-analytics').check()
+  expect(await page.evaluate((key) => localStorage.getItem(key), key)).toBeNull()
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  await expect(page).toHaveURL('/preferencias-de-privacidade')
+  await expect(page.locator('#privacy-preferences-analytics')).toBeChecked()
+  expect(await page.evaluate((key) => localStorage.getItem(key), key)).toBeNull()
+  await page.getByRole('button', { name: 'Salvar preferências' }).click()
+  await expect(page.getByText('Preferências salvas para este navegador e dispositivo.')).toBeVisible()
+  const stored = await page.evaluate((key) => localStorage.getItem(key), key)
+  expect(JSON.parse(stored).categories).toEqual({ essential: true, analytics: true, marketing: false })
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await expect(page.getByText('Preferences saved for this browser and device.')).toBeVisible()
+  expect(await page.evaluate((key) => localStorage.getItem(key), key)).toBe(stored)
+  await checkWidth(page)
+  await evidence(page, testInfo, 'preferencias-en')
+  await page.getByRole('button', { name: 'Reset choice' }).click()
+  expect(await page.evaluate((key) => localStorage.getItem(key), key)).toBeNull()
+  await page.getByRole('link', { name: 'Privacy Policy', exact: true }).first().click()
+  await expect(page).toHaveURL('/en/privacy-policy')
+  await expect(page.getByRole('button', { name: 'Reject optional' })).toBeVisible()
 })

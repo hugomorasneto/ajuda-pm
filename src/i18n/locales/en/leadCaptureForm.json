@@ -1,0 +1,15 @@
+{
+  "leadCaptureForm_informe_seu_nome": "Enter your name.",
+  "leadCaptureForm_informe_seu_e_mail": "Enter your email address.",
+  "leadCaptureForm_informe_um_e_mail_valido": "Enter a valid email address.",
+  "leadCaptureForm_interesse_registrado_vamos_avisar_quando": "You are on the list. We will let you know when there are updates.",
+  "leadCaptureForm_este_e_mail_ja_esta": "This email is already on the list. We will send updates there.",
+  "leadCaptureForm_nao_foi_possivel_registrar_seu": "Could not add you to the list right now. Try again shortly.",
+  "leadCaptureForm_plano_pro": "Pro plan",
+  "leadCaptureForm_nome": "Name",
+  "leadCaptureForm_seu_nome": "Your name",
+  "leadCaptureForm_e_mail": "Email",
+  "leadCaptureForm_seu_email_empresa_com": "your.email@example.com",
+  "leadCaptureForm_registrando": "Signing up...",
+  "leadCaptureForm_interesse_registrado": "You're on the list"
+}
