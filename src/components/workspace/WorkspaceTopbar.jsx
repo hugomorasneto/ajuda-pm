@@ -79,7 +79,7 @@ function WorkspaceTopbar({ onOpenSidebar, topbarStatus }) {
             type="button"
             className="workspace-topbar__menu"
             onClick={onOpenSidebar}
-            aria-label={t('openNav')}
+            aria-label={t('openPublicMenu')}
           >
             <IconMenu />
             <span>{t('menu')}</span>

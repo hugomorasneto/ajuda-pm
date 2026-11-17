@@ -1,23 +1,25 @@
+import { useCopy } from '../../i18n/context'
 function WorkspaceErrorState({
   message,
   canRetry,
   onRetry,
-  title = 'Não foi possível concluir esta etapa agora.',
-  note = 'A matéria-prima preenchida foi preservada. Revise a bancada à esquerda e tente novamente quando estiver pronto.',
-  retryLabel = 'Tentar novamente',
+  title,
+  note,
+  retryLabel,
   secondaryAction = null,
 }) {
+  const t = useCopy('forge')
   return (
     <section className="panel workspace-state workspace-state--error" aria-live="polite">
       <div className="workspace-state__content">
-        <p className="workspace-state__eyebrow">Erro</p>
-        <h2>{title}</h2>
+        <p className="workspace-state__eyebrow">{t('error')}</p>
+        <h2>{title ?? t('could_not_complete_this_step_try')}</h2>
         <p>{message}</p>
-        {note ? <p className="workspace-state__note">{note}</p> : null}
+        <p className="workspace-state__note">{note ?? t('your_brief_is_still_here_review')}</p>
 
         <div className="workspace-state__actions">
           <button type="button" className="btn btn-primary" onClick={onRetry} disabled={!canRetry}>
-            {retryLabel}
+            {retryLabel ?? t('try_again')}
           </button>
           {secondaryAction ? (
             <button

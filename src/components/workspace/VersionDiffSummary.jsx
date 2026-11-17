@@ -1,3 +1,4 @@
+import { useCopy, useLanguage } from '../../i18n/context'
 import { buildVersionDiff, getVersionDiffLead } from '../../utils/storyVersionUtils'
 
 function DiffList({ title, items, emptyText, tone = 'neutral' }) {
@@ -18,25 +19,27 @@ function DiffList({ title, items, emptyText, tone = 'neutral' }) {
 }
 
 function VersionDiffSummary({ currentVersion, previousVersion, onCopyComparison, isCopying }) {
-  const diff = buildVersionDiff(previousVersion, currentVersion)
-  const lead = getVersionDiffLead(diff)
+  const t = useCopy('history')
+  const storyFormat = useCopy('storyFormat')
+  const { language } = useLanguage()
+  const formatNumber = new Intl.NumberFormat(language).format
+  const diff = buildVersionDiff(previousVersion, currentVersion, storyFormat)
+  const lead = getVersionDiffLead(diff, storyFormat)
 
   return (
     <section className="panel version-diff-summary">
       <div className="panel-header">
-        <p className="version-diff-summary__eyebrow">Comparação</p>
-        <h2>Resumo do refino</h2>
+        <p className="version-diff-summary__eyebrow">{t('comparison')}</p>
+        <h2>{t('refinement_summary')}</h2>
         <p>
           {previousVersion
-            ? `Diferenças entre a versão ativa e a ${diff?.previousLabel ?? 'versão anterior'}.`
-            : 'A primeira versão da peça ainda não tem comparação anterior.'}
+            ? t('differences_between_the_active_version_and', { p1: diff?.previousLabel ?? t('the_previous_version') })
+            : t('the_artifact_s_first_version_has')}
         </p>
       </div>
 
       {!previousVersion || !diff ? (
-        <p className="history-status">
-          Gere uma nova versão para comparar o que mudou em relação à peça anterior.
-        </p>
+        <p className="history-status">{t('generate_a_new_version_to_compare_2')}</p>
       ) : (
         <div className="version-diff-summary__content">
           <div className="version-diff-summary__toolbar">
@@ -47,27 +50,22 @@ function VersionDiffSummary({ currentVersion, previousVersion, onCopyComparison,
               onClick={onCopyComparison}
               disabled={isCopying}
             >
-              {isCopying ? 'Copiando...' : 'Copiar comparação'}
+              {isCopying ? t('copying') : t('copy_comparison')}
             </button>
           </div>
 
-          <div className="version-diff-summary__metrics" aria-label="Resumo da comparação entre versões">
-            <span>
-              <strong>{diff.textChangesCount}</strong>
-              campos alterados
-            </span>
-            <span>
-              <strong>{diff.totalAdded}</strong>
-              itens adicionados
-            </span>
-            <span>
-              <strong>{diff.totalRemoved}</strong>
-              itens removidos
-            </span>
-            <span>
-              <strong>{diff.acceptanceCriteria.unchangedCount}</strong>
-              critérios mantidos
-            </span>
+          <div className="version-diff-summary__metrics" aria-label={t('version_comparison_summary')}>
+            {[
+              ['fields_changed', diff.textChangesCount],
+              ['items_added', diff.totalAdded],
+              ['items_removed', diff.totalRemoved],
+              ['criteria_kept', diff.acceptanceCriteria.unchangedCount],
+            ].map(([key, count]) => (
+              <span key={key}>
+                <strong>{formatNumber(count)}</strong>
+                {t(key, { count })}
+              </span>
+            ))}
           </div>
 
           <div className="version-diff-summary__chips">
@@ -76,37 +74,37 @@ function VersionDiffSummary({ currentVersion, previousVersion, onCopyComparison,
                 key={field.key}
                 className={`version-diff-summary__chip ${field.changed ? 'version-diff-summary__chip--changed' : ''}`}
               >
-                {field.label} {field.changed ? 'alterado' : 'mantido'}
+                {t(field.changed ? 'field_changed' : 'field_unchanged', { field: field.label })}
               </span>
             ))}
           </div>
 
           <div className="version-diff-summary__grid">
             <DiffList
-              title="Critérios adicionados"
+              title={t('criteria_added')}
               items={diff.acceptanceCriteria.added}
-              emptyText="Nenhum critério novo nesta versão."
+              emptyText={t('this_version_adds_no_new_criteria')}
               tone="positive"
             />
 
             <DiffList
-              title="Critérios removidos"
+              title={t('criteria_removed')}
               items={diff.acceptanceCriteria.removed}
-              emptyText="Nenhum critério foi removido."
+              emptyText={t('no_criteria_removed')}
               tone="muted"
             />
 
             <DiffList
-              title="Regras adicionadas"
+              title={t('rules_added')}
               items={diff.businessRules.added}
-              emptyText="Nenhuma regra nova nesta versão."
+              emptyText={t('this_version_adds_no_new_rules')}
               tone="positive"
             />
 
             <DiffList
-              title="QA e trincas adicionados"
+              title={t('qa_items_and_gaps_added')}
               items={[...diff.qaChecklist.added, ...diff.gaps.added]}
-              emptyText="Nenhum novo item de QA ou ponto de atenção."
+              emptyText={t('no_new_qa_items_or_points')}
               tone="neutral"
             />
           </div>

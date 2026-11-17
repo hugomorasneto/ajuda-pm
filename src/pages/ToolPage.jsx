@@ -1,3 +1,6 @@
+import { useCopy, useLanguage } from '../i18n/context'
+import { formatNotice } from '../i18n/formatNotice'
+import { localizeHref } from '../i18n/routes'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import BriefComposer from '../components/workspace/BriefComposer'
@@ -12,24 +15,25 @@ import { useUserStoryWorkspace } from '../hooks/useUserStoryWorkspace'
 import { createProject, listProjects } from '../services/projectsService'
 
 const TABS = [
-  { id: 'entrada', label: 'Bancada' },
-  { id: 'resultado', label: 'Artefato' },
-  { id: 'revisao', label: 'Inspeção' },
+  { id: 'entrada', label: 'workspace' },
+  { id: 'resultado', label: 'artifact' },
+  { id: 'revisao', label: 'inspection' },
 ]
 
 const ESTIMATION_STATUS_LABELS = {
-  created: 'Criada',
-  refining: 'Em refinamento',
-  ready_for_estimation: 'Pronta para estimar',
-  estimated: 'Estimativa selada',
+  created: 'created',
+  refining: 'in_refinement',
+  ready_for_estimation: 'ready_for_estimation',
+  estimated: 'estimate_finalized',
 }
 
 function InspectionPreviewCard() {
+  const t = useCopy('forge')
   return (
-    <aside className="panel workspace-inspection-preview" aria-label="Prévia da inspeção">
-      <p className="quality-panel__panel-eyebrow">Inspeção</p>
-      <h2>A inspeção fica disponível depois da forja.</h2>
-      <p>Score, trincas e checklist aparecem com a primeira versão.</p>
+    <aside className="panel workspace-inspection-preview" aria-label={t('inspection_preview')}>
+      <p className="quality-panel__panel-eyebrow">{t('inspection')}</p>
+      <h2>{t('inspection_becomes_available_after_generation')}</h2>
+      <p>{t('the_score_gaps_and_checklist_appear')}</p>
     </aside>
   )
 }
@@ -45,15 +49,16 @@ function PostForgeNextSteps({
   projectLabel,
   statusLabel,
 }) {
+  const t = useCopy('forge')
   return (
-    <section className="post-forge-next-steps panel" aria-label="Próximos passos da peça">
+    <section className="post-forge-next-steps panel" aria-label={t('next_steps_for_this_artifact')}>
       <div className="post-forge-next-steps__header">
         <div>
-          <p className="projects-page__eyebrow">Próximos passos</p>
-          <h2>Leve esta story para o fluxo de produto</h2>
-          <p>Copie para o backlog, organize em projeto ou prepare a Roda da Fogueira quando o time for estimar.</p>
+          <p className="projects-page__eyebrow">{t('next_steps')}</p>
+          <h2>{t('take_this_story_into_your_product')}</h2>
+          <p>{t('copy_it_to_your_backlog_organize')}</p>
         </div>
-        <div className="post-forge-next-steps__status" aria-label="Contexto atual da peça">
+        <div className="post-forge-next-steps__status" aria-label={t('current_artifact_context')}>
           <span title={projectLabel}>{projectLabel}</span>
           <strong title={statusLabel}>{statusLabel}</strong>
         </div>
@@ -67,8 +72,8 @@ function PostForgeNextSteps({
           disabled={isCopying}
         >
           <span>1</span>
-          <strong>{isCopying ? 'Copiando...' : 'Copiar para backlog'}</strong>
-          <small>Leve a user story e critérios de aceite para sua ferramenta atual.</small>
+          <strong>{isCopying ? t('copying') : t('copy_to_backlog')}</strong>
+          <small>{t('take_the_user_story_and_acceptance')}</small>
         </button>
 
         <button
@@ -78,8 +83,8 @@ function PostForgeNextSteps({
           disabled={!canEdit || isSaving}
         >
           <span>2</span>
-          <strong>{isSaving ? 'Organizando...' : 'Organizar em projeto'}</strong>
-          <small>Use projetos para agrupar histórias por jornada, iniciativa ou produto.</small>
+          <strong>{isSaving ? t('organizing') : t('organize_in_a_project')}</strong>
+          <small>{t('use_projects_to_group_stories_by')}</small>
         </button>
 
         <button
@@ -89,8 +94,8 @@ function PostForgeNextSteps({
           disabled={!canEdit || isOpeningPlanning || isSaving}
         >
           <span>3</span>
-          <strong>{isOpeningPlanning ? 'Preparando...' : 'Preparar Roda'}</strong>
-          <small>Marque a story como pronta e abra o fluxo de estimativa colaborativa.</small>
+          <strong>{isOpeningPlanning ? t('preparing') : t('prepare_planning_poker')}</strong>
+          <small>{t('mark_the_story_as_ready_and')}</small>
         </button>
       </div>
     </section>
@@ -98,6 +103,9 @@ function PostForgeNextSteps({
 }
 
 function ToolPage() {
+  const t = useCopy('forge')
+  const storyFormat = useCopy('storyFormat')
+  const { language, preview } = useLanguage()
   const navigate = useNavigate()
   const [mobileTab, setMobileTab] = useState('entrada')
   const [searchParams] = useSearchParams()
@@ -148,7 +156,7 @@ function ToolPage() {
     selectedStoryProjectId,
     validationErrors,
     workspaceError,
-  } = useUserStoryWorkspace()
+  } = useUserStoryWorkspace(storyFormat)
 
   const loadProjects = useCallback(async () => {
     if (!userId) return
@@ -232,7 +240,7 @@ function ToolPage() {
     setIsCreatingProject(false)
 
     if (!response.success || !response.data) {
-      setProjectActionMessage(response.error?.message ?? 'Não foi possível criar o projeto agora.')
+      setProjectActionMessage('could_not_create_the_project_try')
       return false
     }
 
@@ -247,11 +255,11 @@ function ToolPage() {
       const assigned = await handleAssignSelectedStoryToProject(nextProject.id)
       setProjectActionMessage(
         assigned
-          ? 'Projeto criado e história organizada.'
-          : 'Projeto criado, mas não foi possível organizar a história agora.',
+          ? 'project_created_and_story_organized'
+          : 'the_project_was_created_but_the',
       )
     } else {
-      setProjectActionMessage('Projeto criado. As próximas histórias podem usar esse contexto.')
+      setProjectActionMessage('project_created_new_stories_can_use')
     }
 
     return true
@@ -273,8 +281,8 @@ function ToolPage() {
     const assigned = await handleAssignSelectedStoryToProject(selectedProjectId)
     setProjectActionMessage(
       assigned
-        ? 'História organizada no projeto selecionado.'
-        : 'Não foi possível organizar a história agora.',
+        ? 'story_organized_in_the_selected_project'
+        : 'could_not_organize_the_story_try',
     )
 
     return assigned
@@ -298,7 +306,7 @@ function ToolPage() {
 
     if (!targetProjectId) {
       setMobileTab('entrada')
-      setProjectActionMessage('Escolha ou crie um projeto para levar esta história para a Roda da Fogueira.')
+      setProjectActionMessage('choose_or_create_a_project_to')
       return
     }
 
@@ -310,7 +318,7 @@ function ToolPage() {
       if (!assigned) {
         setIsOpeningPlanningShortcut(false)
         setMobileTab('entrada')
-        setProjectActionMessage('Não foi possível vincular a história ao projeto antes de abrir a Roda.')
+        setProjectActionMessage('could_not_link_the_story_to')
         return
       }
     }
@@ -336,12 +344,12 @@ function ToolPage() {
     setMobileTab('entrada')
 
     if (!selectedStoryId || !canEditSelectedStory) {
-      setProjectActionMessage('Apenas quem criou esta história pode organizar a peça em projeto.')
+      setProjectActionMessage('only_the_story_s_author_can')
       return
     }
 
     if (selectedStoryProjectId) {
-      setProjectActionMessage('Esta história já está organizada em um projeto.')
+      setProjectActionMessage('this_story_is_already_organized_in')
       return
     }
 
@@ -350,7 +358,7 @@ function ToolPage() {
       return
     }
 
-    setProjectActionMessage('Escolha um projeto existente ou crie um novo para organizar esta história.')
+    setProjectActionMessage('choose_an_existing_project_or_create')
   }
 
   const hasDraft = Boolean(
@@ -363,37 +371,37 @@ function ToolPage() {
     !reviewStory && Boolean(workspaceError) && !showBlockingLoadingState
   const showStoryDeepLinkError = Boolean(storyIdFromQuery && showBlockingErrorState)
   const showEmptyState = !reviewStory && !showBlockingLoadingState && !showBlockingErrorState
-  const workspaceStatusLabel = isEditing ? 'Peça atual' : 'Nova peça'
-  const workspaceStatusTitle = isEditing && activeStoryTitle ? activeStoryTitle : 'Em preparo'
+  const workspaceStatusLabel = isEditing ? t('current_artifact') : t('new_artifact')
+  const workspaceStatusTitle = isEditing && activeStoryTitle ? activeStoryTitle : t('in_preparation')
   const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? null
   const linkedStoryProject = projects.find((project) => project.id === selectedStoryProjectId) ?? null
-  const selectedProjectName = selectedProject?.name ?? 'Sem projeto'
+  const selectedProjectName = selectedProject?.name ?? t('no_project')
   const linkedStoryProjectName = linkedStoryProject?.name ?? selectedProjectName
-  const projectPillText = selectedProject ? selectedProjectName : 'Peça avulsa'
+  const projectPillText = selectedProject ? selectedProjectName : t('standalone_artifact')
   const selectedStoryEstimationStatusLabel =
-    ESTIMATION_STATUS_LABELS[selectedStoryEstimationStatus] ?? 'Criada'
+    t(ESTIMATION_STATUS_LABELS[selectedStoryEstimationStatus] ?? 'created')
   const planningShortcut = reviewStory
     ? {
         description: !canEditSelectedStory
-          ? 'Apenas quem criou a história pode prepará-la para estimativa.'
+          ? t('only_the_story_s_author_can_2')
           : selectedStoryProjectId
             ? selectedStoryEstimationStatus === 'ready_for_estimation'
-              ? 'Esta história já está pronta para entrar em uma Roda.'
+              ? t('this_story_is_ready_for_a')
               : selectedStoryEstimationStatus === 'estimated'
-                ? 'Esta história já possui estimativa. Consulte as Rodas do projeto.'
-                : 'Marque a história como pronta e abra a Roda com o projeto vinculado.'
+                ? t('this_story_already_has_an_estimate')
+                : t('mark_the_story_as_ready_and_2')
             : selectedProjectId
-              ? 'Vincule esta história ao projeto selecionado e abra a Roda em seguida.'
-              : 'Vincule a história a um projeto antes de criar uma Roda.',
+              ? t('link_this_story_to_the_selected')
+              : t('link_this_story_to_a_project'),
         buttonLabel: selectedStoryProjectId
           ? selectedStoryEstimationStatus === 'ready_for_estimation'
-            ? 'Criar Roda com esta história'
+            ? t('start_planning_poker_with_this_story')
             : selectedStoryEstimationStatus === 'estimated'
-              ? 'Abrir Rodas do projeto'
-              : 'Marcar e criar Roda'
+              ? t('open_project_sessions')
+              : t('mark_as_ready_and_start_planning')
           : selectedProjectId
-            ? 'Vincular e criar Roda'
-            : 'Vincular a projeto',
+            ? t('link_project_and_start_planning_poker')
+            : t('link_to_a_project'),
         isLoading: isOpeningPlanningShortcut,
         disabled: !selectedStoryId || !canEditSelectedStory || isOpeningPlanningShortcut || isSavingEdits,
         onClick: handleOpenPlanningFromWorkspace,
@@ -412,7 +420,7 @@ function ToolPage() {
 
   function handleGoToHistoryFromStoryError() {
     loadedQueryStoryIdRef.current = null
-    navigate('/historico')
+    navigate(preview ? localizeHref('/historico', language) : '/historico')
   }
 
   useEffect(() => {
@@ -420,14 +428,14 @@ function ToolPage() {
 
     const generationsText = effectiveForgeLimit === null
       ? 'Pro'
-      : `${remainingGenerations} ${remainingGenerations === 1 ? 'forja' : 'forjas'}`
+      : t('generation_count', { count: remainingGenerations })
 
     setTopbarStatus({
       label: workspaceStatusLabel,
       title: workspaceStatusTitle,
       pills: [
         {
-          text: isEditing ? 'Em inspeção' : 'Ainda não forjada',
+          text: isEditing ? t('under_inspection') : t('waiting_for_generation'),
           className: isEditing ? 'mode-pill-editing' : '',
         },
         {
@@ -444,6 +452,7 @@ function ToolPage() {
     return () => setTopbarStatus(null)
   }, [
     setTopbarStatus,
+    t,
     workspaceStatusLabel,
     workspaceStatusTitle,
     isEditing,
@@ -459,20 +468,20 @@ function ToolPage() {
     <WorkspaceLoadingState mode={isLoadingSelection ? 'selection' : 'generate'} />
   ) : showBlockingErrorState ? (
       <WorkspaceErrorState
-        message={workspaceError}
-        title={showStoryDeepLinkError ? 'Peça não encontrada ou sem acesso.' : undefined}
+        message={formatNotice(t, workspaceError)}
+        title={showStoryDeepLinkError ? t('artifact_not_found_or_access_denied') : undefined}
         note={
           showStoryDeepLinkError
-            ? 'O link pode ter sido removido, pertencer a outro acesso ou apontar para uma peça que você não pode abrir.'
+            ? t('the_link_may_have_been_removed')
             : undefined
         }
         canRetry={showStoryDeepLinkError || Boolean(formValues.problemContext.trim())}
         onRetry={showStoryDeepLinkError ? handleRetryStoryDeepLink : handleSubmitWithProject}
-        retryLabel={showStoryDeepLinkError ? 'Tentar carregar novamente' : undefined}
+        retryLabel={showStoryDeepLinkError ? t('try_loading_again') : undefined}
         secondaryAction={
           showStoryDeepLinkError
             ? {
-                label: 'Voltar para peças forjadas',
+                label: t('back_to_story_history'),
                 onClick: handleGoToHistoryFromStoryError,
               }
             : null
@@ -507,7 +516,7 @@ function ToolPage() {
         onCopy={() => handleCopy(reviewStory)}
         onOpenPlanning={handleOpenPlanningFromWorkspace}
         onOrganize={handleOrganizeFromNextSteps}
-        projectLabel={selectedStoryProjectId ? linkedStoryProjectName : 'Peça avulsa'}
+        projectLabel={selectedStoryProjectId ? linkedStoryProjectName : t('standalone_artifact')}
         statusLabel={selectedStoryEstimationStatusLabel}
       />
     </>
@@ -527,7 +536,7 @@ function ToolPage() {
             onRequestRefine={handleRequestRefineFromPanel}
             onShowAllAlerts={handleShowAllAlertsFromPanel}
             planningShortcut={planningShortcut}
-            plainCopyMessage={copyMessage}
+            plainCopyMessage={formatNotice(t, copyMessage)}
             isCopyingPlain={isCopying}
             canRefine={canEditSelectedStory}
           />
@@ -579,22 +588,24 @@ function ToolPage() {
           selectedProjectId &&
           selectedProjectId !== selectedStoryProjectId,
       )}
-      actionMessage={projectActionMessage}
+      actionMessage={formatNotice(t, projectActionMessage)}
     />
   )
 
   return (
     <div className="tool-page story-workspace">
+      {language === 'en' && <p className="workspace-language-note">{t('generation_language_notice')}</p>}
 
-      <nav className="workspace-tabs" aria-label="Áreas da bancada">
+      <nav className="workspace-tabs" aria-label={t('workspace_sections')}>
         {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
             className={`workspace-tabs__tab ${mobileTab === tab.id ? 'workspace-tabs__tab--active' : ''}`}
             onClick={() => setMobileTab(tab.id)}
+            aria-pressed={mobileTab === tab.id}
           >
-            {tab.label}
+            {t(tab.label)}
           </button>
         ))}
       </nav>

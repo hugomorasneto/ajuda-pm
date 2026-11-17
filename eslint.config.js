@@ -35,7 +35,9 @@ export default defineConfig([
       'src/pages/Learning{Hub,Guide}Page.jsx',
       'src/components/projects/TeamMembersPanel.jsx',
       'src/components/navigation/Public{Header,Footer}.jsx',
-      'src/components/workspace/Workspace{Topbar,Sidebar}.jsx',
+      'src/components/workspace/Workspace{Topbar,Sidebar,LoadingState,EmptyState,ErrorState}.jsx',
+      'src/components/workspace/{BriefComposer,ProjectContextPanel,PromptChips,StoryDocument,QualityPanel,ExportActionsBar,VersionTimeline,VersionDiffSummary}.jsx',
+      'src/pages/{Tool,History}Page.jsx',
       'src/components/privacy/PrivacyConsentBanner.jsx',
     ],
     rules: {

@@ -115,9 +115,10 @@ function IconSignOut() {
 }
 
 function SidebarNavLink({ item, onClose }) {
+  const { preview, language } = useLanguage()
   return (
     <NavLink
-      to={item.path}
+      to={preview ? localizeHref(item.path, language) : item.path}
       end={item.end}
       onClick={onClose}
       className={({ isActive }) =>
@@ -211,7 +212,7 @@ function WorkspaceSidebar({ isOpen, onClose }) {
   const academyNavItems = [
     {
       label: t('guides'),
-      path: localizeHref('/aprender', language),
+      path: '/aprender',
       end: false,
       icon: <IconAcademy />,
       toneClass: 'workspace-sidebar__link--academy',
@@ -219,7 +220,7 @@ function WorkspaceSidebar({ isOpen, onClose }) {
     },
     {
       label: t('storiesGuide'),
-      path: localizeHref('/aprender/user-stories-na-pratica', language),
+      path: '/aprender/user-stories-na-pratica',
       end: true,
       icon: <IconStoryGuide />,
       toneClass: 'workspace-sidebar__link--academy',

@@ -1,0 +1,22 @@
+{
+  "recuperacao-senha": {
+    "label": "Password recovery",
+    "context": "Users cannot reset their passwords on mobile devices. The email link does not open the native app, and support is receiving many tickets about it.",
+    "requirements": "The reset link works in the mobile app and browser.\nThe link expires after 24 hours.\nThe user keeps data from the active session.\nSupport iOS and Android."
+  },
+  "onboarding-b2b": {
+    "label": "B2B domain validation",
+    "context": "B2B onboarding produces inconsistent registrations because the company email domain is not checked during sign-up. Operations reviews each registration manually.",
+    "requirements": "Validate the domain format before proceeding.\nBlock generic domains such as Gmail and Hotmail.\nShow a clear error without losing entered data.\nLog invalid attempts for analysis."
+  },
+  "filtro-busca": {
+    "label": "Combined search filters",
+    "context": "Users cannot filter results by category and price range at the same time. Applying one filter clears the other and causes users to abandon the search.",
+    "requirements": "Combine filters without resetting earlier selections.\nUpdate results without reloading the page.\nKeep active filters in the URL for sharing.\nAdd a button to clear every filter at once."
+  },
+  "notificacao-pagamento": {
+    "label": "Payment confirmation",
+    "context": "Customers do not receive confirmation after an approved payment. Many contact support because they think the payment failed, creating unnecessary work.",
+    "requirements": "Send a confirmation email with a payment summary within two minutes.\nInclude a receipt link in the email.\nSend an app push notification if the user has enabled notifications.\nLog sending failures so they can be retried."
+  }
+}

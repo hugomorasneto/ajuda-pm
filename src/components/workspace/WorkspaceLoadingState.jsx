@@ -1,25 +1,27 @@
+import { useCopy } from '../../i18n/context'
 const loadingPresets = {
   generate: {
     steps: [
-      { label: 'Organizando briefing…', pct: 30 },
-      { label: 'Refinando a estrutura…', pct: 65 },
-      { label: 'Preparando critérios…', pct: 90 },
+      { label: 'organizing_the_brief_2', pct: 30 },
+      { label: 'refining_the_structure', pct: 65 },
+      { label: 'preparing_criteria_2', pct: 90 },
     ],
   },
   selection: {
     steps: [
-      { label: 'Buscando peças forjadas…', pct: 40 },
-      { label: 'Abrindo artefato…', pct: 75 },
-      { label: 'Sincronizando versões…', pct: 95 },
+      { label: 'loading_story_history', pct: 40 },
+      { label: 'opening_artifact', pct: 75 },
+      { label: 'loading_versions', pct: 95 },
     ],
   },
 }
 
 function WorkspaceLoadingState({ mode = 'generate' }) {
+  const t = useCopy('forge')
   const preset = loadingPresets[mode] ?? loadingPresets.generate
 
   return (
-    <section className="panel workspace-state workspace-state--loading" aria-live="polite" aria-label="Gerando user story">
+    <section className="panel workspace-state workspace-state--loading" aria-live="polite" aria-label={mode === 'selection' ? t('opening_saved_artifact') : t('generating_user_story')}>
       <div className="workspace-state__content">
         {/* Skeleton that mimics the real document structure */}
         <div className="workspace-state__skeleton" aria-hidden="true">
@@ -40,7 +42,7 @@ function WorkspaceLoadingState({ mode = 'generate' }) {
         <div className="workspace-state__progress-steps">
           {preset.steps.map((step) => (
             <div key={step.label} className="workspace-state__progress-row">
-              <span className="workspace-state__progress-label">{step.label}</span>
+              <span className="workspace-state__progress-label">{t(step.label)}</span>
               <div className="workspace-state__progress-track">
                 <span
                   className="workspace-state__progress-fill"

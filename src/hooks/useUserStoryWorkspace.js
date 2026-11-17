@@ -20,17 +20,16 @@ import {
   getEffectiveForgeLimit,
   getRemainingForgeGenerations,
 } from '../constants/app'
+import { defaultStoryFormat } from '../utils/storyFormat'
 import { copyTextToClipboard } from '../utils/storyExport'
 
-const STORY_STATUS_LABELS = {
-  generated: 'Forjado',
-  reviewed: 'Inspecionado',
-  approved: 'Aprovado',
-  archived: 'Arquivado',
-}
-
-function getStoryStatusLabel(status) {
-  return STORY_STATUS_LABELS[status] ?? 'Forjado'
+const generationErrorKeys = {
+  INVALID_INPUT: 'generation_invalid',
+  AUTH_REQUIRED: 'your_session_has_expired_sign_in',
+  RATE_LIMIT: 'generation_busy',
+  PROVIDER_UNAVAILABLE: 'generation_provider',
+  TIMEOUT: 'generation_timeout',
+  NETWORK: 'generation_network',
 }
 
 export function parseTextList(value) {
@@ -42,28 +41,31 @@ export function parseTextList(value) {
 }
 
 function mapStoryRowToGeneratedResult(story) {
-  return normalizeUserStoryGeneration({
-    title: story.title,
-    objective: story.objective,
-    user_story: story.user_story,
-    acceptance_criteria: parseTextList(story.acceptance_criteria),
-    notes: `Status: ${getStoryStatusLabel(story.status)}`,
-    business_rules: parseTextList(story.business_rules),
-    gaps: parseTextList(story.gaps),
-    qa_checklist: parseTextList(story.qa_checklist),
-    generation_meta: {
-      generated_by: 'history',
-      model_used: null,
-      quality_score: null,
-      guardrails_applied: false,
-    },
-  })
+  return {
+    ...normalizeUserStoryGeneration({
+      title: story.title,
+      objective: story.objective,
+      user_story: story.user_story,
+      acceptance_criteria: parseTextList(story.acceptance_criteria),
+      business_rules: parseTextList(story.business_rules),
+      gaps: parseTextList(story.gaps),
+      qa_checklist: parseTextList(story.qa_checklist),
+      generation_meta: {
+        generated_by: 'history',
+        model_used: null,
+        quality_score: null,
+        guardrails_applied: false,
+      },
+    }),
+    storedStatus: story.status ?? 'generated',
+  }
 }
+
 
 function validateForm(formValues) {
   const errors = {}
   if (!formValues.problemContext.trim()) {
-    errors.problemContext = 'Informe a matéria-prima principal antes de acionar a forja.'
+    errors.problemContext = 'enter_the_brief_before_generating_a'
   }
   return errors
 }
@@ -86,11 +88,11 @@ function toNullableText(list) {
   return list.join('\n')
 }
 
-function buildClipboardText(result) {
+function buildClipboardText(result, t) {
   return [
-    `User story: ${result.user_story}`,
+    `${t('user_story')}: ${result.user_story}`,
     '',
-    'Critérios de aceite:',
+    t('criteria') + ':',
     ...result.acceptance_criteria.map((item, index) => `${index + 1}. ${item}`),
   ].join('\n')
 }
@@ -119,11 +121,11 @@ function buildRefinementGenerationAdjustment({ instruction, story }) {
   ].filter(Boolean).join('\n')
 }
 
-export function formatDateTime(value) {
+export function formatDateTime(value, locale = 'pt-BR') {
   if (!value) return '-'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return '-'
-  return new Intl.DateTimeFormat('pt-BR', {
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : locale, {
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
@@ -131,7 +133,7 @@ export function formatDateTime(value) {
   }).format(date)
 }
 
-export function useUserStoryWorkspace() {
+export function useUserStoryWorkspace(storyFormat = defaultStoryFormat) {
   const pageSize = 10
   const { user } = useAuth()
   const userId = user?.id ?? null
@@ -234,7 +236,7 @@ export function useUserStoryWorkspace() {
     if (response.success) {
       setRecentStories(response.data ?? [])
     } else {
-      setHistoryError('Não foi possível buscar as peças forjadas agora.')
+      setHistoryError('could_not_load_story_history_try')
     }
 
     setIsLoadingRecent(false)
@@ -358,8 +360,8 @@ export function useUserStoryWorkspace() {
 
     const response = await getUserStoryById(storyId, userId)
     if (!response.success || !response.data) {
-      setWorkspaceError('Não foi possível carregar a versão selecionada agora.')
-      setSaveMessage('Erro ao carregar a versão selecionada.')
+      setWorkspaceError('could_not_load_the_selected_version')
+      setSaveMessage({ key: 'error_loading_the_selected_version', tone: 'error' })
       setIsLoadingSelection(false)
       return
     }
@@ -383,8 +385,8 @@ export function useUserStoryWorkspace() {
 
     const response = await getUserStoryById(storyId, userId)
     if (!response.success || !response.data) {
-      setWorkspaceError('Não foi possível carregar a user story selecionada agora.')
-      setSaveMessage('Erro ao carregar a user story selecionada.')
+      setWorkspaceError('could_not_load_the_selected_user')
+      setSaveMessage({ key: 'error_loading_the_selected_user_story', tone: 'error' })
       setIsLoadingSelection(false)
       return
     }
@@ -409,9 +411,9 @@ export function useUserStoryWorkspace() {
     setIsCopying(true)
     setCopyMessage('')
     try {
-      const text = buildClipboardText(sourceStory)
+      const text = buildClipboardText(sourceStory, storyFormat)
       await copyTextToClipboard(text)
-      setCopyMessage('Artefato copiado para a área de transferência.')
+      setCopyMessage('artifact_copied_to_the_clipboard')
       trackEvent({
         event_name: 'user_story_copied',
         event_category: 'workspace',
@@ -419,7 +421,7 @@ export function useUserStoryWorkspace() {
         metadata: { story_id: selectedStoryId, has_story: true },
       })
     } catch (error) {
-      setCopyMessage('Erro ao copiar o conteúdo.')
+      setCopyMessage('could_not_copy_the_content')
       console.error('Falha ao copiar user story:', error)
     } finally {
       setIsCopying(false)
@@ -429,7 +431,7 @@ export function useUserStoryWorkspace() {
   async function handleSaveEdits() {
     if (!userId || !selectedStoryId || !result) return
     if (!canEditSelectedStory) {
-      setSaveMessage('Apenas quem criou esta história pode salvar alterações nela.')
+      setSaveMessage({ key: 'only_the_story_s_author_can_3', tone: 'error' })
       return
     }
 
@@ -438,7 +440,7 @@ export function useUserStoryWorkspace() {
     const safeCriteria = editDraft.acceptance_criteria
 
     if (!safeTitle || !safeUserStory || safeCriteria.length === 0) {
-      setSaveMessage('Preencha título, user story e critérios de aceite antes de salvar.')
+      setSaveMessage({ key: 'enter_a_title_user_story_and', tone: 'error' })
       return
     }
 
@@ -455,13 +457,12 @@ export function useUserStoryWorkspace() {
     setIsSavingEdits(false)
 
     if (!response.success || !response.data?.[0]) {
-      const errorMessage = response.error?.message ?? 'Erro desconhecido ao salvar a edição.'
-      setSaveMessage(`Erro ao salvar a versão: ${errorMessage}`)
+      setSaveMessage({ key: 'version_save_failed', tone: 'error' })
       return
     }
 
     fillScreenWithStory(response.data[0])
-    setSaveMessage('Alterações salvas. Revise os critérios de aceite antes de copiar para o backlog.')
+    setSaveMessage('changes_saved')
     await loadVersionsByGroup(selectedStoryGroupId)
     await loadRecentStories()
 
@@ -481,8 +482,8 @@ export function useUserStoryWorkspace() {
       : { ...formValues, adjustment: adjustmentOverride }
 
     if (!userId) {
-      setWorkspaceError('Sua sessão expirou. Entre novamente para continuar.')
-      setSaveMessage('Sessão expirada. Faça login novamente.')
+      setWorkspaceError('your_session_has_expired_sign_in')
+      setSaveMessage({ key: 'session_expired_sign_in_again', tone: 'error' })
       return false
     }
 
@@ -490,7 +491,7 @@ export function useUserStoryWorkspace() {
     setValidationErrors(errors)
 
     if (Object.keys(errors).length > 0) {
-      setSaveMessage('Revise a matéria-prima antes de acionar a forja.')
+      setSaveMessage({ key: 'check_the_brief_before_generating_a', tone: 'error' })
       return false
     }
 
@@ -508,8 +509,8 @@ export function useUserStoryWorkspace() {
       })
       const limitMessage =
         userPlan === 'free' && forgeLimitOverride === null && effectiveForgeLimit === FREE_GENERATION_LIMIT
-          ? `Limite do plano Free atingido (${FREE_GENERATION_LIMIT} forjas). Atualize para Pro para continuar.`
-          : `Limite de forjas atingido (${effectiveForgeLimit} forjas). Ajuste seu acesso para continuar.`
+          ? { key: 'you_have_reached_the_free_plan', values: { p1: FREE_GENERATION_LIMIT } }
+          : { key: 'you_have_reached_your_limit_of', values: { p1: effectiveForgeLimit } }
       setWorkspaceError(limitMessage)
       setSaveMessage(limitMessage)
       return false
@@ -587,7 +588,7 @@ export function useUserStoryWorkspace() {
       if (!actionResult.success || !actionResult.data?.[0]) {
         const errorMessage = actionResult.error?.message ?? 'Erro desconhecido ao persistir.'
         console.error('Falha ao persistir user story:', actionResult.error)
-        setSaveMessage(`Erro ao salvar a versão: ${errorMessage}`)
+        setSaveMessage({ key: 'version_save_failed', tone: 'error' })
         trackEvent({
           event_name: 'user_story_generate_failed',
           event_category: 'workspace',
@@ -610,13 +611,10 @@ export function useUserStoryWorkspace() {
       })
 
       const quality = generated?.generation_meta?.quality_score
-      const qualityLabel =
-        Number.isFinite(quality) && quality > 0 ? ` Pontuação da inspeção: ${quality}/100.` : ''
-      setSaveMessage(
-        shouldUseCurrentGroup
-          ? `Story refinada e salva como nova versão.${qualityLabel}`
-          : `Primeira versão forjada e salva com sucesso.${qualityLabel}`,
-      )
+      const savedKey = shouldUseCurrentGroup ? 'refined_version' : 'first_version'
+      setSaveMessage(Number.isFinite(quality) && quality > 0
+        ? { key: savedKey + '_score', values: { score: quality } }
+        : savedKey + '_saved')
       await loadRecentStories()
       await loadVersionsByGroup(persisted.story_group_id ?? persisted.id)
       await loadUsage()
@@ -651,12 +649,13 @@ export function useUserStoryWorkspace() {
       return true
     } catch (error) {
       console.error('Falha ao gerar user story com IA:', error)
-      const baseMessage =
-        error instanceof Error && error.message
-          ? error.message
-          : 'Não foi possível gerar a story agora.'
-      setWorkspaceError(`${baseMessage} Sua matéria-prima foi preservada para uma nova tentativa.`)
-      setSaveMessage(`${baseMessage} Sua matéria-prima foi preservada para uma nova tentativa.`)
+      const notice = {
+        key: generationErrorKeys[error?.code] ?? 'could_not_generate_a_story_try',
+        keepDraft: true,
+        tone: 'error',
+      }
+      setWorkspaceError(notice)
+      setSaveMessage(notice)
       trackEvent({
         event_name: 'user_story_generate_failed',
         event_category: 'workspace',
@@ -676,17 +675,17 @@ export function useUserStoryWorkspace() {
   async function handleRefineStory(instruction) {
     const adjustment = String(instruction ?? '').trim()
     if (!adjustment) {
-      setSaveMessage('Informe o ajuste desejado antes de refinar na forja.')
+      setSaveMessage({ key: 'describe_the_change_you_want_before', tone: 'error' })
       return false
     }
 
     if (!result) {
-      setSaveMessage('Gere uma story antes de acionar o refino.')
+      setSaveMessage({ key: 'generate_a_story_before_refining_it', tone: 'error' })
       return false
     }
 
     if (!canEditSelectedStory) {
-      setSaveMessage('Apenas quem criou esta história pode gerar uma versão refinada dela.')
+      setSaveMessage({ key: 'only_the_story_s_author_can_4', tone: 'error' })
       return false
     }
 
@@ -724,8 +723,7 @@ export function useUserStoryWorkspace() {
     setIsSavingEdits(false)
 
     if (!response.success || !response.data?.[0]) {
-      const errorMessage = response.error?.message ?? 'Erro desconhecido ao organizar a história.'
-      setSaveMessage(`Erro ao organizar a história: ${errorMessage}`)
+      setSaveMessage({ key: 'project_assignment_failed', tone: 'error' })
       return false
     }
 
@@ -734,8 +732,8 @@ export function useUserStoryWorkspace() {
     setSelectedStoryEstimationStatus(response.data[0].estimation_status ?? 'created')
     setSaveMessage(
       response.data[0].project_id
-        ? 'História organizada no projeto selecionado.'
-        : 'História mantida como peça avulsa.',
+        ? 'story_organized_in_the_selected_project'
+        : 'story_kept_as_a_standalone_artifact',
     )
     await loadRecentStories()
 
@@ -753,7 +751,7 @@ export function useUserStoryWorkspace() {
     if (!userId || !selectedStoryId) return false
 
     if (!canEditSelectedStory) {
-      setSaveMessage('Apenas quem criou esta história pode alterar o status de estimativa.')
+      setSaveMessage({ key: 'only_the_story_s_author_can_5', tone: 'error' })
       return false
     }
 
@@ -770,13 +768,12 @@ export function useUserStoryWorkspace() {
     setIsSavingEdits(false)
 
     if (!response.success) {
-      const errorMessage = response.error?.message ?? 'Não foi possível preparar a história para estimativa.'
-      setSaveMessage(errorMessage)
+      setSaveMessage({ key: 'could_not_prepare_the_story_for', tone: 'error' })
       return false
     }
 
     setSelectedStoryEstimationStatus(response.data?.estimation_status ?? nextStatus)
-    setSaveMessage('História marcada como pronta para estimar.')
+    setSaveMessage('story_marked_as_ready_for_estimation')
     await loadRecentStories()
     await loadVersionsByGroup(selectedStoryGroupId)
 

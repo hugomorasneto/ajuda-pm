@@ -1,45 +1,32 @@
+import { useCopy } from '../../i18n/context'
+import { formatNotice } from '../../i18n/formatNotice'
+import { resolveStoryNotes } from '../../utils/storyFormat'
 import { useEffect, useState } from 'react'
 import StorySection from './StorySection'
 import { buildStoryMarkdown, copyTextToClipboard } from '../../utils/storyExport'
 
 const REFINEMENT_SHORTCUTS = [
   {
-    label: 'Melhorar critérios',
-    text: 'Deixe os critérios de aceite mais objetivos, observáveis e testáveis.',
+    label: 'improve_criteria',
+    text: 'make_the_acceptance_criteria_more_specific',
   },
   {
-    label: 'Simplificar linguagem',
-    text: 'Simplifique a linguagem sem perder clareza para produto, dev e QA.',
+    label: 'simplify_wording',
+    text: 'simplify_the_wording_while_keeping_it',
   },
   {
-    label: 'Adicionar cenários de QA',
-    text: 'Inclua cenários de QA relevantes, cobrindo caminho principal, erro e exceções.',
+    label: 'add_qa_scenarios',
+    text: 'add_relevant_qa_scenarios_for_the',
   },
   {
-    label: 'Mapear exceções',
-    text: 'Mapeie exceções, restrições e dependências que ainda precisam ficar explícitas.',
+    label: 'identify_exceptions',
+    text: 'identify_exceptions_constraints_and_dependencies_that',
   },
 ]
 
 function areCriteriaEqual(current = [], original = []) {
   if (current.length !== original.length) return false
   return current.every((item, index) => item === original[index])
-}
-
-function getCompactSaveMessage(message) {
-  if (!message) return ''
-  if (message.startsWith('Alterações salvas.')) {
-    return 'Alterações salvas'
-  }
-  if (message.includes('Primeira versão forjada e salva com sucesso')) {
-    const scoreMatch = message.match(/(\d+)\/100/)
-    return scoreMatch ? `Primeira versão salva · inspeção ${scoreMatch[1]}/100` : 'Primeira versão salva'
-  }
-  if (message.includes('Story refinada e salva como nova versão')) {
-    const scoreMatch = message.match(/(\d+)\/100/)
-    return scoreMatch ? `Versão refinada salva · inspeção ${scoreMatch[1]}/100` : 'Versão refinada salva'
-  }
-  return message
 }
 
 function StoryDocument({
@@ -58,6 +45,8 @@ function StoryDocument({
   refineRequestId = 0,
   attentionRequestId = 0,
 }) {
+  const t = useCopy('forge')
+  const storyFormat = useCopy('storyFormat')
   const [editingField, setEditingField] = useState(null)
   const [isRefineOpen, setIsRefineOpen] = useState(false)
   const [refinementText, setRefinementText] = useState('')
@@ -86,16 +75,13 @@ function StoryDocument({
     return (
       <section className="panel story-document story-document--empty">
         <div className="story-document__empty">
-          <p className="story-document__eyebrow">Story ainda não gerada</p>
-          <h2>A primeira versão aparece aqui pronta para inspeção.</h2>
-          <p>
-            Forjar gera a primeira versão estruturada da story com objetivo, critérios de aceite, trincas, regras
-            de negócio e teste de resistência no mesmo documento.
-          </p>
+          <p className="story-document__eyebrow">{t('story_not_yet_generated')}</p>
+          <h2>{t('the_first_version_appears_here_ready')}</h2>
+          <p>{t('generate_a_structured_first_version_with')}</p>
           <ul className="story-document__empty-list">
-            <li>Objetivo e user story em formato legível para refinamento.</li>
-            <li>Critérios de aceite organizados para inspeção com dev e QA.</li>
-            <li>Trincas, regras de negócio e notas no mesmo fluxo de trabalho.</li>
+            <li>{t('a_clear_goal_and_user_story')}</li>
+            <li>{t('acceptance_criteria_ready_to_review_with')}</li>
+            <li>{t('gaps_business_rules_and_notes_in')}</li>
           </ul>
         </div>
       </section>
@@ -113,6 +99,7 @@ function StoryDocument({
     user_story: userStoryValue,
     acceptance_criteria: criteriaValue,
   }
+  const notes = resolveStoryNotes(result, storyFormat)
   const hasOriginalContext = Boolean(baseContext?.trim() || baseRequirements?.trim())
   const hasPendingManualEdits = Boolean(
     canEdit && (
@@ -121,7 +108,7 @@ function StoryDocument({
       !areCriteriaEqual(criteriaValue, result.acceptance_criteria)
     ),
   )
-  const compactSaveMessage = getCompactSaveMessage(saveMessage)
+  const compactSaveMessage = formatNotice(t, saveMessage)
 
   function renderEditButton(field) {
     if (!canEdit) return null
@@ -132,7 +119,7 @@ function StoryDocument({
         className="btn btn-ghost btn-small"
         onClick={() => setEditingField((current) => (current === field ? null : field))}
       >
-        {editingField === field ? 'Concluir edição' : 'Editar'}
+        {editingField === field ? t('done_editing') : t('edit')}
       </button>
     )
   }
@@ -158,9 +145,9 @@ function StoryDocument({
     setCopyStatus('')
     try {
       await copyTextToClipboard(userStoryValue)
-      setCopyStatus('User story copiada')
+      setCopyStatus('user_story_copied')
     } catch (error) {
-      setCopyStatus('Não foi possível copiar a user story agora.')
+      setCopyStatus('could_not_copy_the_user_story')
       console.error('Falha ao copiar user story:', error)
     } finally {
       setCopyTarget(null)
@@ -173,10 +160,10 @@ function StoryDocument({
     setCopyTarget('markdown')
     setCopyStatus('')
     try {
-      await copyTextToClipboard(buildStoryMarkdown(currentStoryForExport))
-      setCopyStatus('Artefato copiado em Markdown')
+      await copyTextToClipboard(buildStoryMarkdown(currentStoryForExport, storyFormat))
+      setCopyStatus('artifact_copied_as_markdown')
     } catch (error) {
-      setCopyStatus('Não foi possível copiar o artefato em Markdown agora.')
+      setCopyStatus('could_not_copy_the_markdown_artifact')
       console.error('Falha ao copiar artefato em Markdown:', error)
     } finally {
       setCopyTarget(null)
@@ -192,12 +179,10 @@ function StoryDocument({
       <header className="story-document__header">
         <div className="story-document__header-copy">
           <div className="story-document__status-row">
-            <span className="story-document__meta-pill">Primeira versão gerada</span>
+            <span className="story-document__meta-pill">{t('first_version_generated')}</span>
           </div>
           <h2>{titleValue}</h2>
-          <p>
-            Revise a user story, copie para o backlog ou refine os pontos abertos.
-          </p>
+          <p>{t('review_the_user_story_copy_it')}</p>
         </div>
 
         <div className="story-document__header-actions">
@@ -207,7 +192,7 @@ function StoryDocument({
             onClick={handleCopyUserStory}
             disabled={copiandoStory || copiandoMarkdown}
           >
-            {copiandoStory ? 'Copiando...' : 'Copiar user story'}
+            {copiandoStory ? t('copying') : t('copy_user_story')}
           </button>
 
           <button
@@ -216,7 +201,7 @@ function StoryDocument({
             onClick={handleCopyMarkdown}
             disabled={copiandoStory || copiandoMarkdown}
           >
-            {copiandoMarkdown ? 'Copiando...' : 'Copiar artefato'}
+            {copiandoMarkdown ? t('copying') : t('copy_artifact')}
           </button>
 
           {canRefine ? (
@@ -226,9 +211,7 @@ function StoryDocument({
               onClick={() => setIsRefineOpen((current) => !current)}
               aria-expanded={isRefineOpen}
               disabled={isRefining}
-            >
-              Refinar story
-            </button>
+            >{t('refine_story')}</button>
           ) : null}
 
           {canEdit && (hasPendingManualEdits || isSavingEdits) ? (
@@ -238,24 +221,22 @@ function StoryDocument({
               onClick={onSaveEdits}
               disabled={isSavingEdits || isRefining}
             >
-              {isSavingEdits ? 'Salvando...' : 'Salvar ajustes'}
+              {isSavingEdits ? t('saving') : t('save_changes')}
             </button>
           ) : null}
 
           {canEdit && !hasPendingManualEdits && !isSavingEdits ? (
-            <span className="story-document__save-status" aria-live="polite">
-              Salvo automaticamente
-            </span>
+            <span className="story-document__save-status" aria-live="polite">{t('saved_automatically')}</span>
           ) : null}
         </div>
       </header>
 
       {copyStatus || compactSaveMessage ? (
         <div className="story-document__status-line" aria-live="polite">
-          {copyStatus ? <p className="copy-message">{copyStatus}</p> : null}
+          {copyStatus ? <p className="copy-message">{t(copyStatus)}</p> : null}
           {compactSaveMessage ? (
             <p
-              className={`save-message ${saveMessage.toLowerCase().includes('erro') ? 'save-message-error' : 'save-message-success'}`}
+              className={`save-message ${saveMessage?.tone === 'error' ? 'save-message-error' : 'save-message-success'}`}
             >
               {compactSaveMessage}
             </p>
@@ -266,36 +247,31 @@ function StoryDocument({
       {canRefine && isRefineOpen ? (
         <form className="story-document__refine-panel" onSubmit={handleRefinementSubmit}>
           <div className="story-document__refine-copy">
-            <p className="story-document__eyebrow">Refino</p>
-            <h3>Refinar story</h3>
-            <p>
-              Descreva o ajuste desejado. A IA usa a matéria-prima original,
-              a versão atual e as trincas existentes como referência.
-            </p>
+            <p className="story-document__eyebrow">{t('refinement')}</p>
+            <h3>{t('refine_story')}</h3>
+            <p>{t('describe_the_change_you_want_ai')}</p>
           </div>
 
-          <label className="sr-only" htmlFor="story-refinement-feedback">
-            Ajuste desejado para refinar a story
-          </label>
+          <label className="sr-only" htmlFor="story-refinement-feedback">{t('changes_to_make_in_this_refinement')}</label>
           <textarea
             id="story-refinement-feedback"
             value={refinementText}
             onChange={(event) => setRefinementText(event.target.value)}
-            placeholder="Ex: deixe os critérios mais objetivos, inclua exceções do fluxo mobile ou simplifique a linguagem."
+            placeholder={t('for_example_make_the_criteria_more')}
             rows={4}
             disabled={isRefining}
           />
 
-          <div className="story-document__refine-shortcuts" aria-label="Atalhos de refino">
+          <div className="story-document__refine-shortcuts" aria-label={t('refinement_shortcuts')}>
             {REFINEMENT_SHORTCUTS.map((shortcut) => (
               <button
                 key={shortcut.label}
                 type="button"
                 className="story-document__refine-chip"
-                onClick={() => handleShortcutSelect(shortcut.text)}
+                onClick={() => handleShortcutSelect(t(shortcut.text))}
                 disabled={isRefining}
               >
-                {shortcut.label}
+                {t(shortcut.label)}
               </button>
             ))}
           </div>
@@ -306,39 +282,38 @@ function StoryDocument({
               className="btn btn-primary btn-small"
               disabled={!canSubmitRefinement}
             >
-              {isRefining ? 'Refinando story...' : 'Gerar versão refinada'}
+              {isRefining ? t('refining_story') : t('generate_refined_version')}
             </button>
             <button
               type="button"
               className="btn btn-ghost btn-small"
               onClick={() => setIsRefineOpen(false)}
               disabled={isRefining}
-            >
-              Cancelar
-            </button>
+            >{t('cancel')}</button>
           </div>
         </form>
       ) : null}
 
       {isLoadingSelectedStory ? (
-        <p className="story-document__inline-status">Buscando peça forjada selecionada...</p>
+        <p className="story-document__inline-status">{t('loading_the_selected_artifact')}</p>
       ) : null}
 
       <div className="story-document__body">
         <div className="story-document__primary-stack">
-          <StorySection eyebrow="Objetivo" title="O que esta versão precisa resolver?">
+          <StorySection eyebrow={t('goal')} title={t('what_should_this_version_solve')}>
             <p>{result.objective}</p>
           </StorySection>
 
           <StorySection
-            eyebrow="User story"
-            title="Formulação principal"
+            eyebrow={t('user_story')}
+            title={t('main_statement')}
             emphasis
             actions={renderEditButton('user_story')}
           >
             {editingField === 'user_story' ? (
               <textarea
                 rows={5}
+                aria-label={t('edit_user_story')}
                 value={editDraft.user_story}
                 onChange={(event) => onEditDraftChange('user_story', event.target.value)}
               />
@@ -348,8 +323,8 @@ function StoryDocument({
           </StorySection>
 
           <StorySection
-            eyebrow="Critérios de aceite"
-            title="Checklist mínimo para validar a entrega"
+            eyebrow={t('acceptance_criteria')}
+            title={t('minimum_checklist_for_validating_the_delivery')}
             emphasis
             actions={renderEditButton('acceptance_criteria')}
           >
@@ -357,10 +332,11 @@ function StoryDocument({
               <>
                 <textarea
                   rows={7}
+                  aria-label={t('edit_acceptance_criteria')}
                   value={acceptanceText}
                   onChange={(event) => onEditDraftChange('acceptance_criteria', event.target.value)}
                 />
-                <p className="story-document__section-note">Use uma linha por critério de aceite.</p>
+                <p className="story-document__section-note">{t('use_one_line_per_acceptance_criterion')}</p>
               </>
             ) : (
               <ol className="story-document__ordered-list">
@@ -372,7 +348,7 @@ function StoryDocument({
           </StorySection>
         </div>
 
-        <div className="story-document__secondary-stack" aria-label="Detalhes secundários da peça">
+        <div className="story-document__secondary-stack" aria-label={t('additional_artifact_details')}>
           <details
             className="story-document__detail"
             open={openDetail === 'attention'}
@@ -383,10 +359,10 @@ function StoryDocument({
           >
             <summary>
               <span>
-                <strong>Pontos de atenção</strong>
-                <small>Trincas e decisões pendentes</small>
+                <strong>{t('points_to_review')}</strong>
+                <small>{t('gaps_and_pending_decisions')}</small>
               </span>
-              <em>{result.gaps.length > 0 ? `${result.gaps.length} pontos` : 'Sem trincas críticas'}</em>
+              <em>{result.gaps.length > 0 ? t('points', { p1: result.gaps.length }) : t('no_critical_gaps')}</em>
             </summary>
             {result.gaps.length > 0 ? (
               <ul className="story-document__list">
@@ -395,7 +371,7 @@ function StoryDocument({
                 ))}
               </ul>
             ) : (
-              <p className="story-document__section-note">Nenhuma trinca crítica foi identificada nesta versão.</p>
+              <p className="story-document__section-note">{t('this_version_has_no_identified_critical')}</p>
             )}
           </details>
 
@@ -409,10 +385,10 @@ function StoryDocument({
           >
             <summary>
               <span>
-                <strong>Checklist de QA</strong>
-                <small>Teste de resistência da story</small>
+                <strong>{t('qa_checklist')}</strong>
+                <small>{t('qa_checks_for_the_story')}</small>
               </span>
-              <em>{result.qa_checklist.length > 0 ? `${result.qa_checklist.length} itens` : 'Não preenchido'}</em>
+              <em>{result.qa_checklist.length > 0 ? t('items', { p1: result.qa_checklist.length }) : t('not_provided')}</em>
             </summary>
             {result.qa_checklist.length > 0 ? (
               <ul className="story-document__list">
@@ -421,7 +397,7 @@ function StoryDocument({
                 ))}
               </ul>
             ) : (
-              <p className="story-document__section-note">O checklist de QA ainda não veio preenchido para esta versão.</p>
+              <p className="story-document__section-note">{t('this_version_has_no_qa_checklist')}</p>
             )}
           </details>
 
@@ -435,10 +411,10 @@ function StoryDocument({
           >
             <summary>
               <span>
-                <strong>Regras e notas</strong>
-                <small>Condições, observações e contexto de refinamento</small>
+                <strong>{t('rules_and_notes')}</strong>
+                <small>{t('conditions_observations_and_refinement_context')}</small>
               </span>
-              <em>{result.business_rules.length > 0 ? `${result.business_rules.length} regras` : 'Notas'}</em>
+              <em>{result.business_rules.length > 0 ? t('rules', { p1: result.business_rules.length }) : t('notes')}</em>
             </summary>
             {result.business_rules.length > 0 ? (
               <ul className="story-document__list">
@@ -447,7 +423,7 @@ function StoryDocument({
                 ))}
               </ul>
             ) : null}
-            {result.notes ? <p>{result.notes}</p> : null}
+            {notes ? <p>{notes}</p> : null}
           </details>
 
           {hasOriginalContext ? (
@@ -461,20 +437,20 @@ function StoryDocument({
             >
               <summary>
                 <span>
-                  <strong>Contexto original</strong>
-                  <small>Matéria-prima usada na forja</small>
+                  <strong>{t('original_context')}</strong>
+                  <small>{t('brief_used_to_generate_the_story_2')}</small>
                 </span>
-                <em>Recolhido</em>
+                <em>{t('available')}</em>
               </summary>
               {baseContext?.trim() ? (
                 <div className="story-document__context-block">
-                  <p className="story-document__section-note">Matéria-prima</p>
+                  <p className="story-document__section-note">{t('brief')}</p>
                   <p>{baseContext}</p>
                 </div>
               ) : null}
               {baseRequirements?.trim() ? (
                 <div className="story-document__context-block">
-                  <p className="story-document__section-note">Ligas e regras informadas</p>
+                  <p className="story-document__section-note">{t('provided_rules_and_constraints')}</p>
                   <p>{baseRequirements}</p>
                 </div>
               ) : null}

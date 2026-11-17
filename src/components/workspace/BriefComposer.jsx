@@ -1,7 +1,8 @@
+import { useCopy } from '../../i18n/context'
 import { useRef, useState } from 'react'
 import ComposerSection from './ComposerSection'
 import PromptChips from './PromptChips'
-import { QUICK_TEMPLATES } from './workspaceTemplates'
+import { getQuickTemplates } from './workspaceTemplates'
 
 function IconFileText() {
   return (
@@ -132,35 +133,36 @@ function IconPlus() {
 }
 
 const contextPrompts = [
-  { label: 'Dor do usuário', text: 'Dor do usuário: ' },
-  { label: 'Fluxo atual', text: 'Fluxo atual: ' },
-  { label: 'Impacto no produto', text: 'Impacto no produto: ' },
+  { label: 'user_pain_point', text: 'user_pain_point_2' },
+  { label: 'current_flow', text: 'current_flow_2' },
+  { label: 'product_impact', text: 'product_impact_2' },
 ]
 
 const requirementPrompts = [
-  { label: 'Regra de negócio', text: 'Regra de negócio: ' },
-  { label: 'Critério mínimo', text: 'Critério mínimo: ' },
-  { label: 'Cenário alternativo', text: 'Cenário alternativo: ' },
+  { label: 'business_rule', text: 'business_rule_2' },
+  { label: 'minimum_criterion', text: 'minimum_criterion_2' },
+  { label: 'alternative_scenario', text: 'alternative_scenario_2' },
 ]
 
 const adjustmentPrompts = [
-  { label: 'Mais objetivo', text: 'Deixe a saída mais objetiva e pronta para refinamento.' },
-  { label: 'Mais técnico', text: 'Aprofunde impactos técnicos, integrações e observabilidade.' },
-  { label: 'Foco em teste', text: 'Reforce critérios de aceite, exceções e cenários de QA.' },
+  { label: 'more_concise', text: 'make_the_output_more_concise_and' },
+  { label: 'more_technical_detail', text: 'expand_on_technical_impacts_integrations_and' },
+  { label: 'focus_on_testing', text: 'strengthen_the_acceptance_criteria_exceptions_and' },
 ]
 
 const LOADING_STEPS = [
-  { label: 'Organizando briefing...', pct: 30 },
-  { label: 'Aplicando regras...', pct: 65 },
-  { label: 'Preparando critérios...', pct: 90 },
+  { label: 'organizing_the_brief', pct: 30 },
+  { label: 'applying_rules', pct: 65 },
+  { label: 'preparing_criteria', pct: 90 },
 ]
 
 function LoadingProgress() {
+  const t = useCopy('forge')
   return (
     <div className="brief-loading" aria-live="polite">
       {LOADING_STEPS.map((step) => (
         <div key={step.label} className="brief-loading__step">
-          <span className="brief-loading__label">{step.label}</span>
+          <span className="brief-loading__label">{t(step.label)}</span>
           <div className="brief-loading__bar">
             <span
               className="brief-loading__bar-fill brief-loading__bar-fill--animate"
@@ -180,32 +182,32 @@ function countFilledLines(value) {
     .filter(Boolean).length ?? 0
 }
 
-function getRequirementsSummary(value) {
+function getRequirementsSummary(value, t) {
   const count = countFilledLines(value)
   if (count <= 0) return ''
 
-  return count === 1 ? '1 regra' : `${count} regras`
+  return count === 1 ? t('1_rule') : t('rules', { p1: count })
 }
 
-function getAdjustmentSummary(value) {
+function getAdjustmentSummary(value, t) {
   const count = countFilledLines(value)
   if (count <= 0) return ''
 
-  return count === 1 ? 'Definido' : `${count} instruções`
+  return count === 1 ? t('set') : t('instructions', { p1: count })
 }
 
-function getBriefPreview(value) {
+function getBriefPreview(value, t) {
   const cleanValue = value?.trim().replace(/\s+/g, ' ') ?? ''
-  if (!cleanValue) return 'A matéria-prima usada na forja fica disponível para consulta e ajustes.'
+  if (!cleanValue) return t('the_brief_used_to_generate_the')
   if (cleanValue.length <= 112) return cleanValue
   return `${cleanValue.slice(0, 112).trim()}...`
 }
 
-function getBriefStage({ contextFilled, isGenerated, isSubmitting }) {
-  if (isSubmitting) return 'Forjando'
-  if (isGenerated) return 'Primeira versão pronta'
-  if (contextFilled) return 'Pronto para forjar'
-  return 'Matéria-prima obrigatória'
+function getBriefStage({ contextFilled, isGenerated, isSubmitting }, t) {
+  if (isSubmitting) return t('generating')
+  if (isGenerated) return t('first_version_ready')
+  if (contextFilled) return t('ready_to_generate')
+  return t('brief_required')
 }
 
 function getBriefStageTone({ contextFilled, isGenerated, isSubmitting }) {
@@ -228,22 +230,24 @@ function BriefComposer({
   activeStoryTitle,
   hasAdjustment,
 }) {
+  const t = useCopy('forge')
+  const templateCopy = useCopy('workspaceTemplates')
   const contextTextareaRef = useRef(null)
   const [reqOpen, setReqOpen] = useState(Boolean(formValues.requirements?.trim()))
   const [adjOpen, setAdjOpen] = useState(Boolean(formValues.adjustment?.trim()))
 
   const isPostForge = isGenerated || isEditing
   const contextFilled = formValues.problemContext?.trim().length > 9
-  const briefPreview = getBriefPreview(formValues.problemContext)
-  const requirementsSummary = getRequirementsSummary(formValues.requirements)
-  const adjustmentSummary = getAdjustmentSummary(formValues.adjustment)
+  const briefPreview = getBriefPreview(formValues.problemContext, t)
+  const requirementsSummary = getRequirementsSummary(formValues.requirements, t)
+  const adjustmentSummary = getAdjustmentSummary(formValues.adjustment, t)
   const requirementsFilled = Boolean(requirementsSummary)
   const adjustmentFilled = Boolean(adjustmentSummary)
   const currentStage = getBriefStage({
     contextFilled,
     isGenerated,
     isSubmitting,
-  })
+  }, t)
   const currentStageTone = getBriefStageTone({
     contextFilled,
     isGenerated,
@@ -284,20 +288,20 @@ function BriefComposer({
   }
 
   const submitLabel = isSubmitting
-    ? 'Gerando versão...'
+    ? t('generating_version')
     : isEditing
       ? hasAdjustment
-        ? 'Gerar versão refinada'
-        : 'Gerar nova versão'
-      : 'Forjar primeira versão'
+        ? t('generate_refined_version')
+        : t('generate_new_version')
+      : t('generate_first_version')
   const canSubmit = isEditing ? hasAdjustment || contextFilled : contextFilled
   const submitHelpText = isSubmitting
-    ? 'A IA está gerando a versão estruturada da story.'
+    ? t('ai_is_generating_a_structured_version')
     : canSubmit
       ? isEditing
-        ? 'A IA aplica o acabamento e gera uma nova versão estruturada.'
-        : 'A forja gera a primeira versão estruturada da story.'
-      : 'Preencha a matéria-prima para liberar a geração.'
+        ? t('ai_applies_your_instructions_and_generates')
+        : t('generate_the_first_structured_version_of')
+      : t('enter_a_brief_to_enable_generation')
 
   return (
     <section
@@ -306,11 +310,9 @@ function BriefComposer({
     >
       <header className="brief-composer__panel-header">
         <div className="brief-composer__panel-copy">
-          <p className="brief-composer__eyebrow">Bancada</p>
-          <h2>Descreva a matéria-prima da story</h2>
-          <p>
-            Cole o briefing, problema ou demanda inicial. O ProdForge transforma esse contexto em uma user story pronta para refino.
-          </p>
+          <p className="brief-composer__eyebrow">{t('workspace')}</p>
+          <h2>{t('describe_the_story_s_brief')}</h2>
+          <p>{t('paste_your_brief_problem_statement_or')}</p>
         </div>
 
         <div className="brief-composer__panel-actions">
@@ -321,13 +323,13 @@ function BriefComposer({
       </header>
 
       <div className="brief-composer__body" id="workspace-composer-body">
-        <div className="brief-composer__quick-start" aria-label="Exemplos rápidos">
+        <div className="brief-composer__quick-start" aria-label={t('quick_examples')}>
           <div className="brief-composer__quick-start-copy">
-            <p className="brief-composer__quick-start-label">Exemplos rápidos</p>
-            <p>Use um exemplo para preencher a bancada ou cole seu próprio briefing no campo principal.</p>
+            <p className="brief-composer__quick-start-label">{t('quick_examples')}</p>
+            <p>{t('use_an_example_to_fill_the')}</p>
           </div>
           <div className="brief-composer__template-list">
-            {QUICK_TEMPLATES.map((template) => (
+            {getQuickTemplates(templateCopy).map((template) => (
               <button
                 key={template.id}
                 type="button"
@@ -346,16 +348,14 @@ function BriefComposer({
 
         {isEditing ? (
           <div className="brief-composer__active-story">
-            <span className="brief-composer__active-label">Peça ativa</span>
-            <strong>{activeStoryTitle || 'Peça selecionada'}</strong>
+            <span className="brief-composer__active-label">{t('active_artifact')}</span>
+            <strong>{activeStoryTitle || t('selected_artifact')}</strong>
             <button
               type="button"
               className="btn btn-ghost btn-small brief-composer__reset-btn"
               onClick={onReset}
             >
-              <IconPlus />
-              Nova peça
-            </button>
+              <IconPlus />{t('new_artifact')}</button>
           </div>
         ) : null}
 
@@ -366,40 +366,41 @@ function BriefComposer({
           >
             <summary className="brief-composer__entry-summary">
               <span className="brief-composer__entry-copy">
-                <span className="brief-composer__entry-eyebrow">Entrada original</span>
-                <strong>Briefing usado na forja</strong>
+                <span className="brief-composer__entry-eyebrow">{t('original_input')}</span>
+                <strong>{t('brief_used_to_generate_the_story')}</strong>
                 <span className="brief-composer__entry-preview">{briefPreview}</span>
               </span>
-              <span className="brief-composer__entry-action">Ver ou editar entrada</span>
+              <span className="brief-composer__entry-action">{t('view_or_edit_input')}</span>
             </summary>
 
             <div className="brief-composer__entry-body">
           <div className="brief-composer__primary-flow">
             <ComposerSection
               icon={<IconFileText />}
-              label={isPostForge ? 'Entrada original' : 'Matéria-prima'}
-              error={validationErrors.problemContext}
+              label={isPostForge ? t('original_input') : t('brief')}
+              error={validationErrors.problemContext && t(validationErrors.problemContext)}
+              errorId="workspace-context-error"
               footer={
                 <div className="brief-composer__prompt-shortcuts">
-                  <p className="brief-composer__shortcut-help">
-                    Matéria-prima: briefing, problema ou demanda inicial. Clique para inserir pontos úteis:
-                  </p>
+                  <p className="brief-composer__shortcut-help">{t('brief_the_problem_request_or_starting')}</p>
                   <PromptChips
-                    label="Atalhos para preencher a matéria-prima"
+                    label={t('shortcuts_for_drafting_the_brief')}
                     items={contextPrompts}
                     onSelect={handleContextPromptSelect}
-                    itemActionLabel="Inserir ponto na matéria-prima"
+                    itemActionLabel={t('insert_a_prompt_into_the_brief')}
                   />
                 </div>
               }
             >
-              <label className="sr-only" htmlFor="workspace-context">Matéria-prima da story</label>
+              <label className="sr-only" htmlFor="workspace-context">{t('story_brief')}</label>
               <textarea
                 id="workspace-context"
+                aria-invalid={Boolean(validationErrors.problemContext)}
+                aria-describedby={validationErrors.problemContext ? 'workspace-context-error' : undefined}
                 ref={contextTextareaRef}
                 value={formValues.problemContext}
                 onChange={(event) => onChange('problemContext', event.target.value)}
-                placeholder="Ex: Usuários esquecem a senha, tentam recuperar pelo celular e abandonam o login quando o e-mail não chega."
+                placeholder={t('for_example_users_forget_their_password')}
                 rows={5}
                 className={`brief-composer__context-input ${validationErrors.problemContext ? 'textarea--error' : ''}`}
               />
@@ -431,12 +432,12 @@ function BriefComposer({
               >
                 <span className="brief-accordion__trigger-left">
                   <IconListChecks />
-                  <span className="brief-accordion__label">Ligas e regras</span>
-                  <span className="brief-accordion__optional">opcional</span>
+                  <span className="brief-accordion__label">{t('rules_and_constraints')}</span>
+                  <span className="brief-accordion__optional">{t('optional')}</span>
                   {validationErrors.requirements ? (
                     <span
                       className="brief-accordion__error-dot"
-                      aria-label="Campo obrigatório com erro"
+                      aria-label={t('required_field_with_an_error')}
                     />
                   ) : null}
                   {requirementsFilled && !reqOpen ? (
@@ -450,28 +451,29 @@ function BriefComposer({
                 </span>
               </button>
 
-              <div className="brief-accordion__body" aria-hidden={!reqOpen}>
+              <div className="brief-accordion__body" aria-hidden={!reqOpen} inert={!reqOpen}>
                 <ComposerSection
-                  error={validationErrors.requirements}
+                  error={validationErrors.requirements && t(validationErrors.requirements)}
+                  errorId="workspace-requirements-error"
                   footer={
                     <div className="brief-composer__prompt-shortcuts">
-                      <p className="brief-composer__shortcut-help">
-                        Ligas: regras, restrições, exceções e dependências que fortalecem a story.
-                      </p>
+                      <p className="brief-composer__shortcut-help">{t('add_rules_constraints_exceptions_and_dependencies')}</p>
                       <PromptChips
-                        label="Sugestões para ligas"
+                        label={t('suggestions_for_rules_and_constraints')}
                         items={requirementPrompts}
                         onSelect={(value) => onApplyPrompt('requirements', value)}
                       />
                     </div>
                   }
                 >
-                  <label className="sr-only" htmlFor="workspace-requirements">Ligas, regras e critérios</label>
+                  <label className="sr-only" htmlFor="workspace-requirements">{t('rules_constraints_and_criteria')}</label>
                   <textarea
                     id="workspace-requirements"
+                    aria-invalid={Boolean(validationErrors.requirements)}
+                    aria-describedby={validationErrors.requirements ? 'workspace-requirements-error' : undefined}
                     value={formValues.requirements}
                     onChange={(event) => onChange('requirements', event.target.value)}
-                    placeholder='Ex: "Fluxo por e-mail, link expira em 24h, compatível com iOS e Android"'
+                    placeholder={t('for_example_send_a_reset_email')}
                     rows={4}
                     tabIndex={reqOpen ? 0 : -1}
                     className={validationErrors.requirements ? 'textarea--error' : ''}
@@ -489,8 +491,8 @@ function BriefComposer({
               >
                 <span className="brief-accordion__trigger-left">
                   <IconSliders />
-                  <span className="brief-accordion__label">Acabamento</span>
-                  <span className="brief-accordion__optional">opcional</span>
+                  <span className="brief-accordion__label">{t('refinement_instructions')}</span>
+                  <span className="brief-accordion__optional">{t('optional')}</span>
                   {adjustmentFilled && !adjOpen ? (
                     <span className="brief-accordion__preview" aria-hidden="true">
                       {adjustmentSummary}
@@ -502,27 +504,25 @@ function BriefComposer({
                 </span>
               </button>
 
-              <div className="brief-accordion__body" aria-hidden={!adjOpen}>
+              <div className="brief-accordion__body" aria-hidden={!adjOpen} inert={!adjOpen}>
                 <ComposerSection
                   footer={
                     <div className="brief-composer__prompt-shortcuts">
-                      <p className="brief-composer__shortcut-help">
-                        Acabamento: formato, tom e nível de detalhe da entrega.
-                      </p>
+                      <p className="brief-composer__shortcut-help">{t('specify_the_format_tone_and_level')}</p>
                       <PromptChips
-                        label="Sugestões para acabamento"
+                        label={t('suggestions_for_refinement')}
                         items={adjustmentPrompts}
                         onSelect={(value) => onApplyPrompt('adjustment', value)}
                       />
                     </div>
                   }
                 >
-                  <label className="sr-only" htmlFor="workspace-adjustment">Acabamento para a próxima versão</label>
+                  <label className="sr-only" htmlFor="workspace-adjustment">{t('instructions_for_the_next_version')}</label>
                   <textarea
                     id="workspace-adjustment"
                     value={formValues.adjustment}
                     onChange={(event) => onChange('adjustment', event.target.value)}
-                    placeholder="Ex: Detalhe melhor os critérios de aceite e deixe o texto mais objetivo."
+                    placeholder={t('for_example_make_the_acceptance_criteria')}
                     rows={3}
                     tabIndex={adjOpen ? 0 : -1}
                   />

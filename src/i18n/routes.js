@@ -17,7 +17,9 @@ export const publicLocalePages = [
 
 const pilotPages = [
   ...publicLocalePages,
-  { id: 'teams', 'pt-BR': '/times' },
+  { id: 'workspace', 'pt-BR': '/tool', workspace: true },
+  { id: 'history', 'pt-BR': '/historico', workspace: true },
+  { id: 'teams', 'pt-BR': '/times', workspace: true },
   { id: 'login', 'pt-BR': '/login', auth: true },
   { id: 'signup', 'pt-BR': '/signup', auth: true },
   { id: 'checkEmail', 'pt-BR': '/check-email', auth: true },
@@ -88,7 +90,7 @@ export function localizeHref(to, language) {
   const suffix = to.slice(pathname.length)
   const page = getPilotPage(pathname)
   if (page?.en) return page[language] + suffix
-  if (!page?.auth) return to
+  if (!page?.auth && !page?.workspace) return to
 
   const hashIndex = suffix.indexOf('#')
   const search = hashIndex === -1 ? suffix : suffix.slice(0, hashIndex)

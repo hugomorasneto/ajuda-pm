@@ -1,5 +1,9 @@
+import { useCopy, useLanguage } from '../i18n/context'
+import { localizeHref } from '../i18n/routes'
+import Link from '../i18n/LocalizedLink'
+import { resolveStoryNotes } from '../utils/storyFormat'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import VersionDiffSummary from '../components/workspace/VersionDiffSummary'
 import VersionTimeline from '../components/workspace/VersionTimeline'
 import { getResolvedQualityScore, getScoreMeta } from '../components/workspace/qualityScoreUtils'
@@ -25,69 +29,69 @@ import {
 } from '../utils/storyVersionUtils'
 
 const PERIOD_OPTIONS = [
-  { value: 'today', label: 'Hoje' },
-  { value: '7d', label: '7 dias' },
-  { value: '30d', label: '30 dias' },
-  { value: 'all', label: 'Tudo' },
+  { value: 'today', label: 'today' },
+  { value: '7d', label: '7_days' },
+  { value: '30d', label: '30_days' },
+  { value: 'all', label: 'all_time' },
 ]
 
 const STATUS_OPTIONS = [
-  { value: 'all', label: 'Todos' },
-  { value: 'generated', label: 'Forjado' },
-  { value: 'reviewed', label: 'Inspecionado' },
-  { value: 'approved', label: 'Aprovado' },
-  { value: 'archived', label: 'Arquivado' },
+  { value: 'all', label: 'all' },
+  { value: 'generated', label: 'generated' },
+  { value: 'reviewed', label: 'inspected' },
+  { value: 'approved', label: 'approved' },
+  { value: 'archived', label: 'archived' },
 ]
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50]
 const STATUS_LABELS = {
-  generated: 'Forjado',
-  reviewed: 'Inspecionado',
-  approved: 'Aprovado',
-  archived: 'Arquivado',
+  generated: 'generated',
+  reviewed: 'inspected',
+  approved: 'approved',
+  archived: 'archived',
 }
 
 const ESTIMATION_STATUS_OPTIONS = [
-  { value: 'all', label: 'Todos' },
-  { value: 'created', label: 'Criada' },
-  { value: 'refining', label: 'Em refinamento' },
-  { value: 'ready_for_estimation', label: 'Pronta para estimar' },
-  { value: 'estimated', label: 'Estimada' },
+  { value: 'all', label: 'all' },
+  { value: 'created', label: 'created' },
+  { value: 'refining', label: 'in_refinement' },
+  { value: 'ready_for_estimation', label: 'ready_for_estimation' },
+  { value: 'estimated', label: 'estimated' },
 ]
 
 const ESTIMATION_STATUS_LABELS = {
-  created: 'Criada',
-  refining: 'Em refinamento',
-  ready_for_estimation: 'Pronta para estimar',
-  estimated: 'Estimada',
+  created: 'created',
+  refining: 'in_refinement',
+  ready_for_estimation: 'ready_for_estimation',
+  estimated: 'estimated',
 }
 
 const PROJECT_FILTER_OPTIONS = [
-  { value: 'all', label: 'Todas' },
-  { value: 'none', label: 'Sem projeto' },
-  { value: 'project', label: 'Por projeto' },
+  { value: 'all', label: 'all_2' },
+  { value: 'none', label: 'no_project' },
+  { value: 'project', label: 'by_project' },
 ]
 
 const HISTORY_QUICK_FILTERS = [
   {
     value: 'all',
-    label: 'Todas',
-    description: 'Peças salvas no histórico.',
+    label: 'all_2',
+    description: 'artifacts_saved_in_your_history',
   },
   {
     value: 'without_project',
-    label: 'Sem projeto',
-    description: 'Peças avulsas para organizar.',
+    label: 'no_project',
+    description: 'standalone_artifacts_to_organize',
   },
   {
     value: 'ready_for_estimation',
-    label: 'Prontas para estimar',
-    description: 'Peças preparadas para a Roda.',
+    label: 'ready_for_estimation_2',
+    description: 'artifacts_prepared_for_planning_poker',
   },
   {
     value: 'estimated',
-    label: 'Estimadas',
-    description: 'Peças com pontuação final.',
+    label: 'estimated_2',
+    description: 'artifacts_with_a_final_estimate',
   },
 ]
 
@@ -101,54 +105,54 @@ const INITIAL_ADVANCED_SECTIONS = {
 const DELIVERY_FORMAT_OPTIONS = [
   {
     value: 'markdown',
-    label: 'Markdown',
-    description: 'Artefato completo para backlog, documentação ou refinamento.',
-    successMessage: 'Artefato em Markdown copiado.',
+    label: 'markdown',
+    description: 'complete_artifact_for_your_backlog_documentation',
+    successMessage: 'markdown_artifact_copied',
   },
   {
     value: 'plain',
-    label: 'Texto simples',
-    description: 'User story e critérios de aceite em formato direto.',
-    successMessage: 'Artefato em texto simples copiado.',
+    label: 'plain_text',
+    description: 'user_story_and_acceptance_criteria_in',
+    successMessage: 'plain_text_artifact_copied',
   },
   {
     value: 'jira',
-    label: 'Formato Jira',
-    description: 'Texto estruturado para colar em uma issue manualmente.',
-    successMessage: 'Formato textual para Jira copiado. Revise antes de colar na issue.',
+    label: 'jira_format',
+    description: 'structured_text_to_paste_into_an',
+    successMessage: 'jira_text_copied_review_it_before',
   },
   {
     value: 'story',
-    label: 'Somente user story',
-    description: 'A frase principal para compartilhar rapidamente.',
-    successMessage: 'User story copiada.',
+    label: 'user_story_only',
+    description: 'the_main_statement_for_quick_sharing',
+    successMessage: 'user_story_copied',
   },
 ]
 
-function getStatusLabel(status) {
-  return STATUS_LABELS[status] ?? 'Forjado'
+function getStatusLabel(status, t) {
+  return t(STATUS_LABELS[status] ?? 'generated')
 }
 
-function getDeliveryFormatLabel(value) {
-  return DELIVERY_FORMAT_OPTIONS.find((option) => option.value === value)?.label ?? 'Markdown'
+function getDeliveryFormatLabel(value, t) {
+  return t(DELIVERY_FORMAT_OPTIONS.find((option) => option.value === value)?.label ?? 'markdown')
 }
 
-function buildDeliveryText(story, format) {
+function buildDeliveryText(story, format, t) {
   if (!story) return ''
 
   if (format === 'story') return story.user_story ?? ''
-  if (format === 'plain') return buildStoryPlainText(story)
-  if (format === 'jira') return buildStoryJiraLike(story)
+  if (format === 'plain') return buildStoryPlainText(story, t)
+  if (format === 'jira') return buildStoryJiraLike(story, t)
 
-  return buildStoryMarkdown(story)
+  return buildStoryMarkdown(story, t)
 }
 
-function getEstimationStatusLabel(status) {
-  return ESTIMATION_STATUS_LABELS[status] ?? 'Criada'
+function getEstimationStatusLabel(status, t) {
+  return t(ESTIMATION_STATUS_LABELS[status] ?? 'created')
 }
 
-function getOptionLabel(options, value, fallback = 'Todos') {
-  return options.find((option) => option.value === value)?.label ?? fallback
+function getOptionLabel(options, value, fallback, t) {
+  return t(options.find((option) => option.value === value)?.label ?? fallback)
 }
 
 function buildSinceIso(period) {
@@ -175,17 +179,16 @@ function mapStoryRowToResult(story) {
     business_rules: parseTextList(story.business_rules),
     gaps: parseTextList(story.gaps),
     qa_checklist: parseTextList(story.qa_checklist),
-    notes: story.regeneration_instruction
-      ? `Acabamento aplicado: ${story.regeneration_instruction}`
-      : `Status: ${getStatusLabel(story.status)}`,
+    storedStatus: story.status ?? 'generated',
+    refinementInstruction: story.regeneration_instruction,
   }
 }
 
-function getVisibleRange({ page, pageSize, totalCount, itemCount }) {
+function getVisibleRange({ page, pageSize, totalCount, itemCount }, formatNumber) {
   if (totalCount === 0) return '0-0'
   const start = (page - 1) * pageSize + 1
   const end = start + itemCount - 1
-  return `${start}-${end}`
+  return `${formatNumber(start)}-${formatNumber(end)}`
 }
 
 function getVersionCount(story) {
@@ -193,47 +196,43 @@ function getVersionCount(story) {
   return Number.isFinite(count) && count > 0 ? count : 1
 }
 
-function getVersionLabel(count) {
-  return `${count} ${count === 1 ? 'versão' : 'versões'}`
-}
-
-function getProjectName(story, projects) {
+function getProjectName(story, projects, t) {
   if (story?.project_name) return story.project_name
   if (story?.project_id) {
-    return projects.find((project) => project.id === story.project_id)?.name ?? 'Projeto vinculado'
+    return projects.find((project) => project.id === story.project_id)?.name ?? t('linked_project')
   }
-  return 'Sem projeto'
+  return t('no_project')
 }
 
 function getStoryPreview(story) {
   return story?.input_context?.trim() || story?.input_requirements?.trim() || story?.user_story?.trim() || ''
 }
 
-function getHistoryItemNextAction(story) {
+function getHistoryItemNextAction(story, t) {
   if (!story?.project_id) {
     return {
-      label: 'Organizar',
-      text: 'Sem projeto',
+      label: t('organize'),
+      text: t('no_project'),
     }
   }
 
   if (story.estimation_status === 'ready_for_estimation') {
     return {
-      label: 'Roda',
-      text: 'Pronta para estimar',
+      label: t('planning_poker'),
+      text: t('ready_for_estimation'),
     }
   }
 
   if (story.estimation_status === 'estimated') {
     return {
-      label: 'Estimativa',
-      text: 'Pontuação registrada',
+      label: t('estimation'),
+      text: t('estimate_recorded'),
     }
   }
 
   return {
-    label: 'Revisar',
-    text: 'Pode seguir para preparo',
+    label: t('review'),
+    text: t('ready_for_preparation'),
   }
 }
 
@@ -264,31 +263,27 @@ function HistoryAccordion({ id, eyebrow, title, summary, open, onToggle, childre
 }
 
 function HistoryListState({ isLoading, loadError, hasItems }) {
+  const t = useCopy('history')
   if (isLoading) {
     return (
       <div className="history-state history-state--loading" role="status">
         <span aria-hidden="true" />
-        <p>Buscando peças forjadas...</p>
+        <p>{t('loading_story_history')}</p>
       </div>
     )
   }
 
   if (loadError) {
-    return <p className="history-status history-status-error">{loadError}</p>
+    return <p className="history-status history-status-error">{t(loadError)}</p>
   }
 
   if (!hasItems) {
     return (
       <article className="history-empty-card">
-        <p className="history-page__eyebrow">Histórico vazio</p>
-        <h3>Nenhuma peça forjada ainda</h3>
-        <p>
-          Crie a primeira matéria-prima para gerar uma user story e voltar aqui para localizar,
-          revisar e entregar o artefato.
-        </p>
-        <Link className="btn btn-primary btn-small" to="/tool">
-          Criar primeira matéria-prima
-        </Link>
+        <p className="history-page__eyebrow">{t('empty_history')}</p>
+        <h3>{t('no_artifacts_yet')}</h3>
+        <p>{t('create_your_first_brief_to_generate')}</p>
+        <Link className="btn btn-primary btn-small" to="/tool">{t('create_your_first_brief')}</Link>
       </article>
     )
   }
@@ -297,6 +292,12 @@ function HistoryListState({ isLoading, loadError, hasItems }) {
 }
 
 function HistoryPage() {
+  const t = useCopy('history')
+  const storyFormat = useCopy('storyFormat')
+  const { language, preview } = useLanguage()
+  const formatNumber = new Intl.NumberFormat(language).format
+  const getVersionLabel = (count) => t('version_count', { count, value: formatNumber(count) })
+  const localizedPath = (path) => preview ? localizeHref(path, language) : path
   const { user } = useAuth()
   const userId = user?.id ?? null
   const navigate = useNavigate()
@@ -333,13 +334,14 @@ function HistoryPage() {
   const [deliveryFormat, setDeliveryFormat] = useState('markdown')
 
   const selectedResult = useMemo(() => mapStoryRowToResult(selectedStory), [selectedStory])
+  const selectedNotes = selectedResult ? resolveStoryNotes(selectedResult, storyFormat) : null
   const deliveryPreviewText = useMemo(
-    () => buildDeliveryText(selectedResult, deliveryFormat),
-    [deliveryFormat, selectedResult],
+    () => buildDeliveryText(selectedResult, deliveryFormat, storyFormat),
+    [deliveryFormat, selectedResult, storyFormat],
   )
   const deliveryFormatLabel = useMemo(
-    () => getDeliveryFormatLabel(deliveryFormat),
-    [deliveryFormat],
+    () => getDeliveryFormatLabel(deliveryFormat, t),
+    [deliveryFormat, t],
   )
   const deliveryLineCount = useMemo(
     () => deliveryPreviewText.split('\n').filter(Boolean).length,
@@ -364,8 +366,8 @@ function HistoryPage() {
       buildVersionComparisonMarkdown({
         previousVersion,
         currentVersion: currentVersionForComparison,
-      }),
-    [currentVersionForComparison, previousVersion],
+      }, storyFormat),
+    [currentVersionForComparison, previousVersion, storyFormat],
   )
 
   const selectStory = useCallback(
@@ -399,16 +401,16 @@ function HistoryPage() {
     if (typeof setTopbarStatus !== 'function') return
 
     setTopbarStatus({
-      label: 'Peças forjadas',
-      title: selectedStory?.title || 'Peças forjadas',
+      label: t('story_history'),
+      title: selectedStory?.title || t('story_history'),
       pills: [
-        { text: `${totalCount} ${totalCount === 1 ? 'peça' : 'peças'}` },
-        { text: `${pageSize} por página` },
+        { text: t('artifact_count', { count: totalCount, value: new Intl.NumberFormat(language).format(totalCount) }) },
+        { text: t('per_page', { p1: pageSize }) },
       ],
     })
 
     return () => setTopbarStatus(null)
-  }, [setTopbarStatus, selectedStory, totalCount, pageSize])
+  }, [setTopbarStatus, selectedStory, totalCount, pageSize, t, language])
 
   useEffect(() => {
     let active = true
@@ -484,7 +486,7 @@ function HistoryPage() {
         setTotalCount(0)
         setTotalPages(0)
         setLoadError(
-          'Não foi possível carregar as peças forjadas. Verifique se a migration story-history-search.sql foi aplicada.',
+          'could_not_load_story_history_try',
         )
       }
 
@@ -546,8 +548,8 @@ function HistoryPage() {
     await copySelectedText({
       target: 'story',
       value: selectedResult?.user_story,
-      successMessage: 'User story copiada.',
-      errorMessage: 'Não foi possível copiar a user story agora.',
+      successMessage: 'user_story_copied',
+      errorMessage: 'could_not_copy_the_user_story',
       logMessage: 'Falha ao copiar user story do histórico:',
     })
   }
@@ -555,9 +557,9 @@ function HistoryPage() {
   async function handleCopyPlain() {
     await copySelectedText({
       target: 'plain',
-      value: buildStoryPlainText(selectedResult),
-      successMessage: 'Artefato copiado.',
-      errorMessage: 'Não foi possível copiar o artefato agora.',
+      value: buildStoryPlainText(selectedResult, storyFormat),
+      successMessage: 'artifact_copied',
+      errorMessage: 'could_not_copy_the_artifact_try',
       logMessage: 'Falha ao copiar texto simples do histórico:',
     })
   }
@@ -565,9 +567,9 @@ function HistoryPage() {
   async function handleCopyMarkdown() {
     await copySelectedText({
       target: 'markdown',
-      value: buildStoryMarkdown(selectedResult),
-      successMessage: 'Artefato em Markdown copiado.',
-      errorMessage: 'Não foi possível copiar o artefato em Markdown agora.',
+      value: buildStoryMarkdown(selectedResult, storyFormat),
+      successMessage: 'markdown_artifact_copied',
+      errorMessage: 'could_not_copy_the_markdown_artifact',
       logMessage: 'Falha ao copiar exportação em Markdown do histórico:',
     })
   }
@@ -575,9 +577,9 @@ function HistoryPage() {
   async function handleCopyJira() {
     await copySelectedText({
       target: 'jira',
-      value: buildStoryJiraLike(selectedResult),
-      successMessage: 'Formato textual para Jira copiado. Revise antes de colar na issue.',
-      errorMessage: 'Não foi possível copiar o formato para Jira agora.',
+      value: buildStoryJiraLike(selectedResult, storyFormat),
+      successMessage: 'jira_text_copied_review_it_before',
+      errorMessage: 'could_not_copy_jira_text_try',
       logMessage: 'Falha ao copiar formato textual para Jira do histórico:',
     })
   }
@@ -587,8 +589,8 @@ function HistoryPage() {
     await copySelectedText({
       target: selectedDeliveryCopyTarget,
       value: deliveryPreviewText,
-      successMessage: option?.successMessage ?? `${deliveryFormatLabel} copiado.`,
-      errorMessage: `Não foi possível copiar ${deliveryFormatLabel.toLocaleLowerCase('pt-BR')} agora.`,
+      successMessage: option?.successMessage ?? 'artifact_copied',
+      errorMessage: 'could_not_copy_the_artifact_try',
       logMessage: 'Falha ao copiar formato de entrega do histórico:',
     })
   }
@@ -597,8 +599,8 @@ function HistoryPage() {
     await copySelectedText({
       target: 'comparison',
       value: comparisonMarkdown,
-      successMessage: 'Comparação de versões copiada.',
-      errorMessage: 'Não foi possível copiar a comparação agora.',
+      successMessage: 'version_comparison_copied',
+      errorMessage: 'could_not_copy_the_comparison_try',
       logMessage: 'Falha ao copiar comparação de versões do histórico:',
     })
   }
@@ -715,7 +717,7 @@ function HistoryPage() {
 
     if (selectedStory.user_id !== userId) {
       setProjectAssignmentMessage(
-        'Apenas quem criou esta história pode mudar o projeto vinculado.',
+        'only_the_story_s_author_can',
       )
       return
     }
@@ -731,7 +733,7 @@ function HistoryPage() {
 
     if (!response.success || !response.data?.[0]) {
       setProjectAssignmentMessage(
-        response.error?.message ?? 'Não foi possível organizar esta história agora.',
+        'could_not_organize_the_story_try',
       )
       return
     }
@@ -761,8 +763,8 @@ function HistoryPage() {
     )
     setProjectAssignmentMessage(
       updatedStory.project_id
-        ? 'História organizada no projeto selecionado.'
-        : 'História marcada como sem projeto.',
+        ? 'story_organized_in_the_selected_project'
+        : 'story_marked_as_having_no_project',
     )
   }
 
@@ -773,14 +775,14 @@ function HistoryPage() {
 
     if (selectedStory.user_id !== userId) {
       setEstimationActionMessage(
-        'Apenas quem criou esta história pode prepará-la para estimativa.',
+        'only_the_story_s_author_can_2',
       )
       return false
     }
 
     if (!selectedStory.project_id) {
       setEstimationActionMessage(
-        'Vincule a história a um projeto antes de prepará-la para a Roda.',
+        'link_the_story_to_a_project',
       )
       return false
     }
@@ -802,7 +804,7 @@ function HistoryPage() {
 
     if (!response.success) {
       setEstimationActionMessage(
-        response.error?.message ?? 'Não foi possível preparar esta história agora.',
+        'could_not_prepare_the_story_try',
       )
       return false
     }
@@ -826,7 +828,7 @@ function HistoryPage() {
         return sameStory || sameGroup ? { ...item, ...updatedFields } : item
       }),
     )
-    setEstimationActionMessage('História pronta para estimativa.')
+    setEstimationActionMessage('story_ready_for_estimation')
     return true
   }
 
@@ -837,7 +839,7 @@ function HistoryPage() {
 
     if (!selectedStory.project_id) {
       setEstimationActionMessage(
-        'Vincule a história a um projeto antes de abrir a Roda da Fogueira.',
+        'link_the_story_to_a_project_2',
       )
       return
     }
@@ -875,15 +877,15 @@ function HistoryPage() {
     pageSize,
     totalCount,
     itemCount: items.length,
-  })
+  }, formatNumber)
   const selectedGroupKey = selectedStory?.story_group_id ?? selectedStory?.id ?? null
   const canAssignSelectedStoryProject = Boolean(selectedStory?.id && selectedStory.user_id === userId)
   const canPrepareSelectedStory = Boolean(selectedStory?.id && selectedStory.user_id === userId)
-  const selectedProjectName = getProjectName(selectedStory, projects)
+  const selectedProjectName = getProjectName(selectedStory, projects, t)
   const selectedVersionCount = Math.max(versions.length, getVersionCount(selectedStory))
-  const latestVersionDate = formatDateTime(versions[0]?.created_at ?? selectedStory?.created_at)
+  const latestVersionDate = formatDateTime(versions[0]?.created_at ?? selectedStory?.created_at, language)
   const qualityScore = selectedResult ? getResolvedQualityScore(selectedResult) : 0
-  const qualityMeta = getScoreMeta(qualityScore)
+  const qualityMeta = getScoreMeta(qualityScore, storyFormat)
   const acceptanceCriteria = selectedResult?.acceptance_criteria ?? []
   const previewCriteria = acceptanceCriteria.slice(0, 3)
   const hiddenCriteriaCount = Math.max(0, acceptanceCriteria.length - previewCriteria.length)
@@ -897,91 +899,91 @@ function HistoryPage() {
   const currentPageEstimatedCount = items.filter((item) => item.estimation_status === 'estimated').length
   const historySummaryItems = [
     {
-      label: 'Recorte',
+      label: t('current_results'),
       value: totalCount,
-      detail: totalCount === 1 ? 'peça encontrada' : 'peças encontradas',
+      detail: totalCount === 1 ? t('artifact_found') : t('artifacts_found'),
     },
     {
-      label: 'Nesta página',
+      label: t('on_this_page'),
       value: items.length,
-      detail: 'visíveis agora',
+      detail: t('visible_now'),
     },
     {
-      label: 'Sem projeto',
+      label: t('no_project'),
       value: currentPageWithoutProjectCount,
-      detail: 'para organizar',
+      detail: t('to_organize'),
     },
     {
-      label: 'Roda',
+      label: t('planning_poker'),
       value: currentPageReadyCount + currentPageEstimatedCount,
-      detail: 'prontas ou estimadas',
+      detail: t('ready_or_estimated'),
     },
   ]
   const filterSummaryItems = [
-    { label: 'Período', value: getOptionLabel(PERIOD_OPTIONS, period, 'Tudo') },
-    { label: 'Status', value: getOptionLabel(STATUS_OPTIONS, status, 'Todos') },
-    { label: 'Estimativa', value: getOptionLabel(ESTIMATION_STATUS_OPTIONS, estimationStatus, 'Todos') },
+    { label: t('period'), value: getOptionLabel(PERIOD_OPTIONS, period, 'all_time', t) },
+    { label: t('status_2'), value: getOptionLabel(STATUS_OPTIONS, status, 'all', t) },
+    { label: t('estimation'), value: getOptionLabel(ESTIMATION_STATUS_OPTIONS, estimationStatus, 'all', t) },
     {
-      label: 'Projeto',
+      label: t('project'),
       value: projectFilter === 'project'
-        ? projects.find((project) => project.id === selectedProjectId)?.name ?? 'Projeto'
-        : getOptionLabel(PROJECT_FILTER_OPTIONS, projectFilter, 'Todas'),
+        ? projects.find((project) => project.id === selectedProjectId)?.name ?? t('project')
+        : getOptionLabel(PROJECT_FILTER_OPTIONS, projectFilter, 'all_2', t),
     },
-    { label: 'Página', value: `${pageSize} por página` },
+    { label: t('page'), value: t('per_page', { p1: pageSize }) },
   ]
   const isCopying = Boolean(copyTarget)
   const isCopyingSelectedDeliveryFormat = copyTarget === selectedDeliveryCopyTarget
   const isCopyingComparison = copyTarget === 'comparison'
   const comparisonSummaryLabel = comparisonDiff
-    ? `${comparisonDiff.totalChanges} ${comparisonDiff.totalChanges === 1 ? 'mudança detectada' : 'mudanças detectadas'}`
-    : 'Sem comparação real ainda'
+    ? `${formatNumber(comparisonDiff.totalChanges)} ${comparisonDiff.totalChanges === 1 ? t('change_detected') : t('changes_detected')}`
+    : t('no_comparison_yet')
   const activeQuickFilter = getActiveQuickFilter()
   const deliveryMetrics = selectedResult
     ? [
         {
-          label: 'Critérios',
+          label: t('criteria'),
           value: selectedResult.acceptance_criteria.length,
         },
         {
-          label: 'Regras',
+          label: t('rules'),
           value: selectedResult.business_rules.length,
         },
         {
-          label: 'Trincas',
+          label: t('gaps'),
           value: selectedResult.gaps.length,
         },
         {
-          label: 'QA',
+          label: t('qa'),
           value: selectedResult.qa_checklist.length,
         },
       ]
     : []
-  let planningActionLabel = 'Preparar e abrir Roda'
+  let planningActionLabel = t('prepare_and_open_planning_poker')
   if (selectedStory?.estimation_status === 'estimated') {
-    planningActionLabel = 'Ver Rodas do projeto'
+    planningActionLabel = t('view_project_sessions')
   } else if (selectedStory?.estimation_status === 'ready_for_estimation') {
-    planningActionLabel = 'Abrir Roda'
+    planningActionLabel = t('open_planning_poker')
   }
   const historyNextAction = (() => {
     if (!selectedStory) return null
 
     if (selectedStory.user_id !== userId) {
       return {
-        eyebrow: 'Consulta',
-        title: 'Peça compartilhada',
-        description: 'Você pode revisar e copiar este artefato, mas alterações ficam com quem criou a história.',
-        actionLabel: 'Abrir na bancada',
-        action: () => navigate(`/tool?storyId=${selectedStory.id}`),
+        eyebrow: t('read_only_access'),
+        title: t('shared_artifact'),
+        description: t('you_can_review_and_copy_this'),
+        actionLabel: t('open_in_workspace'),
+        action: () => navigate(localizedPath(`/tool?storyId=${selectedStory.id}`)),
         disabled: false,
       }
     }
 
     if (!selectedStory.project_id) {
       return {
-        eyebrow: 'Organização',
-        title: 'Vincule a um projeto',
-        description: 'Projetos liberam organização por iniciativa, Kanban e Roda da Fogueira para estimativa.',
-        actionLabel: 'Vincular projeto',
+        eyebrow: t('organization'),
+        title: t('link_to_a_project'),
+        description: t('projects_support_organization_by_initiative_kanban'),
+        actionLabel: t('link_project'),
         action: handleOpenProjectAssignment,
         disabled: !canAssignSelectedStoryProject,
       }
@@ -989,10 +991,10 @@ function HistoryPage() {
 
     if (selectedStory.estimation_status === 'estimated') {
       return {
-        eyebrow: 'Estimativa',
-        title: 'Estimativa registrada',
-        description: 'Consulte as Rodas do projeto ou reabra a peça para revisar o conteúdo antes de encaminhar.',
-        actionLabel: 'Ver estimativa',
+        eyebrow: t('estimation'),
+        title: t('estimate_recorded_2'),
+        description: t('see_the_project_sessions_or_reopen'),
+        actionLabel: t('view_estimate'),
         action: handleOpenPlanningPoker,
         disabled: isUpdatingEstimationStatus,
       }
@@ -1000,20 +1002,20 @@ function HistoryPage() {
 
     if (selectedStory.estimation_status === 'ready_for_estimation') {
       return {
-        eyebrow: 'Estimativa',
-        title: 'Pronta para a Roda',
-        description: 'Esta peça já está preparada para entrar em uma sessão colaborativa de estimativa.',
-        actionLabel: 'Abrir Roda',
+        eyebrow: t('estimation'),
+        title: t('ready_for_planning_poker'),
+        description: t('this_artifact_is_ready_for_a'),
+        actionLabel: t('open_planning_poker'),
         action: handleOpenPlanningPoker,
         disabled: isUpdatingEstimationStatus,
       }
     }
 
     return {
-      eyebrow: 'Próxima ação',
-      title: 'Preparar estimativa',
-      description: 'Marque a peça como pronta e abra a Roda quando o time estiver alinhado para pontuar.',
-      actionLabel: isUpdatingEstimationStatus ? 'Preparando...' : 'Preparar e abrir Roda',
+      eyebrow: t('next_action'),
+      title: t('prepare_for_estimation'),
+      description: t('mark_the_artifact_as_ready_and'),
+      actionLabel: isUpdatingEstimationStatus ? t('preparing') : t('prepare_and_open_planning_poker'),
       action: handleOpenPlanningPoker,
       disabled: isUpdatingEstimationStatus || !canPrepareSelectedStory,
     }
@@ -1021,32 +1023,32 @@ function HistoryPage() {
   const selectedOperationalCards = selectedStory
     ? [
         {
-          label: 'Entrega',
-          title: 'Preparar cópia',
-          description: `Formato atual: ${deliveryFormatLabel}. Revise a prévia antes de colar no backlog.`,
-          actionLabel: 'Abrir entrega',
+          label: t('delivery'),
+          title: t('prepare_to_copy'),
+          description: t('current_format_review_the_preview_before', { p1: deliveryFormatLabel }),
+          actionLabel: t('open_delivery'),
           action: () => openAdvancedSection('delivery'),
           tone: 'delivery',
         },
         {
-          label: 'Organização',
+          label: t('organization'),
           title: selectedProjectName,
           description: selectedStory.project_id
-            ? 'Peça vinculada a um projeto com quadro, IA e Roda disponíveis.'
-            : 'Peça avulsa. Vincule a um projeto para liberar organização e colaboração.',
-          actionLabel: selectedStory.project_id ? 'Abrir projeto' : 'Vincular projeto',
+            ? t('this_artifact_is_linked_to_a')
+            : t('link_this_standalone_artifact_to_a'),
+          actionLabel: selectedStory.project_id ? t('open_project') : t('link_project'),
           to: selectedStory.project_id ? `/projetos/${selectedStory.project_id}` : null,
           action: selectedStory.project_id ? null : handleOpenProjectAssignment,
           disabled: !selectedStory.project_id && !canAssignSelectedStoryProject,
           tone: selectedStory.project_id ? 'project' : 'organize',
         },
         {
-          label: 'Estimativa',
-          title: getEstimationStatusLabel(selectedStory.estimation_status),
+          label: t('estimation'),
+          title: getEstimationStatusLabel(selectedStory.estimation_status, t),
           description: selectedStory.project_id
-            ? 'Prepare ou abra a Roda da Fogueira quando a peça estiver pronta para pontuar.'
-            : 'A Roda depende de projeto. Organize a peça antes de estimar com o time.',
-          actionLabel: selectedStory.project_id ? planningActionLabel : 'Vincular projeto',
+            ? t('prepare_or_open_planning_poker_when')
+            : t('planning_poker_requires_a_project_organize'),
+          actionLabel: selectedStory.project_id ? planningActionLabel : t('link_project'),
           action: selectedStory.project_id ? handleOpenPlanningPoker : handleOpenProjectAssignment,
           disabled: selectedStory.project_id
             ? !canPrepareSelectedStory || isUpdatingEstimationStatus
@@ -1058,12 +1060,10 @@ function HistoryPage() {
               : 'planning',
         },
         {
-          label: 'Qualidade',
+          label: t('quality'),
           title: `${qualityMeta.label} · ${qualityScore}/100`,
-          description: `${gapsCount} ${gapsCount === 1 ? 'trinca' : 'trincas'} e ${qaCount} ${
-            qaCount === 1 ? 'item de QA' : 'itens de QA'
-          } registrados na inspeção.`,
-          actionLabel: 'Ver inspeção',
+          description: t('inspection_recorded_and', { p1: formatNumber(gapsCount), p2: t('gap', { count: gapsCount }), p3: formatNumber(qaCount), p4: qaCount === 1 ? t('qa_item') : t('qa_items') }),
+          actionLabel: t('view_inspection'),
           action: () => openAdvancedSection('inspection'),
           tone: qualityScore >= 80 ? 'quality' : 'warning',
         },
@@ -1074,55 +1074,51 @@ function HistoryPage() {
     <div className="history-page">
       <section className="panel history-page__hero">
         <div className="history-page__hero-copy">
-          <p className="history-page__eyebrow">Peças forjadas</p>
-          <h1>Peças forjadas</h1>
-          <p>
-            Histórico para localizar, revisar, copiar e reabrir user stories sem transformar esta tela em uma segunda bancada.
-          </p>
+          <p className="history-page__eyebrow">{t('story_history')}</p>
+          <h1>{t('story_history')}</h1>
+          <p>{t('find_review_copy_and_reopen_user')}</p>
         </div>
-        <Link className="btn btn-secondary btn-small" to="/tool">
-          Nova matéria-prima
-        </Link>
+        <Link className="btn btn-secondary btn-small" to="/tool">{t('new_brief')}</Link>
       </section>
 
       {totalCount > 0 ? (
-        <section className="history-summary-strip" aria-label="Resumo das peças forjadas">
+        <section className="history-summary-strip" aria-label={t('story_history_summary')}>
           {historySummaryItems.map((item) => (
             <article key={item.label}>
               <span>{item.label}</span>
-              <strong>{item.value}</strong>
+              <strong>{typeof item.value === 'number' ? formatNumber(item.value) : item.value}</strong>
               <small>{item.detail}</small>
             </article>
           ))}
         </section>
       ) : null}
 
-      <section className="panel history-filters" aria-label="Filtros das peças forjadas">
+      <section className="panel history-filters" aria-label={t('story_history_filters')}>
         <div className="history-filters__primary">
           <label className="history-filter-field history-filter-field--search">
-            <span>Buscar peça</span>
+            <span>{t('search_artifacts')}</span>
             <input
               type="search"
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
-              placeholder="Título, matéria-prima, user story ou critério"
+              placeholder={t('title_brief_user_story_or_criterion')}
             />
           </label>
 
           <div className="history-filters__applied" aria-live="polite">
-            <span>Recorte atual</span>
+            <span>{t('current_view')}</span>
             <div className="history-filters__applied-list">
               {filterSummaryItems.map((item) => (
                 <span key={item.label} className="history-filters__applied-chip">
                   <small>{item.label}</small>
-                  <strong>{item.value}</strong>
+                  <strong>{typeof item.value === 'number' ? formatNumber(item.value) : item.value}</strong>
                 </span>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="history-quick-filters" aria-label="Filtros rápidos das peças forjadas">
+        <div className="history-quick-filters" aria-label={t('quick_filters_for_story_history')}>
           {HISTORY_QUICK_FILTERS.map((option) => {
             const isActive = activeQuickFilter === option.value
 
@@ -1134,8 +1130,8 @@ function HistoryPage() {
                 aria-pressed={isActive}
                 onClick={() => handleQuickFilterChange(option.value)}
               >
-                <span>{option.label}</span>
-                <small>{option.description}</small>
+                <span>{t(option.label)}</span>
+                <small>{t(option.description)}</small>
               </button>
             )
           })}
@@ -1143,53 +1139,53 @@ function HistoryPage() {
 
         <details className="history-filters__advanced">
           <summary>
-            <span>Filtros avançados</span>
-            <em>Período, status, estimativa, projeto e navegação por páginas</em>
+            <span>{t('advanced_filters')}</span>
+            <em>{t('period_status_estimation_project_and_pagination')}</em>
           </summary>
 
           <div className="history-filters__grid">
             <label className="history-filter-field">
-              <span>Período</span>
+              <span>{t('period')}</span>
               <select value={period} onChange={(event) => resetPageWith(setPeriod, event.target.value)}>
                 {PERIOD_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.label)}
                   </option>
                 ))}
               </select>
             </label>
 
             <label className="history-filter-field">
-              <span>Status</span>
+              <span>{t('status_2')}</span>
               <select value={status} onChange={(event) => resetPageWith(setStatus, event.target.value)}>
                 {STATUS_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.label)}
                   </option>
                 ))}
               </select>
             </label>
 
             <label className="history-filter-field">
-              <span>Estimativa</span>
+              <span>{t('estimation')}</span>
               <select
                 value={estimationStatus}
                 onChange={(event) => resetPageWith(setEstimationStatus, event.target.value)}
               >
                 {ESTIMATION_STATUS_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.label)}
                   </option>
                 ))}
               </select>
             </label>
 
             <label className="history-filter-field">
-              <span>Projeto</span>
+              <span>{t('project')}</span>
               <select value={projectFilter} onChange={(event) => handleProjectFilterChange(event.target.value)}>
                 {PROJECT_FILTER_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.label)}
                   </option>
                 ))}
               </select>
@@ -1197,13 +1193,13 @@ function HistoryPage() {
 
             {projectFilter === 'project' ? (
               <label className="history-filter-field">
-                <span>Escolher projeto</span>
+                <span>{t('choose_project')}</span>
                 <select
                   value={selectedProjectId}
                   onChange={(event) => handleSelectedProjectChange(event.target.value)}
                   disabled={projects.length === 0}
                 >
-                  {projects.length === 0 ? <option value="">Nenhum projeto</option> : null}
+                  {projects.length === 0 ? <option value="">{t('no_projects')}</option> : null}
                   {projects.map((project) => (
                     <option key={project.id} value={project.id}>
                       {project.name}
@@ -1214,7 +1210,7 @@ function HistoryPage() {
             ) : null}
 
             <label className="history-filter-field">
-              <span>Por página</span>
+              <span>{t('per_page_2')}</span>
               <select
                 value={pageSize}
                 onChange={(event) => resetPageWith(setPageSize, Number(event.target.value))}
@@ -1231,14 +1227,14 @@ function HistoryPage() {
       </section>
 
       <div className="history-layout">
-        <section className="panel history-results" aria-label="Lista de peças forjadas">
+        <section className="panel history-results" aria-label={t('story_history_results')}>
           <div className="history-results__header">
             <div>
-              <p className="history-page__eyebrow">Resultados</p>
-              <h2>{totalCount} {totalCount === 1 ? 'peça' : 'peças'}</h2>
+              <p className="history-page__eyebrow">{t('results')}</p>
+              <h2>{t('artifact_count', { count: totalCount, value: formatNumber(totalCount) })}</h2>
             </div>
             <span className="history-results__range">
-              {visibleRange} de {totalCount}
+              {t('result_range', { range: visibleRange, total: formatNumber(totalCount) })}
             </span>
           </div>
 
@@ -1250,8 +1246,8 @@ function HistoryPage() {
               const isActive = itemGroupKey === selectedGroupKey
               const preview = getStoryPreview(item)
               const versionCount = getVersionCount(item)
-              const itemProjectName = item.project_name || 'Sem projeto'
-              const nextAction = getHistoryItemNextAction(item)
+              const itemProjectName = item.project_name || t('no_project')
+              const nextAction = getHistoryItemNextAction(item, t)
               const itemTone = getHistoryItemTone(item)
 
               return (
@@ -1262,7 +1258,6 @@ function HistoryPage() {
                     isActive ? 'history-result-card--active' : ''
                   }`}
                   aria-pressed={isActive}
-                  aria-label={`${isActive ? 'Peça aberta' : 'Abrir detalhes da peça'}: ${item.title}`}
                   onClick={() => {
                     setProjectAssignmentMessage('')
                     selectStory(item)
@@ -1272,16 +1267,16 @@ function HistoryPage() {
                     <h3 title={item.title}>{item.title}</h3>
                     <span
                       className="history-result-card__action"
-                      title={isActive ? 'Peça aberta no preview' : 'Ver detalhes da peça'}
+                      title={isActive ? t('artifact_open_in_preview') : t('view_artifact_details')}
                     >
-                      {isActive ? 'Aberta' : 'Ver'}
+                      {isActive ? t('open') : t('view')}
                     </span>
                   </div>
 
                   {preview ? (
                     <p title={preview}>{preview}</p>
                   ) : (
-                    <p>Peça salva sem resumo de matéria-prima.</p>
+                    <p>{t('this_artifact_has_no_brief_summary')}</p>
                   )}
 
                   <div className="history-result-card__next">
@@ -1289,16 +1284,16 @@ function HistoryPage() {
                     <strong title={nextAction.text}>{nextAction.text}</strong>
                   </div>
 
-                  <div className="history-result-card__context" aria-label="Contexto da peça">
-                    <span>{formatDateTime(item.created_at)}</span>
+                  <div className="history-result-card__context" aria-label={t('artifact_context')}>
+                    <span>{formatDateTime(item.created_at, language)}</span>
                     <strong title={itemProjectName}>{itemProjectName}</strong>
                   </div>
 
-                  <div className="history-result-card__meta" aria-label="Metadados da peça">
+                  <div className="history-result-card__meta" aria-label={t('artifact_details')}>
                     <span title={getVersionLabel(versionCount)}>{getVersionLabel(versionCount)}</span>
-                    <span title={getStatusLabel(item.status)}>{getStatusLabel(item.status)}</span>
-                    <span title={getEstimationStatusLabel(item.estimation_status)}>
-                      {getEstimationStatusLabel(item.estimation_status)}
+                    <span title={getStatusLabel(item.status, t)}>{getStatusLabel(item.status, t)}</span>
+                    <span title={getEstimationStatusLabel(item.estimation_status, t)}>
+                      {getEstimationStatusLabel(item.estimation_status, t)}
                     </span>
                   </div>
                 </button>
@@ -1306,33 +1301,28 @@ function HistoryPage() {
             })}
           </div>
 
-          <div className="history-pagination" aria-label="Paginação das peças forjadas">
+          <div className="history-pagination" aria-label={t('story_history_pagination')}>
             <div className="history-pagination__controls">
-              <button type="button" className="btn btn-ghost btn-small" onClick={() => goToPage(1)} disabled={page <= 1}>
-                Início
-              </button>
+              <button type="button" className="btn btn-ghost btn-small" onClick={() => goToPage(1)} disabled={page <= 1}>{t('first')}</button>
               <button
                 type="button"
                 className="btn btn-ghost btn-small"
                 onClick={() => goToPage(page - 1)}
                 disabled={page <= 1}
-              >
-                Anterior
-              </button>
+              >{t('previous')}</button>
             </div>
             <form className="history-pagination__jump" onSubmit={handlePageJump}>
-              <span>Página</span>
+              <label htmlFor="history-page-jump">{t('page')}</label>
               <input
+                id="history-page-jump"
                 type="number"
                 min="1"
                 max={Math.max(totalPages, 1)}
                 value={pageJump}
                 onChange={(event) => setPageJump(event.target.value)}
               />
-              <span>de {Math.max(totalPages, 1)}</span>
-              <button type="submit" className="btn btn-ghost btn-small">
-                Ir
-              </button>
+              <span>{t('page_count', { total: formatNumber(Math.max(totalPages, 1)) })}</span>
+              <button type="submit" className="btn btn-ghost btn-small">{t('go')}</button>
             </form>
             <div className="history-pagination__controls">
               <button
@@ -1340,35 +1330,31 @@ function HistoryPage() {
                 className="btn btn-ghost btn-small"
                 onClick={() => goToPage(page + 1)}
                 disabled={totalPages === 0 || page >= totalPages}
-              >
-                Próxima
-              </button>
+              >{t('next')}</button>
               <button
                 type="button"
                 className="btn btn-ghost btn-small"
                 onClick={() => goToPage(totalPages)}
                 disabled={totalPages === 0 || page >= totalPages}
-              >
-                Fim
-              </button>
+              >{t('last')}</button>
             </div>
           </div>
         </section>
 
-        <aside className="history-detail" aria-label="Detalhe da peça selecionada">
+        <aside className="history-detail" aria-label={t('selected_artifact_details')}>
           {selectedResult ? (
             <>
               <article className="panel history-preview">
                 <header className="history-preview__header">
                   <div className="history-preview__copy">
-                    <p className="history-page__eyebrow">Preview selecionado</p>
+                    <p className="history-page__eyebrow">{t('selected_preview')}</p>
                     <h2 title={selectedStory.title}>{selectedStory.title}</h2>
-                    <div className="history-preview__badges" aria-label="Resumo da peça selecionada">
-                      <span title={getStatusLabel(selectedStory.status)}>{getStatusLabel(selectedStory.status)}</span>
+                    <div className="history-preview__badges" aria-label={t('selected_artifact_summary')}>
+                      <span title={getStatusLabel(selectedStory.status, t)}>{getStatusLabel(selectedStory.status, t)}</span>
                       <span title={selectedProjectName}>{selectedProjectName}</span>
                       <span title={getVersionLabel(selectedVersionCount)}>{getVersionLabel(selectedVersionCount)}</span>
-                      <span title={getEstimationStatusLabel(selectedStory.estimation_status)}>
-                        {getEstimationStatusLabel(selectedStory.estimation_status)}
+                      <span title={getEstimationStatusLabel(selectedStory.estimation_status, t)}>
+                        {getEstimationStatusLabel(selectedStory.estimation_status, t)}
                       </span>
                     </div>
                   </div>
@@ -1377,17 +1363,15 @@ function HistoryPage() {
                     <button
                       type="button"
                       className="btn btn-primary btn-small"
-                      onClick={() => navigate(`/tool?storyId=${selectedStory.id}`)}
-                    >
-                      Abrir na bancada
-                    </button>
+                      onClick={() => navigate(localizedPath(`/tool?storyId=${selectedStory.id}`))}
+                    >{t('open_in_workspace')}</button>
                     <button
                       type="button"
                       className="btn btn-secondary btn-small"
                       onClick={handleCopyUserStory}
                       disabled={isCopying}
                     >
-                      {copyTarget === 'story' ? 'Copiando...' : 'Copiar user story'}
+                      {copyTarget === 'story' ? t('copying') : t('copy_user_story')}
                     </button>
                     <button
                       type="button"
@@ -1395,7 +1379,7 @@ function HistoryPage() {
                       onClick={handleCopyPlain}
                       disabled={isCopying}
                     >
-                      {copyTarget === 'plain' ? 'Copiando...' : 'Copiar artefato'}
+                      {copyTarget === 'plain' ? t('copying') : t('copy_artifact')}
                     </button>
                     <button
                       type="button"
@@ -1403,23 +1387,23 @@ function HistoryPage() {
                       onClick={handleOpenPlanningPoker}
                       disabled={!canPrepareSelectedStory || isUpdatingEstimationStatus}
                     >
-                      {isUpdatingEstimationStatus ? 'Preparando...' : planningActionLabel}
+                      {isUpdatingEstimationStatus ? t('preparing') : planningActionLabel}
                     </button>
                   </div>
                 </header>
 
                 {copyMessage ? (
                   <p className="history-copy-message" role="status">
-                    {copyMessage}
+                    {t(copyMessage)}
                   </p>
                 ) : null}
                 {estimationActionMessage ? (
                   <p className="history-copy-message" role="status">
-                    {estimationActionMessage}
+                    {t(estimationActionMessage)}
                   </p>
                 ) : null}
 
-                <div className="history-preview__command-grid" aria-label="Comandos da peça selecionada">
+                <div className="history-preview__command-grid" aria-label={t('selected_artifact_actions')}>
                   {selectedOperationalCards.map((card) => {
                     const cardClassName = `history-preview__command-card history-preview__command-card--${card.tone}`
                     const content = (
@@ -1454,15 +1438,15 @@ function HistoryPage() {
 
                 <div className="history-preview__facts">
                   <div>
-                    <span>Projeto atual</span>
+                    <span>{t('current_project')}</span>
                     <strong title={selectedProjectName}>{selectedProjectName}</strong>
                   </div>
                   <div>
-                    <span>Última versão</span>
+                    <span>{t('latest_version')}</span>
                     <strong title={latestVersionDate}>{latestVersionDate}</strong>
                   </div>
                   <div>
-                    <span>Inspeção</span>
+                    <span>{t('inspection')}</span>
                     <strong title={`${qualityMeta.label} · ${qualityScore}/100`}>
                       {qualityMeta.label} · {qualityScore}/100
                     </strong>
@@ -1470,7 +1454,7 @@ function HistoryPage() {
                 </div>
 
                 {historyNextAction ? (
-                  <section className="history-preview__next-action" aria-label="Próxima ação sugerida">
+                  <section className="history-preview__next-action" aria-label={t('suggested_next_action')}>
                     <div>
                       <span>{historyNextAction.eyebrow}</span>
                       <strong>{historyNextAction.title}</strong>
@@ -1495,23 +1479,23 @@ function HistoryPage() {
                 >
                   <summary>
                     <span>
-                      <small>Organização da peça</small>
+                      <small>{t('artifact_organization')}</small>
                       <strong title={selectedProjectName}>{selectedProjectName}</strong>
                     </span>
-                    <em title={selectedStory.project_id ? 'Alterar projeto' : 'Vincular projeto'}>
-                      {selectedStory.project_id ? 'Alterar projeto' : 'Vincular projeto'}
+                    <em title={selectedStory.project_id ? t('change_project') : t('link_project')}>
+                      {selectedStory.project_id ? t('change_project') : t('link_project')}
                     </em>
                   </summary>
 
                   <div className="history-preview__project-assignment-body">
                     <label className="history-filter-field">
-                      <span>Vincular projeto</span>
+                      <span>{t('link_project')}</span>
                       <select
                         value={selectedStory.project_id ?? ''}
                         onChange={(event) => handleSelectedStoryProjectChange(event.target.value)}
                         disabled={!canAssignSelectedStoryProject || isAssigningProject}
                       >
-                        <option value="">Sem projeto</option>
+                        <option value="">{t('no_project')}</option>
                         {projects.map((project) => (
                           <option key={project.id} value={project.id}>
                             {project.name}
@@ -1521,12 +1505,12 @@ function HistoryPage() {
                     </label>
                     <p>
                       {canAssignSelectedStoryProject
-                        ? 'Use projetos para separar peças antigas por produto, squad ou iniciativa.'
-                        : 'Histórias compartilhadas ficam somente para consulta.'}
+                        ? t('use_projects_to_group_older_artifacts')
+                        : t('shared_stories_are_read_only')}
                     </p>
                     {projectAssignmentMessage ? (
                       <p className="history-detail__project-message" role="status">
-                        {projectAssignmentMessage}
+                        {t(projectAssignmentMessage)}
                       </p>
                     ) : null}
                   </div>
@@ -1534,20 +1518,20 @@ function HistoryPage() {
 
                 <div className="history-preview__content">
                   <section>
-                    <p className="history-page__eyebrow">Objetivo</p>
-                    <h3>O que esta peça resolve</h3>
+                    <p className="history-page__eyebrow">{t('goal')}</p>
+                    <h3>{t('what_this_artifact_solves')}</h3>
                     <p>{selectedResult.objective}</p>
                   </section>
 
                   <section className="history-preview__story">
-                    <p className="history-page__eyebrow">User story</p>
-                    <h3>Formulação principal</h3>
+                    <p className="history-page__eyebrow">{t('user_story')}</p>
+                    <h3>{t('main_statement')}</h3>
                     <p>{selectedResult.user_story}</p>
                   </section>
 
                   <section>
-                    <p className="history-page__eyebrow">Critérios de aceite</p>
-                    <h3>Checklist resumido</h3>
+                    <p className="history-page__eyebrow">{t('acceptance_criteria')}</p>
+                    <h3>{t('checklist_summary')}</h3>
                     {previewCriteria.length > 0 ? (
                       <>
                         <ol className="history-preview__criteria">
@@ -1556,51 +1540,38 @@ function HistoryPage() {
                           ))}
                         </ol>
                         {hiddenCriteriaCount > 0 ? (
-                          <p className="history-preview__note">
-                            Mais {hiddenCriteriaCount} {hiddenCriteriaCount === 1 ? 'critério' : 'critérios'} na inspeção completa.
-                          </p>
+                          <p className="history-preview__note">{t('additional_criteria', { count: hiddenCriteriaCount, value: formatNumber(hiddenCriteriaCount) })}</p>
                         ) : null}
                       </>
                     ) : (
-                      <p className="history-preview__note">Nenhum critério de aceite salvo nesta peça.</p>
+                      <p className="history-preview__note">{t('this_artifact_has_no_saved_acceptance')}</p>
                     )}
                   </section>
                 </div>
 
-                <div className="history-preview__secondary-actions" aria-label="Atalhos para detalhes avançados">
-                  <button type="button" className="btn btn-ghost btn-small" onClick={() => openAdvancedSection('delivery')}>
-                    Entrega
-                  </button>
-                  <button type="button" className="btn btn-ghost btn-small" onClick={() => openAdvancedSection('versions')}>
-                    Ver versões
-                  </button>
-                  <button type="button" className="btn btn-ghost btn-small" onClick={() => openAdvancedSection('comparison')}>
-                    Comparação
-                  </button>
-                  <button type="button" className="btn btn-ghost btn-small" onClick={() => openAdvancedSection('inspection')}>
-                    Inspeção completa
-                  </button>
+                <div className="history-preview__secondary-actions" aria-label={t('shortcuts_to_advanced_details')}>
+                  <button type="button" className="btn btn-ghost btn-small" onClick={() => openAdvancedSection('delivery')}>{t('delivery')}</button>
+                  <button type="button" className="btn btn-ghost btn-small" onClick={() => openAdvancedSection('versions')}>{t('view_versions')}</button>
+                  <button type="button" className="btn btn-ghost btn-small" onClick={() => openAdvancedSection('comparison')}>{t('comparison')}</button>
+                  <button type="button" className="btn btn-ghost btn-small" onClick={() => openAdvancedSection('inspection')}>{t('full_inspection')}</button>
                 </div>
               </article>
 
-              <section className="history-detail__advanced" aria-label="Detalhes avançados da peça selecionada">
+              <section className="history-detail__advanced" aria-label={t('advanced_details_for_the_selected_artifact')}>
                 <HistoryAccordion
                   id="delivery"
-                  eyebrow="Entrega"
-                  title="Entregar artefato"
-                  summary="Markdown, texto simples e formato para Jira"
+                  eyebrow={t('delivery')}
+                  title={t('deliver_artifact')}
+                  summary={t('markdown_plain_text_and_jira_format')}
                   open={openAdvancedSections.delivery}
                   onToggle={toggleAdvancedSection}
                 >
                   <div className="history-delivery">
                     <div className="history-delivery__intro">
-                      <p>
-                        Escolha um formato, revise a prévia e copie o artefato para o backlog. O formato para Jira é
-                        apenas texto estruturado; o ProdForge não envia dados para ferramentas externas nesta ação.
-                      </p>
+                      <p>{t('choose_a_format_review_the_preview')}</p>
                     </div>
 
-                    <div className="history-delivery__format-grid" aria-label="Formatos de entrega">
+                    <div className="history-delivery__format-grid" aria-label={t('delivery_formats')}>
                       {DELIVERY_FORMAT_OPTIONS.map((option) => (
                         <button
                           key={option.value}
@@ -1611,29 +1582,29 @@ function HistoryPage() {
                           onClick={() => setDeliveryFormat(option.value)}
                           aria-pressed={deliveryFormat === option.value}
                         >
-                          <span>{option.label}</span>
-                          <p>{option.description}</p>
+                          <span>{t(option.label)}</span>
+                          <p>{t(option.description)}</p>
                         </button>
                       ))}
                     </div>
 
-                    <section className="history-delivery__preview" aria-label="Prévia do formato selecionado">
+                    <section className="history-delivery__preview" aria-label={t('selected_format_preview')}>
                       <header>
                         <div>
-                          <span>Prévia de entrega</span>
+                          <span>{t('delivery_preview')}</span>
                           <strong>{deliveryFormatLabel}</strong>
                         </div>
-                        <em>{deliveryLineCount} {deliveryLineCount === 1 ? 'linha' : 'linhas'}</em>
+                        <em>{t('line_count', { count: deliveryLineCount, value: formatNumber(deliveryLineCount) })}</em>
                       </header>
 
                       <pre>
                         <code>{deliveryPreviewText}</code>
                       </pre>
 
-                      <div className="history-delivery__metrics" aria-label="Conteúdo incluído no artefato">
+                      <div className="history-delivery__metrics" aria-label={t('content_included_in_the_artifact')}>
                         {deliveryMetrics.map((metric) => (
                           <span key={metric.label}>
-                            <strong>{metric.value}</strong>
+                            <strong>{formatNumber(metric.value)}</strong>
                             {metric.label}
                           </span>
                         ))}
@@ -1645,11 +1616,11 @@ function HistoryPage() {
                         onClick={handleCopySelectedDeliveryFormat}
                         disabled={isCopying || !deliveryPreviewText}
                       >
-                        {isCopyingSelectedDeliveryFormat ? 'Copiando...' : 'Copiar formato selecionado'}
+                        {isCopyingSelectedDeliveryFormat ? t('copying') : t('copy_selected_format')}
                       </button>
                     </section>
 
-                    <p className="history-delivery__shortcut-label">Atalhos rápidos</p>
+                    <p className="history-delivery__shortcut-label">{t('quick_actions')}</p>
                     <div className="history-delivery__actions">
                       <button
                         type="button"
@@ -1657,7 +1628,7 @@ function HistoryPage() {
                         onClick={handleCopyMarkdown}
                         disabled={isCopying}
                       >
-                        {copyTarget === 'markdown' ? 'Copiando...' : 'Copiar artefato em Markdown'}
+                        {copyTarget === 'markdown' ? t('copying') : t('copy_markdown_artifact')}
                       </button>
                       <button
                         type="button"
@@ -1665,7 +1636,7 @@ function HistoryPage() {
                         onClick={handleCopyJira}
                         disabled={isCopying}
                       >
-                        {copyTarget === 'jira' ? 'Copiando...' : 'Copiar formato para Jira'}
+                        {copyTarget === 'jira' ? t('copying') : t('copy_jira_format')}
                       </button>
                       <button
                         type="button"
@@ -1673,7 +1644,7 @@ function HistoryPage() {
                         onClick={handleCopyPlain}
                         disabled={isCopying}
                       >
-                        {copyTarget === 'plain' ? 'Copiando...' : 'Copiar artefato'}
+                        {copyTarget === 'plain' ? t('copying') : t('copy_artifact')}
                       </button>
                     </div>
                   </div>
@@ -1681,9 +1652,9 @@ function HistoryPage() {
 
                 <HistoryAccordion
                   id="versions"
-                  eyebrow="Versões"
-                  title="Linha do tempo"
-                  summary={`${getVersionLabel(selectedVersionCount)} · Última versão: ${latestVersionDate}`}
+                  eyebrow={t('versions')}
+                  title={t('timeline')}
+                  summary={t('latest_version_2', { p1: getVersionLabel(selectedVersionCount), p2: latestVersionDate })}
                   open={openAdvancedSections.versions}
                   onToggle={toggleAdvancedSection}
                 >
@@ -1697,9 +1668,9 @@ function HistoryPage() {
 
                 <HistoryAccordion
                   id="comparison"
-                  eyebrow="Comparação"
-                  title="Resumo do refino"
-                  summary={selectedVersionCount > 1 ? comparisonSummaryLabel : 'Sem comparação real ainda'}
+                  eyebrow={t('comparison')}
+                  title={t('refinement_summary')}
+                  summary={selectedVersionCount > 1 ? comparisonSummaryLabel : t('no_comparison_yet')}
                   open={openAdvancedSections.comparison}
                   onToggle={toggleAdvancedSection}
                 >
@@ -1711,29 +1682,30 @@ function HistoryPage() {
                       isCopying={isCopyingComparison}
                     />
                   ) : (
-                    <p className="history-status">
-                      Gere uma nova versão para comparar evolução, acabamento e critérios.
-                    </p>
+                    <p className="history-status">{t('generate_a_new_version_to_compare')}</p>
                   )}
                 </HistoryAccordion>
 
                 <HistoryAccordion
                   id="inspection"
-                  eyebrow="Inspeção"
-                  title="Inspeção completa e contexto"
-                  summary={`${qualityMeta.label} · ${selectedResult.gaps.length} ${selectedResult.gaps.length === 1 ? 'trinca' : 'trincas'} · ${selectedResult.qa_checklist.length} itens de QA`}
+                  eyebrow={t('inspection')}
+                  title={t('full_inspection_and_context')}
+                  summary={t('inspection_card_summary', {
+                    quality: qualityMeta.label,
+                    gaps: formatNumber(gapsCount),
+                    gapLabel: t('gap', { count: gapsCount }),
+                    qa: t('qa_count', { count: qaCount, value: formatNumber(qaCount) }),
+                  })}
                   open={openAdvancedSections.inspection}
                   onToggle={toggleAdvancedSection}
                 >
                   <div className="history-inspection">
-                    <div className="history-inspection__overview" aria-label="Resumo da inspeção">
+                    <div className="history-inspection__overview" aria-label={t('inspection_summary')}>
                       <span>
-                        <strong>{qualityScore}/100</strong>
-                        qualidade
-                      </span>
+                        <strong>{qualityScore}/100</strong>{t('quality_2')}</span>
                       <span>
                         <strong>{selectedResult.gaps.length}</strong>
-                        {selectedResult.gaps.length === 1 ? 'trinca' : 'trincas'}
+                        {t('gap', { count: selectedResult.gaps.length })}
                       </span>
                       <span>
                         <strong>{selectedResult.business_rules.length}</strong>
@@ -1741,19 +1713,19 @@ function HistoryPage() {
                       </span>
                       <span>
                         <strong>{selectedResult.qa_checklist.length}</strong>
-                        {selectedResult.qa_checklist.length === 1 ? 'item de QA' : 'itens de QA'}
+                        {selectedResult.qa_checklist.length === 1 ? t('qa_item') : t('qa_items')}
                       </span>
                     </div>
 
                     <section className="history-inspection__score">
-                      <p className="history-page__eyebrow">Qualidade da peça</p>
+                      <p className="history-page__eyebrow">{t('artifact_quality')}</p>
                       <strong>{qualityScore}/100</strong>
                       <span>{qualityMeta.label}</span>
                       <p>{qualityMeta.note}</p>
                     </section>
 
                     <section>
-                      <h3>Pontos de atenção</h3>
+                      <h3>{t('points_to_review')}</h3>
                       {selectedResult.gaps.length > 0 ? (
                         <ul>
                           {selectedResult.gaps.map((gap) => (
@@ -1761,12 +1733,12 @@ function HistoryPage() {
                           ))}
                         </ul>
                       ) : (
-                        <p>Nenhuma trinca crítica foi identificada nesta versão.</p>
+                        <p>{t('this_version_has_no_identified_critical')}</p>
                       )}
                     </section>
 
                     <section>
-                      <h3>Checklist de QA</h3>
+                      <h3>{t('qa_checklist')}</h3>
                       {selectedResult.qa_checklist.length > 0 ? (
                         <ul>
                           {selectedResult.qa_checklist.map((item) => (
@@ -1774,12 +1746,12 @@ function HistoryPage() {
                           ))}
                         </ul>
                       ) : (
-                        <p>O checklist de QA ainda não veio preenchido para esta versão.</p>
+                        <p>{t('this_version_has_no_qa_checklist')}</p>
                       )}
                     </section>
 
                     <section>
-                      <h3>Regras e notas</h3>
+                      <h3>{t('rules_and_notes')}</h3>
                       {selectedResult.business_rules.length > 0 ? (
                         <ul>
                           {selectedResult.business_rules.map((rule) => (
@@ -1787,28 +1759,28 @@ function HistoryPage() {
                           ))}
                         </ul>
                       ) : null}
-                      {selectedResult.notes ? <p>{selectedResult.notes}</p> : null}
+                      {selectedNotes ? <p>{selectedNotes}</p> : null}
                     </section>
 
                     <section className="history-inspection__context">
-                      <h3>Contexto original</h3>
+                      <h3>{t('original_context')}</h3>
                       {hasOriginalContext ? (
                         <>
                           {selectedStory.input_context?.trim() ? (
                             <div>
-                              <span>Matéria-prima</span>
+                              <span>{t('brief')}</span>
                               <p>{selectedStory.input_context}</p>
                             </div>
                           ) : null}
                           {selectedStory.input_requirements?.trim() ? (
                             <div>
-                              <span>Ligas e regras informadas</span>
+                              <span>{t('provided_rules_and_constraints')}</span>
                               <p>{selectedStory.input_requirements}</p>
                             </div>
                           ) : null}
                         </>
                       ) : (
-                        <p>Esta peça não tem contexto original salvo para consulta.</p>
+                        <p>{t('this_artifact_has_no_saved_original')}</p>
                       )}
                     </section>
                   </div>
@@ -1817,9 +1789,9 @@ function HistoryPage() {
             </>
           ) : (
             <section className="panel history-detail__empty">
-              <p className="history-page__eyebrow">Preview</p>
-              <h2>Selecione uma peça</h2>
-              <p>A leitura rápida, as ações de cópia e os detalhes avançados aparecem aqui.</p>
+              <p className="history-page__eyebrow">{t('preview')}</p>
+              <h2>{t('select_an_artifact')}</h2>
+              <p>{t('find_a_quick_summary_copy_actions')}</p>
             </section>
           )}
         </aside>

@@ -1,3 +1,4 @@
+import { useCopy } from '../../i18n/context'
 import { useState } from 'react'
 import {
   buildStoryJiraLike,
@@ -6,6 +7,8 @@ import {
 } from '../../utils/storyExport'
 
 function ExportActionsBar({ story, onCopyPlain, plainCopyMessage, isCopyingPlain }) {
+  const t = useCopy('forge')
+  const storyFormat = useCopy('storyFormat')
   const [exportMessage, setExportMessage] = useState('')
   const [isCopyingMarkdown, setIsCopyingMarkdown] = useState(false)
   const [isCopyingJira, setIsCopyingJira] = useState(false)
@@ -15,10 +18,10 @@ function ExportActionsBar({ story, onCopyPlain, plainCopyMessage, isCopyingPlain
 
     setIsCopyingMarkdown(true)
     try {
-      await copyTextToClipboard(buildStoryMarkdown(story))
-      setExportMessage('Artefato em Markdown copiado. Revise a formatação antes de colar no backlog.')
+      await copyTextToClipboard(buildStoryMarkdown(story, storyFormat))
+      setExportMessage('markdown_artifact_copied_review_the_formatting')
     } catch (error) {
-      setExportMessage('Não foi possível copiar em Markdown agora.')
+      setExportMessage('could_not_copy_as_markdown_try')
       console.error('Falha ao copiar exportação em Markdown:', error)
     } finally {
       setIsCopyingMarkdown(false)
@@ -30,10 +33,10 @@ function ExportActionsBar({ story, onCopyPlain, plainCopyMessage, isCopyingPlain
 
     setIsCopyingJira(true)
     try {
-      await copyTextToClipboard(buildStoryJiraLike(story))
-      setExportMessage('Artefato para Jira copiado. Revise o texto antes de enviar para a issue.')
+      await copyTextToClipboard(buildStoryJiraLike(story, storyFormat))
+      setExportMessage('jira_text_copied_review_it_before')
     } catch (error) {
-      setExportMessage('Não foi possível copiar no formato Jira agora.')
+      setExportMessage('could_not_copy_jira_text_try')
       console.error('Falha ao copiar exportação em formato Jira:', error)
     } finally {
       setIsCopyingJira(false)
@@ -49,7 +52,7 @@ function ExportActionsBar({ story, onCopyPlain, plainCopyMessage, isCopyingPlain
           onClick={handleCopyMarkdown}
           disabled={!story || isCopyingMarkdown}
         >
-          {isCopyingMarkdown ? 'Copiando artefato...' : 'Copiar artefato em Markdown'}
+          {isCopyingMarkdown ? t('copying_artifact') : t('copy_markdown_artifact')}
         </button>
         <button
           type="button"
@@ -57,7 +60,7 @@ function ExportActionsBar({ story, onCopyPlain, plainCopyMessage, isCopyingPlain
           onClick={handleCopyJira}
           disabled={!story || isCopyingJira}
         >
-          {isCopyingJira ? 'Copiando artefato...' : 'Copiar artefato para Jira'}
+          {isCopyingJira ? t('copying_artifact') : t('copy_jira_artifact')}
         </button>
         <button
           type="button"
@@ -65,12 +68,12 @@ function ExportActionsBar({ story, onCopyPlain, plainCopyMessage, isCopyingPlain
           onClick={onCopyPlain}
           disabled={!story || isCopyingPlain}
         >
-          {isCopyingPlain ? 'Copiando artefato...' : 'Copiar artefato'}
+          {isCopyingPlain ? t('copying_artifact') : t('copy_artifact')}
         </button>
       </div>
 
       {plainCopyMessage ? <p className="copy-message">{plainCopyMessage}</p> : null}
-      {exportMessage ? <p className="copy-message">{exportMessage}</p> : null}
+      {exportMessage ? <p className="copy-message">{t(exportMessage)}</p> : null}
     </>
   )
 }

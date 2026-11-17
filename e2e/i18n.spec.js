@@ -687,3 +687,243 @@ test('o progresso do Campo de Treino usa o mesmo guia ao trocar de idioma', asyn
     { method: 'DELETE', user_id: user.id, guide_slug: guide },
   ])
 })
+
+const forgeFixture = {
+  title: 'Recuperação de acesso',
+  objective: 'Reduzir abandono no acesso.',
+  user_story: 'Como cliente, quero recuperar meu acesso pelo celular.',
+  acceptance_criteria: ['Enviar link na plataforma correta.', 'Preservar dados existentes.'],
+  business_rules: ['Respeitar o prazo informado.'],
+  gaps: ['Confirmar as exceções de conta.'],
+  qa_checklist: ['Testar link inválido.'],
+  notes: 'Validar ressalvas no refinamento.',
+  generation_meta: { quality_score: 83 },
+}
+
+function savedStory(overrides = {}) {
+  return {
+    ...forgeFixture,
+    id: 'story-2',
+    user_id: user.id,
+    project_id: 'project-a',
+    estimation_status: 'created',
+    story_group_id: 'story-group',
+    version_number: 2,
+    previous_version_id: 'story-1',
+    regeneration_instruction: 'Preserve o contexto original.',
+    input_context: 'Entrada em português que deve permanecer.',
+    input_requirements: 'Validar no celular.',
+    created_at: '2026-06-23T14:10:00Z',
+    acceptance_criteria: forgeFixture.acceptance_criteria.join('\n'),
+    business_rules: forgeFixture.business_rules.join('\n'),
+    gaps: forgeFixture.gaps.join('\n'),
+    qa_checklist: forgeFixture.qa_checklist.join('\n'),
+    status: 'generated',
+    ...overrides,
+  }
+}
+
+async function mockStoryTraffic(context, initialVersions = []) {
+  const records = [...initialVersions]
+  const writes = []
+  const searches = []
+  const reads = []
+  await mockWorkspace(context)
+  await context.route((url) => url.origin === 'http://127.0.0.1:54321' &&
+    ['/rest/v1/user_stories', '/rest/v1/rpc/search_user_story_groups'].includes(url.pathname), async (route) => {
+    const request = route.request()
+    const url = new URL(request.url())
+    const method = request.method()
+    if (url.pathname.endsWith('/search_user_story_groups')) {
+      searches.push(request.postDataJSON())
+      return route.fulfill({
+        json: records.slice(0, 1).map((story) => ({ ...story, total_count: 1301, versions_count: records.length })),
+      })
+    }
+    if (method === 'HEAD') {
+      reads.push(method)
+      return route.fulfill({ status: 200, headers: { 'content-range': '*/' + records.length } })
+    }
+    if (method === 'POST') {
+      const [payload] = request.postDataJSON()
+      writes.push(payload)
+      const story = { ...payload, id: 'generated-' + writes.length, estimation_status: 'created' }
+      records.unshift(story)
+      return route.fulfill({ status: 201, json: [story] })
+    }
+    if (method !== 'GET') {
+      writes.push({ method, payload: request.postDataJSON() })
+      return route.fulfill({ status: 405 })
+    }
+    reads.push(method)
+    const id = url.searchParams.get('id')
+    if (id) {
+      const existing = records.find((row) => 'eq.' + row.id === id)
+      return route.fulfill(existing ? { json: existing } : { status: 404, json: { message: 'Unknown artifact' } })
+    }
+    const group = url.searchParams.get('story_group_id')
+    return route.fulfill({ json: group ? records.filter((row) => 'eq.' + row.story_group_id === group) : records })
+  })
+  return { records, writes, searches, reads }
+}
+
+function showForgeTab(page, tab) {
+  const control = page.locator('.workspace-tabs button').filter({ hasText: tab })
+  return control.isVisible().then((visible) => visible ? control.click() : undefined)
+}
+
+test('Bancada troca idioma durante geração, traduz erro e grava apenas a ação explícita', async ({ page, context }, testInfo) => {
+  test.setTimeout(45_000)
+  page.setDefaultTimeout(8000)
+  const traffic = await mockStoryTraffic(context)
+  const payloads = []
+  const releases = []
+  const runtimeErrors = []
+  page.on('pageerror', (error) => runtimeErrors.push(error.message))
+  await context.route('http://127.0.0.1:54321/functions/v1/generate-user-story', async (route) => {
+    const requestIndex = payloads.length
+    payloads.push(route.request().postDataJSON())
+    await new Promise((resolve) => releases.push(resolve))
+    await route.fulfill(requestIndex === 0
+      ? { status: 429, json: { message: 'Mensagem do provedor em português.' } }
+      : { json: forgeFixture })
+  })
+
+  await page.goto('/tool?projectId=project-a&ref=teste%20local&lang=pt-BR#main-content')
+  await expect(page.getByRole('heading', { name: 'Descreva a matéria-prima da story' })).toBeVisible()
+  await expect(page.locator('.brief-accordion__body[aria-hidden="true"][inert]')).toHaveCount(2)
+  await page.getByRole('button', { name: 'Recuperação de senha' }).click()
+  const brief = page.locator('#workspace-context')
+  const appliedTemplate = await brief.inputValue()
+  expect(appliedTemplate).toContain('Usuários não conseguem')
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await expect(page).toHaveURL('/tool?projectId=project-a&ref=teste%20local&lang=en#main-content')
+  await expect(page.getByText('Story generation is currently in Brazilian Portuguese.')).toBeVisible()
+  await expect(brief).toHaveValue(appliedTemplate)
+  await expect(page.getByRole('button', { name: 'Password recovery' })).toBeVisible()
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+
+  const original = 'Contexto de teste para recuperar acesso.'
+  await brief.fill(original)
+  await page.getByRole('button', { name: 'Forjar primeira versão' }).click()
+  await expect.poll(() => releases.length).toBe(1)
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await showForgeTab(page, 'Artifact')
+  await expect(page.getByRole('region', { name: 'Generating user story' })).toBeVisible()
+  releases[0]()
+  await expect(page.getByText(/The generator is busy.*Your brief is still here/)).toBeVisible()
+  expect(traffic.writes).toHaveLength(0)
+  await showForgeTab(page, 'Workspace')
+  await expect(brief).toHaveValue(original)
+  await page.getByRole('button', { name: 'Generate first version' }).click()
+  await expect.poll(() => releases.length).toBe(2)
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  releases[1]()
+  await expect.poll(() => traffic.writes.length).toBe(1)
+  await showForgeTab(page, 'Artefato')
+  await expect(page.getByRole('heading', { name: forgeFixture.title })).toBeVisible()
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await expect(page.getByText('First version saved · inspection 83/100')).toBeVisible()
+  await expect(page.locator('.story-document')).toContainText(forgeFixture.user_story)
+  await expect(page.locator('.story-document')).toContainText(forgeFixture.acceptance_criteria[0])
+  expect(payloads).toHaveLength(2)
+  expect(payloads[1]).toEqual({ input_context: original, input_requirements: expect.any(String), input_adjustment: '' })
+  expect(traffic.writes[0]).toMatchObject({ title: forgeFixture.title, user_story: forgeFixture.user_story, project_id: 'project-a', version_number: 1 })
+  expect(traffic.writes[0]).not.toHaveProperty('output_language')
+  await page.locator('.story-document').getByRole('button', { name: 'Edit', exact: true }).first().click()
+  await page.getByRole('textbox', { name: 'Edit user story' }).fill('Rascunho manual em português.')
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  await expect(page.getByRole('textbox', { name: 'Editar user story' })).toHaveValue('Rascunho manual em português.')
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await expect(page.getByRole('textbox', { name: 'Edit user story' })).toHaveValue('Rascunho manual em português.')
+  expect(traffic.writes).toHaveLength(1)
+  expect(payloads).toHaveLength(2)
+  expect(runtimeErrors).toEqual([])
+  await checkWidth(page)
+  await page.getByRole('combobox', { name: 'Language' }).scrollIntoViewIfNeeded()
+  await evidence(page, testInfo, 'bancada-en')
+})
+
+test('Histórico mantém busca, versão, comparação e exportação durante a troca de idioma', async ({ page, context }, testInfo) => {
+  test.setTimeout(45_000)
+  page.setDefaultTimeout(8000)
+  const first = savedStory({
+    id: 'story-1', title: 'Primeira estrutura',
+    acceptance_criteria: 'Testar apenas no navegador.',
+    version_number: 1, previous_version_id: null, regeneration_instruction: null,
+  })
+  const current = savedStory()
+  const traffic = await mockStoryTraffic(context, [current, first])
+  const runtimeErrors = []
+  page.on('pageerror', (error) => runtimeErrors.push(error.message))
+  await page.addInitScript(() => {
+    window.testClipboardWrites = []
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: async (text) => window.testClipboardWrites.push(text) },
+    })
+  })
+  if (testInfo.project.name === 'celular') await page.setViewportSize({ width: 320, height: 740 })
+  await page.goto('/historico?projectId=project-a&origem=teste%20local&lang=pt-BR#main-content')
+  const search = page.getByRole('searchbox', { name: 'Buscar peça' })
+  await search.fill('recuperar acesso')
+  await expect.poll(() => traffic.searches.at(-1)?.p_search).toBe('recuperar acesso')
+  await expect(page.locator('.history-preview')).toContainText(forgeFixture.user_story)
+  await page.getByRole('button', { name: 'Ver versões', exact: true }).click()
+  await page.getByRole('button', { name: /V1.*Primeira estrutura/ }).click()
+  await expect(page.locator('.history-preview')).toContainText('Primeira estrutura')
+  await page.getByRole('button', { name: /V2.*Recuperação de acesso/ }).click()
+  const versionDate = page.locator('.version-timeline__meta').first()
+  await expect(versionDate).toContainText('23/06')
+  await page.getByRole('button', { name: 'Comparação', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Resumo do refino', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Entrega', exact: true }).click()
+  const preview = page.locator('.history-delivery__preview pre')
+  await expect(preview).toContainText('## Critérios de aceite')
+  await page.getByRole('button', { name: 'Formato Jira', exact: false }).click()
+  await expect(preview).toContainText('h2. Critérios de aceite')
+  const before = { reads: traffic.reads.length, searches: traffic.searches.length }
+  const selector = page.getByRole('combobox', { name: 'Idioma' })
+  await selector.focus()
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL('/historico?projectId=project-a&origem=teste%20local&lang=en#main-content')
+  await expect(page.getByRole('combobox', { name: 'Language' })).toBeFocused()
+  await expect(page.getByRole('searchbox', { name: 'Search artifacts' })).toHaveValue('recuperar acesso')
+  await expect(page.getByRole('heading', { name: '1,301 artifacts' })).toBeVisible()
+  await expect(versionDate).toContainText('06/23')
+  await expect(page.getByRole('button', { name: /V2.*Recuperação de acesso/ })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('heading', { name: 'Refinement summary', exact: true })).toBeVisible()
+  await expect(page.getByText('Title changed', { exact: true })).toBeVisible()
+  await expect(page.locator('.version-diff-summary__metrics')).toContainText('item removed')
+  await expect(preview).toContainText('h2. Acceptance criteria')
+  await expect(preview).toContainText(forgeFixture.user_story)
+  await expect(preview).toContainText(forgeFixture.acceptance_criteria[0])
+  expect(traffic.reads).toHaveLength(before.reads)
+  expect(traffic.searches).toHaveLength(before.searches)
+  expect(traffic.writes).toHaveLength(0)
+  expect(await page.evaluate(() => window.testClipboardWrites)).toEqual([])
+  await page.getByRole('button', { name: 'Copy selected format' }).click()
+  await page.getByRole('button', { name: 'Copy comparison' }).click()
+  const copies = await page.evaluate(() => window.testClipboardWrites)
+  expect(copies).toHaveLength(2)
+  expect(copies[0]).toContain('h2. Acceptance criteria')
+  expect(copies[0]).toContain(forgeFixture.user_story)
+  expect(copies[1]).toContain('# Version comparison')
+  expect(copies[1]).toContain('Testar apenas no navegador.')
+  await page.getByRole('button', { name: 'Plain text', exact: false }).first().click()
+  await expect(preview).toContainText('Acceptance criteria:')
+  await expect(preview).toContainText(forgeFixture.user_story)
+  await page.getByRole('button', { name: 'Jira format', exact: false }).first().click()
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  await expect(preview).toContainText('h2. Critérios de aceite')
+  await expect(page.getByText('Comparação de versões copiada.', { exact: true })).toBeVisible()
+  expect(traffic.writes).toHaveLength(0)
+  expect(runtimeErrors).toEqual([])
+  await checkWidth(page)
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await page.getByRole('combobox', { name: 'Language' }).scrollIntoViewIfNeeded()
+  await evidence(page, testInfo, 'historico-en')
+  await page.reload()
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await expect(page.locator('.history-preview')).toContainText(forgeFixture.user_story)
+})

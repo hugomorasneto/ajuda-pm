@@ -1,3 +1,5 @@
+import { defaultStoryFormat, resolveStoryNotes } from './storyFormat'
+
 function normalizeList(items) {
   if (!Array.isArray(items)) return []
   return items.map((item) => String(item).trim()).filter(Boolean)
@@ -22,15 +24,15 @@ function joinSections(sections) {
   return sections.filter(Boolean).join('\n\n').trim()
 }
 
-export function buildStoryPlainText(story) {
+export function buildStoryPlainText(story, t = defaultStoryFormat) {
   if (!story) return ''
 
   const acceptanceCriteria = normalizeList(story.acceptance_criteria)
 
   return [
-    `User story: ${withFallbackText(story.user_story)}`,
+    `${t('user_story')}: ${withFallbackText(story.user_story)}`,
     '',
-    'Critérios de aceite:',
+    t('criteria') + ':',
     acceptanceCriteria.length > 0
       ? acceptanceCriteria.map((item, index) => `${index + 1}. ${item}`).join('\n')
       : '-',
@@ -39,57 +41,59 @@ export function buildStoryPlainText(story) {
     .join('\n')
 }
 
-export function buildStoryMarkdown(story) {
+export function buildStoryMarkdown(story, t = defaultStoryFormat) {
   if (!story) return ''
 
   const acceptanceCriteria = normalizeList(story.acceptance_criteria)
   const businessRules = normalizeList(story.business_rules)
   const gaps = normalizeList(story.gaps)
   const qaChecklist = normalizeList(story.qa_checklist)
+  const notes = resolveStoryNotes(story, t)
 
   return joinSections([
-    `# ${withFallbackText(story.title, 'User story')}`,
-    buildSection('Objetivo', withFallbackText(story.objective)),
-    buildSection('User story', withFallbackText(story.user_story)),
+    `# ${withFallbackText(story.title, t('user_story'))}`,
+    buildSection(t('goal'), withFallbackText(story.objective)),
+    buildSection(t('user_story'), withFallbackText(story.user_story)),
     buildSection(
-      'Critérios de aceite',
+      t('criteria'),
       acceptanceCriteria.map((item, index) => `${index + 1}. ${item}`).join('\n'),
     ),
     businessRules.length > 0
-      ? buildSection('Regras de negócio', businessRules.map((item) => `- ${item}`).join('\n'))
+      ? buildSection(t('business_rules'), businessRules.map((item) => `- ${item}`).join('\n'))
       : '',
-    gaps.length > 0 ? buildSection('Trincas', gaps.map((item) => `- ${item}`).join('\n')) : '',
+    gaps.length > 0 ? buildSection(t('gaps'), gaps.map((item) => `- ${item}`).join('\n')) : '',
     qaChecklist.length > 0
-      ? buildSection('Teste de resistência', qaChecklist.map((item) => `- ${item}`).join('\n'))
+      ? buildSection(t('qa'), qaChecklist.map((item) => `- ${item}`).join('\n'))
       : '',
-    story.notes ? buildSection('Notas', story.notes.trim()) : '',
+    notes ? buildSection(t('notes'), notes.trim()) : '',
   ])
 }
 
-export function buildStoryJiraLike(story) {
+export function buildStoryJiraLike(story, t = defaultStoryFormat) {
   if (!story) return ''
 
   const acceptanceCriteria = normalizeList(story.acceptance_criteria)
   const businessRules = normalizeList(story.business_rules)
   const gaps = normalizeList(story.gaps)
   const qaChecklist = normalizeList(story.qa_checklist)
+  const notes = resolveStoryNotes(story, t)
 
   return joinSections([
-    `Summary: ${withFallbackText(story.title, 'User story')}`,
-    buildJiraSection('Objetivo', withFallbackText(story.objective)),
-    buildJiraSection('User story', withFallbackText(story.user_story)),
+    `${t('jira_summary')}: ${withFallbackText(story.title, t('user_story'))}`,
+    buildJiraSection(t('goal'), withFallbackText(story.objective)),
+    buildJiraSection(t('user_story'), withFallbackText(story.user_story)),
     buildJiraSection(
-      'Critérios de aceite',
+      t('criteria'),
       acceptanceCriteria.map((item) => `# ${item}`).join('\n'),
     ),
     businessRules.length > 0
-      ? buildJiraSection('Regras de negócio', businessRules.map((item) => `* ${item}`).join('\n'))
+      ? buildJiraSection(t('business_rules'), businessRules.map((item) => `* ${item}`).join('\n'))
       : '',
-    gaps.length > 0 ? buildJiraSection('Trincas', gaps.map((item) => `* ${item}`).join('\n')) : '',
+    gaps.length > 0 ? buildJiraSection(t('gaps'), gaps.map((item) => `* ${item}`).join('\n')) : '',
     qaChecklist.length > 0
-      ? buildJiraSection('Teste de resistência', qaChecklist.map((item) => `* ${item}`).join('\n'))
+      ? buildJiraSection(t('qa'), qaChecklist.map((item) => `* ${item}`).join('\n'))
       : '',
-    story.notes ? buildJiraSection('Notas', story.notes.trim()) : '',
+    notes ? buildJiraSection(t('notes'), notes.trim()) : '',
   ])
 }
 
