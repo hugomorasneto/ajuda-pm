@@ -1,9 +1,9 @@
 {
   "home": {
     "title": "ProdForge — AI workspace for product managers",
-    "description": "Turn unclear briefs into complete user stories for product, engineering, and QA teams.",
+    "description": "Turn rough briefs into user stories and acceptance criteria your product, engineering, and QA teams can review.",
     "name": "ProdForge",
-    "ogDescription": "Turn unclear briefs into complete user stories for product, engineering, and QA teams."
+    "ogDescription": "Turn rough briefs into user stories and acceptance criteria your product, engineering, and QA teams can review."
   },
   "faq": {
     "title": "FAQ | ProdForge",
@@ -22,7 +22,7 @@
   },
   "preferences": {
     "title": "Privacy Preferences | ProdForge",
-    "description": "Review, change, or reset your ProdForge privacy consent on this browser.",
+    "description": "Review, change, or reset the privacy preferences saved in this browser for ProdForge.",
     "name": "Privacy Preferences"
   },
   "terms": {

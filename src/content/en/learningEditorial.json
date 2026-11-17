@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "ProdForge Training Ground | Practical product management",
-    "description": "Practical guides for learning product management and applying it in the workspace, with user stories ready for review.",
+    "description": "Learn product management with practical guides on user stories, acceptance criteria, refinement, and team alignment.",
     "name": "ProdForge Training Ground",
     "imageAlt": "ProdForge brand mark"
   },
@@ -11,15 +11,15 @@
       "title": "Agile product foundations for new PMs and POs",
       "excerpt": "Start with what matters: the problem, the decision, team alignment, and continuous learning. Frameworks can wait.",
       "level": "Beginner",
-      "problem": "Many people start by hearing about Scrum, discovery, and roadmaps without knowing what they need to solve in everyday product work.",
-      "outcome": "You will leave with a simple way to connect the problem and the priority to the team conversation without relying on jargon.",
+      "problem": "New product professionals often hear about Scrum, discovery, and roadmaps before they know what problems they need to solve day to day.",
+      "outcome": "Learn to explain the problem to your team and show why it matters now.",
       "quickSummary": [
         "Agile product work reduces risk before you invest more in building.",
         "Your main job is to improve decisions. Moving cards between columns is only part of the work.",
         "A good backlog starts with clear context. A polished ticket is secondary."
       ],
       "exampleScenario": {
-        "title": "Real-world example",
+        "title": "Practical example",
         "summary": "The team receives a request to \"improve onboarding.\" Before opening several tasks, the PM needs to find the actual problem.",
         "bullets": [
           "Which onboarding step is hurting conversion?",
@@ -45,7 +45,7 @@
           "title": "Use the backlog to make decisions",
           "paragraphs": [
             "The backlog should show what deserves a discussion now and what is outside the current focus.",
-            "When everything becomes a priority, the team loses context and works for volume."
+            "When everything becomes a priority, the team can lose sight of why it is doing the work and focus on closing tickets."
           ],
           "bullets": [
             "Separate ideas, hypotheses, and items ready for refinement.",
@@ -57,7 +57,7 @@
           "title": "Better conversations make teams more agile",
           "paragraphs": [
             "Teams work more effectively when product, engineering, and QA can understand the purpose of a change without excessive meetings.",
-            "That takes clearer artifacts, better criteria, and less ambiguity."
+            "Clear briefs and acceptance criteria let the team resolve more questions before meeting."
           ],
           "bullets": [
             "Explain what needs to be validated.",
@@ -86,7 +86,7 @@
     "user-stories-na-pratica": {
       "category": "User Stories",
       "title": "User stories in practice",
-      "excerpt": "Turn loose context into a useful story with a goal, expected behavior, acceptance criteria, and questions for refinement.",
+      "excerpt": "Turn a rough brief into a user story with a goal, expected behavior, acceptance criteria, and questions for refinement.",
       "level": "Beginner",
       "problem": "Requests arrive by message, call, or spreadsheet, and the PM ends up manually turning fragments of context into tickets.",
       "outcome": "Learn a consistent way to structure stories so the team can decide, build, and test with less rework.",
@@ -96,7 +96,7 @@
         "Making gaps explicit early prevents costly discoveries during development."
       ],
       "exampleScenario": {
-        "title": "Real-world example",
+        "title": "Practical example",
         "summary": "Sales asks for company domain validation during B2B onboarding because too many registrations are inconsistent.",
         "bullets": [
           "Goal: reduce operational rework.",
@@ -156,14 +156,14 @@
       ],
       "seo": {
         "title": "User stories in practice for PMs and POs | ProdForge",
-        "description": "Turn loose context into user stories with a goal, acceptance criteria, open gaps, and a refinement checklist."
+        "description": "Turn a rough brief into a user story with a clear goal, acceptance criteria, open questions, and a refinement checklist."
       },
       "thumbnailAlt": "Forge illustration for the practical user stories guide"
     },
     "backlog-e-refinamento": {
       "category": "Backlog",
       "title": "Backlog and refinement without chaos",
-      "excerpt": "Organize priorities, item readiness, and team discussions without turning the backlog into a list of requests.",
+      "excerpt": "Use the backlog to show what matters now, what needs refinement, and what is ready to build.",
       "level": "Beginner",
       "problem": "The backlog grows and changes every week, mixing raw ideas with work that is ready for development.",
       "outcome": "Use the backlog to focus and refine work so it stays useful over time.",
@@ -173,7 +173,7 @@
         "Refine items likely to start soon."
       ],
       "exampleScenario": {
-        "title": "Real-world example",
+        "title": "Practical example",
         "summary": "A PM has 40 items on the board, but only five are realistic for the next cycle. The team spends time discussing details of items that have yet to be prioritized.",
         "bullets": [
           "Separating ideas from items in preparation reduces distractions.",
@@ -242,7 +242,7 @@
       "title": "Practical Scrum for PMs and POs",
       "excerpt": "Understand what each Scrum event should accomplish so the routine helps the team work with greater clarity.",
       "level": "Beginner",
-      "problem": "Teams schedule the daily, planning, and review, yet still face misalignment, rework, and unclear priorities.",
+      "problem": "Teams hold Scrum events and still run into unclear priorities, misunderstandings, and rework.",
       "outcome": "Use each event to make decisions and align the team with a clear purpose.",
       "quickSummary": [
         "A useful event clears up questions about the work or its priority.",
@@ -250,7 +250,7 @@
         "A meeting that has no bearing on a decision may be doing more than it needs to."
       ],
       "exampleScenario": {
-        "title": "Real-world example",
+        "title": "Practical example",
         "summary": "In planning, the team gets stories without context and ends up arguing over implementation. In the review, everyone watches the demo and comes away without learning from the result.",
         "bullets": [
           "Planning should explain what comes into the sprint and why.",
@@ -316,7 +316,7 @@
     "discovery-leve": {
       "category": "Discovery",
       "title": "Getting started with lightweight discovery",
-      "excerpt": "Validate problems, hypotheses, and user needs without creating a separate process from the backlog.",
+      "excerpt": "Test hypotheses about problems and user needs as part of your regular backlog work.",
       "level": "Beginner",
       "problem": "Teams often make discovery too big to fit into their work, or skip it entirely as delivery pressure rises.",
       "outcome": "Learn a discovery approach that fits everyday work and still tests the assumptions behind backlog items.",
@@ -326,7 +326,7 @@
         "The goal is a better backlog that incorporates what you learned."
       ],
       "exampleScenario": {
-        "title": "Real-world example",
+        "title": "Practical example",
         "summary": "A manager asks for a new registration field because it \"will help operations.\" Before building it, the PM investigates when the operations team needs the information.",
         "bullets": [
           "Who is affected by the missing data today?",
@@ -363,7 +363,7 @@
         {
           "title": "Bring discovery findings back into the story",
           "paragraphs": [
-            "Discovery is complete when it improves the backlog.",
+            "Use the evidence from discovery to improve the backlog.",
             "The findings should be visible in the goal, acceptance criteria, risks, and decisions about priority."
           ],
           "bullets": [
@@ -402,7 +402,7 @@
         "A useful refinement meeting gives the team decisions it can act on."
       ],
       "exampleScenario": {
-        "title": "Real-world example",
+        "title": "Practical example",
         "summary": "The PM brings an item titled \"Improve checkout performance.\" Nobody knows what improvement means, and the meeting turns into 40 minutes of discovery.",
         "bullets": [
           "Which performance metric is falling short today?",
@@ -472,14 +472,14 @@
       "excerpt": "Go to the source of the problem, confirm understanding before writing the specification, and stay aligned throughout the cycle so the review brings fewer surprises.",
       "level": "Beginner",
       "problem": "A request changes as it passes through several people. The PM ends up translating secondhand requests without a clear view of the original problem.",
-      "outcome": "Learn to speak directly with the people affected, confirm the expected outcome, and maintain alignment so the review brings no surprises.",
+      "outcome": "Speak directly with the people affected, confirm the expected outcome, and check expectations along the way to reduce surprises in the review.",
       "quickSummary": [
         "Alignment means a shared understanding of the problem and what will be delivered.",
         "Speaking early with people who experience the problem reduces misunderstandings in the specification.",
         "A user story helps people align and records what they agreed to build."
       ],
       "exampleScenario": {
-        "title": "Real-world example",
+        "title": "Practical example",
         "summary": "Sales asks for a new report and the PM specifies it. At the review, finance says it cannot use the report because a field is missing. Nobody had consulted finance.",
         "bullets": [
           "Who actually uses the report day to day?",

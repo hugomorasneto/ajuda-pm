@@ -1,5 +1,5 @@
 const heroSummary = [
-  "Raw ideas provide the product context",
+  "Start with a rough idea or product request",
   "AI helps organize questions, risks, and criteria",
   "Clearer stories are ready for human review",
 ]
@@ -8,7 +8,7 @@ const transformationSteps = [
   {
     title: "Raw input",
     description:
-      "Loose problems, business requests, customer messages, incomplete rules, or briefs that still need structure.",
+      "Start with an open problem, a business request, a customer message, an incomplete rule, or a rough brief.",
   },
   {
     title: "Shape the thinking",
@@ -44,7 +44,7 @@ const audienceCards = [
       "To standardize writing, reduce miscommunication across teams, and establish shared acceptance criteria, hypotheses, and next steps.",
   },
   {
-    title: "Developing product professionals",
+    title: "People learning product management",
     description:
       "For people learning to write better stories who want guidance on structuring their product thinking.",
   },
@@ -55,13 +55,13 @@ const aboutSections = [
     title: "What ProdForge is",
     paragraphs: [
       "ProdForge is an AI-powered web platform that helps create, improve, and standardize user stories, acceptance criteria, technical insights, and improvement suggestions.",
-      "The idea is simple: start with raw ideas and turn them into clearer, more complete, actionable stories for review and team discussion.",
+      "Start with a rough idea and turn it into a story your team can review, discuss, and refine.",
     ],
   },
   {
     title: "Why it exists",
     paragraphs: [
-      "Many teams lose time because requests are vague, criteria are subjective, and product, engineering, and QA align too late.",
+      "Teams lose time when requests are vague, criteria are subjective, and product, engineering, and QA agree on expectations too late.",
       "ProdForge helps reduce rework, improve communication, and give product professionals a clearer picture of what needs to be understood before delivery.",
     ],
   },
@@ -89,15 +89,15 @@ const aboutSections = [
   {
     title: "Our vision",
     paragraphs: [
-      "We believe good products come from clarity, context, and collaboration. A well-written story gives the people who need to build together a more focused conversation.",
+      "We believe good products come from clarity, context, and collaboration. A well-written story helps the team focus its discussion on what to build and why.",
       "We want product artifacts to be easier to create, more consistent, and more useful as teams move from an initial idea to a shared understanding of what to deliver.",
     ],
   },
   {
     title: "What is next for ProdForge",
     paragraphs: [
-      "ProdForge is expected to evolve with stronger history features, project-level standards, better learning flows, clearer usage limits, and possible integrations with work tools.",
-      "These changes will come gradually, keeping the focus on helping teams turn context into better stories with less confusion.",
+      "Areas for future work include better story history, shared project standards, clearer usage limits, improvements to the Training Ground, and possible integrations.",
+      "Our focus is helping teams turn their context into clearer stories.",
     ],
   },
 ]
