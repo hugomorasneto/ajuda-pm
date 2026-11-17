@@ -18,6 +18,16 @@ import { fileURLToPath } from 'node:url'
 const generatedPortugueseEntries = new Set(['refinamento-e-criterios', 'alinhamento-com-stakeholders'])
 
 const rootDir = fileURLToPath(new URL('.', import.meta.url))
+const copyReviewDirectory = 'revisao-de-textos'
+
+function isCopyReviewRequest(pathname) {
+  try {
+    const [, directory, ...segments] = decodeURIComponent(pathname).replaceAll('\\', '/').toLowerCase().split('/')
+    return directory === copyReviewDirectory || (directory === '@fs' && segments.includes(copyReviewDirectory))
+  } catch {
+    return false
+  }
+}
 
 function escapeHtml(value) {
   return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
@@ -25,8 +35,14 @@ function escapeHtml(value) {
 
 function publicMetadataPlugin(mode) {
   function servePublicEntry(server) {
-    server.middlewares.use((request, _response, next) => {
+    server.middlewares.use((request, response, next) => {
       const url = new URL(request.url, 'http://localhost')
+      if (mode !== PILOT_MODE && isCopyReviewRequest(url.pathname)) {
+        response.statusCode = 404
+        response.end()
+        return
+      }
+
       const page = getPilotPage(url.pathname)
       if (page?.en) {
         const isEnglish = /^\/en(?:\/|$)/.test(url.pathname)
@@ -99,9 +115,12 @@ export default defineConfig(({ mode }) => ({
         termsOfUse: resolve(rootDir, 'termos-de-uso/index.html'),
         contact: resolve(rootDir, 'contato/index.html'),
         about: resolve(rootDir, 'sobre/index.html'),
-        ...(mode === PILOT_MODE ? Object.fromEntries(publicLocalePages.map(({ id, en }) => [
-          id + 'English', resolve(rootDir, en.slice(1).replace(/\/$/, '') + '/index.html'),
-        ])) : {}),
+        ...(mode === PILOT_MODE ? {
+          copyReview: resolve(rootDir, copyReviewDirectory, 'index.html'),
+          ...Object.fromEntries(publicLocalePages.map(({ id, en }) => [
+            id + 'English', resolve(rootDir, en.slice(1).replace(/\/$/, '') + '/index.html'),
+          ])),
+        } : {}),
         faq: resolve(rootDir, 'faq/index.html'),
         ...Object.fromEntries(learningRoutes.map((page) => [
           page.id, resolve(rootDir, page['pt-BR'].slice(1) + '/index.html'),
