@@ -1,13 +1,15 @@
+import LanguageSwitcher from '../../i18n/LanguageSwitcher'
+import { useCopy, useLanguage } from '../../i18n/context'
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC } from '../../constants/app'
 import { useAuth } from '../../hooks/useAuth'
 
-const publicNavItems = [
-  { label: 'Produto', to: '/#produto', activeOn: ['/'] },
-  { label: 'Como funciona', to: '/#como-funciona' },
-  { label: 'Campo de Treino', to: '/aprender', activeOn: ['/aprender'] },
-  { label: 'Planos', to: '/#planos' },
+const publicNavItems = (t) => [
+  { label: t('product'), to: '/#produto', activeOn: ['/'] },
+  { label: t('how'), to: '/#como-funciona' },
+  { label: t('training'), to: '/aprender', activeOn: ['/aprender'] },
+  { label: t('plans'), to: '/#planos' },
 ]
 
 function isItemActive(item, pathname) {
@@ -43,12 +45,14 @@ function PublicNavLink({ item, pathname, mobile = false, onNavigate }) {
 }
 
 function PublicHeader({ isHomeRoute = false, isLearningRoute = false, isLegalRoute = false }) {
+  const t = useCopy('navigation')
+  const { preview } = useLanguage()
   const location = useLocation()
   const { user } = useAuth()
   const [menuOpenPath, setMenuOpenPath] = useState(null)
   const isMenuOpen = menuOpenPath === location.pathname
   const isForgeHeader = isHomeRoute || isLearningRoute || isLegalRoute
-  const navItems = publicNavItems
+  const navItems = publicNavItems(t)
   const headerClassName = ['public-header', isForgeHeader ? 'public-header--forge-home' : '']
     .filter(Boolean)
     .join(' ')
@@ -85,7 +89,7 @@ function PublicHeader({ isHomeRoute = false, isLearningRoute = false, isLegalRou
           />
         </Link>
 
-        <nav className="public-header__nav" aria-label="Navegação pública">
+        <nav className="public-header__nav" aria-label={t('publicNav')}>
           {navItems.map((item) => (
             <PublicNavLink key={item.to ?? item.href} item={item} pathname={location.pathname} />
           ))}
@@ -94,15 +98,15 @@ function PublicHeader({ isHomeRoute = false, isLearningRoute = false, isLegalRou
         <div className="public-header__actions">
           {user ? (
             <Link to="/tool" className={primaryCtaClassName}>
-              Abrir bancada
+              {t('openWorkspace')}
             </Link>
           ) : (
             <>
               <Link to="/login" className={secondaryCtaClassName}>
-                Entrar
+                {t('signIn')}
               </Link>
               <Link to="/signup" className={primaryCtaClassName}>
-                Criar conta grátis
+                {t('createAccount')}
               </Link>
             </>
           )}
@@ -115,15 +119,17 @@ function PublicHeader({ isHomeRoute = false, isLearningRoute = false, isLegalRou
             setMenuOpenPath((currentPath) => (currentPath === location.pathname ? null : location.pathname))
           }
           aria-expanded={isMenuOpen}
-          aria-label={isMenuOpen ? 'Fechar navegação' : 'Abrir navegação'}
+          aria-label={isMenuOpen ? t('closeNav') : t('openNav')}
         >
-          {isMenuOpen ? 'Fechar' : 'Menu'}
+          {isMenuOpen ? t('close') : t('menu')}
         </button>
       </div>
 
+      {preview && <div className="public-header__language"><LanguageSwitcher /></div>}
+
       {isMenuOpen ? (
         <div className="public-header__mobile-panel">
-          <nav className="public-header__mobile-nav" aria-label="Navegação pública — mobile">
+          <nav className="public-header__mobile-nav" aria-label={t('mobileNav')}>
             {navItems.map((item) => (
               <PublicNavLink
                 key={item.to ?? item.href}
@@ -138,15 +144,15 @@ function PublicHeader({ isHomeRoute = false, isLearningRoute = false, isLegalRou
           <div className="public-header__mobile-actions">
             {user ? (
               <Link to="/tool" className={primaryCtaClassName}>
-                Abrir bancada
+                {t('openWorkspace')}
               </Link>
             ) : (
               <>
                 <Link to="/login" className={secondaryCtaClassName}>
-                  Entrar
+                  {t('signIn')}
                 </Link>
                 <Link to="/signup" className={primaryCtaClassName}>
-                  Criar conta grátis
+                  {t('createAccount')}
                 </Link>
               </>
             )}

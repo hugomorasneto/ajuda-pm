@@ -1,3 +1,4 @@
+import { useCopy } from '../i18n/context'
 import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import WorkspaceSidebar from '../components/workspace/WorkspaceSidebar'
@@ -5,6 +6,7 @@ import WorkspaceTopbar from '../components/workspace/WorkspaceTopbar'
 import '../styles/workspace.css'
 
 function WorkspaceLayout() {
+  const t = useCopy('navigation')
   const location = useLocation()
   const [sidebarOpenPath, setSidebarOpenPath] = useState(null)
   const [topbarStatus, setTopbarStatus] = useState(null)
@@ -38,7 +40,7 @@ function WorkspaceLayout() {
           type="button"
           className="workspace-shell__backdrop"
           onClick={closeSidebar}
-          aria-label="Fechar navegação"
+          aria-label={t('closeNav')}
         />
       ) : null}
 

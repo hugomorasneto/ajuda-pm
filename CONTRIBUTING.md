@@ -3,7 +3,7 @@
 Comece pela [instalação local](README.md#instalação). Uma primeira contribuição pode melhorar um teste unitário ou corrigir a navegação de uma página pública. Esses cenários podem ser verificados com dados fictícios e sem credenciais de serviços.
 
 1. Procure um relato semelhante nas [issues do projeto](https://github.com/hugomorasneto/ajuda-pm/issues). Para um erro comum, descreva o comportamento esperado, o observado, a revisão usada e os passos para reproduzir. Para uma possível exposição de dados ou falha de acesso, use o [canal de segurança](SECURITY.md).
-2. Faça a mudança em uma branch própria. Consulte [AGENTS.md](AGENTS.md) para o vocabulário do produto e mantenha em português brasileiro os textos visíveis, inclusive mensagens, rótulos, metadados e exemplos.
+2. Faça a mudança em uma branch própria. Consulte [AGENTS.md](AGENTS.md) para o vocabulário do produto e mantenha os textos visíveis em português brasileiro. Nas páginas bilíngues da prévia, mantenha também o catálogo em inglês com as mesmas chaves e parâmetros.
 3. Execute `npm run quality`. Para mudanças na interface, confira a jornada afetada em uma janela de celular e outra de computador. Use capturas e exemplos com dados fictícios.
 4. Abra um pull request com o que mudou, o motivo, os comandos executados e as limitações dos testes. Se a mudança envolver banco, permissões ou hospedagem, descreva as dependências e a ordem de aplicação para revisão. Use um ambiente de teste autorizado para operações que acessem serviços compartilhados.
 

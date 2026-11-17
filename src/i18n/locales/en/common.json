@@ -1,0 +1,13 @@
+{
+  "language": "Language",
+  "unavailable": "English is available in the About and Teams preview.",
+  "selected": "Selected language: English.",
+  "loadingModules": "Loading modules",
+  "loadingInterface": "Setting up the interface",
+  "loadingContext": "Keeping your context",
+  "loadingLabel": "Loading ProdForge modules",
+  "loading": "Loading",
+  "preparing": "Getting things ready",
+  "preparingDetails": "We are loading this area so you can pick up where you left off.",
+  "checkingSession": "Checking your session..."
+}

@@ -32,6 +32,23 @@ Abra [a página inicial](http://127.0.0.1:5173/) ou [o Campo de Treino](http://1
 
 Variáveis `VITE_*` podem aparecer no bundle do frontend. Use apenas a URL e a chave pública do projeto de teste. Mantenha tokens administrativos, senhas SMTP, chaves de serviço e chaves de IA fora do Git e do frontend. Veja o [modelo de configuração](.env.local.example) e o [guia do Supabase](supabase/README.md).
 
+## Prévia de idiomas
+
+Sobre e Times têm uma prévia em português brasileiro e inglês, disponível apenas em endereço local. Use os valores fictícios descritos acima e rode:
+
+```sh
+npm run dev:i18n
+```
+
+Abra [Sobre](http://127.0.0.1:5173/sobre) ou [About](http://127.0.0.1:5173/en/about). Times exige sessão. O teste automatizado simula a sessão e as respostas do Supabase sem acessar serviços externos.
+
+```sh
+npx playwright install chromium
+npm run test:e2e:i18n
+```
+
+Para conferir o HTML compilado, use `npm run build:i18n` e `npm run preview:i18n`. O build de prévia fica em `dist-i18n-preview/`. O build normal continua em `dist/` com a prévia desativada.
+
 ## Contribuição
 
 Leia o [guia de contribuição](CONTRIBUTING.md) e as [instruções para relatar problemas de segurança](SECURITY.md).

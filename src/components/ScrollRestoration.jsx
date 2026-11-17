@@ -1,4 +1,6 @@
 import { useEffect } from 'react'
+import { useLanguage } from '../i18n/context'
+import { getPilotPage } from '../i18n/routes'
 import { useLocation } from 'react-router-dom'
 
 const MAX_HASH_SCROLL_ATTEMPTS = 20
@@ -37,6 +39,13 @@ function scrollToElement(element) {
 
 function ScrollRestoration() {
   const { pathname, search, hash } = useLocation()
+
+  const { preview } = useLanguage()
+  const pilotPage = preview ? getPilotPage(pathname) : undefined
+  const scrollPath = pilotPage?.['pt-BR'] ?? pathname
+  const scrollSearch = pilotPage?.id === 'teams'
+    ? search.slice(1).split('&').filter((field) => !new URLSearchParams(field).has('lang')).join('&')
+    : search
 
   useEffect(() => {
     if (!('scrollRestoration' in window.history)) return undefined
@@ -79,7 +88,7 @@ function ScrollRestoration() {
     return () => {
       window.cancelAnimationFrame(frameId)
     }
-  }, [pathname, search, hash])
+  }, [scrollPath, scrollSearch, hash])
 
   return null
 }

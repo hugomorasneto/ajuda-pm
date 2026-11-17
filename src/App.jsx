@@ -1,4 +1,6 @@
 import { Suspense, lazy } from 'react'
+import LanguageSwitcher from './i18n/LanguageSwitcher'
+import { useCopy, useLanguage } from './i18n/context'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import AdminRoute from './components/AdminRoute'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -30,15 +32,18 @@ const CheckEmailPage = lazy(() => import('./pages/CheckEmailPage'))
 const AdminPage = lazy(() => import('./pages/AdminPage'))
 
 function RouteFallback() {
-  const loadingSteps = ['Carregando módulos', 'Organizando a interface', 'Preservando o contexto']
+  const t = useCopy('common')
+  const { preview } = useLanguage()
+  const loadingSteps = [t('loadingModules'), t('loadingInterface'), t('loadingContext')]
 
   return (
     <div
       className="app-route-loader theme-forge"
       role="status"
       aria-live="polite"
-      aria-label="Carregando módulos do ProdForge"
+      aria-label={t('loadingLabel')}
     >
+      {preview && <div className="language-switcher--loading"><LanguageSwitcher /></div>}
       <div className="app-route-loader__content">
         <div className="app-route-loader__brand" aria-hidden="true">
           <span className="app-route-loader__brand-mark" />
@@ -46,9 +51,9 @@ function RouteFallback() {
         </div>
 
         <div className="app-route-loader__copy">
-          <p className="app-route-loader__eyebrow">Carregando</p>
-          <h1>Preparando a experiência</h1>
-          <p>Estamos carregando os módulos desta área para você continuar com o contexto preservado.</p>
+          <p className="app-route-loader__eyebrow">{t('loading')}</p>
+          <h1>{t('preparing')}</h1>
+          <p>{t('preparingDetails')}</p>
         </div>
 
         <div className="app-route-loader__skeleton" aria-hidden="true">
@@ -72,6 +77,7 @@ function RouteFallback() {
 }
 
 function App() {
+  const { preview } = useLanguage()
   return (
     <>
       <ScrollRestoration />
@@ -88,6 +94,7 @@ function App() {
             <Route path="/aprender" element={<LearningHubPage />} />
             <Route path="/aprender/:slug" element={<LearningGuidePage />} />
             <Route path="/sobre" element={<AboutPage />} />
+            {preview && <Route path="/en/about" element={<AboutPage />} />}
             <Route path="/contato" element={<ContactPage />} />
             <Route path="/faq" element={<FaqPage />} />
             <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />

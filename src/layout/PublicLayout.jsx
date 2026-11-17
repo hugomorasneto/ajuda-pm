@@ -1,3 +1,4 @@
+import { getPilotPage } from '../i18n/routes'
 import { Outlet, useLocation } from 'react-router-dom'
 import PublicHeader from '../components/navigation/PublicHeader'
 import PublicFooter from '../components/navigation/PublicFooter'
@@ -8,7 +9,7 @@ function PublicLayout() {
   const isHomeRoute = location.pathname === '/'
   const isLearningRoute = location.pathname.startsWith('/aprender')
   const isContactRoute = location.pathname === '/contato' || location.pathname === '/contato/'
-  const isLegalRoute = [
+  const isLegalRoute = getPilotPage(location.pathname)?.id === 'about' || [
     '/sobre',
     '/faq',
     '/politica-de-privacidade',

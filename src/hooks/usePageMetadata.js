@@ -1,3 +1,4 @@
+import { getOgLocale } from '../i18n/routes'
 import { useEffect } from 'react'
 import { APP_NAME } from '../constants/app'
 
@@ -57,6 +58,8 @@ function upsertStructuredData(jsonLd) {
 
 export function usePageMetadata({
   title,
+  enabled = true,
+  language = 'pt-BR',
   description,
   path = '/',
   type = 'website',
@@ -71,6 +74,7 @@ export function usePageMetadata({
   jsonLd = null,
 }) {
   useEffect(() => {
+    if (!enabled) return
     const url = new URL(path, SITE_URL).toString()
 
     document.title = title
@@ -79,7 +83,7 @@ export function usePageMetadata({
     upsertLink('link[rel="canonical"]', 'canonical', url)
 
     upsertMeta('meta[property="og:site_name"]', 'property', 'og:site_name', APP_NAME)
-    upsertMeta('meta[property="og:locale"]', 'property', 'og:locale', 'pt_BR')
+    upsertMeta('meta[property="og:locale"]', 'property', 'og:locale', getOgLocale(language))
     upsertMeta('meta[property="og:title"]', 'property', 'og:title', ogTitle)
     upsertMeta('meta[property="og:description"]', 'property', 'og:description', ogDescription)
     upsertMeta('meta[property="og:type"]', 'property', 'og:type', type)
@@ -100,9 +104,11 @@ export function usePageMetadata({
     upsertStructuredData(jsonLd)
   }, [
     description,
+    enabled,
     image,
     imageAlt,
     jsonLd,
+    language,
     ogDescription,
     ogTitle,
     path,

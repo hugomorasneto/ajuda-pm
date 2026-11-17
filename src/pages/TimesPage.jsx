@@ -1,19 +1,21 @@
+import { useCopy, useLanguage } from '../i18n/context'
+import { teamOperationMessage, renderTeamMessage } from '../utils/teamMessages'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useOutletContext, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import TeamMembersPanel from '../components/projects/TeamMembersPanel'
 import { useAuth } from '../hooks/useAuth'
 import { checkCanManageProject, listProjects } from '../services/projectsService'
 import { createTeam, listTeamsByProject } from '../services/teamsService'
 
-function formatTeamMetric(value, singular, plural) {
-  return `${value} ${value === 1 ? singular : plural}`
-}
-
 function TimesPage() {
+  const t = useCopy('teams')
+  const { language } = useLanguage()
   const { user } = useAuth()
   const userId = user?.id ?? null
   const { setTopbarStatus } = useOutletContext() ?? {}
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
+  const location = useLocation()
+  const navigate = useNavigate()
   const createSectionRef = useRef(null)
   const projectIdFromUrl = searchParams.get('projectId') ?? ''
   const [projects, setProjects] = useState([])
@@ -26,7 +28,7 @@ function TimesPage() {
   const [description, setDescription] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState(null)
 
   const selectedProject = useMemo(
     () => projects.find((project) => project.id === selectedProjectId) ?? null,
@@ -40,14 +42,10 @@ function TimesPage() {
       ),
     [teamsByProject],
   )
-  const teamCountLabel = useMemo(
-    () => formatTeamMetric(teamCount, 'time criado', 'times criados'),
-    [teamCount],
-  )
-  const projectCountLabel = useMemo(
-    () => formatTeamMetric(projects.length, 'projeto disponível', 'projetos disponíveis'),
-    [projects.length],
-  )
+  const collaborationLabel = t('collaborationLayer')
+  const title = t('title')
+  const teamCountLabel = t('teamCount', { count: teamCount })
+  const projectCountLabel = t('projectCount', { count: projects.length })
   const projectsWithTeamsCount = useMemo(
     () =>
       projects.filter((project) => {
@@ -88,14 +86,8 @@ function TimesPage() {
       }, 0),
     [teamsByProject, visibleProjects],
   )
-  const visibleTeamCountLabel = useMemo(
-    () => formatTeamMetric(visibleTeamCount, 'time exibido', 'times exibidos'),
-    [visibleTeamCount],
-  )
-  const visibleProjectCountLabel = useMemo(
-    () => formatTeamMetric(visibleProjects.length, 'projeto exibido', 'projetos exibidos'),
-    [visibleProjects.length],
-  )
+  const visibleTeamCountLabel = t('visibleTeams', { count: visibleTeamCount })
+  const visibleProjectCountLabel = t('visibleProjects', { count: visibleProjects.length })
   const selectedProjectTeamCount = selectedProject
     ? (teamsByProject[selectedProject.id] ?? []).length
     : 0
@@ -114,7 +106,7 @@ function TimesPage() {
       setProjects([])
       setTeamsByProject({})
       setCanManageProjectById({})
-      setMessage('Não foi possível carregar os projetos agora.')
+      setMessage({ key: 'loadFailed' })
       setIsLoading(false)
       return
     }
@@ -167,8 +159,8 @@ function TimesPage() {
     if (typeof setTopbarStatus !== 'function') return
 
     setTopbarStatus({
-      label: 'Camada colaborativa',
-      title: 'Times',
+      label: collaborationLabel,
+      title,
       pills: [
         { text: teamCountLabel },
         { text: projectCountLabel },
@@ -176,21 +168,23 @@ function TimesPage() {
     })
 
     return () => setTopbarStatus(null)
-  }, [projectCountLabel, setTopbarStatus, teamCountLabel])
+  }, [collaborationLabel, projectCountLabel, setTopbarStatus, teamCountLabel, title])
 
   function handleProjectSelection(projectId) {
     setSelectedProjectId(projectId)
-    if (projectId) {
-      setSearchParams({ projectId }, { replace: true })
-    } else {
-      setSearchParams({}, { replace: true })
-    }
+    const next = new URLSearchParams(searchParams)
+    if (projectId) next.set('projectId', projectId)
+    else next.delete('projectId')
+    navigate({ pathname: location.pathname, search: next.toString(), hash: location.hash }, {
+      replace: true,
+      state: location.state,
+    })
   }
 
   function handleSelectProjectForCreation(projectId) {
     handleProjectSelection(projectId)
     setShowOnlySelectedProject(true)
-    setMessage('Projeto selecionado para criação do time.')
+    setMessage({ key: 'projectChosen' })
     window.requestAnimationFrame(() => {
       createSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
@@ -198,15 +192,15 @@ function TimesPage() {
 
   async function handleCreateTeam(event) {
     event.preventDefault()
-    setMessage('')
+    setMessage(null)
 
     if (!selectedProjectId) {
-      setMessage('Selecione um projeto para criar o time.')
+      setMessage({ key: 'chooseProject' })
       return
     }
 
     if (!canCreateForSelectedProject) {
-      setMessage('Apenas responsáveis e administradores do projeto podem criar times.')
+      setMessage({ key: 'noCreatePermission' })
       return
     }
 
@@ -220,13 +214,13 @@ function TimesPage() {
     setIsCreating(false)
 
     if (!response.success) {
-      setMessage(response.error?.message ?? 'Não foi possível criar o time agora.')
+      setMessage(teamOperationMessage(response.error, 'createFailed'))
       return
     }
 
     setName('')
     setDescription('')
-    setMessage('Time criado.')
+    setMessage({ key: 'created' })
     await loadTeams()
   }
 
@@ -234,104 +228,101 @@ function TimesPage() {
     <div className="projects-page teams-page">
       <section className="panel projects-page__hero">
         <div className="projects-page__hero-copy">
-          <p className="projects-page__eyebrow">Camada colaborativa</p>
-          <h1>Times</h1>
+          <p className="projects-page__eyebrow">{t('collaborationLayer')}</p>
+          <h1>{t('title')}</h1>
           <p>
-            Organize as guildas por projeto sem ocupar o detalhe da jornada. Times continuam vinculados a projetos e
-            entram como uma camada leve para refino, estimativa e acompanhamento.
+            {t('intro')}
           </p>
-          <div className="projects-page__hero-indicators" aria-label="Resumo dos times">
+          <div className="projects-page__hero-indicators" aria-label={t('overviewLabel')}>
             <span className="projects-page__indicator">
               <strong>{teamCount}</strong>
-              {teamCount === 1 ? 'time' : 'times'}
+              {t('unit', { count: teamCount })}
             </span>
             <span className="projects-page__indicator projects-page__indicator--free">
-              Vinculados a projetos
+              {t('linked')}
             </span>
           </div>
         </div>
         <div className="projects-page__hero-actions">
           <Link className="btn btn-secondary btn-small" to="/projetos">
-            Ver projetos
+            {t('viewProjects')}
           </Link>
         </div>
       </section>
 
-      <section className="teams-page__overview" aria-label="Resumo operacional de times">
+      <section className="teams-page__overview" aria-label={t('operationsLabel')}>
         <article className="teams-page__overview-card teams-page__overview-card--primary">
-          <span>Colaboração</span>
+          <span>{t('collaboration')}</span>
           <strong>{teamCount}</strong>
-          <p>{teamCount === 1 ? 'time pronto para organizar pessoas.' : 'times prontos para organizar pessoas.'}</p>
+          <p>{t('ready', { count: teamCount })}</p>
         </article>
         <article className="teams-page__overview-card">
-          <span>Projetos com times</span>
+          <span>{t('projectsWithTeams')}</span>
           <strong>{projectsWithTeamsCount}</strong>
-          <p>Projetos que já possuem uma guilda de trabalho vinculada.</p>
+          <p>{t('withTeamDescription')}</p>
         </article>
         <article className="teams-page__overview-card">
-          <span>Gestão liberada</span>
+          <span>{t('management')}</span>
           <strong>{manageableProjectCount}</strong>
-          <p>Projetos onde você pode criar times e administrar membros.</p>
+          <p>{t('managementDescription')}</p>
         </article>
         <article className="teams-page__overview-card">
-          <span>Fluxo recomendado</span>
-          <strong>Projeto</strong>
-          <p>Crie times apenas quando houver colaboração recorrente no projeto.</p>
+          <span>{t('recommended')}</span>
+          <strong>{t('project')}</strong>
+          <p>{t('recommendation')}</p>
         </article>
       </section>
 
       {projectIdFromUrl && selectedProject ? (
-        <section className="panel teams-page__context" aria-label="Projeto em foco">
+        <section className="panel teams-page__context" aria-label={t('focused')}>
           <div className="teams-page__context-copy">
-            <p className="projects-page__eyebrow">Projeto em foco</p>
+            <p className="projects-page__eyebrow">{t('focused')}</p>
             <h2>{selectedProject.name}</h2>
             <p>
-              Você entrou a partir de um projeto. Este contexto tem{' '}
-              {formatTeamMetric(selectedProjectTeamCount, 'time vinculado', 'times vinculados')}.
+              {t('focusedDescription', { count: selectedProjectTeamCount })}
             </p>
           </div>
           <div className="teams-page__context-actions">
             <Link className="btn btn-secondary btn-small" to={`/projetos/${selectedProject.id}`}>
-              Abrir projeto
+              {t('openProject')}
             </Link>
             <Link className="btn btn-secondary btn-small" to={`/roda?projectId=${selectedProject.id}`}>
-              Abrir Roda
+              {t('openPlanning')}
             </Link>
           </div>
         </section>
       ) : null}
 
       <div className="projects-page__layout">
-        <section ref={createSectionRef} className="panel projects-page__form-card" aria-label="Criar time">
+        <section ref={createSectionRef} className="panel projects-page__form-card" aria-label={t('create')}>
           <div className="projects-page__card-header">
-            <p className="projects-page__eyebrow">Novo time</p>
-            <h2>Criar time</h2>
-            <p>Escolha o projeto e crie um time para colaboração, refinamento e estimativas futuras.</p>
+            <p className="projects-page__eyebrow">{t('newTeam')}</p>
+            <h2>{t('create')}</h2>
+            <p>{t('createIntro')}</p>
           </div>
 
-          <div className="teams-page__creation-status" aria-label="Permissão para criar time">
+          <div className="teams-page__creation-status" aria-label={t('createPermission')}>
             <strong>
               {selectedProject
                 ? canCreateForSelectedProject
-                  ? 'Você pode criar times neste projeto.'
-                  : 'Somente consulta neste projeto.'
-                : 'Selecione um projeto para começar.'}
+                  ? t('canCreate')
+                  : t('readOnly')
+                : t('chooseToStart')}
             </strong>
             <p>
-              Times não são obrigatórios para usar a Bancada. Use esta área quando o projeto precisar de organização
-              colaborativa.
+              {t('optional')}
             </p>
           </div>
 
           <form className="projects-page__form" onSubmit={handleCreateTeam}>
             <label className="projects-page__field">
-              <span>Projeto</span>
+              <span>{t('project')}</span>
               <select
                 value={selectedProjectId}
                 onChange={(event) => handleProjectSelection(event.target.value)}
                 disabled={isLoading || isCreating || projects.length === 0}
               >
-                {projects.length === 0 ? <option value="">Nenhum projeto disponível</option> : null}
+                {projects.length === 0 ? <option value="">{t('noProjectsAvailable')}</option> : null}
                 {projects.map((project) => (
                   <option key={project.id} value={project.id}>
                     {project.name}
@@ -341,23 +332,23 @@ function TimesPage() {
             </label>
 
             <label className="projects-page__field">
-              <span>Nome do time</span>
+              <span>{t('name')}</span>
               <input
                 type="text"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Ex.: Guilda de Checkout"
+                placeholder={t('nameExample')}
                 disabled={isCreating || isLoading || !canCreateForSelectedProject}
                 required
               />
             </label>
 
             <label className="projects-page__field">
-              <span>Descrição opcional</span>
+              <span>{t('description')}</span>
               <textarea
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
-                placeholder="Descreva responsabilidade, squad ou frente de trabalho."
+                placeholder={t('descriptionExample')}
                 rows={4}
                 disabled={isCreating || isLoading || !canCreateForSelectedProject}
               />
@@ -368,39 +359,38 @@ function TimesPage() {
               className="btn btn-primary"
               disabled={isCreating || isLoading || !canCreateForSelectedProject || !name.trim()}
             >
-              {isCreating ? 'Criando time...' : 'Criar time'}
+              {isCreating ? t('creating') : t('create')}
             </button>
           </form>
 
           {selectedProject && !canCreateForSelectedProject ? (
             <p className="projects-page__state">
-              Você pode consultar os times de {selectedProject.name}. Apenas responsáveis e administradores criam novos
-              times.
+              {t('viewOnlyProject', { name: selectedProject.name })}
             </p>
           ) : null}
-          {message ? <p className="projects-page__message">{message}</p> : null}
+          {message ? <p className="projects-page__message" role="status">{renderTeamMessage(t, message, language)}</p> : null}
         </section>
 
-        <section className="panel projects-page__list-card" aria-label="Times por projeto">
+        <section className="panel projects-page__list-card" aria-label={t('byProject')}>
           <div className="projects-page__section-header">
             <div>
-              <p className="projects-page__eyebrow">Times por projeto</p>
+              <p className="projects-page__eyebrow">{t('byProject')}</p>
               <h2>{visibleTeamCountLabel}</h2>
             </div>
-            <div className="teams-page__section-metrics" aria-label="Resumo da listagem">
+            <div className="teams-page__section-metrics" aria-label={t('listSummary')}>
               <span className="projects-page__section-count">{visibleProjectCountLabel}</span>
               <span className="projects-page__section-count">{teamCountLabel}</span>
             </div>
           </div>
 
-          <div className="teams-page__toolbar" aria-label="Filtros de times">
+          <div className="teams-page__toolbar" aria-label={t('filters')}>
             <label className="projects-page__field projects-page__field--search">
-              <span>Buscar time ou projeto</span>
+              <span>{t('search')}</span>
               <input
                 type="search"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Nome do projeto, time ou descrição"
+                placeholder={t('searchPlaceholder')}
               />
             </label>
             <div className="teams-page__toolbar-actions">
@@ -410,25 +400,25 @@ function TimesPage() {
                 disabled={!selectedProjectId}
                 onClick={() => setShowOnlySelectedProject((current) => !current)}
               >
-                {showOnlySelectedProject ? 'Ver todos os projetos' : 'Ver projeto selecionado'}
+                {showOnlySelectedProject ? t('showAll') : t('showSelected')}
               </button>
             </div>
           </div>
 
-          {isLoading ? <p className="projects-page__state">Carregando times...</p> : null}
+          {isLoading ? <p className="projects-page__state">{t('loading')}</p> : null}
           {!isLoading && projects.length === 0 ? (
             <div className="projects-page__empty">
-              <h3>Nenhum projeto criado ainda</h3>
-              <p>Crie um projeto antes de organizar times.</p>
+              <h3>{t('noProjects')}</h3>
+              <p>{t('createProjectFirst')}</p>
               <Link className="btn btn-secondary btn-small" to="/projetos">
-                Criar projeto
+                {t('createProject')}
               </Link>
             </div>
           ) : null}
           {hasFilteredNoResults ? (
             <div className="projects-page__empty">
-              <h3>Nenhum resultado encontrado</h3>
-              <p>Limpe a busca ou veja todos os projetos para revisar os times disponíveis.</p>
+              <h3>{t('noResults')}</h3>
+              <p>{t('noResultsHelp')}</p>
               <button
                 type="button"
                 className="btn btn-secondary btn-small"
@@ -437,7 +427,7 @@ function TimesPage() {
                   setShowOnlySelectedProject(false)
                 }}
               >
-                Limpar filtros
+                {t('clearFilters')}
               </button>
             </div>
           ) : null}
@@ -448,14 +438,14 @@ function TimesPage() {
               const canManageProjectMembers = Boolean(canManageProjectById[project.id])
 
               return (
-                <section key={project.id} className="teams-page__group" aria-label={`Times de ${project.name}`}>
+                <section key={project.id} className="teams-page__group" aria-label={t('group', { name: project.name })}>
                   <div className="teams-page__group-header">
                     <div className="teams-page__group-title">
-                      <p className="projects-page__eyebrow">Projeto</p>
+                      <p className="projects-page__eyebrow">{t('project')}</p>
                       <h3>{project.name}</h3>
                       <p>
-                        {formatTeamMetric(projectTeams.length, 'time vinculado', 'times vinculados')} ·{' '}
-                        {canManageProjectMembers ? 'Você pode gerenciar membros' : 'Somente visualização'}
+                        {t('linkedTeams', { count: projectTeams.length })} ·{' '}
+                        {canManageProjectMembers ? t('manageMembers') : t('viewOnly')}
                       </p>
                     </div>
                     <div className="teams-page__group-actions">
@@ -465,35 +455,35 @@ function TimesPage() {
                           className="btn btn-secondary btn-small"
                           onClick={() => handleSelectProjectForCreation(project.id)}
                         >
-                          Criar time aqui
+                          {t('createHere')}
                         </button>
                       ) : null}
                       <Link className="btn btn-secondary btn-small" to={`/projetos/${project.id}`}>
-                        Ver projeto
+                        {t('viewProject')}
                       </Link>
                       <Link className="btn btn-secondary btn-small" to={`/roda?projectId=${project.id}`}>
-                        Abrir Roda
+                        {t('openPlanning')}
                       </Link>
                     </div>
                   </div>
 
-                  <div className="teams-page__group-metrics" aria-label={`Resumo de ${project.name}`}>
-                    <span>{formatTeamMetric(projectTeams.length, 'time vinculado', 'times vinculados')}</span>
-                    <span>{canManageProjectMembers ? 'Gestão de membros liberada' : 'Gestão somente leitura'}</span>
-                    <span>Rodas vinculadas ao projeto</span>
+                  <div className="teams-page__group-metrics" aria-label={t('groupSummary', { name: project.name })}>
+                    <span>{t('linkedTeams', { count: projectTeams.length })}</span>
+                    <span>{canManageProjectMembers ? t('canManage') : t('cannotManage')}</span>
+                    <span>{t('linkedSessions')}</span>
                   </div>
 
                   {projectTeams.length === 0 ? (
                     <div className="projects-page__empty">
-                      <h3>Nenhum time neste projeto</h3>
-                      <p>Crie um time quando a organização do projeto pedir colaboração recorrente.</p>
+                      <h3>{t('noTeams')}</h3>
+                      <p>{t('noTeamsHelp')}</p>
                       {canManageProjectMembers ? (
                         <button
                           type="button"
                           className="btn btn-secondary btn-small"
                           onClick={() => handleSelectProjectForCreation(project.id)}
                         >
-                          Preparar primeiro time
+                          {t('firstTeam')}
                         </button>
                       ) : null}
                     </div>

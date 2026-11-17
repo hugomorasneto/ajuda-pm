@@ -1,3 +1,4 @@
+import { useCopy } from '../../i18n/context'
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
@@ -25,6 +26,7 @@ function isPublicConsentPath(pathname) {
 }
 
 function PrivacyConsentBanner() {
+  const t = useCopy('privacy')
   const location = useLocation()
   const [hasDecision, setHasDecision] = useState(() => Boolean(getPrivacyConsent()))
 
@@ -62,38 +64,35 @@ function PrivacyConsentBanner() {
       <div className="privacy-consent-banner__signal" aria-hidden="true" />
 
       <div className="privacy-consent-banner__content">
-        <p className="privacy-consent-banner__eyebrow">Privacidade na forja</p>
-        <h2 id="privacy-consent-title">Controle de dados opcionais</h2>
+        <p className="privacy-consent-banner__eyebrow">{t('eyebrow')}</p>
+        <h2 id="privacy-consent-title">{t('title')}</h2>
         <p id="privacy-consent-description">
-          Usamos tecnologias essenciais para login, segurança e funcionamento básico. Com sua
-          autorização, cookies analíticos ajudam a entender uso e melhorar o produto; cookies de
-          marketing ficam preparados para campanhas e mensuração futuras. Se algum recurso opcional
-          ainda não estiver ativo, sua escolha apenas registra a preferência para uso futuro.
+          {t('description')}
         </p>
         <p className="privacy-consent-banner__links">
-          <Link to="/politica-de-privacidade">Política de Privacidade</Link>
+          <Link to="/politica-de-privacidade">{t('policy')}</Link>
           <span aria-hidden="true">·</span>
-          <Link to="/termos-de-uso">Termos de Uso</Link>
+          <Link to="/termos-de-uso">{t('terms')}</Link>
         </p>
       </div>
 
-      <div className="privacy-consent-banner__actions" aria-label="Ações de consentimento">
+      <div className="privacy-consent-banner__actions" aria-label={t('actions')}>
         <button
           type="button"
           className="forge-button forge-button--ember forge-button--sm"
           onClick={() => handleDecision(PRIVACY_CONSENT_STATUS.accepted)}
         >
-          Aceitar todos
+          {t('accept')}
         </button>
         <button
           type="button"
           className="forge-button forge-button--metal forge-button--sm"
           onClick={() => handleDecision(PRIVACY_CONSENT_STATUS.essentialOnly)}
         >
-          Recusar opcionais
+          {t('reject')}
         </button>
         <Link className="forge-button forge-button--ghost forge-button--sm" to="/preferencias-de-privacidade">
-          Gerenciar preferências
+          {t('manage')}
         </Link>
       </div>
     </section>

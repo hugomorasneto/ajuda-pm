@@ -1,0 +1,13 @@
+{
+  "language": "Idioma",
+  "unavailable": "O inglês está disponível na prévia das páginas Sobre e Times.",
+  "selected": "Idioma selecionado: Português (Brasil).",
+  "loadingModules": "Carregando módulos",
+  "loadingInterface": "Organizando a interface",
+  "loadingContext": "Preservando o contexto",
+  "loadingLabel": "Carregando módulos do ProdForge",
+  "loading": "Carregando",
+  "preparing": "Preparando a experiência",
+  "preparingDetails": "Estamos carregando os módulos desta área para você continuar com o contexto preservado.",
+  "checkingSession": "Validando sessão..."
+}

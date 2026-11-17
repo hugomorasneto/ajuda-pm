@@ -1,0 +1,25 @@
+{
+  "version": "0.2",
+  "language": "en-US",
+  "caseSensitive": true,
+  "dictionaryDefinitions": [
+    {
+      "name": "prodforge-terms",
+      "path": "./cspell-project-words.txt",
+      "addWords": true
+    }
+  ],
+  "dictionaries": [
+    "prodforge-terms"
+  ],
+  "patterns": [
+    {
+      "name": "copy-source-marker",
+      "pattern": "^@@.*$"
+    }
+  ],
+  "ignoreRegExpList": [
+    "copy-source-marker",
+    "[\\w.-]+@[\\w.-]+\\.[a-z]+"
+  ]
+}

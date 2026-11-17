@@ -1,32 +1,35 @@
+import LanguageSwitcher from '../../i18n/LanguageSwitcher'
+import { useCopy, useLanguage } from '../../i18n/context'
 import { Link, useLocation } from 'react-router-dom'
-import { BRAND_MARK_SRC } from '../../constants/app'
+import { APP_NAME, BRAND_MARK_SRC } from '../../constants/app'
+import { usePageMetadata } from '../../hooks/usePageMetadata'
 
-const pageMeta = {
+const pageMeta = (t) => ({
   '/tool': {
-    title: 'Bancada de trabalho',
-    description: 'Espaço para transformar briefing em user story.',
+    title: t('workspaceTitle'),
+    description: t('workspaceDesc'),
   },
   '/historico': {
-    title: 'Peças forjadas',
-    description: 'Histórico das user stories geradas, versões e artefatos prontos para inspeção.',
+    title: t('history'),
+    description: t('historyDesc'),
   },
   '/projetos': {
-    title: 'Projetos',
-    description: 'Organize histórias por jornada quando fizer sentido.',
+    title: t('projects'),
+    description: t('projectsDesc'),
   },
   '/times': {
-    title: 'Times',
-    description: 'Gerencie guildas e membros por projeto.',
+    title: t('teams'),
+    description: t('teamsDesc'),
   },
   '/roda': {
-    title: 'Roda da Fogueira',
-    description: 'Crie e acompanhe estimativas colaborativas.',
+    title: t('planning'),
+    description: t('planningDesc'),
   },
   '/tool/admin': {
-    title: 'Administração da Forja',
-    description: 'Acompanhe operação, aquisição e uso do ProdForge.',
+    title: t('adminTitle'),
+    description: t('adminDesc'),
   },
-}
+})
 
 function IconMenu() {
   return (
@@ -39,18 +42,31 @@ function IconMenu() {
 }
 
 function WorkspaceTopbar({ onOpenSidebar, topbarStatus }) {
-  const location = useLocation()
+  const t = useCopy('navigation')
+  const { language, preview } = useLanguage()
+  const labels = pageMeta(t)
+  const { pathname } = useLocation()
+  const path = pathname.replace(/\/+$/, '')
   const isPlanningPokerRoute =
-    location.pathname === '/roda' || location.pathname.includes('/roda/')
-  const meta = pageMeta[location.pathname] ??
+    path === '/roda' || path.includes('/roda/')
+  const meta = labels[path] ??
     (isPlanningPokerRoute
-      ? pageMeta['/roda']
-      : location.pathname.startsWith('/projetos/')
-      ? pageMeta['/projetos']
+      ? labels['/roda']
+      : path.startsWith('/projetos/')
+      ? labels['/projetos']
       : {
-          title: 'Bancada de trabalho',
-          description: 'Ambiente interno do ProdForge.',
+          title: t('workspaceTitle'),
+          description: t('internal'),
         })
+
+  usePageMetadata({
+    enabled: preview || path === '/times',
+    language,
+    title: meta.title + ' · ' + APP_NAME,
+    description: meta.description,
+    path,
+    robots: 'noindex,follow',
+  })
 
   const hasStatus = Boolean(topbarStatus)
 
@@ -62,10 +78,10 @@ function WorkspaceTopbar({ onOpenSidebar, topbarStatus }) {
             type="button"
             className="workspace-topbar__menu"
             onClick={onOpenSidebar}
-            aria-label="Abrir navegação"
+            aria-label={t('openNav')}
           >
             <IconMenu />
-            <span>Menu</span>
+            <span>{t('menu')}</span>
           </button>
 
           <img
@@ -76,7 +92,7 @@ function WorkspaceTopbar({ onOpenSidebar, topbarStatus }) {
           />
 
           <div className="workspace-topbar__copy">
-            <p className="workspace-topbar__eyebrow">ProdForge</p>
+            <p className="workspace-topbar__eyebrow">{APP_NAME}</p>
             <h1>{meta.title}</h1>
             {!hasStatus && <p>{meta.description}</p>}
           </div>
@@ -98,13 +114,14 @@ function WorkspaceTopbar({ onOpenSidebar, topbarStatus }) {
 
         <div className="workspace-topbar__actions">
           <Link to="/aprender" className="workspace-topbar__link workspace-topbar__link--academy">
-            Campo de Treino
+            {t('training')}
           </Link>
           <Link to="/" className="workspace-topbar__link">
-            Site
+            {t('site')}
           </Link>
         </div>
       </div>
+      {preview && <div className="workspace-topbar__language"><LanguageSwitcher /></div>}
     </header>
   )
 }

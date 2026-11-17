@@ -1,3 +1,5 @@
+import { useCopy, useLanguage } from '../../i18n/context'
+import { teamOperationMessage, renderTeamMessage } from '../../utils/teamMessages'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   addTeamMemberByEmail,
@@ -6,20 +8,12 @@ import {
   updateTeamMemberRole,
 } from '../../services/teamsService'
 
-const TEAM_MEMBER_ROLES = [
-  { value: 'member', label: 'Membro' },
-  { value: 'admin', label: 'Admin' },
-  { value: 'viewer', label: 'Visualizador' },
-]
-
-const ROLE_LABELS = {
-  owner: 'Owner',
-  admin: 'Admin',
-  member: 'Membro',
-  viewer: 'Visualizador',
-}
+const EDITABLE_ROLES = ['member', 'admin', 'viewer']
+const KNOWN_ROLES = ['owner', ...EDITABLE_ROLES]
 
 function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
+  const t = useCopy('members')
+  const { language } = useLanguage()
   const teamId = team?.id
   const [members, setMembers] = useState([])
   const [email, setEmail] = useState('')
@@ -28,7 +22,7 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
   const [isAdding, setIsAdding] = useState(false)
   const [updatingMemberId, setUpdatingMemberId] = useState(null)
   const [removingMemberId, setRemovingMemberId] = useState(null)
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState(null)
 
   const currentUserTeamRole = useMemo(
     () => members.find((member) => member.user_id === userId)?.role ?? null,
@@ -36,8 +30,8 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
   )
   const canManageTeamMembers =
     canManageProjectMembers || currentUserTeamRole === 'owner' || currentUserTeamRole === 'admin'
-  const memberCountLabel = `${members.length} ${members.length === 1 ? 'membro' : 'membros'}`
-  const managementLabel = canManageTeamMembers ? 'Gestão liberada' : 'Somente leitura'
+  const memberCountLabel = t('memberCount', { count: members.length })
+  const managementLabel = canManageTeamMembers ? t('management') : t('readOnly')
 
   const loadMembers = useCallback(async () => {
     if (!teamId || !userId) return
@@ -51,7 +45,7 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
       return
     }
 
-    setMessage('Não foi possível carregar os membros deste time.')
+    setMessage({ key: 'loadFailed' })
   }, [teamId, userId])
 
   useEffect(() => {
@@ -64,10 +58,10 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
 
   async function handleAddMember(event) {
     event.preventDefault()
-    setMessage('')
+    setMessage(null)
 
     if (!canManageTeamMembers) {
-      setMessage('Apenas administradores do projeto ou do time podem adicionar membros.')
+      setMessage({ key: 'addPermission' })
       return
     }
 
@@ -82,32 +76,32 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
     setIsAdding(false)
 
     if (!response.success) {
-      setMessage(response.error?.message ?? 'Não foi possível adicionar o membro agora.')
+      setMessage(teamOperationMessage(response.error, 'addFailed'))
       return
     }
 
     setEmail('')
     setRole('member')
-    setMessage('Membro adicionado ao time.')
+    setMessage({ key: 'added' })
     await loadMembers()
   }
 
   async function handleUpdateMemberRole(member, nextRole) {
     if (!member || member.role === nextRole) return
-    setMessage('')
+    setMessage(null)
 
     if (!canManageTeamMembers) {
-      setMessage('Apenas administradores do projeto ou do time podem alterar papéis.')
+      setMessage({ key: 'editPermission' })
       return
     }
 
     if (member.role === 'owner') {
-      setMessage('O owner do time não pode ter o papel alterado por aqui.')
+      setMessage({ key: 'editOwner' })
       return
     }
 
     if (member.user_id === userId) {
-      setMessage('Você não pode alterar seu próprio papel por aqui.')
+      setMessage({ key: 'editSelf' })
       return
     }
 
@@ -121,36 +115,36 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
     setUpdatingMemberId(null)
 
     if (!response.success) {
-      setMessage(response.error?.message ?? 'Não foi possível alterar o papel deste membro.')
+      setMessage(teamOperationMessage(response.error, 'editFailed'))
       return
     }
 
     setMembers((current) =>
       current.map((item) => (item.user_id === member.user_id ? { ...item, role: nextRole } : item)),
     )
-    setMessage('Papel do membro atualizado.')
+    setMessage({ key: 'updated' })
   }
 
   async function handleRemoveMember(member) {
     if (!member) return
-    setMessage('')
+    setMessage(null)
 
     if (!canManageTeamMembers) {
-      setMessage('Apenas administradores do projeto ou do time podem remover membros.')
+      setMessage({ key: 'removePermission' })
       return
     }
 
     if (member.role === 'owner') {
-      setMessage('O owner do time não pode ser removido por aqui.')
+      setMessage({ key: 'removeOwner' })
       return
     }
 
     if (member.user_id === userId) {
-      setMessage('Você não pode remover seu próprio acesso por aqui.')
+      setMessage({ key: 'removeSelf' })
       return
     }
 
-    const confirmed = window.confirm(`Remover ${member.email} deste time?`)
+    const confirmed = window.confirm(t('confirmRemove', { email: member.email }))
     if (!confirmed) return
 
     setRemovingMemberId(member.user_id)
@@ -162,12 +156,12 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
     setRemovingMemberId(null)
 
     if (!response.success) {
-      setMessage(response.error?.message ?? 'Não foi possível remover este membro.')
+      setMessage(teamOperationMessage(response.error, 'removeFailed'))
       return
     }
 
     setMembers((current) => current.filter((item) => item.user_id !== member.user_id))
-    setMessage('Membro removido do time.')
+    setMessage({ key: 'removed' })
   }
 
   return (
@@ -175,63 +169,63 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
       <div className="project-detail-team__header">
         <div className="project-detail-team__title">
           <h3 title={team.name}>{team.name}</h3>
-          {team.description ? <p>{team.description}</p> : <p>Sem descrição.</p>}
+          {team.description ? <p>{team.description}</p> : <p>{t('noDescription')}</p>}
         </div>
-        <div className="project-detail-team__summary" aria-label="Resumo do time">
+        <div className="project-detail-team__summary" aria-label={t('summary')}>
           <span>{memberCountLabel}</span>
           <span>{managementLabel}</span>
         </div>
       </div>
 
       <div className="project-detail-team__guidance">
-        <strong>{canManageTeamMembers ? 'Adicionar pessoas cadastradas' : 'Consulta do time'}</strong>
+        <strong>{canManageTeamMembers ? t('addPeople') : t('viewTeam')}</strong>
         <p>
           {canManageTeamMembers
-            ? 'Inclua membros que já possuem conta no ProdForge e defina o papel de cada pessoa no time.'
-            : 'Você pode visualizar a composição do time. Alterações ficam com administradores do projeto ou do time.'}
+            ? t('addHelp')
+            : t('viewHelp')}
         </p>
       </div>
 
       {canManageTeamMembers ? (
         <form className="project-detail-team__member-form" onSubmit={handleAddMember}>
           <label className="projects-page__field">
-            <span>E-mail do participante</span>
+            <span>{t('email')}</span>
             <input
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="pessoa@empresa.com"
+              placeholder={t('emailExample')}
               disabled={isAdding}
               required
             />
           </label>
           <label className="projects-page__field">
-            <span>Papel</span>
+            <span>{t('role')}</span>
             <select value={role} onChange={(event) => setRole(event.target.value)} disabled={isAdding}>
-              {TEAM_MEMBER_ROLES.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+              {EDITABLE_ROLES.map((option) => (
+                <option key={option} value={option}>
+                  {t(option)}
                 </option>
               ))}
             </select>
           </label>
           <button type="submit" className="btn btn-secondary btn-small" disabled={isAdding || !email.trim()}>
-            {isAdding ? 'Adicionando...' : 'Adicionar ao time'}
+            {isAdding ? t('adding') : t('add')}
           </button>
         </form>
       ) : (
         <p className="projects-page__state">
-          Você pode consultar os membros. Apenas administradores do projeto ou do time adicionam novas pessoas.
+          {t('viewOnly')}
         </p>
       )}
 
-      {message ? <p className="projects-page__message">{message}</p> : null}
-      {isLoading ? <p className="projects-page__state">Carregando membros...</p> : null}
+      {message ? <p className="projects-page__message" role="status">{renderTeamMessage(t, message, language)}</p> : null}
+      {isLoading ? <p className="projects-page__state">{t('loading')}</p> : null}
 
       <div className="project-detail-team__members">
         {!isLoading && members.length === 0 ? (
           <div className="project-detail-team__member project-detail-team__member--empty">
-            <span>Nenhum membro cadastrado neste time.</span>
+            <span>{t('empty')}</span>
           </div>
         ) : null}
         {members.map((member) => {
@@ -244,20 +238,20 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
             <div key={member.user_id} className="project-detail-team__member">
               <div className="project-detail-team__member-identity">
                 <span title={member.email}>{member.email}</span>
-                <small>{member.user_id === userId ? 'Você' : 'Integrante do time'}</small>
+                <small>{member.user_id === userId ? t('you') : t('teamMember')}</small>
               </div>
               {canEditMember ? (
                 <div className="project-detail-team__member-controls">
                   <label className="project-detail-team__member-role">
-                    <span>Papel</span>
+                    <span>{t('role')}</span>
                     <select
                       value={member.role}
                       onChange={(event) => handleUpdateMemberRole(member, event.target.value)}
                       disabled={isUpdatingMember || isRemovingMember}
                     >
-                      {TEAM_MEMBER_ROLES.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
+                      {EDITABLE_ROLES.map((option) => (
+                        <option key={option} value={option}>
+                          {t(option)}
                         </option>
                       ))}
                     </select>
@@ -268,12 +262,12 @@ function TeamMembersPanel({ team, userId, canManageProjectMembers }) {
                     onClick={() => handleRemoveMember(member)}
                     disabled={isUpdatingMember || isRemovingMember}
                   >
-                    {isRemovingMember ? 'Removendo...' : 'Remover'}
+                    {isRemovingMember ? t('removing') : t('remove')}
                   </button>
                 </div>
               ) : (
                 <strong className={`project-detail-team__role-badge project-detail-team__role-badge--${member.role}`}>
-                  {ROLE_LABELS[member.role] ?? member.role}
+                  {KNOWN_ROLES.includes(member.role) ? t(member.role) : member.role}
                 </strong>
               )}
             </div>

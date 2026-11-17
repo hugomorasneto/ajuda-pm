@@ -8,11 +8,14 @@ const DEFAULT_TARGETS = [
   'src/App.jsx',
   'src/components',
   'src/content',
+  'src/i18n/locales',
   'src/hooks/usePageMetadata.js',
   'src/layout',
   'src/pages',
   'aprender',
   'index.html',
+  'sobre',
+  'en',
   'public/site.webmanifest',
 ]
 
@@ -179,6 +182,7 @@ function normalizeCopy(value) {
   return decodeHtmlEntities(value)
     .replace(/\$\{[\s\S]*?\}/g, ' ')
     .replace(/\\[nrt]/g, ' ')
+    .replace(/\{\{[\s\S]*?\}\}/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 }
@@ -357,10 +361,27 @@ function collectHtmlTitleText(source, file) {
   return items
 }
 
-export function collectVisibleCopy() {
+export function collectVisibleCopy(language = 'pt-BR') {
   return listCopyFiles().flatMap((absolutePath) => {
     const source = fs.readFileSync(absolutePath, 'utf8')
     const relativePath = toPosix(path.relative(ROOT_DIR, absolutePath))
+    const itemLanguage = /^(?:en\/|src\/(?:content|i18n\/locales)\/en\/)/.test(relativePath)
+      ? 'en'
+      : 'pt-BR'
+    if (itemLanguage !== language) return []
+
+    if (relativePath.startsWith('src/i18n/locales/') || relativePath.endsWith('/aboutMetadata.json')) {
+      function values(object) {
+        return Object.values(object).flatMap((value) => typeof value === 'string' ? [value] : values(value))
+      }
+      return values(JSON.parse(source)).map((value) => ({
+        file: relativePath,
+        line: 1,
+        column: 1,
+        text: normalizeCopy(value),
+      }))
+    }
+
     const items = [
       ...collectQuotedStrings(source, relativePath),
       ...collectJsxText(source, relativePath),
@@ -374,7 +395,7 @@ export function collectVisibleCopy() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  for (const item of collectVisibleCopy()) {
+  for (const item of collectVisibleCopy(process.argv[2])) {
     process.stdout.write(`@@ ${item.file}:${item.line}:${item.column}\n`)
     process.stdout.write(`${item.text}\n`)
   }
