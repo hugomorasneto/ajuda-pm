@@ -1,7 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCopy, useLanguage } from '../i18n/context'
+import LanguageSwitcher from '../i18n/LanguageSwitcher'
+import { formatNotice } from '../i18n/formatNotice'
+import { useLearningCatalog } from '../hooks/useLearningCatalog'
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import {
   APP_NAME,
+  FREE_GENERATION_LIMIT,
+  FREE_PLAN_NAME,
+  PRO_PLAN_NAME,
   MAX_FORGE_LIMIT_OVERRIDE,
   PLAN_VALUES,
   getEffectiveForgeLimit,
@@ -12,37 +19,37 @@ import { updateAdminUserAccess } from '../services/adminUserAccessService'
 import '../styles/pages.css'
 
 const periodOptions = [
-  { value: 'today', label: 'Hoje' },
-  { value: '7d', label: 'Últimos 7 dias' },
-  { value: '30d', label: 'Últimos 30 dias' },
+  { value: 'today', label: 'today' },
+  { value: '7d', label: 'last_7_days' },
+  { value: '30d', label: 'last_30_days' },
 ]
 
 const adminTabs = [
-  { id: 'overview', label: 'Visão geral' },
-  { id: 'leads', label: 'Interessados' },
-  { id: 'users', label: 'Usuários' },
-  { id: 'usage', label: 'Uso' },
-  { id: 'stories', label: 'Peças' },
-  { id: 'learning', label: 'Aprendizado' },
+  { id: 'overview', label: 'overview' },
+  { id: 'leads', label: 'leads' },
+  { id: 'users', label: 'users' },
+  { id: 'usage', label: 'usage' },
+  { id: 'stories', label: 'artifacts' },
+  { id: 'learning', label: 'learning' },
 ]
 
 const accessPlanOptions = [
-  { value: PLAN_VALUES.FREE, label: 'Free' },
-  { value: PLAN_VALUES.PRO, label: 'Pro' },
+  { value: PLAN_VALUES.FREE, label: FREE_PLAN_NAME },
+  { value: PLAN_VALUES.PRO, label: PRO_PLAN_NAME },
 ]
 
 const emptyDash = '—'
 
-function formatNumber(value) {
-  return new Intl.NumberFormat('pt-BR').format(Number(value ?? 0))
+function formatNumber(value, language) {
+  return new Intl.NumberFormat(language).format(Number(value ?? 0))
 }
 
-function formatDateTime(value) {
+function formatDateTime(value, language) {
   if (!value) return emptyDash
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return emptyDash
 
-  return new Intl.DateTimeFormat('pt-BR', {
+  return new Intl.DateTimeFormat(language, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -51,38 +58,39 @@ function formatDateTime(value) {
   }).format(date)
 }
 
-function formatDay(value) {
+function formatDay(value, language) {
   if (!value) return emptyDash
   const date = new Date(`${value}T00:00:00`)
   if (Number.isNaN(date.getTime())) return value
 
-  return new Intl.DateTimeFormat('pt-BR', {
+  return new Intl.DateTimeFormat(language, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
   }).format(date)
 }
 
-function formatPercent(value) {
-  return `${Number(value ?? 0).toFixed(1)}%`
+function formatPercent(value, language) {
+  return new Intl.NumberFormat(language, {
+    style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1,
+  }).format(Number(value ?? 0) / 100)
 }
 
 function formatPlan(plan) {
-  if (plan === 'premium') return 'Pro'
-  return 'Free'
+  return plan === PLAN_VALUES.PRO ? PRO_PLAN_NAME : FREE_PLAN_NAME
 }
 
-function formatRole(role) {
-  if (role === 'admin') return 'Admin'
-  return 'Usuário'
+function formatRole(role, t) {
+  if (role === 'admin') return t('admin')
+  return t('user')
 }
 
-function formatStoryStatus(status) {
+function formatStoryStatus(status, t) {
   const statusLabels = {
-    generated: 'Forjada',
-    reviewed: 'Inspecionada',
-    approved: 'Aprovada',
-    archived: 'Arquivada',
+    generated: t('forged'),
+    reviewed: t('reviewed'),
+    approved: t('approved'),
+    archived: t('archived'),
   }
 
   return statusLabels[status] ?? status ?? emptyDash
@@ -115,12 +123,12 @@ function isUserAtForgeLimit(user) {
   return limit !== null && Number(user?.stories_count ?? 0) >= limit
 }
 
-function formatForgeLimit(limit) {
-  return limit === null ? 'Ilimitado' : formatNumber(limit)
+function formatForgeLimit(limit, language, t) {
+  return limit === null ? t('unlimited') : formatNumber(limit, language)
 }
 
-function formatRemainingForges(remaining) {
-  return remaining === null ? 'Ilimitadas' : formatNumber(remaining)
+function formatRemainingForges(remaining, language, t) {
+  return remaining === null ? t('unlimited_2') : formatNumber(remaining, language)
 }
 
 function parseForgeLimitOverride(value) {
@@ -128,12 +136,12 @@ function parseForgeLimitOverride(value) {
   if (!rawValue) return null
 
   if (!/^\d+$/.test(rawValue)) {
-    throw new Error(`Informe um limite inteiro entre 0 e ${MAX_FORGE_LIMIT_OVERRIDE}.`)
+    return NaN
   }
 
   const parsed = Number(rawValue)
   if (!Number.isSafeInteger(parsed) || parsed < 0 || parsed > MAX_FORGE_LIMIT_OVERRIDE) {
-    throw new Error(`Informe um limite inteiro entre 0 e ${MAX_FORGE_LIMIT_OVERRIDE}.`)
+    return NaN
   }
 
   return parsed
@@ -156,26 +164,45 @@ function StateCard({ tone = 'default', children }) {
   return (
     <div className={`admin-state-card ${tone === 'error' ? 'admin-state-card--error' : ''}`.trim()}>
       {tone === 'loading' ? <div className="admin-state-card__spinner" aria-hidden="true" /> : null}
-      <p>{children}</p>
+      <p role={tone === 'error' ? 'alert' : 'status'}>{children}</p>
     </div>
   )
 }
 
 function AdminTabs({ activeTab, onChange }) {
+  const t = useCopy('admin')
+
+  function handleKeyDown(event) {
+    const index = adminTabs.findIndex((tab) => tab.id === activeTab)
+    const last = adminTabs.length - 1
+    const next = {
+      ArrowLeft: index === 0 ? last : index - 1,
+      ArrowRight: index === last ? 0 : index + 1,
+      Home: 0,
+      End: last,
+    }[event.key]
+    if (!Number.isInteger(next)) return
+
+    event.preventDefault()
+    onChange(adminTabs[next].id)
+    event.currentTarget.children[next].focus()
+  }
+
   return (
-    <div className="admin-tabs" role="tablist" aria-label="Seções administrativas">
+    <div className="admin-tabs" role="tablist" aria-label={t('administration_sections')} onKeyDown={handleKeyDown}>
       {adminTabs.map((tab) => (
         <button
           key={tab.id}
           id={`admin-tab-${tab.id}`}
           type="button"
           role="tab"
-          aria-controls={`admin-panel-${tab.id}`}
+          aria-controls={activeTab === tab.id ? `admin-panel-${tab.id}` : undefined}
+          tabIndex={activeTab === tab.id ? 0 : -1}
           aria-selected={activeTab === tab.id}
           className={`admin-tabs__button ${activeTab === tab.id ? 'admin-tabs__button--active' : ''}`}
           onClick={() => onChange(tab.id)}
         >
-          {tab.label}
+          {t(tab.label)}
         </button>
       ))}
     </div>
@@ -198,6 +225,7 @@ function SearchField({ id, label, placeholder, value, onChange }) {
 }
 
 function DataTable({ title, description, columns, rows, renderRow, emptyMessage }) {
+  const titleId = useId()
   let tableRows = (
     <tr>
       <td colSpan={columns.length} className="admin-table__empty">
@@ -213,15 +241,15 @@ function DataTable({ title, description, columns, rows, renderRow, emptyMessage 
   return (
     <section className="admin-table-section">
       <div className="admin-table-section__header">
-        <h2 className="admin-table-section__title">{title}</h2>
+        <h2 id={titleId} className="admin-table-section__title">{title}</h2>
         {description ? <p className="admin-table-section__desc">{description}</p> : null}
       </div>
-      <div className="admin-table-wrap">
+      <div className="admin-table-wrap" role="region" aria-labelledby={titleId} tabIndex={0}>
         <table className="admin-table">
           <thead>
             <tr>
               {columns.map((col) => (
-                <th key={col}>{col}</th>
+                <th scope="col" key={col}>{col}</th>
               ))}
             </tr>
           </thead>
@@ -233,16 +261,20 @@ function DataTable({ title, description, columns, rows, renderRow, emptyMessage 
 }
 
 function Pagination({ page, totalPages, totalCount, onPageChange }) {
+  const t = useCopy('admin')
+  const { language } = useLanguage()
   if (!totalCount) return null
 
   const safeTotalPages = Math.max(totalPages, 1)
 
   return (
-    <div className="admin-pagination" aria-label="Paginação">
-      <p>
-        Página {page} de {safeTotalPages} · {formatNumber(totalCount)} registro
-        {totalCount === 1 ? '' : 's'}
-      </p>
+    <nav className="admin-pagination" aria-label={t('pagination')}>
+      <p>{t('page_record_count', {
+        count: totalCount,
+        page: formatNumber(page, language),
+        pages: formatNumber(safeTotalPages, language),
+        records: formatNumber(totalCount, language),
+      })}</p>
       <div className="admin-pagination__actions">
         <button
           type="button"
@@ -250,7 +282,7 @@ function Pagination({ page, totalPages, totalCount, onPageChange }) {
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
         >
-          Anterior
+          {t('previous')}
         </button>
         <button
           type="button"
@@ -258,10 +290,10 @@ function Pagination({ page, totalPages, totalCount, onPageChange }) {
           disabled={page >= safeTotalPages}
           onClick={() => onPageChange(page + 1)}
         >
-          Próxima
+          {t('next')}
         </button>
       </div>
-    </div>
+    </nav>
   )
 }
 
@@ -289,10 +321,17 @@ function AccessSummaryItem({ label, value }) {
 }
 
 function UserAccessModal({ user, isSaving, feedback, onClose, onSave }) {
+  const t = useCopy('admin')
+  const { language } = useLanguage()
   const [form, setForm] = useState(() => buildAccessForm(user))
   const [localError, setLocalError] = useState('')
+  const dialogRef = useRef(null)
 
-  if (!user) return null
+  useLayoutEffect(() => {
+    const dialog = dialogRef.current
+    dialog.showModal()
+    return () => dialog.close()
+  }, [])
 
   const currentLimit = getUserEffectiveForgeLimit(user)
   const remainingForges = getUserRemainingForges(user)
@@ -311,15 +350,13 @@ function UserAccessModal({ user, isSaving, feedback, onClose, onSave }) {
     setLocalError('')
 
     if (!accessPlanOptions.some((option) => option.value === form.plan)) {
-      setLocalError('Escolha um plano válido.')
+      setLocalError('choose_a_valid_plan')
       return
     }
 
-    let forgeLimitOverride = null
-    try {
-      forgeLimitOverride = parseForgeLimitOverride(form.forgeLimitOverride)
-    } catch (error) {
-      setLocalError(error instanceof Error ? error.message : 'Informe um limite válido.')
+    const forgeLimitOverride = parseForgeLimitOverride(form.forgeLimitOverride)
+    if (Number.isNaN(forgeLimitOverride)) {
+      setLocalError('forge_limit_range')
       return
     }
 
@@ -331,50 +368,50 @@ function UserAccessModal({ user, isSaving, feedback, onClose, onSave }) {
   }
 
   return (
-    <div className="admin-access-modal" role="presentation">
-      <button
-        type="button"
-        className="admin-access-modal__backdrop"
-        aria-label="Cancelar gerenciamento de acesso"
-        onClick={onClose}
-      />
-
-      <form
-        className="admin-access-modal__panel"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="admin-access-modal-title"
-        onSubmit={handleSubmit}
-      >
+    <dialog
+      ref={dialogRef}
+      className="admin-access-modal"
+      aria-labelledby="admin-access-modal-title"
+      onCancel={(event) => {
+        event.preventDefault()
+        onClose()
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose()
+      }}
+    >
+      <form className="admin-access-modal__panel" onSubmit={handleSubmit}>
         <div className="admin-access-modal__header">
           <div>
-            <p className="admin-section-label">Acesso do usuário</p>
-            <h2 id="admin-access-modal-title">Gerenciar acesso</h2>
+            <p className="admin-section-label">{t('user_access')}</p>
+            <h2 id="admin-access-modal-title">{t('manage_access')}</h2>
             <p>{user.email}</p>
           </div>
-          <button type="button" className="admin-button admin-button--compact" onClick={onClose}>
-            Cancelar
+          <button type="button" className="admin-button admin-button--compact" onClick={onClose} disabled={isSaving}>
+            {t('cancel')}
           </button>
         </div>
 
+        <LanguageSwitcher />
+
         <dl className="admin-access-summary">
-          <AccessSummaryItem label="Papel atual" value={formatRole(user.role)} />
-          <AccessSummaryItem label="Plano atual" value={formatPlan(user.plan)} />
-          <AccessSummaryItem label="Usadas" value={formatNumber(user.stories_count)} />
-          <AccessSummaryItem label="Limite" value={formatForgeLimit(currentLimit)} />
-          <AccessSummaryItem label="Restantes" value={formatRemainingForges(remainingForges)} />
-          <AccessSummaryItem label="Última atividade" value={formatDateTime(user.last_activity_at)} />
+          <AccessSummaryItem label={t('current_role')} value={formatRole(user.role, t)} />
+          <AccessSummaryItem label={t('current_plan')} value={formatPlan(user.plan)} />
+          <AccessSummaryItem label={t('used')} value={formatNumber(user.stories_count, language)} />
+          <AccessSummaryItem label={t('limit')} value={formatForgeLimit(currentLimit, language, t)} />
+          <AccessSummaryItem label={t('remaining')} value={formatRemainingForges(remainingForges, language, t)} />
+          <AccessSummaryItem label={t('last_activity')} value={formatDateTime(user.last_activity_at, language)} />
         </dl>
 
         {limitReached ? (
           <p className="admin-access-modal__limit-warning" role="status">
-            Limite atingido
+            {t('limit_reached')}
           </p>
         ) : null}
 
         <div className="admin-access-modal__fields">
           <label className="admin-access-field">
-            <span>Plano</span>
+            <span>{t('plan')}</span>
             <select
               value={form.plan}
               onChange={(event) => updateForm('plan', event.target.value)}
@@ -389,28 +426,36 @@ function UserAccessModal({ user, isSaving, feedback, onClose, onSave }) {
           </label>
 
           <label className="admin-access-field">
-            <span>Limite de forjas</span>
+            <span id="admin-forge-limit-label">{t('forge_limit')}</span>
             <input
               type="number"
               min="0"
               max={MAX_FORGE_LIMIT_OVERRIDE}
               step="1"
               inputMode="numeric"
+              aria-labelledby="admin-forge-limit-label"
+              aria-describedby="admin-forge-limit-help"
+              aria-invalid={localError === 'forge_limit_range' || undefined}
+              onInvalid={(event) => {
+                event.preventDefault()
+                event.currentTarget.focus()
+                setLocalError('forge_limit_range')
+              }}
               value={form.forgeLimitOverride}
-              placeholder="Usar padrão do plano"
+              placeholder={t('use_plan_default')}
               onChange={(event) => updateForm('forgeLimitOverride', event.target.value)}
               disabled={isSaving}
             />
-            <small>
-              Deixe em branco para usar o padrão do plano. O plano Free mantém 10 forjas.
+            <small id="admin-forge-limit-help">
+              {t('leave_blank_to_use_the_plan_default', { count: FREE_GENERATION_LIMIT })}
             </small>
           </label>
 
           <label className="admin-access-field">
-            <span>Observação administrativa</span>
+            <span>{t('administrative_note')}</span>
             <textarea
               value={form.notes}
-              placeholder="Motivo da alteração"
+              placeholder={t('reason_for_the_change')}
               rows="3"
               onChange={(event) => updateForm('notes', event.target.value)}
               disabled={isSaving}
@@ -425,78 +470,80 @@ function UserAccessModal({ user, isSaving, feedback, onClose, onSave }) {
             }`}
             role={shownFeedback.tone === 'error' ? 'alert' : 'status'}
           >
-            {shownFeedback.message}
+            {formatNotice(t, { key: shownFeedback.message, values: { max: formatNumber(MAX_FORGE_LIMIT_OVERRIDE, language) } })}
           </p>
         ) : null}
 
         <div className="admin-access-modal__actions">
           <button type="button" className="admin-button" onClick={onClose} disabled={isSaving}>
-            Cancelar
+            {t('cancel')}
           </button>
           <button type="submit" className="admin-button admin-button--primary" disabled={isSaving}>
-            {isSaving ? 'Salvando...' : 'Salvar alterações'}
+            {isSaving ? t('saving') : t('save_changes')}
           </button>
         </div>
       </form>
-    </div>
+    </dialog>
   )
 }
 
 function OverviewTab({ dashboard, periodLabel }) {
+  const t = useCopy('admin')
+  const { language } = useLanguage()
   const overview = dashboard.overview
 
   const metrics = [
     {
-      label: 'Interessados totais',
-      value: formatNumber(overview.totalLeads),
-      note: `${formatNumber(overview.periodLeads)} no período`,
+      label: t('total_leads'),
+      value: formatNumber(overview.totalLeads, language),
+      note: t('in_this_period', { p1: formatNumber(overview.periodLeads, language) }),
       tone: 'tech',
     },
     {
-      label: 'Usuários totais',
-      value: formatNumber(overview.totalUsers),
-      note: `${formatNumber(overview.periodUsers)} novos no período`,
+      label: t('total_users'),
+      value: formatNumber(overview.totalUsers, language),
+      note: t('new_in_this_period', { p1: formatNumber(overview.periodUsers, language) }),
       tone: 'success',
     },
     {
-      label: 'Peças forjadas',
-      value: formatNumber(overview.totalStories),
-      note: `${formatNumber(overview.periodStories)} no período`,
+      label: t('forged_artifacts'),
+      value: formatNumber(overview.totalStories, language),
+      note: t('in_this_period', { p1: formatNumber(overview.periodStories, language) }),
       tone: 'ember',
     },
     {
-      label: 'Usuários ativos',
-      value: formatNumber(overview.activeUsers),
+      label: t('active_users'),
+      value: formatNumber(overview.activeUsers, language),
       note: periodLabel,
     },
     {
-      label: 'Conclusões de guias',
-      value: formatNumber(overview.totalLearningCompletions),
-      note: `${formatNumber(overview.periodLearningCompletions)} no período`,
+      label: t('guide_completions'),
+      value: formatNumber(overview.totalLearningCompletions, language),
+      note: t('in_this_period', { p1: formatNumber(overview.periodLearningCompletions, language) }),
       tone: 'tech',
     },
     {
-      label: 'Gerações com sucesso',
-      value: formatNumber(overview.generationSuccess),
+      label: t('successful_generations'),
+      value: formatNumber(overview.generationSuccess, language),
       note: periodLabel,
       tone: 'success',
     },
     {
-      label: 'Falhas de geração',
-      value: formatNumber(overview.generationFailures),
-      note: `Taxa de falha: ${formatPercent(overview.failureRate)}`,
+      label: t('generation_failures'),
+      value: formatNumber(overview.generationFailures, language),
+      note: t('failure_rate', { p1: formatPercent(overview.failureRate, language) }),
       tone: 'danger',
     },
     {
-      label: 'Eventos registrados',
-      value: formatNumber(dashboard.usage.overview.total_events),
-      note: `${formatNumber(dashboard.usage.overview.unique_users)} usuários únicos`,
+      label: t('recorded_events'),
+      value: formatNumber(dashboard.usage.overview.total_events, language),
+      note: t('unique_users', { p1: formatNumber(dashboard.usage.overview.unique_users, language) }),
     },
   ]
 
   return (
     <section className="admin-metrics-section">
-      <p className="admin-section-label">Resumo operacional</p>
+      <p className="admin-section-label">{t('operational_overview')}</p>
       <div className="admin-metrics-grid">
         {metrics.map((metric) => (
           <MetricCard key={metric.label} {...metric} />
@@ -507,28 +554,30 @@ function OverviewTab({ dashboard, periodLabel }) {
 }
 
 function LeadsTab({ data, search, onSearchChange, onPageChange }) {
+  const t = useCopy('admin')
+  const { language } = useLanguage()
   return (
     <>
       <AdminSectionToolbar>
         <SearchField
           id="admin-leads-search"
-          label="Buscar interessados"
-          placeholder="Nome ou e-mail"
+          label={t('search_leads')}
+          placeholder={t('name_or_email')}
           value={search}
           onChange={onSearchChange}
         />
       </AdminSectionToolbar>
       <DataTable
-        title="Lista de interessados"
-        description="Pessoas que registraram interesse na lista pública."
-        columns={['Nome', 'E-mail', 'Entrada']}
+        title={t('lead_list')}
+        description={t('people_who_joined_the_public_interest_list')}
+        columns={[t('name'), t('email'), t('date_added')]}
         rows={data.rows}
-        emptyMessage="Nenhuma pessoa interessada encontrada."
+        emptyMessage={t('no_leads_found')}
         renderRow={(lead) => (
           <tr key={lead.id}>
             <td>{lead.name}</td>
             <td>{lead.email}</td>
-            <td>{formatDateTime(lead.created_at)}</td>
+            <td>{formatDateTime(lead.created_at, language)}</td>
           </tr>
         )}
       />
@@ -538,23 +587,25 @@ function LeadsTab({ data, search, onSearchChange, onPageChange }) {
 }
 
 function UsersTab({ data, search, onSearchChange, onPageChange, onManageAccess }) {
+  const t = useCopy('admin')
+  const { language } = useLanguage()
   return (
     <>
       <AdminSectionToolbar>
         <SearchField
           id="admin-users-search"
-          label="Buscar usuários"
-          placeholder="E-mail do usuário"
+          label={t('search_users')}
+          placeholder={t('user_email')}
           value={search}
           onChange={onSearchChange}
         />
       </AdminSectionToolbar>
       <DataTable
-        title="Usuários"
-        description="Contas criadas, papel, plano e atividade recente."
-        columns={['E-mail', 'Plano', 'Papel', 'Cadastro', 'Última atividade', 'Histórias', 'Guias', 'Acesso']}
+        title={t('users')}
+        description={t('registered_accounts_roles_plans_and_recent_activity')}
+        columns={[t('email'), t('plan'), t('role'), t('signed_up'), t('last_activity'), t('stories'), t('guides'), t('access')]}
         rows={data.rows}
-        emptyMessage="Nenhum usuário encontrado."
+        emptyMessage={t('no_users_found')}
         renderRow={(user) => (
           <tr key={user.id}>
             <td>{user.email}</td>
@@ -562,22 +613,22 @@ function UsersTab({ data, search, onSearchChange, onPageChange, onManageAccess }
               <span className="admin-user-plan-cell">
                 <span>{formatPlan(user.plan)}</span>
                 {isUserAtForgeLimit(user) ? (
-                  <span className="admin-badge admin-badge--warning">Limite atingido</span>
+                  <span className="admin-badge admin-badge--warning">{t('limit_reached')}</span>
                 ) : null}
               </span>
             </td>
             <td>
               <span className={`admin-badge ${user.role === 'admin' ? 'admin-badge--strong' : ''}`}>
-                {formatRole(user.role)}
+                {formatRole(user.role, t)}
               </span>
             </td>
-            <td>{formatDateTime(user.created_at)}</td>
-            <td>{formatDateTime(user.last_activity_at)}</td>
-            <td>{formatNumber(user.stories_count)}</td>
-            <td>{formatNumber(user.guides_count)}</td>
+            <td>{formatDateTime(user.created_at, language)}</td>
+            <td>{formatDateTime(user.last_activity_at, language)}</td>
+            <td>{formatNumber(user.stories_count, language)}</td>
+            <td>{formatNumber(user.guides_count, language)}</td>
             <td>
               <button type="button" className="admin-button admin-button--compact" onClick={() => onManageAccess(user)}>
-                Gerenciar
+                {t('manage')}
               </button>
             </td>
           </tr>
@@ -589,109 +640,109 @@ function UsersTab({ data, search, onSearchChange, onPageChange, onManageAccess }
 }
 
 function UsageTab({ usage }) {
+  const t = useCopy('admin')
+  const { language } = useLanguage()
   return (
     <>
       <section className="admin-metrics-section">
-        <p className="admin-section-label">Uso da ferramenta</p>
+        <p className="admin-section-label">{t('tool_usage')}</p>
         <div className="admin-metrics-grid">
           <MetricCard
-            label="Gerações com sucesso"
-            value={formatNumber(usage.operational.total_generate_success)}
+            label={t('successful_generations')}
+            value={formatNumber(usage.operational.total_generate_success, language)}
             tone="success"
           />
           <MetricCard
-            label="Falhas de geração"
-            value={formatNumber(usage.operational.total_generate_failed)}
+            label={t('generation_failures')}
+            value={formatNumber(usage.operational.total_generate_failed, language)}
             tone="danger"
           />
           <MetricCard
-            label="Taxa de falha"
-            value={formatPercent(usage.operational.generation_failure_rate)}
+            label={t('failure_rate_2')}
+            value={formatPercent(usage.operational.generation_failure_rate, language)}
             tone="warning"
           />
           <MetricCard
-            label="Atingiram limite Free"
-            value={formatNumber(usage.operational.users_reached_free_limit)}
+            label={t('reached_the_free_limit')}
+            value={formatNumber(usage.operational.users_reached_free_limit, language)}
             tone="tech"
           />
           <MetricCard
-            label="Workspace sem geração"
-            value={formatPercent(usage.operational.tool_without_generation_rate)}
-            note={`${formatNumber(usage.operational.tool_users_without_generation)} de ${formatNumber(
-              usage.operational.tool_users_total,
-            )} usuários`}
+            label={t('opened_workspace_without_generating')}
+            value={formatPercent(usage.operational.tool_without_generation_rate, language)}
+            note={t('of_users', { p1: formatNumber(usage.operational.tool_users_without_generation, language), p2: formatNumber(usage.operational.tool_users_total, language) })}
           />
         </div>
       </section>
 
       <DataTable
-        title="Funil principal"
-        description="Conversão entre etapas de aquisição e uso do produto."
-        columns={['Etapa', 'Volume', 'Conversão da etapa anterior']}
+        title={t('main_funnel')}
+        description={t('conversion_across_acquisition_and_product_usage_steps')}
+        columns={[t('step'), t('volume'), t('conversion_from_previous_step')]}
         rows={usage.funnel.steps}
-        emptyMessage="Nenhuma etapa encontrada."
+        emptyMessage={t('no_funnel_steps_found')}
         renderRow={(item) => (
           <tr key={item.step}>
             <td>
               <code className="admin-event-code">{item.step}</code>
             </td>
-            <td>{formatNumber(item.count)}</td>
-            <td>{item.conversion_from_previous === null ? emptyDash : formatPercent(item.conversion_from_previous)}</td>
+            <td>{formatNumber(item.count, language)}</td>
+            <td>{item.conversion_from_previous === null ? emptyDash : formatPercent(item.conversion_from_previous, language)}</td>
           </tr>
         )}
       />
       <p className="admin-inline-note">
-        Conversão total da landing para geração:{' '}
-        <strong>{formatPercent(usage.funnel.final_completion_rate)}</strong>
+        {t('overall_conversion_from_landing_page_to_generation')}{' '}
+        <strong>{formatPercent(usage.funnel.final_completion_rate, language)}</strong>
       </p>
 
       <DataTable
-        title="Atividade por dia"
-        description="Resumo diário de eventos e conversões principais."
-        columns={['Data', 'Eventos', 'Gerações', 'Cadastros']}
+        title={t('daily_activity')}
+        description={t('daily_summary_of_events_and_key_conversions')}
+        columns={[t('date'), t('events'), t('generations'), t('sign_ups')]}
         rows={usage.dailyActivity}
-        emptyMessage="Nenhuma atividade encontrada."
+        emptyMessage={t('no_activity_found')}
         renderRow={(day) => (
           <tr key={day.day}>
-            <td>{formatDay(day.day)}</td>
-            <td>{formatNumber(day.total_events)}</td>
-            <td>{formatNumber(day.user_story_generate_success)}</td>
-            <td>{formatNumber(day.signup_completed)}</td>
+            <td>{formatDay(day.day, language)}</td>
+            <td>{formatNumber(day.total_events, language)}</td>
+            <td>{formatNumber(day.user_story_generate_success, language)}</td>
+            <td>{formatNumber(day.signup_completed, language)}</td>
           </tr>
         )}
       />
 
       <DataTable
-        title="Eventos recentes"
-        columns={['Evento', 'Usuário', 'Página', 'Data e hora']}
+        title={t('recent_events')}
+        columns={[t('event'), t('user'), t('page'), t('date_and_time')]}
         rows={usage.recentEvents}
-        emptyMessage="Nenhum evento recente."
+        emptyMessage={t('no_recent_events')}
         renderRow={(event) => (
           <tr key={event.id}>
             <td>
               <code className="admin-event-code">{event.event_name}</code>
             </td>
-            <td>{event.user_email ?? event.user_id ?? 'anônimo'}</td>
+            <td>{event.user_email ?? event.user_id ?? t('anonymous')}</td>
             <td>{event.page_path ?? emptyDash}</td>
-            <td>{formatDateTime(event.created_at)}</td>
+            <td>{formatDateTime(event.created_at, language)}</td>
           </tr>
         )}
       />
 
       <DataTable
-        title="Resumo por evento"
-        description="Ordenado por maior volume no período selecionado."
-        columns={['Evento', 'Quantidade', '% do total']}
+        title={t('events_by_type')}
+        description={t('sorted_by_highest_volume_in_the_selected')}
+        columns={[t('event'), t('count'), t('of_total')]}
         rows={usage.groupedEvents}
-        emptyMessage="Nenhum evento agrupado."
+        emptyMessage={t('no_grouped_events')}
         renderRow={(item) => (
           <tr key={item.event_name}>
             <td>
               <code className="admin-event-code">{item.event_name}</code>
             </td>
-            <td>{formatNumber(item.total)}</td>
+            <td>{formatNumber(item.total, language)}</td>
             <td>
-              <span className="admin-percent-bar">{formatPercent(item.percentage)}</span>
+              <span className="admin-percent-bar">{formatPercent(item.percentage, language)}</span>
             </td>
           </tr>
         )}
@@ -701,39 +752,44 @@ function UsageTab({ usage }) {
 }
 
 function StoryDetail({ story, onClose }) {
+  const t = useCopy('admin')
+  const { language } = useLanguage()
   if (!story) return null
 
   const detailSections = [
-    { label: 'Contexto de entrada', value: story.input_context },
-    { label: 'Requisitos de entrada', value: story.input_requirements },
-    { label: 'Objetivo', value: story.objective },
-    { label: 'User story', value: story.user_story },
-    { label: 'Critérios de aceite', value: story.acceptance_criteria },
-    { label: 'Regras de negócio', value: story.business_rules },
-    { label: 'Lacunas', value: story.gaps },
-    { label: 'Checklist de QA', value: story.qa_checklist },
+    { label: t('input_context'), value: story.input_context },
+    { label: t('input_requirements'), value: story.input_requirements },
+    { label: t('objective'), value: story.objective },
+    { label: t('user_story'), value: story.user_story },
+    { label: t('acceptance_criteria'), value: story.acceptance_criteria },
+    { label: t('business_rules'), value: story.business_rules },
+    { label: t('gaps'), value: story.gaps },
+    { label: t('qa_checklist'), value: story.qa_checklist },
   ]
 
   return (
-    <section className="admin-story-detail" aria-label="Detalhe da peça selecionada">
+    <section className="admin-story-detail" aria-label={t('selected_artifact_details')}>
       <div className="admin-story-detail__header">
         <div>
-          <p className="admin-section-label">Detalhe somente leitura</p>
+          <p className="admin-section-label">{t('read_only_details')}</p>
           <h2>{story.title}</h2>
           <p>
-            {story.user_email ?? story.user_id ?? 'Usuário não identificado'} · versão{' '}
-            {formatNumber(story.version_number)} · {formatDateTime(story.created_at)}
+            {t('story_details_byline', {
+              user: story.user_email ?? story.user_id ?? t('unidentified_user'),
+              version: formatNumber(story.version_number, language),
+              date: formatDateTime(story.created_at, language),
+            })}
           </p>
         </div>
         <button type="button" className="admin-button" onClick={onClose}>
-          Fechar detalhe
+          {t('close_details')}
         </button>
       </div>
       <div className="admin-story-detail__grid">
         {detailSections.map((section) => (
           <article key={section.label} className="admin-story-detail__block">
             <h3>{section.label}</h3>
-            <p>{section.value || 'Não informado.'}</p>
+            <p>{section.value || t('not_provided')}</p>
           </article>
         ))}
       </div>
@@ -742,33 +798,35 @@ function StoryDetail({ story, onClose }) {
 }
 
 function StoriesTab({ data, search, selectedStory, onSearchChange, onPageChange, onSelectStory, onCloseStory }) {
+  const t = useCopy('admin')
+  const { language } = useLanguage()
   return (
     <>
       <AdminSectionToolbar>
         <SearchField
           id="admin-stories-search"
-          label="Buscar peças"
-          placeholder="Título, contexto ou conteúdo"
+          label={t('search_artifacts')}
+          placeholder={t('title_context_or_content')}
           value={search}
           onChange={onSearchChange}
         />
       </AdminSectionToolbar>
       <DataTable
-        title="Peças recentes"
-        description="Conteúdo completo disponível apenas no detalhe somente leitura."
-        columns={['Título', 'Usuário', 'Status', 'Versão', 'Criada em', 'Detalhe']}
+        title={t('recent_artifacts')}
+        description={t('open_the_read_only_details_to_view')}
+        columns={[t('title'), t('user'), t('status'), t('version'), t('created_on'), t('details')]}
         rows={data.rows}
-        emptyMessage="Nenhuma peça encontrada."
+        emptyMessage={t('no_artifacts_found')}
         renderRow={(story) => (
           <tr key={story.id}>
             <td>{story.title}</td>
             <td>{story.user_email ?? story.user_id ?? emptyDash}</td>
-            <td>{formatStoryStatus(story.status)}</td>
-            <td>{formatNumber(story.version_number)}</td>
-            <td>{formatDateTime(story.created_at)}</td>
+            <td>{formatStoryStatus(story.status, t)}</td>
+            <td>{formatNumber(story.version_number, language)}</td>
+            <td>{formatDateTime(story.created_at, language)}</td>
             <td>
               <button type="button" className="admin-button admin-button--compact" onClick={() => onSelectStory(story)}>
-                Ver detalhe
+                {t('view_details')}
               </button>
             </td>
           </tr>
@@ -781,46 +839,49 @@ function StoriesTab({ data, search, selectedStory, onSearchChange, onPageChange,
 }
 
 function LearningTab({ data, search, onSearchChange, onPageChange }) {
+  const t = useCopy('admin')
+  const { language } = useLanguage()
+  const guides = useLearningCatalog()?.guides
   return (
     <>
       <AdminSectionToolbar>
         <SearchField
           id="admin-learning-search"
-          label="Buscar guias"
-          placeholder="Identificador do guia"
+          label={t('search_guides')}
+          placeholder={t('guide_identifier')}
           value={search}
           onChange={onSearchChange}
         />
       </AdminSectionToolbar>
 
       <DataTable
-        title="Conclusões por guia"
-        description="Ranking de guias concluídos no período selecionado."
-        columns={['Guia', 'Identificador', 'Conclusões']}
+        title={t('completions_by_guide')}
+        description={t('guides_ranked_by_completions_in_the_selected')}
+        columns={[t('guide'), t('identifier'), t('completions')]}
         rows={data.guideSummary}
-        emptyMessage="Nenhuma conclusão no período."
+        emptyMessage={t('no_completions_in_this_period')}
         renderRow={(guide) => (
           <tr key={guide.guide_slug}>
-            <td>{guide.guide_title}</td>
+            <td>{guides?.[guide.guide_slug]?.title ?? guide.guide_title}</td>
             <td>
               <code className="admin-event-code">{guide.guide_slug}</code>
             </td>
-            <td>{formatNumber(guide.completions)}</td>
+            <td>{formatNumber(guide.completions, language)}</td>
           </tr>
         )}
       />
 
       <DataTable
-        title="Conclusões recentes"
-        description="Usuários que marcaram guias como concluídos."
-        columns={['Usuário', 'Guia', 'Data e hora']}
+        title={t('recent_completions')}
+        description={t('users_who_marked_guides_as_complete')}
+        columns={[t('user'), t('guide'), t('date_and_time')]}
         rows={data.rows}
-        emptyMessage="Nenhuma conclusão recente encontrada."
+        emptyMessage={t('no_recent_completions_found')}
         renderRow={(row) => (
           <tr key={row.id}>
             <td>{row.user_email ?? row.user_id ?? emptyDash}</td>
-            <td>{row.guide_title}</td>
-            <td>{formatDateTime(row.completed_at)}</td>
+            <td>{guides?.[row.guide_slug]?.title ?? row.guide_title}</td>
+            <td>{formatDateTime(row.completed_at, language)}</td>
           </tr>
         )}
       />
@@ -830,6 +891,7 @@ function LearningTab({ data, search, onSearchChange, onPageChange }) {
 }
 
 function AdminPage() {
+  const t = useCopy('admin')
   const { setTopbarStatus } = useOutletContext() ?? {}
   const [period, setPeriod] = useState('7d')
   const [activeTab, setActiveTab] = useState('overview')
@@ -875,7 +937,7 @@ function AdminPage() {
       } catch (loadError) {
         console.error('Falha ao carregar painel administrativo:', loadError)
         if (active) {
-          setError('Não foi possível carregar os dados administrativos agora. Verifique as permissões e tente novamente.')
+          setError('could_not_load_administration_data_check_your')
         }
       } finally {
         if (active) {
@@ -891,30 +953,24 @@ function AdminPage() {
     }
   }, [period, search, pages])
 
-  const periodLabel = useMemo(
-    () => periodOptions.find((option) => option.value === period)?.label ?? 'Período selecionado',
-    [period],
-  )
+  const periodLabel = t(periodOptions.find((option) => option.value === period)?.label ?? 'selected_period')
 
-  const activeTabLabel = useMemo(
-    () => adminTabs.find((tab) => tab.id === activeTab)?.label ?? 'Visão geral',
-    [activeTab],
-  )
+  const activeTabLabel = t(adminTabs.find((tab) => tab.id === activeTab)?.label ?? 'overview')
 
   useEffect(() => {
     if (typeof setTopbarStatus !== 'function') return
 
     setTopbarStatus({
-      label: 'Administração',
+      label: t('administration'),
       title: activeTabLabel,
       pills: [
         { text: periodLabel },
-        { text: 'Controle seguro' },
+        { text: t('secure_access') },
       ],
     })
 
     return () => setTopbarStatus(null)
-  }, [activeTabLabel, periodLabel, setTopbarStatus])
+  }, [activeTabLabel, periodLabel, setTopbarStatus, t])
 
   const selectedStory = useMemo(() => {
     if (!selectedStoryId || !dashboard?.stories?.rows) return null
@@ -936,12 +992,13 @@ function AdminPage() {
   }
 
   function closeAccessModal() {
+    if (isSavingAccess) return
     setSelectedAccessUser(null)
     setAccessFeedback(null)
   }
 
   async function handleSaveUserAccess(payload) {
-    if (!selectedAccessUser?.id) return
+    if (!selectedAccessUser?.id || isSavingAccess) return
 
     setIsSavingAccess(true)
     setAccessFeedback(null)
@@ -954,7 +1011,7 @@ function AdminPage() {
     if (!response.success) {
       setAccessFeedback({
         tone: 'error',
-        message: response.message,
+        message: response.messageKey,
       })
       return
     }
@@ -987,7 +1044,7 @@ function AdminPage() {
     })
     setAccessFeedback({
       tone: 'success',
-      message: 'Acesso atualizado com sucesso.',
+      message: 'access_updated_successfully',
     })
   }
 
@@ -996,18 +1053,18 @@ function AdminPage() {
       <header className="admin-page__header">
         <div className="admin-page__header-copy">
           <div className="admin-page__kicker-row">
-            <p className="admin-page__eyebrow">Administração</p>
-            <span className="admin-page__status-pill">Controle seguro</span>
+            <p className="admin-page__eyebrow">{t('administration')}</p>
+            <span className="admin-page__status-pill">{t('secure_access')}</span>
           </div>
-          <h1 className="admin-page__title">Sala de controle da Forja</h1>
+          <h1 className="admin-page__title">{t('forge_control_room')}</h1>
           <p className="admin-page__description">
-            Operação, aquisição, uso da ferramenta e aprendizado do {APP_NAME} em uma visão de produto.
+            {t('dashboard_description', { product: APP_NAME })}
           </p>
         </div>
 
-        <div className="admin-page__filter" aria-label="Filtro do painel administrativo">
+        <div className="admin-page__filter" role="group" aria-label={t('administration_dashboard_filter')}>
           <label className="admin-page__filter-label" htmlFor="period-select">
-            Período analisado
+            {t('reporting_period')}
           </label>
           <select
             id="period-select"
@@ -1017,7 +1074,7 @@ function AdminPage() {
           >
             {periodOptions.map((option) => (
               <option key={option.value} value={option.value}>
-                {option.label}
+                {t(option.label)}
               </option>
             ))}
           </select>
@@ -1026,14 +1083,15 @@ function AdminPage() {
 
       <AdminTabs activeTab={activeTab} onChange={setActiveTab} />
 
-      {isLoading ? <StateCard tone="loading">Carregando dados administrativos...</StateCard> : null}
-      {error && !isLoading ? <StateCard tone="error">{error}</StateCard> : null}
+      {isLoading ? <StateCard tone="loading">{t('loading_administration_data')}</StateCard> : null}
+      {error && !isLoading ? <StateCard tone="error">{formatNotice(t, error)}</StateCard> : null}
 
       {!isLoading && !error && dashboard ? (
         <div
           id={`admin-panel-${activeTab}`}
           className="admin-tab-panel"
           role="tabpanel"
+          tabIndex={0}
           aria-labelledby={`admin-tab-${activeTab}`}
         >
           {activeTab === 'overview' ? <OverviewTab dashboard={dashboard} periodLabel={periodLabel} /> : null}

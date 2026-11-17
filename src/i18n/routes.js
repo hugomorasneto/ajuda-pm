@@ -19,6 +19,7 @@ const pilotPages = [
   ...publicLocalePages,
   { id: 'workspace', 'pt-BR': '/tool', workspace: true },
   { id: 'history', 'pt-BR': '/historico', workspace: true },
+  { id: 'admin', 'pt-BR': '/tool/admin', workspace: true },
   { id: 'projects', 'pt-BR': '/projetos', workspace: true },
   { id: 'planning', 'pt-BR': '/roda', workspace: true },
   { id: 'teams', 'pt-BR': '/times', workspace: true },

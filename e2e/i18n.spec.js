@@ -1505,3 +1505,286 @@ test('Código inacessível mantém convite e traduz o pedido de liberação', as
   expect(calls('join_planning_poker_session')).toHaveLength(0)
   expect(calls('planning-poker-invite')).toHaveLength(0)
 })
+
+const adminPath = '/tool/admin'
+const adminFixtureDate = '2026-08-14T13:00:00Z'
+const managedEmail = 'review@example.test'
+const secondEmail = 'another@example.test'
+const adminGuideSlug = 'fundamentos-produto-agil'
+const adminArtifactTitle = 'Validação de orçamento'
+const adminAcceptanceCriteria = 'Dado um orçamento válido, exibir a confirmação.'
+
+async function mockAdmin(context, {
+  authenticated = true, role = 'admin', holdFirstSave = false, failDashboard = false,
+} = {}) {
+  const traffic = await mockWorkspace(context, user, { authenticated })
+  const adminProfile = { id: user.id, email: user.email, plan: 'free', role, created_at: adminFixtureDate }
+  let managedProfile = {
+    id: 'access-user', email: managedEmail, plan: 'free', role: 'user', forge_limit_override: 10,
+    access_notes: 'Nota existente', updated_at: adminFixtureDate, created_at: adminFixtureDate,
+  }
+  const secondProfile = {
+    id: 'second-user', email: secondEmail, plan: 'free', role: 'user',
+    forge_limit_override: null, created_at: adminFixtureDate,
+  }
+  const events = [
+    { id: 'event-1', event_name: 'landing_view', user_id: null, page_path: '/', created_at: adminFixtureDate },
+    { id: 'event-2', event_name: 'user_story_generate_success', user_id: managedProfile.id, page_path: '/tool', created_at: adminFixtureDate },
+    { id: 'event-3', event_name: 'user_story_generate_failed', user_id: managedProfile.id, page_path: '/tool', created_at: adminFixtureDate },
+    { id: 'event-4', event_name: 'user_story_generate_failed', user_id: secondProfile.id, page_path: '/tool', created_at: adminFixtureDate },
+  ]
+  let releaseFirstSave
+  const pendingSave = holdFirstSave ? new Promise((resolve) => { releaseFirstSave = resolve }) : Promise.resolve()
+  const endpoints = new Set(['profiles', 'tracking_events', 'leads', 'user_stories', 'learning_progress', 'admin_update_user_access'])
+  let saveAttempts = 0
+
+  await context.route((url) => url.origin === 'http://127.0.0.1:54321' &&
+    endpoints.has(url.pathname.split('/').at(-1)), async (route) => {
+    const request = route.request()
+    const { pathname, searchParams } = new URL(request.url())
+    const endpoint = pathname.split('/').at(-1)
+    const method = request.method()
+    const body = request.postDataJSON()
+    const scope = searchParams.get('id')
+    traffic.push({ pathname, method, body, scope })
+
+    if (method === 'HEAD') {
+      const count = endpoint === 'leads'
+        ? 1234
+        : endpoint === 'user_stories' && searchParams.has('user_id')
+          ? (searchParams.get('user_id') === 'eq.access-user' ? 10 : 1)
+          : 2
+      return route.fulfill({ headers: { 'content-range': '*/' + count, 'access-control-expose-headers': 'content-range' } })
+    }
+    const rows = (data, count = data.length) => {
+      const offset = Number(searchParams.get('offset') ?? 0)
+      const range = data.length ? offset + '-' + (offset + data.length - 1) : '*'
+      return route.fulfill({ headers: {
+        'content-range': range + '/' + count, 'access-control-expose-headers': 'content-range',
+      }, json: data })
+    }
+    switch (endpoint) {
+      case 'profiles':
+        if (scope?.startsWith('eq.')) return rows(scope === 'eq.' + user.id ? [adminProfile] : [])
+        if (scope?.startsWith('in.')) return rows([adminProfile, managedProfile, secondProfile])
+        return rows([managedProfile, secondProfile].filter((profile) =>
+          !searchParams.has('email') || profile.email.includes(searchParams.get('email').replace(/^ilike\.%|%$/g, ''))))
+      case 'tracking_events':
+        if (failDashboard) return route.fulfill({ status: 500, json: { message: 'Mock unavailable' } })
+        return rows(events)
+      case 'leads': {
+        const secondPage = searchParams.get('offset') === '10'
+        const name = secondPage ? 'Ana do Vale' : 'Ana da Silva'
+        return rows([{ id: secondPage ? 'lead-b' : 'lead-a', name, email: 'lead@example.test', created_at: adminFixtureDate }], 12)
+      }
+      case 'user_stories':
+        return rows([{
+          id: 'admin-artifact', user_id: managedProfile.id, title: adminArtifactTitle,
+          status: 'generated', version_number: 2, created_at: adminFixtureDate,
+          input_context: 'Validar orçamento antes de finalizar.', acceptance_criteria: adminAcceptanceCriteria,
+        }])
+      case 'learning_progress':
+        return rows([{ id: 'progress-a', user_id: managedProfile.id, guide_slug: adminGuideSlug, completed_at: adminFixtureDate }])
+      case 'admin_update_user_access':
+        saveAttempts += 1
+        if (holdFirstSave && saveAttempts === 1) {
+          await pendingSave
+          return route.fulfill({ status: 400, json: {
+            code: 'P0001', message: 'Limite de forjas inválido. Use um número inteiro entre 0 e 9999.',
+          } })
+        }
+        if (body.p_user_id !== managedProfile.id) return route.fulfill({ status: 404 })
+        managedProfile = {
+          ...managedProfile, plan: body.p_plan, forge_limit_override: body.p_forge_limit_override,
+          access_notes: body.p_notes,
+        }
+        return rows([managedProfile])
+      default:
+        return route.abort()
+    }
+  })
+
+  return { traffic, releaseFirstSave }
+}
+
+async function checkAdminLayout(page) {
+  await checkWidth(page)
+  const clipped = await page.locator(
+    '.admin-page, .admin-tabs, .admin-table-wrap, .admin-access-modal, .admin-access-modal__actions',
+  ).evaluateAll((items) => items.filter((item) => {
+    const { left, right } = item.getBoundingClientRect()
+    return left < -1 || right > window.innerWidth + 1
+  }).map((item) => item.className))
+  expect(clipped).toEqual([])
+}
+
+test('Administração traduz as seis abas e preserva período, busca e detalhe na troca', async ({ page, context }, testInfo) => {
+  const { traffic } = await mockAdmin(context)
+  const query = '?ref=a%20b&ref=c&lang=pt-BR#main-content'
+  await page.goto('/admin' + query)
+  await expect(page).toHaveURL(adminPath + query)
+  await expect(page.getByRole('heading', { name: 'Sala de controle da Forja' })).toBeVisible()
+  await expect(page.getByText('1.234', { exact: true })).toBeVisible()
+  await page.getByRole('combobox', { name: 'Período analisado' }).selectOption('30d')
+  await expect(page.getByText('1.234', { exact: true })).toBeVisible()
+  const overview = page.getByRole('tab', { name: 'Visão geral' })
+  await overview.focus()
+  await page.keyboard.press('ArrowRight')
+  const leads = page.getByRole('tab', { name: 'Interessados' })
+  await expect(leads).toBeFocused()
+  await expect(leads).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByRole('cell', { name: 'Ana da Silva' })).toBeVisible()
+  await page.getByRole('searchbox', { name: 'Buscar interessados' }).fill('Ana')
+  await expect(page.getByRole('cell', { name: 'Ana da Silva' })).toBeVisible()
+  await page.getByRole('button', { name: 'Próxima', exact: true }).click()
+  await expect(page.getByRole('cell', { name: 'Ana do Vale' })).toBeVisible()
+
+  const beforeSwitch = traffic.length
+  await page.getByRole('combobox', { name: 'Idioma' }).focus()
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(adminPath + query.replace('pt-BR', 'en'))
+  await expect(page.getByRole('combobox', { name: 'Language' })).toBeFocused()
+  await expect(page.getByRole('combobox', { name: 'Reporting period' })).toHaveValue('30d')
+  await expect(page.getByRole('tab', { name: 'Leads', exact: true })).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByRole('searchbox', { name: 'Search leads' })).toHaveValue('Ana')
+  await expect(page.getByText('Page 2 of 2 · 12 records', { exact: true })).toBeVisible()
+  await expect(page.getByRole('cell', { name: 'Ana do Vale' })).toBeVisible()
+  await expect(page.getByRole('cell', { name: /08\/14\/2026/ })).toBeVisible()
+  expect(traffic).toHaveLength(beforeSwitch)
+  await expect(page.getByRole('tablist').getByRole('tab')).toHaveText(['Overview', 'Leads', 'Users', 'Usage', 'Artifacts', 'Learning'])
+
+  await page.getByRole('tab', { name: 'Overview' }).click()
+  await expect(page.getByText('1,234', { exact: true })).toBeVisible()
+  await page.getByRole('tab', { name: 'Usage', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Main funnel' })).toBeVisible()
+  await expect(page.getByText('66.7%', { exact: true }).first()).toBeVisible()
+  await expect(page.getByText('user_story_generate_success', { exact: true }).first()).toBeVisible()
+
+  await page.getByRole('tab', { name: 'Learning', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Completions by guide' })).toBeVisible()
+  await expect(page.getByText('Agile product foundations for new PMs and POs', { exact: true }).first()).toBeVisible()
+  await expect(page.getByText(adminGuideSlug, { exact: true })).toBeVisible()
+
+  await page.getByRole('tab', { name: 'Artifacts', exact: true }).click()
+  await page.getByRole('button', { name: 'View details', exact: true }).click()
+  await expect(page.getByRole('heading', { name: adminArtifactTitle })).toBeVisible()
+  await expect(page.getByText(adminAcceptanceCriteria)).toBeVisible()
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  await expect(page.getByRole('region', { name: 'Detalhe da peça selecionada' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Critérios de aceite' })).toBeVisible()
+  await expect(page.getByText(adminAcceptanceCriteria)).toBeVisible()
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+
+  if (testInfo.project.name === 'celular') {
+    await page.getByRole('button', { name: 'Open navigation' }).click()
+    await expect(page.getByRole('navigation', { name: 'Workspace navigation' })).toBeVisible()
+    await page.locator('.workspace-sidebar__close').click()
+    await page.setViewportSize({ width: 320, height: 740 })
+  }
+  await checkAdminLayout(page)
+  await page.evaluate(() => scrollTo(0, 0))
+  await evidence(page, testInfo, 'admin-en')
+  await page.reload()
+  await expect(page.getByRole('combobox', { name: 'Language' })).toHaveValue('en')
+  await page.goto(adminPath)
+  await expect(page.getByRole('heading', { name: 'Forge control room' })).toBeVisible()
+  await page.goto('http://127.0.0.1:4176' + adminPath + '?lang=en')
+  await expect(page.getByRole('heading', { name: 'Sala de controle da Forja' })).toBeVisible()
+  await expect(page.getByRole('combobox', { name: 'Idioma' })).toHaveCount(0)
+})
+
+test('Administração mantém o rascunho de acesso e traduz validações sem gravar ao trocar idioma', async ({ page, context }, testInfo) => {
+  const { traffic, releaseFirstSave } = await mockAdmin(context, { holdFirstSave: true })
+  const errors = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  await page.goto(adminPath + '?lang=pt-BR')
+  await page.getByRole('tab', { name: 'Usuários', exact: true }).click()
+  const managed = page.getByRole('row').filter({ hasText: managedEmail })
+  await managed.getByRole('button', { name: 'Gerenciar', exact: true }).click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByText(managedEmail)).toBeVisible()
+  await dialog.getByRole('combobox', { name: 'Plano', exact: true }).selectOption('premium')
+  await dialog.getByRole('spinbutton', { name: 'Limite de forjas', exact: true }).fill('11111')
+  await dialog.getByRole('textbox', { name: 'Observação administrativa' }).fill('Cota ajustada para homologação')
+  await dialog.getByRole('button', { name: 'Salvar alterações' }).click()
+  await expect(dialog.getByRole('alert')).toHaveText('Informe um limite inteiro entre 0 e 9.999.')
+  await expect(dialog.getByRole('spinbutton', { name: 'Limite de forjas' })).toBeFocused()
+  const saves = () => traffic.filter(({ pathname }) => pathname.endsWith('/admin_update_user_access'))
+  expect(saves()).toHaveLength(0)
+
+  const beforeSwitch = traffic.length
+  const selector = dialog.getByRole('combobox', { name: 'Idioma' })
+  await selector.focus()
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  await expect(dialog.getByRole('combobox', { name: 'Language' })).toBeFocused()
+  await expect(dialog).toHaveAccessibleName('Manage access')
+  await expect(dialog.getByRole('spinbutton', { name: 'Forge limit' })).toHaveValue('11111')
+  await expect(dialog.getByRole('combobox', { name: 'Plan', exact: true })).toHaveValue('premium')
+  await expect(dialog.getByRole('textbox', { name: 'Administrative note' })).toHaveValue('Cota ajustada para homologação')
+  await expect(dialog.getByRole('alert')).toHaveText('Enter a whole number between 0 and 9,999.')
+  expect(traffic).toHaveLength(beforeSwitch)
+
+  if (testInfo.project.name === 'celular') await page.setViewportSize({ width: 320, height: 740 })
+  await checkAdminLayout(page)
+  expect(await dialog.evaluate((modal) => modal.scrollWidth - modal.clientWidth)).toBeLessThanOrEqual(1)
+  await dialog.getByRole('spinbutton', { name: 'Forge limit' }).fill('25')
+  await dialog.getByRole('button', { name: 'Save changes' }).click()
+  await expect.poll(() => saves().length).toBe(1)
+  await dialog.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  releaseFirstSave()
+  await expect(dialog.getByRole('alert')).toHaveText('Limite de forjas inválido. Use um número inteiro entre 0 e 9.999.')
+  await dialog.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await expect(dialog.getByRole('alert')).toHaveText('Invalid forge limit. Enter a whole number between 0 and 9,999.')
+  await expect(dialog.getByRole('spinbutton', { name: 'Forge limit' })).toHaveValue('25')
+  expect(saves()).toHaveLength(1)
+
+  await dialog.getByRole('button', { name: 'Save changes' }).click()
+  await expect(dialog.getByRole('status').filter({ hasText: 'Access updated successfully.' })).toBeVisible()
+  expect(saves().map(({ body }) => body)).toEqual(Array(2).fill({
+    p_user_id: 'access-user', p_plan: 'premium', p_forge_limit_override: 25, p_notes: 'Cota ajustada para homologação',
+  }))
+  await dialog.getByRole('combobox', { name: 'Language' }).scrollIntoViewIfNeeded()
+  await evidence(page, testInfo, 'admin-acesso-en')
+  await page.keyboard.press('Escape')
+  await expect(dialog).toHaveCount(0)
+  await expect(managed.getByRole('button', { name: 'Manage', exact: true })).toBeFocused()
+  await expect(managed.getByRole('cell', { name: 'Pro', exact: true })).toBeVisible()
+  await expect(page.getByRole('row').filter({ hasText: secondEmail }).getByRole('cell', { name: 'Free', exact: true })).toBeVisible()
+  expect(errors).toEqual([])
+})
+
+test('Administração retorna ao link direto em inglês após o login do administrador', async ({ page, context }) => {
+  const { traffic } = await mockAdmin(context, { authenticated: false })
+  const target = adminPath + '?ref=a%2Bb&lang=en#main-content'
+  await page.goto(target)
+  await expect(page.getByRole('heading', { name: 'Sign in to your workspace' })).toBeVisible()
+  expect(new URL(page.url()).searchParams.get('from')).toBe(target)
+  expect(traffic.some(({ pathname }) => pathname.endsWith('/tracking_events'))).toBe(false)
+  await page.getByRole('textbox', { name: 'Email' }).fill(user.email)
+  await page.getByLabel('Password', { exact: true }).fill('simulated-password')
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await expect(page).toHaveURL(target)
+  await expect(page.getByRole('heading', { name: 'Forge control room' })).toBeVisible()
+  await expect(page.getByRole('tab', { name: 'Overview' })).toBeVisible()
+})
+
+test('Administração redireciona a conta sem papel administrador antes de solicitar dados', async ({ page, context }) => {
+  const { traffic } = await mockAdmin(context, { role: 'user' })
+  await page.goto('/admin?lang=en')
+  await expect(page).toHaveURL('/')
+  await expect(page.getByRole('heading', { name: 'Forge control room' })).toHaveCount(0)
+  expect(traffic.some(({ pathname }) => /tracking_events|admin_update_user_access|\/leads$/.test(pathname))).toBe(false)
+})
+
+test('Administração traduz falha de carregamento sem repetir a consulta', async ({ page, context }) => {
+  const { traffic } = await mockAdmin(context, { failDashboard: true })
+  await page.goto(adminPath + '?lang=pt-BR')
+  await expect(page.getByRole('alert')).toHaveText('Não foi possível carregar os dados administrativos agora. Verifique as permissões e tente novamente.')
+  const before = traffic.length
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await expect(page.getByRole('alert')).toHaveText('Could not load administration data. Check your permissions and try again.')
+  expect(traffic).toHaveLength(before)
+})

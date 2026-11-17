@@ -1,15 +1,15 @@
 import { supabase } from '../lib/supabaseClient'
 
-function getFriendlyAccessError(error) {
+function getAccessErrorKey(error) {
   const message = String(error?.message ?? '').trim()
 
-  if (!message) return 'Não foi possível salvar o acesso agora.'
-  if (message.includes('Apenas administradores')) return message
-  if (message.includes('Plano inválido')) return message
-  if (message.includes('Limite de forjas inválido')) return message
-  if (message.includes('Usuário não encontrado')) return message
+  if (!message) return 'change_access_unavailable'
+  if (message.includes('Apenas administradores')) return 'change_access_admin_only'
+  if (message.includes('Plano inválido')) return 'change_access_invalid_plan'
+  if (message.includes('Limite de forjas inválido')) return 'change_access_invalid_limit'
+  if (message.includes('Usuário não encontrado')) return 'change_access_user_missing'
 
-  return 'Não foi possível salvar o acesso agora. Verifique os dados e tente novamente.'
+  return 'change_access_failed'
 }
 
 export async function updateAdminUserAccess({ userId, plan, forgeLimitOverride, notes }) {
@@ -26,18 +26,18 @@ export async function updateAdminUserAccess({ userId, plan, forgeLimitOverride, 
       return {
         success: false,
         error,
-        message: getFriendlyAccessError(error),
+        messageKey: getAccessErrorKey(error),
         data: null,
       }
     }
 
-    return { success: true, data: data?.[0] ?? null, error: null, message: '' }
+    return { success: true, data: data?.[0] ?? null, error: null, messageKey: '' }
   } catch (error) {
     console.error('Unexpected updateAdminUserAccess error:', error)
     return {
       success: false,
       error,
-      message: 'Não foi possível salvar o acesso agora. Tente novamente.',
+      messageKey: 'change_access_unavailable',
       data: null,
     }
   }

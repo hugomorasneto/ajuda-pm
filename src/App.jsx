@@ -87,7 +87,7 @@ const publicComponents = {
   terms: TermsOfUsePage,
 }
 
-function PublicRedirect({ pathname }) {
+function RouteRedirect({ pathname }) {
   const { search, hash } = useLocation()
   return <Navigate to={{ pathname, search, hash }} replace />
 }
@@ -113,30 +113,30 @@ function App() {
               const paths = preview ? [page['pt-BR'], page.en] : [page['pt-BR']]
               return paths.map((path) => <Route key={path} path={path} element={element} />)
             })}
-            <Route path="/aprender/:slug" element={<PublicRedirect pathname="/aprender" />} />
-            {preview && <Route path="/en/learn/:slug" element={<PublicRedirect pathname="/en/learn" />} />}
+            <Route path="/aprender/:slug" element={<RouteRedirect pathname="/aprender" />} />
+            {preview && <Route path="/en/learn/:slug" element={<RouteRedirect pathname="/en/learn" />} />}
             <Route
               path="/preferencias-de-cookies"
-              element={<PublicRedirect pathname="/preferencias-de-privacidade" />}
+              element={<RouteRedirect pathname="/preferencias-de-privacidade" />}
             />
             <Route
               path="/fundamentos"
-              element={<PublicRedirect pathname="/aprender/fundamentos-produto-agil" />}
+              element={<RouteRedirect pathname="/aprender/fundamentos-produto-agil" />}
             />
             <Route
               path="/scrum-agil"
-              element={<PublicRedirect pathname="/aprender/scrum-para-pm-po" />}
+              element={<RouteRedirect pathname="/aprender/scrum-para-pm-po" />}
             />
             <Route
               path="/backlog"
-              element={<PublicRedirect pathname="/aprender/backlog-e-refinamento" />}
+              element={<RouteRedirect pathname="/aprender/backlog-e-refinamento" />}
             />
             <Route
               path="/user-stories"
-              element={<PublicRedirect pathname="/aprender/user-stories-na-pratica" />}
+              element={<RouteRedirect pathname="/aprender/user-stories-na-pratica" />}
             />
-            <Route path="/templates" element={<PublicRedirect pathname="/aprender" />} />
-            <Route path="/glossario" element={<PublicRedirect pathname="/aprender" />} />
+            <Route path="/templates" element={<RouteRedirect pathname="/aprender" />} />
+            <Route path="/glossario" element={<RouteRedirect pathname="/aprender" />} />
           </Route>
 
           <Route
@@ -163,7 +163,7 @@ function App() {
             />
           </Route>
 
-          <Route path="/admin" element={<Navigate to="/tool/admin" replace />} />
+          <Route path="/admin" element={<RouteRedirect pathname="/tool/admin" />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

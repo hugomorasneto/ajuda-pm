@@ -96,6 +96,8 @@ describe('authRedirect', () => {
     expect(getAuthContinuation(from, 'pt-BR')).toBe(from.replace('lang=en', 'lang=pt-BR'))
     const invite = '/roda?codigo=a%2Fb%26c#sessao'
     expect(getAuthContinuation(invite, 'en')).toBe('/roda?codigo=a%2Fb%26c&lang=en#sessao')
+    expect(getAuthContinuation('/tool/admin?ref=a%20b#main-content', 'en'))
+      .toBe('/tool/admin?ref=a%20b&lang=en#main-content')
   })
 
   it('mantém o destino explícito quando sessionStorage está indisponível', () => {
