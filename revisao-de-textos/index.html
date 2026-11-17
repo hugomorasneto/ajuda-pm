@@ -17,6 +17,7 @@
       p, ul { margin-block: .55rem; }
       ul { padding-inline-start: 1.25rem; }
       a { color: #174b74; text-underline-offset: .16em; overflow-wrap: anywhere; }
+      code { overflow-wrap: anywhere; }
       a:focus-visible { outline: 2px solid #174b74; outline-offset: .2rem; }
       nav { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin-block: 1.5rem; }
       .columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
@@ -33,6 +34,7 @@
         <p>ProdForge · Prévia local</p>
         <h1>Minutas para aprovação</h1>
         <p>A redação foi aprovada. As notas de cada seção indicam os trechos já aplicados na prévia e os dados ou decisões que ainda precisam de confirmação.</p>
+        <p>Revisão da base <code>cf04407</code>. A cota do Free foi validada em ambiente local. As datas de vigência dos Termos e da Política continuam em revisão.</p>
       </header>
 
       <nav aria-label="Seções das minutas">
@@ -72,8 +74,10 @@
           <p><strong>Aplicado na prévia.</strong> Cadastro, distinção entre serviço hospedado e código MIT, português brasileiro como referência e uso do conteúdo para prestar o serviço solicitado e operá-lo com segurança.</p>
           <p><strong>Ainda em revisão</strong></p>
           <ul>
-            <li>Informe quem opera o serviço hospedado e a data efetiva de vigência. O registro de versão, idioma e data do aceite depende da versão definitiva dos Termos e de armazenamento confiável desse registro.</li>
+            <li>Informe o nome ou a razão social de quem opera o serviço hospedado e confirme a data efetiva de vigência. A autoria do código e a licença MIT não identificam, por si só, o responsável pelo serviço.</li>
+            <li>O registro de versão, idioma e data do aceite depende da versão definitiva dos Termos e de armazenamento confiável desse registro. O cadastro apresenta o aviso aprovado, mas o repositório não contém esse registro de aceite.</li>
           </ul>
+          <p><strong>Evidência no repositório.</strong> <code>LICENSE</code>, <code>docs/escopo-da-licenca.md</code>, <code>src/pages/SignupPage.jsx</code> e <code>src/pages/TermsOfUsePage.jsx</code>. A prévia exibe a vigência como em revisão.</p>
         </aside>
       </section>
 
@@ -112,15 +116,18 @@
           </div>
         </div>
         <aside class="pending">
-          <p><strong>Aplicado na prévia.</strong> Direitos dos titulares, aviso no formulário de contato e distinção entre uso dos briefings para responder às solicitações e uso de analytics autorizado para melhorar o produto.</p>
+          <p><strong>Aplicado na prévia.</strong> Direitos dos titulares, aviso no formulário de contato, contagem de gerações entre os dados da conta e distinção entre uso dos briefings para responder às solicitações e uso de analytics autorizado para melhorar o produto.</p>
           <p><strong>Ainda em revisão</strong></p>
           <ul>
-            <li>Preencha a identificação do controlador e confirme se o endereço atual, contato@techtupa.com.br, atende pedidos de privacidade. Confirme os prazos por categoria, inclusive cópias de segurança se aplicável, as bases legais e o fluxo real de exclusão.</li>
-            <li>Confirme os provedores ativos, as finalidades, os destinatários e os países de processamento. A decisão é usar a modalidade paga da API Gemini para briefings reais. A descrição do tratamento pelo fornecedor depende de confirmar o regime efetivo e suas condições de uso e retenção.</li>
-            <li>Os prazos aprovados são metas de operação. A proposta prevê manter dados enquanto a conta estiver ativa, 12 meses para mensagens após o encerramento do atendimento e 90 dias para analytics bruto. Confirme o fluxo de exclusão, o tratamento de projetos compartilhados, a rotação de backups e a guarda legal de registros de acesso antes de inserir esses prazos na Política.</li>
+            <li>Preencha a identificação do controlador. Confirme se contato@techtupa.com.br recebe pedidos de privacidade e quem responde, verifica a identidade do solicitante e acompanha o atendimento.</li>
+            <li>O código integra Supabase, Gemini e envio por SMTP. Confirme os fornecedores e destinatários efetivamente contratados, suas finalidades, países de processamento, salvaguardas de transferência e bases legais por finalidade.</li>
+            <li>A decisão aprovada é usar a modalidade paga da API Gemini para briefings reais. Confirme o projeto com faturamento ativo e as condições efetivas de uso, retenção e tratamento pelo fornecedor. Os termos do Gemini distinguem serviços pagos e gratuitos e exigem público adulto. Confirme o público-alvo antes de finalizar o texto sobre IA.</li>
+            <li>Os prazos aprovados são metas de operação. A proposta prevê manter dados enquanto a conta estiver ativa, 12 meses para mensagens após o encerramento do atendimento e 90 dias para analytics bruto. Confirme como esses prazos serão cumpridos e o prazo da lista de interesse após o descadastro.</li>
+            <li>Confirme o fluxo de exclusão de conta e materiais, o tratamento de projetos compartilhados, a rotação de backups e a guarda de registros de acesso. A cota conserva o consumo após a exclusão de uma história. Confirme como os registros de cota entram no atendimento à exclusão da conta.</li>
             <li>Confirme a data de vigência da Política.</li>
           </ul>
-          <p><a href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm">LGPD, arts. 9, 18 e 20</a> · <a href="https://ai.google.dev/gemini-api/terms">Termos da API Gemini</a></p>
+          <p><strong>Evidência no repositório.</strong> <code>src/services/analyticsService.js</code>, <code>supabase/functions/generate-user-story/</code>, <code>supabase/functions/analyze-project/</code>, <code>supabase/functions/contact-message/</code> e <code>supabase/migrations/20261117171616_free_lifetime_story_generation_quota.sql</code>. O código confirma os fluxos e os registros de cota. Contratos, faturamento, regiões e rotinas operacionais precisam de confirmação.</p>
+          <p><a href="https://www2.camara.leg.br/legin/fed/lei/2018/lei-13709-14-agosto-2018-787077-normaatualizada-pl.html">LGPD, arts. 9, 18 e 20</a> · <a href="https://ai.google.dev/gemini-api/terms">Termos da API Gemini</a></p>
         </aside>
       </section>
 
@@ -150,7 +157,9 @@
         </div>
         <aside class="pending">
           <p><strong>Aplicado na prévia.</strong> Analytics é a única opção disponível. A prévia preserva a escolha anterior de analytics e ignora autorizações antigas de marketing. Uma ativação futura de marketing dependerá de uma escolha específica nova.</p>
-          <p><strong>Ainda em revisão.</strong> Confirme quais rastreadores estão ativos ou configurados no ambiente publicado e a finalidade de cada um.</p>
+          <p><strong>Evidência no repositório.</strong> <code>src/utils/privacyConsent.js</code> mantém a escolha de privacidade na versão 2.2 e desativa marketing na prévia. <code>src/services/analyticsService.js</code> exige autorização antes de registrar eventos no Supabase. Sessão, preferência de idioma e atribuição de campanha usam armazenamento no navegador.</p>
+          <p><strong>Evidência adicional.</strong> <code>src/styles/tokens.css</code> carrega Google Fonts por uma chamada externa, independentemente da escolha de analytics. Essa chamada foi identificada e bloqueada durante a validação local.</p>
+          <p><strong>Ainda em revisão.</strong> Confirme quais rastreadores e scripts estão ativos no ambiente publicado, seus fornecedores, finalidades e períodos de armazenamento. Confirme como o carregamento de Google Fonts será tratado na operação e na Política. Inclua configurações de hospedagem e serviços externos que não estejam versionadas neste repositório.</p>
           <p><a href="https://www.gov.br/anpd/pt-br/centrais-de-conteudo/materiais-educativos-e-publicacoes/guia_orientativo_cookies_e_protecao_de_dados_pessoais">Guia de Cookies da ANPD</a></p>
         </aside>
       </section>
@@ -168,7 +177,8 @@
             <p><strong>Botão</strong> — Quero receber novidades do Pro</p>
             <p><strong>Confirmação</strong> — Seu interesse no Pro foi registrado.</p>
             <h4>Termos de Uso · Planos e limites</h4>
-            <p>O plano Free tem um limite de uso indicado na sua conta. Quando uma oferta paga estiver disponível, apresentaremos preço, recursos, limites e condições antes da contratação.</p>
+            <p>O plano Free inclui uma cota padrão de 10 gerações bem-sucedidas e salvas por conta, sem renovação mensal. Cada geração ou regeneração salva consome uma unidade. Edições manuais, falhas e diagnósticos de projeto ficam fora da cota. Excluir uma história salva não repõe o saldo. Consulte na Bancada o limite e o saldo da sua conta.</p>
+            <p>Quando uma oferta paga estiver disponível, apresentaremos preço, recursos, limites e condições antes da contratação.</p>
           </div>
           <div class="draft" lang="en">
             <h3>English</h3>
@@ -180,11 +190,14 @@
             <p><strong>Button</strong> — Get Pro updates</p>
             <p><strong>Confirmation</strong> — You are on the Pro interest list.</p>
             <h4>Terms of Use · Plans and limits</h4>
-            <p>Your account shows the Free plan's usage limit. If a paid offer becomes available, we will show its price, features, limits, and terms before you subscribe.</p>
+            <p>The Free plan includes a default allowance of 10 successful, saved generations per account, with no monthly reset. Each saved generation or regeneration uses one unit. Manual edits, failed attempts, and project diagnostics are outside this allowance. Deleting a saved story does not restore your allowance. Check your account's limit and remaining allowance in the workspace.</p>
+            <p>If a paid offer becomes available, we will show its price, features, limits, and terms before you subscribe.</p>
           </div>
         </div>
         <aside class="pending">
           <p><strong>Aplicado na prévia.</strong> A Bancada usa a cota do servidor e conta cada geração bem-sucedida e salva, incluindo regenerações. O Pro segue como lista de interesse.</p>
+          <p><strong>Verificado localmente.</strong> Os testes de <code>cf04407</code> cobrem o bloqueio da 11ª geração, concorrência, repetição de pedidos, falhas e isolamento entre contas. Os registros existentes entram como consumo inicial. Exclusões anteriores à migração não podem ser reconstruídas. A aplicação futura exige ativar migração, função e frontend em conjunto.</p>
+          <p><strong>Evidência no repositório.</strong> <code>supabase/tests/free-story-quota.sql</code>, <code>supabase/tests/free-story-quota.integration.mjs</code>, <code>scripts/test-free-quota-local.ps1</code> e <code>src/i18n/preview-copy/</code>. O limite personalizado por conta continua disponível na Administração.</p>
           <p><strong>Ainda em revisão</strong></p>
           <ul>
             <li>Confirme o custo previsto para as 10 gerações por conta antes da publicação.</li>

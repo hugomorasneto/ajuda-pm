@@ -6,16 +6,19 @@
     "privacyNote": "We use the information in this form to record your request, route it to our team, and respond. Read our <policy>Privacy Policy</policy> to learn how we handle this information."
   },
   "termsOfUsePage": {
+    "termsOfUsePage_ultima_atualizacao": "Draft status",
     "termsOfUsePage_a_versao_publicada_nesta_pagina": "If the language versions differ, the Brazilian Portuguese version is the reference, subject to your rights under applicable law. Specific features may have additional rules when they become available.",
     "termsOfUsePage_a_marca_prodforge_identidade_visual": "The MIT License governs use of the code released under it. The ProdForge brand, visual identity, editorial materials, and other reserved items listed in the license scope are subject to the permissions that apply to each item.",
     "termsOfUsePage_esses_conteudos_podem_ser_armazenados": "We may store this content to maintain your history, recover context, troubleshoot issues, and prevent abuse, as described in the Privacy Policy.",
     "termsOfUsePage_voce_mantem_seus_direitos_sobre": "You retain the rights you already hold in the content you submit. We use your content to provide the features you request and operate the service securely, as described in the Privacy Policy.",
     "termsOfUsePage_voce_nao_pode_copiar_revender": "Reselling or sublicensing access to the hosted service requires express permission.",
     "termsOfUsePage_para_proteger_a_experiencia_de": "These rules apply to use of the hosted ProdForge service.",
-    "termsOfUsePage_o_prodforge_pode_oferecer_plano": "Your account shows the Free plan's usage limit.",
+    "termsOfUsePage_o_prodforge_pode_oferecer_plano": "The Free plan includes a default allowance of 10 successful, saved generations per account, with no monthly reset. Each saved generation or regeneration uses one unit. Manual edits, failed attempts, and project diagnostics are outside this allowance. Deleting a saved story does not restore your allowance. Check your account's limit and remaining allowance in the workspace.",
     "termsOfUsePage_recursos_pagos_podem_depender_de": "If a paid offer becomes available, we will show its price, features, limits, and terms before you subscribe."
   },
   "privacyPolicyPage": {
+    "privacyPolicyPage_ultima_atualizacao": "Draft status",
+    "privacyPolicyPage_historico_de_uso_versoes_geradas": "Usage history, generated versions, generation counts and account limits, preferences, projects, invited members, and actions taken in the workspace.",
     "privacyPolicyPage_entender_uso_desempenho_erros_e": "Use aggregate metrics on usage, performance, and errors, calculated from authorized analytics events, to improve the product.",
     "privacyPolicyPage_dados_inseridos_pelo_usuario_podem": "When you request AI generation or analysis, we send the AI provider the context needed to produce a response, such as the brief or project information included in your request.",
     "privacyPolicyPage_nao_usamos_dados_pessoais_como": "We do not sell databases of personal data to third parties. We share data for the purposes described in this Policy and to the extent necessary for each purpose.",
@@ -44,7 +47,7 @@
     "landingCopy_para_comecar_sem_cartao_e": "with a usage limit and no card required",
     "landingCopy_comece_gratis_escale_quando_precisar": "Start with Free and get updates about Pro",
     "landingCopy_comece_sem_cartao_evolua_quando": "Start without a card. The Pro interest list is open.",
-    "landingCopy_geracoes_de_user_story_por": "In the workspace, Free includes {{p1}} successful, saved generations per account, with no monthly reset. Saved regenerations also count.",
+    "landingCopy_geracoes_de_user_story_por": "In the workspace, Free includes {{p1}} successful, saved generations per account, with no monthly reset. Saved regenerations also count. Manual edits, failed attempts, and project diagnostics are outside this allowance.",
     "landingCopy_mais_popular": "Interest list",
     "landingCopy_para_times_que_precisam_de": "We are evaluating the Pro plan.",
     "landingCopy_quer_testar_o_plano": "Interested in the {{p1}} plan?",

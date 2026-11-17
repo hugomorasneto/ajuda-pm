@@ -172,7 +172,7 @@ function PrivacySection({ section, index }) {
 
 function PrivacyPolicyPage() {
   const t = useCopy('privacyPolicyPage')
-  const { language } = useLanguage()
+  const { language, preview } = useLanguage()
   const policySections = getPolicySections(t)
   const policySummary = getPolicySummary(t)
   usePublicPageMetadata('privacyPolicy')
@@ -199,7 +199,9 @@ function PrivacyPolicyPage() {
 
         <aside className="privacy-policy-hero__summary" aria-label={t('privacyPolicyPage_resumo_da_politica')}>
           <p className="privacy-policy-hero__summary-label">{t('privacyPolicyPage_ultima_atualizacao')}</p>
-          <p className="privacy-policy-hero__summary-date">{formatPublicDate(POLICY_LAST_UPDATED, language)}</p>
+          <p className="privacy-policy-hero__summary-date">
+            {preview ? t('privacyPolicyPage_vigencia_em_revisao') : formatPublicDate(POLICY_LAST_UPDATED, language)}
+          </p>
           <ul>
             {policySummary.map((item) => (
               <li key={item}>{item}</li>

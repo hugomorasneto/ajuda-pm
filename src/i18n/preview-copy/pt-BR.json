@@ -6,16 +6,19 @@
     "privacyNote": "Usamos os dados deste formulário para registrar, encaminhar e responder à sua solicitação. Consulte a <policy>Política de Privacidade</policy> para saber como tratamos esses dados."
   },
   "termsOfUsePage": {
+    "termsOfUsePage_ultima_atualizacao": "Status da minuta",
     "termsOfUsePage_a_versao_publicada_nesta_pagina": "Em caso de divergência entre idiomas, a versão em português brasileiro é a referência, respeitados os direitos previstos na legislação aplicável. Recursos específicos podem ter regras complementares quando forem disponibilizados.",
     "termsOfUsePage_a_marca_prodforge_identidade_visual": "O código disponibilizado sob a licença MIT pode ser usado conforme as condições dessa licença. A marca ProdForge, a identidade visual, os materiais editoriais e os demais itens reservados no escopo da licença seguem as permissões aplicáveis a cada material.",
     "termsOfUsePage_esses_conteudos_podem_ser_armazenados": "Podemos armazenar esses conteúdos para manter seu histórico, recuperar contexto, diagnosticar falhas e prevenir abuso, conforme descrito na Política de Privacidade.",
     "termsOfUsePage_voce_mantem_seus_direitos_sobre": "Você mantém os direitos que já tem sobre o conteúdo que envia. Usamos seu conteúdo para fornecer os recursos solicitados e operar o serviço com segurança, conforme a Política de Privacidade.",
     "termsOfUsePage_voce_nao_pode_copiar_revender": "A revenda ou a sublicença de acesso ao serviço hospedado exige autorização expressa.",
     "termsOfUsePage_para_proteger_a_experiencia_de": "Estas regras se aplicam ao uso do serviço hospedado do ProdForge.",
-    "termsOfUsePage_o_prodforge_pode_oferecer_plano": "O plano Free tem um limite de uso indicado na sua conta.",
+    "termsOfUsePage_o_prodforge_pode_oferecer_plano": "O plano Free inclui uma cota padrão de 10 gerações bem-sucedidas e salvas por conta, sem renovação mensal. Cada geração ou regeneração salva consome uma unidade. Edições manuais, falhas e diagnósticos de projeto ficam fora da cota. Excluir uma história salva não repõe o saldo. Consulte na Bancada o limite e o saldo da sua conta.",
     "termsOfUsePage_recursos_pagos_podem_depender_de": "Quando uma oferta paga estiver disponível, apresentaremos preço, recursos, limites e condições antes da contratação."
   },
   "privacyPolicyPage": {
+    "privacyPolicyPage_ultima_atualizacao": "Status da minuta",
+    "privacyPolicyPage_historico_de_uso_versoes_geradas": "Histórico de uso, versões geradas, contagem de gerações e limites da conta, preferências, projetos, membros convidados e ações realizadas na Bancada.",
     "privacyPolicyPage_entender_uso_desempenho_erros_e": "Usar métricas agregadas de uso, desempenho e erros, calculadas a partir de eventos de analytics autorizados, para melhorar o produto.",
     "privacyPolicyPage_dados_inseridos_pelo_usuario_podem": "Quando você solicita geração ou análise por IA, enviamos ao fornecedor de IA o contexto necessário para produzir a resposta, como o briefing ou as informações do projeto incluídas na solicitação.",
     "privacyPolicyPage_nao_usamos_dados_pessoais_como": "Não usamos dados pessoais como produto para venda de bases a terceiros. Compartilhamos dados conforme as finalidades desta Política e na medida necessária para cada uma.",
@@ -44,7 +47,7 @@
     "landingCopy_para_comecar_sem_cartao_e": "com limite de uso e sem cartão",
     "landingCopy_comece_gratis_escale_quando_precisar": "Comece com o Free e acompanhe o Pro",
     "landingCopy_comece_sem_cartao_evolua_quando": "Comece sem cartão. A lista de interesse do Pro está aberta.",
-    "landingCopy_geracoes_de_user_story_por": "Na Bancada, o Free inclui {{p1}} gerações bem-sucedidas e salvas por conta, sem renovação mensal. Regenerações salvas também contam.",
+    "landingCopy_geracoes_de_user_story_por": "Na Bancada, o Free inclui {{p1}} gerações bem-sucedidas e salvas por conta, sem renovação mensal. Regenerações salvas também contam. Edições manuais, falhas e diagnósticos de projeto ficam fora da cota.",
     "landingCopy_mais_popular": "Lista de interesse",
     "landingCopy_para_times_que_precisam_de": "O plano Pro está em avaliação.",
     "landingCopy_quer_testar_o_plano": "Tem interesse no plano {{p1}}?",

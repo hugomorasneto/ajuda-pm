@@ -194,7 +194,7 @@ function TermsSection({ section, index }) {
 
 function TermsOfUsePage() {
   const t = useCopy('termsOfUsePage')
-  const { language } = useLanguage()
+  const { language, preview } = useLanguage()
   const termsSections = getTermsSections(t)
   const termsSummary = getTermsSummary(t)
   usePublicPageMetadata('terms')
@@ -221,7 +221,9 @@ function TermsOfUsePage() {
 
         <aside className="privacy-policy-hero__summary" aria-label={t('termsOfUsePage_resumo_dos_termos')}>
           <p className="privacy-policy-hero__summary-label">{t('termsOfUsePage_ultima_atualizacao')}</p>
-          <p className="privacy-policy-hero__summary-date">{formatPublicDate(TERMS_LAST_UPDATED, language)}</p>
+          <p className="privacy-policy-hero__summary-date">
+            {preview ? t('termsOfUsePage_vigencia_em_revisao') : formatPublicDate(TERMS_LAST_UPDATED, language)}
+          </p>
           <ul>
             {termsSummary.map((item) => (
               <li key={item}>{item}</li>

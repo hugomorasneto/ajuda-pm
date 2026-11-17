@@ -457,7 +457,10 @@ test('rotas públicas abrem diretamente nos dois idiomas com metadados e víncul
       await expect(page.locator('#propriedade-intelectual')).toContainText('The MIT License governs use of the code released under it.')
       await expect(page.locator('#aceitacao-e-escopo')).toContainText('the Brazilian Portuguese version is the reference')
       await expect(page.locator('#propriedade-intelectual')).toContainText('provide the features you request and operate the service securely')
-      await expect(page.locator('#planos-limites-e-recursos')).toContainText('Your account shows the Free plan\'s usage limit.')
+      await expect(page.locator('#planos-limites-e-recursos')).toContainText('a default allowance of 10 successful, saved generations per account, with no monthly reset')
+      await expect(page.locator('#planos-limites-e-recursos')).toContainText('Manual edits, failed attempts, and project diagnostics are outside this allowance.')
+      await expect(page.locator('#planos-limites-e-recursos')).toContainText('Deleting a saved story does not restore your allowance.')
+      await expect(page.locator('.privacy-policy-hero__summary-date')).toHaveText('Effective date under review')
       if (testInfo.project.name === 'celular') {
         await page.setViewportSize({ width: 320, height: 740 })
         await checkWidth(page)
@@ -468,6 +471,9 @@ test('rotas públicas abrem diretamente nos dois idiomas com metadados e víncul
     if (english === '/en/privacy-policy') {
       await expect(page.locator('#direitos-do-titular')).toContainText('a review of decisions made solely by automated means that affect your interests')
       await expect(page.locator('#uso-de-inteligencia-artificial')).toContainText('the context needed to produce a response')
+      await expect(page.locator('#quais-dados-podemos-coletar')).toContainText('generation counts and account limits')
+      await expect(page.locator('.privacy-policy-hero__summary-date')).toHaveText('Effective date under review')
+      await expect(page.locator('#retencao-dos-dados')).not.toContainText('90 days')
     }
     await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
     await expect(page).toHaveURL(portuguese)
@@ -475,10 +481,14 @@ test('rotas públicas abrem diretamente nos dois idiomas com metadados e víncul
     if (portuguese === '/termos-de-uso') {
       await expect(page.locator('#propriedade-intelectual')).toContainText('A revenda ou a sublicença de acesso ao serviço hospedado exige autorização expressa.')
       await expect(page.locator('#aceitacao-e-escopo')).toContainText('a versão em português brasileiro é a referência')
+      await expect(page.locator('#planos-limites-e-recursos')).toContainText('Excluir uma história salva não repõe o saldo.')
+      await expect(page.locator('.privacy-policy-hero__summary-date')).toHaveText('Vigência em revisão')
     }
     if (portuguese === '/politica-de-privacidade') {
       await expect(page.locator('#direitos-do-titular')).toContainText('Agência Nacional de Proteção de Dados (ANPD)')
       await expect(page.locator('#cookies-e-tecnologias-similares')).toContainText('Cookies de marketing estão desativados.')
+      await expect(page.locator('#quais-dados-podemos-coletar')).toContainText('contagem de gerações e limites da conta')
+      await expect(page.locator('.privacy-policy-hero__summary-date')).toHaveText('Vigência em revisão')
     }
   }
 
@@ -487,6 +497,20 @@ test('rotas públicas abrem diretamente nos dois idiomas com metadados e víncul
   await page.goto('http://127.0.0.1:4176/en/contact')
   await expect(page).toHaveURL('http://127.0.0.1:4176/')
   await expect(page.getByRole('combobox', { name: 'Idioma' })).toHaveCount(0)
+  await page.goto('http://127.0.0.1:4176/termos-de-uso')
+  await expect(page.locator('.privacy-policy-hero__summary-date')).toContainText('2026')
+  await expect(page.locator('#planos-limites-e-recursos')).not.toContainText('10 gerações bem-sucedidas')
+  expect((await request.get('http://127.0.0.1:4176/revisao-de-textos/')).status()).toBe(404)
+  const review = await request.get('/revisao-de-textos/')
+  expect(review.ok()).toBe(true)
+  const reviewHtml = await review.text()
+  expect(reviewHtml).toContain('Revisão da base <code>cf04407</code>')
+  expect(reviewHtml).toContain('Confirme o custo previsto para as 10 gerações')
+  await page.goto('/revisao-de-textos/#privacidade')
+  await checkWidth(page)
+  await page.getByRole('link', { name: 'Planos', exact: true }).click()
+  await expect(page).toHaveURL('/revisao-de-textos/#planos')
+  await checkWidth(page)
 })
 
 test('home mantém rascunho, âncora e validação da lista de interesse ao traduzir', async ({ page, context }, testInfo) => {
@@ -499,6 +523,7 @@ test('home mantém rascunho, âncora e validação da lista de interesse ao trad
   await page.getByRole('button', { name: 'Recusar opcionais' }).click()
   const plans = page.locator('#planos')
   await expect(plans).toContainText('10 gerações bem-sucedidas e salvas por conta, sem renovação mensal.')
+  await expect(plans).toContainText('Edições manuais, falhas e diagnósticos de projeto ficam fora da cota.')
   await expect(plans.locator('.landing-pricing__card--pro .landing-pricing__list')).toHaveCount(0)
   await page.locator('#lead-name').fill('Nome de teste')
   await page.getByRole('button', { name: 'Quero receber novidades do Pro' }).click()
@@ -508,6 +533,7 @@ test('home mantém rascunho, âncora e validação da lista de interesse ao trad
   await expect(page.locator('#lead-name')).toHaveValue('Nome de teste')
   await expect(page.locator('#lead-email-error')).toHaveText('Enter your email address.')
   await expect(plans).toContainText('10 successful, saved generations per account, with no monthly reset.')
+  await expect(plans).toContainText('Manual edits, failed attempts, and project diagnostics are outside this allowance.')
   await expect(plans).toContainText('We are evaluating the Pro plan.')
   if (testInfo.project.name === 'desktop') {
     const freeButton = await plans.getByRole('link', { name: 'Create a free account' }).boundingBox()
