@@ -83,6 +83,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-legal-consent-l
 
 O teste usa contas fictícias e inclui cadastro, falhas, permissões, isolamento, repetição, quatro solicitações concorrentes e apresentação de uma nova versão. A autenticação nos testes de navegador é simulada. A migração e o frontend precisam ser ativados em conjunto em uma futura implantação autorizada.
 
+Para validar o percurso com autenticação real e e-mail capturado localmente, execute `npm run test:auth:local` com Docker e o Chromium do Playwright disponíveis. O teste monta PostgreSQL, GoTrue, PostgREST e um coletor SMTP descartáveis, sem consultar um projeto hospedado. Ele compila a prévia com configuração fictícia, usa exclusivamente as portas locais `54321` e `43919` e falha se estiverem ocupadas. Não execute junto com outro comando que reconstrua `dist-i18n-preview/`.
+
+O percurso cobre português e inglês em desktop e celular de 320 pixels: cadastro, reenvio, bloqueio do login antes da confirmação, confirmação pelo link de e-mail real, aceite registrado no cadastro, recarga, conta sem aceite, aceite pelo teclado, saída e novo login com o destino, parâmetros e âncora preservados. Os documentos do cadastro abrem em outra aba na prévia para preservar o formulário preenchido. As capturas ficam na pasta temporária informada pelo teste; os containers e a rede exclusivos são removidos ao terminar. A validação não cobre os modelos de e-mail, limites ou entrega do serviço remoto, nem as funcionalidades de Times após a autenticação.
+
 ## Contribuição
 
 Leia o [guia de contribuição](CONTRIBUTING.md) e as [instruções para relatar problemas de segurança](SECURITY.md).

@@ -193,8 +193,12 @@ function SignupPage() {
               ns="auth"
               i18nKey="signupTerms"
               components={{
-                terms: <Link to="/termos-de-uso" className="auth-card__link" />,
-                privacy: <Link to="/politica-de-privacidade" className="auth-card__link" />,
+                terms: <Link to="/termos-de-uso" className="auth-card__link" {...(preview ? {
+                  target: '_blank', rel: 'noreferrer', 'aria-label': t('legalTermsNewTab'),
+                } : {})} />,
+                privacy: <Link to="/politica-de-privacidade" className="auth-card__link" {...(preview ? {
+                  target: '_blank', rel: 'noreferrer', 'aria-label': t('legalPrivacyNewTab'),
+                } : {})} />,
               }}
             />
           </p>

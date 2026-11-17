@@ -23,7 +23,8 @@
     "dev:i18n": "vite --mode i18n-preview --host 127.0.0.1 --strictPort",
     "build:i18n": "vite build --mode i18n-preview",
     "preview:i18n": "vite preview --mode i18n-preview --host 127.0.0.1 --strictPort",
-    "test:e2e:i18n": "node e2e/build-preview.mjs && playwright test"
+    "test:e2e:i18n": "node e2e/build-preview.mjs && playwright test",
+    "test:auth:local": "node scripts/test-auth-flow-local.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.0",

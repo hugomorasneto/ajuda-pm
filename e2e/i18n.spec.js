@@ -358,6 +358,40 @@ test('login mantém campos e aviso, reenvia uma vez e encerra a sessão no mesmo
   await expect(page.getByText('You signed out.')).toHaveCount(0)
 })
 
+test('cadastro preserva formulário e destino ao ler os documentos legais pelo teclado', async ({ page, context }) => {
+  const traffic = await mockWorkspace(context, user, { authenticated: false })
+  const from = '/times?ref=a%26b%23c#main-content'
+  await page.goto(authLink('/signup', from, 'pt-BR'))
+  await page.getByRole('button', { name: 'Recusar opcionais' }).click()
+  await page.locator('#email').fill('reader@example.test')
+  await page.locator('#password').fill('fictional-password')
+  for (const language of ['pt-BR', 'en']) {
+    await page.getByRole('combobox').selectOption(language)
+    await expect(page.locator('.auth-side__preview-story')).not.toContainText('<em>')
+    await expect(page.locator('.auth-side__preview-story em')).toHaveCount(2)
+    const documents = language === 'en'
+      ? [['Read the Terms of Use in a new tab', 'Terms of Use'], ['Read the Privacy Policy in a new tab', 'Privacy Policy']]
+      : [['Ler os Termos de Uso em uma nova aba', 'Termos de Uso'], ['Ler a Política de Privacidade em uma nova aba', 'Política de Privacidade']]
+    for (const [name, heading] of documents) {
+      const link = page.locator('#uso-de-dados').getByRole('link', { name, exact: true })
+      await link.focus()
+      await expect(link).toBeFocused()
+      const popup = page.waitForEvent('popup')
+      await page.keyboard.press('Enter')
+      const document = await popup
+      await expect(document.getByRole('heading', { name: heading, level: 1, exact: true })).toBeVisible()
+      await expect(document.locator('html')).toHaveAttribute('lang', language)
+      await document.close()
+      await expect(page.locator('#email')).toHaveValue('reader@example.test')
+      await expect(page.locator('#password')).toHaveValue('fictional-password')
+      expect(new URL(page.url()).searchParams.get('from')).toBe(from)
+      // Reviewing documents cannot create an account or accept on the person's behalf.
+      await expect(page.getByRole('heading', { name: language === 'en' ? 'Create your free account' : 'Crie sua conta grátis' })).toBeVisible()
+    }
+  }
+  expect(traffic.filter(({ pathname }) => pathname.endsWith('/signup') || pathname.endsWith('/accept_local_legal_terms'))).toHaveLength(0)
+})
+
 test('cadastro e confirmação preservam o destino codificado e permitem reenviar sem sair da tela', async ({ page, context }, testInfo) => {
   const traffic = await mockWorkspace(context, user, { authenticated: false, resendFailsFirst: true })
   const from = '/times?projectId=project-b&ref=a%26b%23c#main-content'
@@ -365,7 +399,7 @@ test('cadastro e confirmação preservam o destino codificado e permitem reenvia
   await page.getByRole('button', { name: 'Recusar opcionais' }).click()
   await expect(page.locator('#uso-de-dados')).toContainText('aceita os Termos de Uso. Consulte a Política de Privacidade')
   await expect(page.locator('#uso-de-dados')).toContainText('uso profissional por pessoas com 18 anos ou mais')
-  await expect(page.locator('#uso-de-dados').getByRole('link', { name: 'Política de Privacidade' })).toHaveAttribute('href', '/politica-de-privacidade')
+  await expect(page.locator('#uso-de-dados').getByRole('link', { name: 'Ler a Política de Privacidade em uma nova aba' })).toHaveAttribute('href', '/politica-de-privacidade')
   await page.getByLabel('E-mail', { exact: true }).fill(user.email)
   await page.locator('input[type="password"]').fill('short')
   await page.getByRole('button', { name: 'Criar conta grátis' }).click()
@@ -373,7 +407,7 @@ test('cadastro e confirmação preservam o destino codificado e permitem reenvia
   await expect(page.locator('input[type="password"]')).toBeFocused()
   await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
   await expect(page.getByText('Use at least 6 characters.', { exact: true })).toBeVisible()
-  await expect(page.locator('#uso-de-dados').getByRole('link', { name: 'Terms of Use' })).toHaveAttribute('href', '/en/terms-of-use')
+  await expect(page.locator('#uso-de-dados').getByRole('link', { name: 'Read the Terms of Use in a new tab' })).toHaveAttribute('href', '/en/terms-of-use')
   await expect(page.locator('#uso-de-dados')).toContainText('agree to the Terms of Use. Read the Privacy Policy')
   await expect(page.locator('#uso-de-dados')).toContainText('professional use by people aged 18 or older')
   await expect(page.locator('input[type="password"]')).toHaveValue('short')

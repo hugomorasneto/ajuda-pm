@@ -8,7 +8,7 @@ export default function AuthStoryExample({ label }) {
       <p className="auth-side__preview-label">{t(label)}</p>
       <div className="auth-side__preview-card">
         <p className="auth-side__preview-story">
-          <Trans t={t} ns="auth" i18nKey="exampleStory" />
+          <Trans t={t} ns="auth" i18nKey="exampleStory" components={{ em: <em /> }} />
         </p>
         <ul className="auth-side__preview-criteria">
           <li>{t('exampleBlock')}</li>
