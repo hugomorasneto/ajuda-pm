@@ -1,39 +1,10 @@
 {
   "learningTeaser_ver_trilha_completa": "Ver trilha completa →",
   "cover": "Capa do guia {{title}}",
-  "beginner": "Iniciante",
   "trainingGround": "Campo de Treino ProdForge",
   "completedModule": "Módulo concluído",
   "completed": "Concluído",
   "reread": "Reler guia",
   "read": "Ler guia",
-  "practice": "Praticar →",
-  "guidesInPortuguese": "Os guias completos estão em português (Brasil).",
-  "guides": {
-    "fundamentos-produto-agil": {
-      "title": "Fundamentos de produto ágil para PM/PO iniciante",
-      "excerpt": "O que realmente importa no começo: problema, decisão, alinhamento e aprendizado contínuo. Sem decorar framework antes da hora.",
-      "category": "Fundamentos"
-    },
-    "user-stories-na-pratica": {
-      "title": "Stories na prática",
-      "excerpt": "Como sair de contexto solto para uma história útil, com objetivo, comportamento esperado, critérios e perguntas de refinamento.",
-      "category": "User Stories"
-    },
-    "backlog-e-refinamento": {
-      "title": "Backlog e refinamento sem caos",
-      "excerpt": "Como organizar prioridade, maturidade e conversa com o squad sem transformar backlog em depósito de pedidos.",
-      "category": "Backlog"
-    },
-    "refinamento-e-criterios": {
-      "title": "Como fazer refinamento sem desperdiçar reunião",
-      "excerpt": "Como chegar preparado, escrever critérios de aceite que realmente orientam dev e QA, e sair com decisões em vez de mais dúvidas.",
-      "category": "Refinamento"
-    },
-    "alinhamento-com-stakeholders": {
-      "title": "Alinhamento com stakeholders sem virar telefone sem fio",
-      "excerpt": "Como ir à fonte do problema, confirmar entendimento antes de especificar e manter o alinhamento ativo ao longo do ciclo — sem surpresas na review.",
-      "category": "Alinhamento"
-    }
-  }
+  "practice": "Praticar →"
 }

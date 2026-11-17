@@ -7,10 +7,6 @@ const DEFAULT_IMAGE_URL = `${SITE_URL}/og-prodforge.png`
 const DEFAULT_IMAGE_ALT =
   'Preview do ProdForge, workspace de IA para transformar briefings confusos em user stories claras.'
 
-export const ACADEMIA_IMAGE_URL = `${SITE_URL}/og-prodforge.png`
-export const ACADEMIA_IMAGE_ALT =
-  'Preview do ProdForge com proposta de valor e exemplo de user story estruturada.'
-
 function upsertMeta(selector, attributeName, attributeValue, content) {
   let element = document.head.querySelector(selector)
 
@@ -123,35 +119,4 @@ export function usePageMetadata({
     twitterTitle,
     type,
   ])
-}
-
-export function buildArticleJsonLd({ title, description, path, excerpt, publishedTime }) {
-  const url = new URL(path, SITE_URL).toString()
-
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: title,
-    description,
-    articleSection: 'Campo de Treino',
-    inLanguage: 'pt-BR',
-    mainEntityOfPage: url,
-    url,
-    image: DEFAULT_IMAGE_URL,
-    author: {
-      '@type': 'Organization',
-      name: APP_NAME,
-    },
-    publisher: {
-      '@type': 'Organization',
-      name: APP_NAME,
-      logo: {
-        '@type': 'ImageObject',
-        url: `${SITE_URL}/favicon.svg`,
-      },
-    },
-    datePublished: publishedTime,
-    dateModified: publishedTime,
-    abstract: excerpt,
-  }
 }

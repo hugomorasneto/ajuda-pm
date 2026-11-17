@@ -8,8 +8,8 @@ function PublicLayout() {
   const location = useLocation()
   const page = getPilotPage(location.pathname)
   const isHomeRoute = page?.id === 'home'
-  const isLearningRoute = location.pathname.startsWith('/aprender')
-  const isLegalRoute = Boolean(page?.en && !isHomeRoute)
+  const isLearningRoute = Boolean(page?.learning)
+  const isLegalRoute = Boolean(page?.en && !isHomeRoute && !isLearningRoute)
   const layoutClassName = [
     'page-shell',
     'public-layout',

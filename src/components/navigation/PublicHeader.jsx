@@ -11,7 +11,7 @@ import { useAuth } from '../../hooks/useAuth'
 const publicNavItems = (t) => [
   { label: t('product'), to: '/#produto', activeOn: ['/'] },
   { label: t('how'), to: '/#como-funciona' },
-  { label: t('training'), to: '/aprender', activeOn: ['/aprender'] },
+  { label: t('training'), to: '/aprender', activeOn: ['/aprender', '/en/learn'] },
   { label: t('plans'), to: '/#planos' },
 ]
 
@@ -124,7 +124,7 @@ function PublicHeader({ isHomeRoute = false, isLearningRoute = false, isLegalRou
             setMenuOpenPath((currentPath) => (currentPath === navPage ? null : navPage))
           }
           aria-expanded={isMenuOpen}
-          aria-label={isMenuOpen ? t('closeNav') : t('openNav')}
+          aria-label={isMenuOpen ? t('closeNav') : t('openPublicMenu')}
         >
           {isMenuOpen ? t('close') : t('menu')}
         </button>

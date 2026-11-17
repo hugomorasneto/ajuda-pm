@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { learningGuides } from '../content/learningContent'
+import englishLearning from '../content/en/learningEditorial.json'
+import { learningRoutes } from '../i18n/learningRoutes'
 import { isLocalPreview, languageDestination, localizeHref, preferenceKey, resolveLanguage } from '../i18n/routes'
 
 describe('pilot language resolution', () => {
@@ -40,13 +43,27 @@ describe('pilot language resolution', () => {
     expect(languageDestination({ pathname: '/projetos' }, 'en')).toBeNull()
   })
 
-  it('maps public links without changing encoded parameters, anchors or out-of-scope guides', () => {
+  it('maps public links without changing encoded parameters and anchors', () => {
     expect(localizeHref('/#como-funciona', 'en')).toBe('/en/#como-funciona')
     expect(localizeHref('/en/contact?ref=a%26b#formulario-contato', 'pt-BR'))
       .toBe('/contato?ref=a%26b#formulario-contato')
-    expect(localizeHref('/aprender/user-stories-na-pratica', 'en')).toBe('/aprender/user-stories-na-pratica')
+    expect(localizeHref('/aprender/user-stories-na-pratica#checklist', 'en'))
+      .toBe('/en/learn/user-stories-in-practice#checklist')
+    expect(localizeHref('/aprender/guia-inexistente', 'en')).toBe('/aprender/guia-inexistente')
     expect(localizeHref('/login?from=%2Ftimes&lang=pt-BR', 'en')).toBe('/login?from=%2Ftimes&lang=pt-BR')
     expect(resolveLanguage({ pathname: '/en', enabled: true })).toBe('en')
+  })
+
+  it('keeps stable progress IDs for all localized guide paths', () => {
+    const guideRoutes = learningRoutes.filter(({ guideSlug }) => guideSlug)
+    expect(guideRoutes.map(({ guideSlug }) => guideSlug).sort()).toEqual(learningGuides.map(({ slug }) => slug).sort())
+    expect(Object.keys(englishLearning.guides).sort()).toEqual(guideRoutes.map(({ guideSlug }) => guideSlug).sort())
+    for (const route of guideRoutes) {
+      const ref = '?ref=a%2Bb&ref=c'
+      const path = route['pt-BR'] + ref + '#checklist'
+      expect(localizeHref(path, 'en')).toBe(route.en + ref + '#checklist')
+      expect(localizeHref(route.en + ref + '#checklist', 'pt-BR')).toBe(path)
+    }
   })
 
 })

@@ -11,8 +11,9 @@ import LearningTeaser from '../components/landing/LearningTeaser'
 import PricingTeaser from '../components/landing/PricingTeaser'
 import WorkflowSteps from '../components/landing/WorkflowSteps'
 import { HUGO_MORAES_LINKEDIN_URL } from '../constants/app'
-import { getLearningGuidesBySlugs, learningHub } from '../content/learningContent'
+import { getLearningGuidesBySlugs, starterGuideSlugs } from '../content/learningContent'
 import { getLandingCopy } from '../content/landingCopy'
+import { useLearningCatalog } from '../hooks/useLearningCatalog'
 import { useAuth } from '../hooks/useAuth'
 import { usePublicPageMetadata } from '../hooks/usePublicPageMetadata'
 import { PRIVACY_CONSENT_CHANGE_EVENT } from '../utils/privacyConsent'
@@ -21,7 +22,7 @@ function HomePage() {
   const t = useCopy('homePage')
   const landingCopy = getLandingCopy(useCopy('landingCopy'))
   const { user } = useAuth()
-  const featuredGuides = getLearningGuidesBySlugs(learningHub.starterGuideSlugs)
+  const featuredGuides = getLearningGuidesBySlugs(starterGuideSlugs, useLearningCatalog())
 
   usePublicPageMetadata('home')
 

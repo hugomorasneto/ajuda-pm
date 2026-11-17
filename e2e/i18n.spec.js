@@ -482,7 +482,7 @@ test('home mantém rascunho, âncora e validação da lista de interesse ao trad
   await expect(page.locator('#lead-name')).toHaveValue('Nome de teste')
   await expect(page.locator('#lead-email-error')).toHaveText('Enter your email address.')
   expect(sent).toHaveLength(0)
-  await expect(page.getByRole('link', { name: 'See the full learning path' })).toHaveAttribute('hreflang', 'pt-BR')
+  await expect(page.getByRole('link', { name: 'See the full learning path' })).toHaveAttribute('href', '/en/learn')
   await page.locator('#lead-email').fill('test@example.test')
   await page.getByRole('button', { name: 'Notify me when it opens' }).click()
   await expect(page.getByText('You are on the list. We will let you know when there are updates.')).toBeVisible()
@@ -560,4 +560,130 @@ test('consentimento, alterações pendentes e idioma ficam independentes', async
   await page.getByRole('link', { name: 'Privacy Policy', exact: true }).first().click()
   await expect(page).toHaveURL('/en/privacy-policy')
   await expect(page.getByRole('button', { name: 'Reject optional' })).toBeVisible()
+})
+
+test('Campo de Treino abre a trilha e os sete guias nos dois idiomas', async ({ page, request }, testInfo) => {
+  test.setTimeout(60_000)
+  const errors = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  const entries = [
+    ['fundamentos-produto-agil', 'agile-product-foundations', 'Agile product foundations for new PMs and POs'],
+    ['user-stories-na-pratica', 'user-stories-in-practice', 'User stories in practice'],
+    ['backlog-e-refinamento', 'backlog-and-refinement', 'Backlog and refinement without chaos'],
+    ['scrum-para-pm-po', 'scrum-for-pms-and-pos', 'Practical Scrum for PMs and POs'],
+    ['discovery-leve', 'lightweight-discovery', 'Getting started with lightweight discovery'],
+    ['refinamento-e-criterios', 'refinement-and-acceptance-criteria', 'Make refinement meetings count'],
+    ['alinhamento-com-stakeholders', 'stakeholder-alignment', 'Stakeholder alignment without the game of telephone'],
+  ]
+  await page.goto('/aprender?origem=teste#modulos')
+  await expect(page.getByRole('heading', { level: 1, name: 'Campo de Treino ProdForge' })).toBeVisible()
+  await page.getByRole('button', { name: 'Recusar opcionais' }).click()
+  const selector = page.getByRole('combobox', { name: 'Idioma' })
+  await selector.focus()
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL('/en/learn?origem=teste#modulos')
+  await expect(page.getByRole('combobox', { name: 'Language' })).toBeFocused()
+  await expect(page.getByRole('heading', { level: 1, name: 'ProdForge Training Ground' })).toBeVisible()
+  await expect(page.getByRole('list', { name: 'Learning path modules' }).getByRole('listitem')).toHaveCount(5)
+  await expect(page.locator('.learn-apply-block__panel-text strong').first()).toHaveText('persona')
+  await expect(page.locator('.quick-notes-strip').getByRole('listitem')).toHaveCount(5)
+  await expect(page.getByRole('link', { name: 'Read User stories in practice', exact: true }))
+    .toHaveAttribute('href', '/en/learn/user-stories-in-practice')
+  await expect(page.getByRole('link', { name: 'Start the learning path' })).toHaveAttribute('href', '/en/learn/agile-product-foundations')
+  await page.goto('/en/learn')
+  await expect(page.getByRole('heading', { level: 1, name: 'ProdForge Training Ground' })).toBeInViewport()
+  await checkWidth(page)
+  await evidence(page, testInfo, 'campo-de-treino-en')
+
+  if (testInfo.project.name === 'celular') await page.setViewportSize({ width: 320, height: 740 })
+  for (const [portuguese, english, heading] of entries) {
+    const path = '/en/learn/' + english
+    const response = await request.get(path)
+    const html = await response.text()
+    expect(response.ok()).toBe(true)
+    expect(html).toContain('<html lang="en">')
+    expect(html).toContain('content="noindex,follow"')
+    expect(html).toContain('property="og:type" content="article"')
+    expect(html).toContain('href="https://prodforge.techtupa.com.br' + path + '"')
+    expect(html).not.toContain('{{')
+    await page.goto(path + '?ref=pt%2Ben#checklist')
+    await expect(page.getByRole('heading', { level: 1, name: heading, exact: true })).toBeVisible()
+    await expect(page.locator('#checklist li')).toHaveCount(4)
+    await expect(page.getByRole('navigation', { name: 'Guide contents' })).toBeVisible()
+    const schema = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent())
+    expect(schema).toMatchObject({ '@type': 'Article', inLanguage: 'en', headline: heading })
+    await expect(page.getByRole('link', { name: 'ProdForge Training Ground' })).toHaveAttribute('href', '/en/learn')
+    const nextReads = await page.locator('#proximas-leituras .learning-guide-related__read').evaluateAll(
+      (links) => links.map((link) => link.getAttribute('href')),
+    )
+    expect(nextReads).toHaveLength(2)
+    expect(nextReads.every((href) => href.startsWith('/en/learn/'))).toBe(true)
+    await checkWidth(page)
+    await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+    await expect(page).toHaveURL('/aprender/' + portuguese + '?ref=pt%2Ben#checklist')
+    await expect(page.getByRole('heading', { name: 'Use isto antes de seguir' })).toBeVisible()
+    await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR')
+  }
+
+  await page.goto('/en/learn/lightweight-discovery')
+  await expect(page.getByRole('heading', { level: 1, name: 'Getting started with lightweight discovery' })).toBeInViewport()
+  await evidence(page, testInfo, 'guia-en')
+  await page.reload()
+  await expect(page.getByRole('heading', { level: 1, name: 'Getting started with lightweight discovery' })).toBeVisible()
+  await page.goto('/scrum-agil?origem=legado#checklist')
+  await expect(page).toHaveURL('/aprender/scrum-para-pm-po?origem=legado#checklist')
+  await page.goto('/en/learn/unknown?from=old#modulos')
+  await expect(page).toHaveURL('/en/learn?from=old#modulos')
+  expect(errors).toEqual([])
+})
+
+test('o progresso do Campo de Treino usa o mesmo guia ao trocar de idioma', async ({ page, context }) => {
+  const guide = 'user-stories-na-pratica'
+  const edits = []
+  const completed = new Set(['fundamentos-produto-agil'])
+  await mockWorkspace(context)
+  await context.route((url) => url.origin === 'http://127.0.0.1:54321' && url.pathname === '/rest/v1/learning_progress', async (route) => {
+    const request = route.request()
+    const url = new URL(request.url())
+    if (request.method() === 'GET') {
+      expect(url.searchParams.get('user_id')).toBe('eq.' + user.id)
+      return route.fulfill({ json: [...completed].map((guide_slug) => ({ guide_slug })) })
+    }
+    if (request.method() === 'POST') {
+      const payload = request.postDataJSON()
+      edits.push({ method: 'POST', ...payload })
+      completed.add(payload.guide_slug)
+      return route.fulfill({ status: 201, json: [] })
+    }
+    const guideSlug = url.searchParams.get('guide_slug').slice(3)
+    edits.push({ method: request.method(), guide_slug: guideSlug, user_id: url.searchParams.get('user_id').slice(3) })
+    completed.delete(guideSlug)
+    return route.fulfill({ status: 204 })
+  })
+  await page.goto('/times?lang=en')
+  await expect(page.locator('.workspace-topbar__link--academy')).toHaveAttribute('href', '/en/learn')
+  await page.goto('/aprender/' + guide + '#checklist')
+  await page.getByRole('button', { name: 'Recusar opcionais' }).click()
+  await page.getByRole('button', { name: 'Marcar como concluído' }).click()
+  await expect(page.getByText('Módulo concluído', { exact: true })).toBeVisible()
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await expect(page).toHaveURL('/en/learn/user-stories-in-practice#checklist')
+  await expect(page.getByText('Module completed', { exact: true })).toBeVisible()
+  await expect.poll(() => edits).toEqual([{ method: 'POST', user_id: user.id, guide_slug: guide }])
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Undo completion' })).toBeVisible()
+  await page.getByRole('link', { name: 'ProdForge Training Ground', exact: false }).first().click()
+  await expect(page).toHaveURL('/en/learn')
+  const progress = page.getByRole('progressbar', { name: 'Learning path progress' })
+  await expect(progress).toHaveAttribute('aria-valuenow', '2')
+  await expect(page.getByText('2 of 5 modules completed')).toBeVisible()
+  await page.goBack()
+  await page.getByRole('button', { name: 'Undo completion' }).click()
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  await expect(page.getByRole('button', { name: 'Marcar como concluído' })).toBeVisible()
+  await expect.poll(() => edits).toEqual([
+    { method: 'POST', user_id: user.id, guide_slug: guide },
+    { method: 'DELETE', user_id: user.id, guide_slug: guide },
+  ])
 })

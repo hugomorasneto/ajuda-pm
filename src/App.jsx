@@ -87,9 +87,9 @@ const publicComponents = {
   terms: TermsOfUsePage,
 }
 
-function PrivacyPreferencesAlias() {
+function PublicRedirect({ pathname }) {
   const { search, hash } = useLocation()
-  return <Navigate to={{ pathname: '/preferencias-de-privacidade', search, hash }} replace />
+  return <Navigate to={{ pathname, search, hash }} replace />
 }
 
 function App() {
@@ -108,33 +108,35 @@ function App() {
           <Route element={<PublicLayout />}>
             {publicLocalePages.flatMap((page) => {
               const Page = publicComponents[page.id]
+              const LearningPage = page.guideSlug ? LearningGuidePage : LearningHubPage
+              const element = page.learning ? <LearningPage route={page} /> : <Page />
               const paths = preview ? [page['pt-BR'], page.en] : [page['pt-BR']]
-              return paths.map((path) => <Route key={path} path={path} element={<Page />} />)
+              return paths.map((path) => <Route key={path} path={path} element={element} />)
             })}
-            <Route path="/aprender" element={<LearningHubPage />} />
-            <Route path="/aprender/:slug" element={<LearningGuidePage />} />
+            <Route path="/aprender/:slug" element={<PublicRedirect pathname="/aprender" />} />
+            {preview && <Route path="/en/learn/:slug" element={<PublicRedirect pathname="/en/learn" />} />}
             <Route
               path="/preferencias-de-cookies"
-              element={<PrivacyPreferencesAlias />}
+              element={<PublicRedirect pathname="/preferencias-de-privacidade" />}
             />
             <Route
               path="/fundamentos"
-              element={<Navigate to="/aprender/fundamentos-produto-agil" replace />}
+              element={<PublicRedirect pathname="/aprender/fundamentos-produto-agil" />}
             />
             <Route
               path="/scrum-agil"
-              element={<Navigate to="/aprender/scrum-para-pm-po" replace />}
+              element={<PublicRedirect pathname="/aprender/scrum-para-pm-po" />}
             />
             <Route
               path="/backlog"
-              element={<Navigate to="/aprender/backlog-e-refinamento" replace />}
+              element={<PublicRedirect pathname="/aprender/backlog-e-refinamento" />}
             />
             <Route
               path="/user-stories"
-              element={<Navigate to="/aprender/user-stories-na-pratica" replace />}
+              element={<PublicRedirect pathname="/aprender/user-stories-na-pratica" />}
             />
-            <Route path="/templates" element={<Navigate to="/aprender" replace />} />
-            <Route path="/glossario" element={<Navigate to="/aprender" replace />} />
+            <Route path="/templates" element={<PublicRedirect pathname="/aprender" />} />
+            <Route path="/glossario" element={<PublicRedirect pathname="/aprender" />} />
           </Route>
 
           <Route

@@ -1,3 +1,5 @@
+import { learningRoutes } from './learningRoutes.js'
+
 export const DEFAULT_LANGUAGE = 'pt-BR'
 export const ENGLISH = 'en'
 export const PILOT_MODE = 'i18n-preview'
@@ -10,6 +12,7 @@ export const publicLocalePages = [
   { id: 'privacyPolicy', 'pt-BR': '/politica-de-privacidade', en: '/en/privacy-policy' },
   { id: 'preferences', 'pt-BR': '/preferencias-de-privacidade', en: '/en/privacy-preferences' },
   { id: 'terms', 'pt-BR': '/termos-de-uso', en: '/en/terms-of-use' },
+  ...learningRoutes,
 ]
 
 const pilotPages = [

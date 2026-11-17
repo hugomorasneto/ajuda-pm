@@ -316,7 +316,7 @@ function collectQuotedStrings(source, file) {
 function collectJsxText(source, file) {
   const lineStarts = buildLineStarts(source)
   const items = []
-  const pattern = />\s*([^<>{}][^<>{}]*?)\s*</gs
+  const pattern = /(?<!=)>\s*([^<>{}][^<>{}]*?)\s*</gs
 
   for (const match of source.matchAll(pattern)) {
     const text = normalizeCopy(match[1])
@@ -370,7 +370,7 @@ export function collectVisibleCopy(language = 'pt-BR') {
       : 'pt-BR'
     if (itemLanguage !== language) return []
 
-    if (relativePath.startsWith('src/i18n/locales/') || /(?:Metadata|\.i18n)\.json$/.test(relativePath)) {
+    if (relativePath.startsWith('src/i18n/locales/') || /(?:Metadata|learningEditorial|\.i18n)\.json$/.test(relativePath)) {
       function values(object) {
         return Object.values(object).flatMap((value) => typeof value === 'string' ? [value] : values(value))
       }
@@ -378,7 +378,7 @@ export function collectVisibleCopy(language = 'pt-BR') {
         file: relativePath,
         line: 1,
         column: 1,
-        text: normalizeCopy(value),
+        text: normalizeCopy(value.replace(/<\/?strong>/g, '')),
       }))
     }
 

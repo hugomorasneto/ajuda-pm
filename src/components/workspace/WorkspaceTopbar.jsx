@@ -1,6 +1,7 @@
 import LanguageSwitcher from '../../i18n/LanguageSwitcher'
 import { useCopy, useLanguage } from '../../i18n/context'
 import { Link, useLocation } from 'react-router-dom'
+import LocalizedLink from '../../i18n/LocalizedLink'
 import { APP_NAME, BRAND_MARK_SRC } from '../../constants/app'
 import { usePageMetadata } from '../../hooks/usePageMetadata'
 
@@ -113,9 +114,9 @@ function WorkspaceTopbar({ onOpenSidebar, topbarStatus }) {
         ) : null}
 
         <div className="workspace-topbar__actions">
-          <Link to="/aprender" className="workspace-topbar__link workspace-topbar__link--academy">
+          <LocalizedLink to="/aprender" className="workspace-topbar__link workspace-topbar__link--academy">
             {t('training')}
-          </Link>
+          </LocalizedLink>
           <Link to="/" className="workspace-topbar__link">
             {t('site')}
           </Link>

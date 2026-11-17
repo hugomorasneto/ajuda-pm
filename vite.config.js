@@ -1,6 +1,10 @@
 import { readFileSync } from 'node:fs'
 import englishAbout from './src/content/en/aboutMetadata.json'
 import englishFaq from './src/content/en/faqPage.i18n.json'
+import englishLearning from './src/content/en/learningEditorial.json'
+import portugueseLearning from './src/content/pt-BR/learningEditorial.json'
+import { getLearningMetadata } from './src/i18n/learningMetadata.js'
+import { learningRoutes } from './src/i18n/learningRoutes.js'
 import englishMetadata from './src/content/en/publicMetadata.json'
 import { getFaqCategories } from './src/content/faqData.js'
 import { getPublicMetadata } from './src/i18n/publicMetadata.js'
@@ -10,6 +14,8 @@ import { SITE_URL } from './src/i18n/aboutMetadata.js'
 import { getOgLocale, getPilotPage, PILOT_MODE, publicLocalePages } from './src/i18n/routes.js'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+const generatedPortugueseEntries = new Set(['refinamento-e-criterios', 'alinhamento-com-stakeholders'])
 
 const rootDir = fileURLToPath(new URL('.', import.meta.url))
 
@@ -41,14 +47,19 @@ function publicMetadataPlugin(mode) {
         const route = path.replace(/\/index\.html$/, '').replace(/\/$/, '')
         const page = getPilotPage(route)
         const isEnglish = mode === PILOT_MODE && /^\/en(?:\/|$)/.test(route)
-        if (!page?.en || (!isEnglish && page.id !== 'about')) return html
+        const generatedPortuguese = generatedPortugueseEntries.has(page?.guideSlug)
+        if (!page?.en || (!isEnglish && page.id !== 'about' && !generatedPortuguese)) return html
 
         const language = isEnglish ? 'en' : 'pt-BR'
         const faq = page.id === 'faq' ? getFaqCategories((key) => englishFaq[key]) : undefined
         const catalog = page.id === 'about' ? englishAbout : englishMetadata
-        const metadata = getPublicMetadata(page.id, language, faq, isEnglish ? catalog : undefined)
-        const template = isEnglish ? readFileSync(resolve(rootDir, 'sobre/index.html'), 'utf8') : html
+        const metadata = page.learning
+          ? getLearningMetadata(page, language, isEnglish ? englishLearning : portugueseLearning)
+          : getPublicMetadata(page.id, language, faq, isEnglish ? catalog : undefined)
+        const template = isEnglish || generatedPortuguese
+          ? readFileSync(resolve(rootDir, 'sobre/index.html'), 'utf8') : html
         const values = {
+          type: 'website',
           imageWidth: '1200',
           imageHeight: '630',
           ogDescription: metadata.description,
@@ -92,12 +103,9 @@ export default defineConfig(({ mode }) => ({
           id + 'English', resolve(rootDir, en.slice(1).replace(/\/$/, '') + '/index.html'),
         ])) : {}),
         faq: resolve(rootDir, 'faq/index.html'),
-        aprender: resolve(rootDir, 'aprender/index.html'),
-        fundamentos: resolve(rootDir, 'aprender/fundamentos-produto-agil/index.html'),
-        userStories: resolve(rootDir, 'aprender/user-stories-na-pratica/index.html'),
-        backlog: resolve(rootDir, 'aprender/backlog-e-refinamento/index.html'),
-        scrum: resolve(rootDir, 'aprender/scrum-para-pm-po/index.html'),
-        discovery: resolve(rootDir, 'aprender/discovery-leve/index.html'),
+        ...Object.fromEntries(learningRoutes.map((page) => [
+          page.id, resolve(rootDir, page['pt-BR'].slice(1) + '/index.html'),
+        ])),
       },
     },
   },

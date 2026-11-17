@@ -1,6 +1,8 @@
-import { Link } from 'react-router-dom'
+import { useCopy } from '../../i18n/context'
+import Link from '../../i18n/LocalizedLink'
 
 function LearningGuideHero({ guide }) {
+  const t = useCopy('learning')
   const heroStyle = guide.heroImageSrc
     ? {
         '--learning-guide-hero-image': `url("${guide.heroImageSrc}")`,
@@ -12,10 +14,8 @@ function LearningGuideHero({ guide }) {
   return (
     <header className="learning-guide-hero" style={heroStyle}>
       <div className="learning-guide-hero__top">
-        <Link to="/aprender" className="learning-guide-hero__backlink">
-          ← Campo de Treino ProdForge
-        </Link>
-        <div className="learning-guide-hero__chips" aria-label="Metadados do guia">
+        <Link to="/aprender" className="learning-guide-hero__backlink">{t('backTraining')}</Link>
+        <div className="learning-guide-hero__chips" aria-label={t('guideInfo')}>
           <span className="learning-guide-hero__chip">{guide.category}</span>
           <span className="learning-guide-hero__chip">{guide.readingTime}</span>
           <span className="learning-guide-hero__chip learning-guide-hero__chip--level">{guide.level}</span>
@@ -23,7 +23,7 @@ function LearningGuideHero({ guide }) {
       </div>
 
       <div className="learning-guide-hero__copy">
-        <span className="badge-pill badge-pill--academy">Campo de Treino ProdForge</span>
+        <span className="badge-pill badge-pill--academy">{t('title')}</span>
         <h1>{guide.title}</h1>
         <p>{guide.excerpt}</p>
       </div>

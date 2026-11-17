@@ -1,4 +1,7 @@
-import { Link, Navigate, useParams } from 'react-router-dom'
+import Link from '../i18n/LocalizedLink'
+import { useCopy, useLanguage } from '../i18n/context'
+import { getLearningMetadata } from '../i18n/learningMetadata'
+import { useLearningCatalog } from '../hooks/useLearningCatalog'
 import LearningChecklist from '../components/learning/LearningChecklist'
 import LearningExampleBlock from '../components/learning/LearningExampleBlock'
 import LearningGuideHero from '../components/learning/LearningGuideHero'
@@ -8,55 +11,34 @@ import LearningSummaryBlock from '../components/learning/LearningSummaryBlock'
 import {
   getLearningGuideBySlug,
   getLearningGuidesBySlugs,
-  getLearningNotesForGuide,
+  getLearningNotes,
 } from '../content/learningContent'
 import { withAcademyGuideMedia } from '../content/academyGuideMedia'
 import { useAuth } from '../hooks/useAuth'
 import { useLearningProgress } from '../hooks/useLearningProgress'
-import { ACADEMIA_IMAGE_ALT, ACADEMIA_IMAGE_URL, buildArticleJsonLd, usePageMetadata } from '../hooks/usePageMetadata'
+import { usePageMetadata } from '../hooks/usePageMetadata'
 
 const GUIDE_NAV_ITEMS = [
-  { href: '#resumo', label: 'Resumo' },
-  { href: '#quando-importa', label: 'Quando importa' },
-  { href: '#exemplo', label: 'Exemplo' },
-  { href: '#passo-a-passo', label: 'Passo a passo' },
-  { href: '#erros-comuns', label: 'Erros comuns' },
-  { href: '#checklist', label: 'Checklist' },
+  { href: '#resumo', label: 'summary' },
+  { href: '#quando-importa', label: 'context' },
+  { href: '#exemplo', label: 'example' },
+  { href: '#passo-a-passo', label: 'steps' },
+  { href: '#erros-comuns', label: 'mistakes' },
+  { href: '#checklist', label: 'checklist' },
 ]
 
-function LearningGuidePage() {
-  const { slug } = useParams()
+function LearningGuidePage({ route }) {
+  const { language } = useLanguage()
+  const t = useCopy('learning')
+  const catalog = useLearningCatalog()
   const { user } = useAuth()
-  const { isCompleted, markCompleted, unmarkCompleted } = useLearningProgress()
-  const guide = getLearningGuideBySlug(slug)
-  const guideWithMedia = guide ? withAcademyGuideMedia([guide])[0] : null
-  const nextGuides = guide ? getLearningGuidesBySlugs(guide.nextReads) : []
-  const relatedNotes = guide ? getLearningNotesForGuide(guide.slug) : []
-  const metadataPath = guide ? `/aprender/${guide.slug}` : '/aprender'
+  const { isCompleted, isLoading, markCompleted, unmarkCompleted } = useLearningProgress()
+  const guide = getLearningGuideBySlug(route.guideSlug, catalog)
+  const [guideWithMedia] = withAcademyGuideMedia([guide])
+  const nextGuides = getLearningGuidesBySlugs(guide.nextReads, catalog)
+  const relatedNotes = getLearningNotes(catalog).filter((note) => note.targetGuideSlug === guide.slug)
 
-  usePageMetadata({
-    title: guide?.seo.title ?? 'Campo de Treino ProdForge | Aprenda product management na prática',
-    description:
-      guide?.seo.description ??
-      'Guias práticos para PMs e POs iniciantes sobre fundamentos, user stories, backlog, Scrum e discovery.',
-    path: metadataPath,
-    type: guide ? 'article' : 'website',
-    image: ACADEMIA_IMAGE_URL,
-    imageAlt: ACADEMIA_IMAGE_ALT,
-    jsonLd: guide
-      ? buildArticleJsonLd({
-          title: guide.title,
-          description: guide.seo.description,
-          excerpt: guide.excerpt,
-          path: metadataPath,
-          publishedTime: '2026-05-01',
-        })
-      : null,
-  })
-
-  if (!guide) {
-    return <Navigate to="/aprender" replace />
-  }
+  usePageMetadata(getLearningMetadata(route, language, catalog))
 
   return (
     <div className="page learning-page learning-guide">
@@ -64,21 +46,21 @@ function LearningGuidePage() {
 
       <div className="learning-guide__shell">
         <article className="learning-guide__article">
-          <LearningSummaryBlock title="O que você precisa levar desta leitura" items={guide.quickSummary} />
+          <LearningSummaryBlock title={t('summaryTitle')} items={guide.quickSummary} />
 
           <section className="learning-guide-block learning-guide-context" id="quando-importa">
             <div className="learning-guide-block__header">
-              <p className="landing-section__eyebrow">Quando isso importa</p>
-              <h2>O contexto prático por trás do conceito</h2>
+              <p className="landing-section__eyebrow">{t('contextBadge')}</p>
+              <h2>{t('contextTitle')}</h2>
             </div>
 
             <div className="learning-guide-context__grid">
               <div>
-                <h3>Problema</h3>
+                <h3>{t('problem')}</h3>
                 <p>{guide.problem}</p>
               </div>
               <div>
-                <h3>Resultado esperado</h3>
+                <h3>{t('outcome')}</h3>
                 <p>{guide.outcome}</p>
               </div>
             </div>
@@ -88,8 +70,8 @@ function LearningGuidePage() {
 
           <section className="learning-guide-block learning-guide-steps" id="passo-a-passo">
             <div className="learning-guide-block__header">
-              <p className="landing-section__eyebrow">Passo a passo</p>
-              <h2>Como aplicar no dia seguinte</h2>
+              <p className="landing-section__eyebrow">{t('steps')}</p>
+              <h2>{t('stepsTitle')}</h2>
             </div>
 
             <div className="learning-guide-steps__list">
@@ -117,8 +99,8 @@ function LearningGuidePage() {
           {relatedNotes.length > 0 ? (
             <section className="learning-guide-block learning-guide-notes" id="notas-praticas">
               <div className="learning-guide-block__header">
-                <p className="landing-section__eyebrow">Notas práticas</p>
-                <h2>Conexões úteis para o trabalho diário</h2>
+                <p className="landing-section__eyebrow">{t('practicalNotes')}</p>
+                <h2>{t('notesTitle')}</h2>
               </div>
 
               <div className="learning-note-grid">
@@ -140,12 +122,12 @@ function LearningGuidePage() {
 
         <aside className="learning-guide__aside">
           <div className="learning-guide-aside__card">
-            <p className="learning-guide-aside__eyebrow">Nesta leitura</p>
-            <nav aria-label="Sumário do guia">
+            <p className="learning-guide-aside__eyebrow">{t('inThisGuide')}</p>
+            <nav aria-label={t('guideContents')}>
               <ul>
                 {GUIDE_NAV_ITEMS.map((item) => (
                   <li key={item.href}>
-                    <a href={item.href}>{item.label}</a>
+                    <a href={item.href}>{t(item.label)}</a>
                   </li>
                 ))}
               </ul>
@@ -153,24 +135,22 @@ function LearningGuidePage() {
           </div>
 
           <div className="learning-guide-aside__apply-card">
-            <p className="learning-guide-aside__apply-label">Pronto para praticar?</p>
-            <p className="learning-guide-aside__apply-body">
-              Aplique o que você acabou de ler. Gere uma user story com contexto real, não um exemplo fictício.
-            </p>
+            <p className="learning-guide-aside__apply-label">{t('readyToPractice')}</p>
+            <p className="learning-guide-aside__apply-body">{t('applyGuide')}</p>
             <div className="learning-guide-aside__apply-actions">
               <Link
                 className="landing-button landing-button--primary"
                 to={user ? '/tool' : '/signup'}
               >
-                {user ? 'Aplicar na Bancada →' : 'Criar conta grátis →'}
+                {user ? t('applyArrow') : t('signUp')}
               </Link>
               {!user && (
-                <p className="learning-guide-aside__apply-microcopy">Grátis · Sem cartão de crédito</p>
+                <p className="learning-guide-aside__apply-microcopy">{t('signupNote')}</p>
               )}
             </div>
           </div>
 
-          {user && (
+          {user && !isLoading && (
             <div className="learning-guide-aside__progress-card">
               {isCompleted(guide.slug) ? (
                 <>
@@ -179,15 +159,13 @@ function LearningGuidePage() {
                       <circle cx="7" cy="7" r="6" fill="currentColor" opacity="0.15" />
                       <path d="M4 7.5l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                    Módulo concluído
+                    {t('done')}
                   </div>
                   <button
                     type="button"
                     className="learning-guide-aside__progress-undo"
                     onClick={() => unmarkCompleted(guide.slug)}
-                  >
-                    Desmarcar conclusão
-                  </button>
+                  >{t('undo')}</button>
                 </>
               ) : (
                 <button
@@ -199,7 +177,7 @@ function LearningGuidePage() {
                     <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.4" />
                     <path d="M4 7.5l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  Marcar como concluído
+                  {t('markDone')}
                 </button>
               )}
             </div>

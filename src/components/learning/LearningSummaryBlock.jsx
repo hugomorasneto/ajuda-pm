@@ -1,3 +1,4 @@
+import { useCopy } from '../../i18n/context'
 const CheckIcon = () => (
   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
     <path d="M2 6.5l2.5 2.5 5.5-5.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -5,10 +6,11 @@ const CheckIcon = () => (
 )
 
 function LearningSummaryBlock({ title, items }) {
+  const t = useCopy('learning')
   return (
     <section className="learning-guide-block learning-guide-summary" id="resumo">
       <div className="learning-guide-block__header">
-        <span className="badge-pill">Em 2 minutos</span>
+        <span className="badge-pill">{t('summaryBadge')}</span>
         <h2>{title}</h2>
       </div>
 

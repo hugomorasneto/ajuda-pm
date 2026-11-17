@@ -1,9 +1,11 @@
+import { useCopy } from '../../i18n/context'
 function LearningChecklist({ items }) {
+  const t = useCopy('learning')
   return (
     <section className="learning-guide-block learning-guide-checklist" id="checklist">
       <div className="learning-guide-block__header">
-        <span className="badge-pill badge-pill--success">Checklist final</span>
-        <h2>Use isto antes de seguir</h2>
+        <span className="badge-pill badge-pill--success">{t('checklistBadge')}</span>
+        <h2>{t('checklistTitle')}</h2>
       </div>
 
       <ol className="learning-guide-checklist__list">

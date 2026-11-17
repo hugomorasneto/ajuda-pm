@@ -1,4 +1,5 @@
 import { useCopy, useLanguage } from '../../i18n/context'
+import { localizeHref } from '../../i18n/routes'
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC } from '../../constants/app'
@@ -210,7 +211,7 @@ function WorkspaceSidebar({ isOpen, onClose }) {
   const academyNavItems = [
     {
       label: t('guides'),
-      path: '/aprender',
+      path: localizeHref('/aprender', language),
       end: false,
       icon: <IconAcademy />,
       toneClass: 'workspace-sidebar__link--academy',
@@ -218,7 +219,7 @@ function WorkspaceSidebar({ isOpen, onClose }) {
     },
     {
       label: t('storiesGuide'),
-      path: '/aprender/user-stories-na-pratica',
+      path: localizeHref('/aprender/user-stories-na-pratica', language),
       end: true,
       icon: <IconStoryGuide />,
       toneClass: 'workspace-sidebar__link--academy',
