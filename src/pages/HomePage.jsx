@@ -1,4 +1,4 @@
-import { useCopy } from '../i18n/context'
+import { useCopy, useLanguage } from '../i18n/context'
 import { useEffect } from 'react'
 import Link from '../i18n/LocalizedLink'
 import BeforeAfterStory from '../components/landing/BeforeAfterStory'
@@ -20,7 +20,8 @@ import { PRIVACY_CONSENT_CHANGE_EVENT } from '../utils/privacyConsent'
 
 function HomePage() {
   const t = useCopy('homePage')
-  const landingCopy = getLandingCopy(useCopy('landingCopy'))
+  const { preview } = useLanguage()
+  const landingCopy = getLandingCopy(useCopy('landingCopy'), preview)
   const { user } = useAuth()
   const featuredGuides = getLearningGuidesBySlugs(starterGuideSlugs, useLearningCatalog())
 

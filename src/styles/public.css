@@ -7331,6 +7331,10 @@
   grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
+.public-layout--home-forge .landing-pricing__card > .forge-button {
+  grid-row: 3;
+}
+
 .public-layout--home-forge .landing-pricing__list {
   align-self: start;
 }

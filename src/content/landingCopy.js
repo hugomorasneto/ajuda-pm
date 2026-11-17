@@ -1,6 +1,6 @@
 import { FREE_GENERATION_LIMIT, FREE_PLAN_NAME, PRO_PLAN_NAME } from '../constants/app'
 
-export const getLandingCopy = (t) => ({
+export const getLandingCopy = (t, preview) => ({
   contextStrip: [
     {
       icon: 'bolt',
@@ -208,7 +208,7 @@ export const getLandingCopy = (t) => ({
       name: PRO_PLAN_NAME,
       badge: t('landingCopy_mais_popular'),
       description: t('landingCopy_para_times_que_precisam_de'),
-      items: [
+      items: preview ? [] : [
         t('landingCopy_mais_geracoes_e_versoes_por'),
         t('landingCopy_comparacao_de_versoes_e_formatos'),
         t('landingCopy_padroes_do_time_templates_e'),

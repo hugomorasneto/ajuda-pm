@@ -356,6 +356,8 @@ test('cadastro e confirmação preservam o destino codificado e permitem reenvia
   const from = '/times?projectId=project-b&ref=a%26b%23c#main-content'
   await page.goto(authLink('/signup', from, 'pt-BR'))
   await page.getByRole('button', { name: 'Recusar opcionais' }).click()
+  await expect(page.locator('#uso-de-dados')).toContainText('aceita os Termos de Uso. Consulte a Política de Privacidade')
+  await expect(page.locator('#uso-de-dados').getByRole('link', { name: 'Política de Privacidade' })).toHaveAttribute('href', '/politica-de-privacidade')
   await page.getByLabel('E-mail', { exact: true }).fill(user.email)
   await page.locator('input[type="password"]').fill('short')
   await page.getByRole('button', { name: 'Criar conta grátis' }).click()
@@ -364,6 +366,7 @@ test('cadastro e confirmação preservam o destino codificado e permitem reenvia
   await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
   await expect(page.getByText('Use at least 6 characters.', { exact: true })).toBeVisible()
   await expect(page.locator('#uso-de-dados').getByRole('link', { name: 'Terms of Use' })).toHaveAttribute('href', '/en/terms-of-use')
+  await expect(page.locator('#uso-de-dados')).toContainText('agree to the Terms of Use. Read the Privacy Policy')
   await expect(page.locator('input[type="password"]')).toHaveValue('short')
   await expect(page.getByLabel('Email', { exact: true })).toHaveValue(user.email)
   await expect(page).toHaveTitle('Create a ProdForge account')
@@ -447,15 +450,28 @@ test('rotas públicas abrem diretamente nos dois idiomas com metadados e víncul
       await expect(schema).toHaveCount(1)
       expect(JSON.parse(await schema.textContent()).mainEntity.length).toBeGreaterThan(5)
     }
-    if (english === '/en/terms-of-use' && testInfo.project.name === 'celular') {
-      await page.setViewportSize({ width: 320, height: 740 })
-      await checkWidth(page)
-      await page.getByRole('combobox', { name: 'Language' }).scrollIntoViewIfNeeded()
-      await evidence(page, testInfo, 'termos-en')
+    if (english === '/en/terms-of-use') {
+      await expect(page.locator('#propriedade-intelectual')).toContainText('The MIT License governs use of the code released under it.')
+      await expect(page.locator('#planos-limites-e-recursos')).toContainText('Your account shows the Free plan\'s usage limit.')
+      if (testInfo.project.name === 'celular') {
+        await page.setViewportSize({ width: 320, height: 740 })
+        await checkWidth(page)
+        await page.getByRole('combobox', { name: 'Language' }).scrollIntoViewIfNeeded()
+        await evidence(page, testInfo, 'termos-en')
+      }
+    }
+    if (english === '/en/privacy-policy') {
+      await expect(page.locator('#direitos-do-titular')).toContainText('a review of decisions made solely by automated means that affect your interests')
     }
     await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
     await expect(page).toHaveURL(portuguese)
     await expect(page.getByRole('heading', { level: 1, name: ptHeading, exact: true })).toBeVisible()
+    if (portuguese === '/termos-de-uso') {
+      await expect(page.locator('#propriedade-intelectual')).toContainText('A revenda ou a sublicença de acesso ao serviço hospedado exige autorização expressa.')
+    }
+    if (portuguese === '/politica-de-privacidade') {
+      await expect(page.locator('#direitos-do-titular')).toContainText('Agência Nacional de Proteção de Dados (ANPD)')
+    }
   }
 
   await page.goto('/preferencias-de-cookies?utm_source=old#privacy-preferences-info-title')
@@ -473,18 +489,28 @@ test('home mantém rascunho, âncora e validação da lista de interesse ao trad
   })
   await page.goto('/?utm_source=demo#lead-capture-title')
   await page.getByRole('button', { name: 'Recusar opcionais' }).click()
+  const plans = page.locator('#planos')
+  await expect(plans).toContainText('O limite padrão do Free é de 10 gerações de histórias de usuário por conta.')
+  await expect(plans.locator('.landing-pricing__card--pro .landing-pricing__list')).toHaveCount(0)
   await page.locator('#lead-name').fill('Nome de teste')
-  await page.getByRole('button', { name: 'Avise quando abrir' }).click()
+  await page.getByRole('button', { name: 'Quero receber novidades do Pro' }).click()
   await expect(page.locator('#lead-email-error')).toHaveText('Informe seu e-mail.')
   await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
   await expect(page).toHaveURL('/en/?utm_source=demo#lead-capture-title')
   await expect(page.locator('#lead-name')).toHaveValue('Nome de teste')
   await expect(page.locator('#lead-email-error')).toHaveText('Enter your email address.')
+  await expect(plans).toContainText('The default Free limit is 10 user story generations per account.')
+  await expect(plans).toContainText('We are evaluating the Pro plan.')
+  if (testInfo.project.name === 'desktop') {
+    const freeButton = await plans.getByRole('link', { name: 'Create a free account' }).boundingBox()
+    const proButton = await plans.getByRole('link', { name: 'Get Pro updates' }).boundingBox()
+    expect(proButton.height).toBeCloseTo(freeButton.height, 0)
+  }
   expect(sent).toHaveLength(0)
   await expect(page.getByRole('link', { name: 'See the full learning path' })).toHaveAttribute('href', '/en/learn')
   await page.locator('#lead-email').fill('test@example.test')
   await page.getByRole('button', { name: 'Get Pro updates' }).click()
-  await expect(page.getByText('You are on the list. We will let you know when there are updates.')).toBeVisible()
+  await expect(page.getByText('You are on the Pro interest list.')).toBeVisible()
   expect(sent).toEqual([[{ name: 'Nome de teste', email: 'test@example.test' }]])
   await page.reload()
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
@@ -510,6 +536,7 @@ test('contato preserva dados e categoria, traduz erro do servidor e envia só po
   })
   await page.goto('/contato?utm_source=demo#formulario-contato')
   await page.getByRole('button', { name: 'Recusar opcionais' }).click()
+  await expect(page.locator('.contact-page__privacy-note')).toContainText('registrar, encaminhar e responder à sua solicitação')
   await page.locator('#contact-name').fill('Nome de teste')
   await page.locator('#contact-email').fill('test@example.test')
   await page.locator('#contact-category').selectOption('privacidade')
@@ -519,6 +546,8 @@ test('contato preserva dados e categoria, traduz erro do servidor e envia só po
   await expect(page.locator('#contact-subject-error')).toHaveText('Informe o assunto.')
   await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
   await expect(page).toHaveURL('/en/contact?utm_source=demo#formulario-contato')
+  await expect(page.locator('.contact-page__privacy-note')).toContainText('record your request, route it to our team, and respond')
+  await expect(page.locator('.contact-page__privacy-note').getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute('href', '/en/privacy-policy')
   await expect(page.locator('#contact-name')).toHaveValue('Nome de teste')
   await expect(page.locator('#contact-email')).toHaveValue('test@example.test')
   await expect(page.locator('#contact-category')).toHaveValue('privacidade')
@@ -535,14 +564,17 @@ test('contato preserva dados e categoria, traduz erro do servidor e envia só po
 test('consentimento, alterações pendentes e idioma ficam independentes', async ({ page }, testInfo) => {
   const key = 'prodforge_privacy_consent'
   await page.goto('/en/')
+  await expect(page.locator('#privacy-consent-description')).toContainText('The marketing setting saves your preference.')
   await expect(page.getByRole('link', { name: 'Manage preferences' })).toHaveAttribute('href', '/en/privacy-preferences')
   await page.getByRole('link', { name: 'Manage preferences' }).click()
   await expect(page).toHaveURL('/en/privacy-preferences')
+  await expect(page.getByText(/referral sources and campaign parameters/)).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Choose your privacy preferences' })).toHaveCount(0)
   await page.locator('#privacy-preferences-analytics').check()
   expect(await page.evaluate((key) => localStorage.getItem(key), key)).toBeNull()
   await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
   await expect(page).toHaveURL('/preferencias-de-privacidade')
+  await expect(page.getByText(/a origem da visita e parâmetros de campanha/)).toBeVisible()
   await expect(page.locator('#privacy-preferences-analytics')).toBeChecked()
   expect(await page.evaluate((key) => localStorage.getItem(key), key)).toBeNull()
   await page.getByRole('button', { name: 'Salvar preferências' }).click()

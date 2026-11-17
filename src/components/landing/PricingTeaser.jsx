@@ -20,11 +20,13 @@ function PricingCard({ plan, cta, variant }) {
         </span>
       </div>
 
-      <ul className="landing-pricing__list">
-        {plan.items.map((item) => (
-          <li key={item}>{item}</li>
-        ))}
-      </ul>
+      {plan.items.length > 0 && (
+        <ul className="landing-pricing__list">
+          {plan.items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      )}
 
       {cta}
     </article>

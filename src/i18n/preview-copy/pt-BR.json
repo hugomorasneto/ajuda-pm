@@ -1,0 +1,46 @@
+{
+  "auth": {
+    "signupTerms": "Ao criar uma conta, você aceita os <terms>Termos de Uso</terms>. Consulte a <privacy>Política de Privacidade</privacy> para saber como tratamos seus dados pessoais."
+  },
+  "contactPage": {
+    "privacyNote": "Usamos os dados deste formulário para registrar, encaminhar e responder à sua solicitação. Consulte a <policy>Política de Privacidade</policy> para saber como tratamos esses dados."
+  },
+  "termsOfUsePage": {
+    "termsOfUsePage_a_marca_prodforge_identidade_visual": "O código disponibilizado sob a licença MIT pode ser usado conforme as condições dessa licença. A marca ProdForge, a identidade visual, os materiais editoriais e os demais itens reservados no escopo da licença seguem as permissões aplicáveis a cada material.",
+    "termsOfUsePage_voce_nao_pode_copiar_revender": "A revenda ou a sublicença de acesso ao serviço hospedado exige autorização expressa.",
+    "termsOfUsePage_para_proteger_a_experiencia_de": "Estas regras se aplicam ao uso do serviço hospedado do ProdForge.",
+    "termsOfUsePage_o_prodforge_pode_oferecer_plano": "O plano Free tem um limite de uso indicado na sua conta.",
+    "termsOfUsePage_recursos_pagos_podem_depender_de": "Quando uma oferta paga estiver disponível, apresentaremos preço, recursos, limites e condições antes da contratação."
+  },
+  "privacyPolicyPage": {
+    "privacyPolicyPage_nos_termos_da_lgpd_voce": "Nos termos da LGPD, você pode pedir confirmação do tratamento, acesso e correção dos seus dados. Nos casos previstos em lei, você também pode pedir anonimização, bloqueio ou eliminação, portabilidade e informação sobre com quem seus dados foram compartilhados.",
+    "privacyPolicyPage_para_exercer_esses_direitos_envie": "Você pode saber se é possível recusar o consentimento e quais são as consequências da recusa, revogar o consentimento e solicitar a exclusão de dados tratados com base nele, observadas as exceções legais. Quando aplicável, você pode se opor ao tratamento em desacordo com a LGPD e pedir revisão de decisões exclusivamente automatizadas que afetem seus interesses. Você também pode peticionar à Agência Nacional de Proteção de Dados (ANPD). Para exercer seus direitos, envie uma solicitação pelo canal de contato indicado nesta política. Podemos pedir informações necessárias para verificar sua identidade."
+  },
+  "privacy": {
+    "description": "Usamos tecnologias essenciais para manter a sessão, proteger o acesso e fazer o ProdForge funcionar. Com sua autorização, usamos analytics para entender como o site é usado e melhorar o produto. A opção de marketing registra sua preferência. Você pode alterar sua escolha em Preferências de Privacidade."
+  },
+  "privacyPreferencesPage": {
+    "privacyPreferencesPage_ajudam_a_entender_uso_identificar": "Registram páginas acessadas, eventos de uso e, quando disponíveis, a origem da visita e parâmetros de campanha. Quando você entra na conta, esses registros podem ser vinculados a ela.",
+    "privacyPreferencesPage_ajudam_a_entender_uso_desempenho": "Ao recusar essa categoria, o ProdForge interrompe novos registros opcionais de analytics neste navegador. Os registros anteriores seguem as regras de retenção da Política de Privacidade."
+  },
+  "landingCopy": {
+    "landingCopy_100_gratis": "Grátis para começar",
+    "landingCopy_para_comecar_sem_cartao_e": "com limite de uso e sem cartão",
+    "landingCopy_comece_gratis_escale_quando_precisar": "Comece com o Free e acompanhe o Pro",
+    "landingCopy_comece_sem_cartao_evolua_quando": "Comece sem cartão. A lista de interesse do Pro está aberta.",
+    "landingCopy_geracoes_de_user_story_por": "O limite padrão do Free é de {{p1}} gerações de histórias de usuário por conta. Consulte na Bancada o limite disponível para sua conta.",
+    "landingCopy_mais_popular": "Lista de interesse",
+    "landingCopy_para_times_que_precisam_de": "O plano Pro está em avaliação.",
+    "landingCopy_quer_testar_o_plano": "Tem interesse no plano {{p1}}?",
+    "landingCopy_cadastre_seu_e_mail_para": "Cadastre seu nome e e-mail para receber novidades do plano {{p1}}.",
+    "landingCopy_avise_quando_abrir": "Quero receber novidades do Pro",
+    "landingCopy_sem_spam_apenas_novidades_relevantes": "A lista de interesse é gratuita e sem compromisso de compra."
+  },
+  "pricingTeaser": {
+    "pricingTeaser_receber_novidades_do_pro": "Quero receber novidades do Pro"
+  },
+  "leadCaptureForm": {
+    "leadCaptureForm_interesse_registrado_vamos_avisar_quando": "Seu interesse no Pro foi registrado.",
+    "leadCaptureForm_este_e_mail_ja_esta": "Este e-mail já está na lista de interesse do Pro."
+  }
+}

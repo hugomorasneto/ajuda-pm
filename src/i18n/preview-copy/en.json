@@ -1,0 +1,46 @@
+{
+  "auth": {
+    "signupTerms": "By creating an account, you agree to the <terms>Terms of Use</terms>. Read the <privacy>Privacy Policy</privacy> to learn how we process your personal data."
+  },
+  "contactPage": {
+    "privacyNote": "We use the information in this form to record your request, route it to our team, and respond. Read our <policy>Privacy Policy</policy> to learn how we handle this information."
+  },
+  "termsOfUsePage": {
+    "termsOfUsePage_a_marca_prodforge_identidade_visual": "The MIT License governs use of the code released under it. The ProdForge brand, visual identity, editorial materials, and other reserved items listed in the license scope are subject to the permissions that apply to each item.",
+    "termsOfUsePage_voce_nao_pode_copiar_revender": "Reselling or sublicensing access to the hosted service requires express permission.",
+    "termsOfUsePage_para_proteger_a_experiencia_de": "These rules apply to use of the hosted ProdForge service.",
+    "termsOfUsePage_o_prodforge_pode_oferecer_plano": "Your account shows the Free plan's usage limit.",
+    "termsOfUsePage_recursos_pagos_podem_depender_de": "If a paid offer becomes available, we will show its price, features, limits, and terms before you subscribe."
+  },
+  "privacyPolicyPage": {
+    "privacyPolicyPage_nos_termos_da_lgpd_voce": "Under Brazil's General Data Protection Law (LGPD), you may ask us to confirm whether we process your data and request access or corrections. Where the law provides for it, you may also request anonymization, blocking or deletion, data portability, and information about whom we shared your data with.",
+    "privacyPolicyPage_para_exercer_esses_direitos_envie": "You may ask whether you can decline consent and what happens if you do, withdraw your consent, and request deletion of data processed on that basis, subject to legal exceptions. Where applicable, you may object to processing that violates the LGPD and ask for a review of decisions made solely by automated means that affect your interests. You may also file a petition with Brazil's data protection authority (ANPD). To exercise your rights, send a request through the contact channel listed in this policy. We may ask for information needed to verify your identity."
+  },
+  "privacy": {
+    "description": "We use essential technologies to keep you signed in, protect access, and make ProdForge work. With your permission, we use analytics to understand how people use the site and improve the product. The marketing setting saves your preference. You can change your choice in Privacy Preferences."
+  },
+  "privacyPreferencesPage": {
+    "privacyPreferencesPage_ajudam_a_entender_uso_identificar": "Record pages visited, usage events, and, when available, referral sources and campaign parameters. If you sign in, we may link these records to your account.",
+    "privacyPreferencesPage_ajudam_a_entender_uso_desempenho": "Rejecting this category stops ProdForge from recording new optional analytics events in this browser. Earlier records follow the retention rules in the Privacy Policy."
+  },
+  "landingCopy": {
+    "landingCopy_100_gratis": "Free to start",
+    "landingCopy_para_comecar_sem_cartao_e": "with a usage limit and no card required",
+    "landingCopy_comece_gratis_escale_quando_precisar": "Start with Free and get updates about Pro",
+    "landingCopy_comece_sem_cartao_evolua_quando": "Start without a card. The Pro interest list is open.",
+    "landingCopy_geracoes_de_user_story_por": "The default Free limit is {{p1}} user story generations per account. Check the workspace for the limit that applies to your account.",
+    "landingCopy_mais_popular": "Interest list",
+    "landingCopy_para_times_que_precisam_de": "We are evaluating the Pro plan.",
+    "landingCopy_quer_testar_o_plano": "Interested in the {{p1}} plan?",
+    "landingCopy_cadastre_seu_e_mail_para": "Enter your name and email to get updates about the {{p1}} plan.",
+    "landingCopy_avise_quando_abrir": "Get Pro updates",
+    "landingCopy_sem_spam_apenas_novidades_relevantes": "Joining the interest list is free and involves no purchase commitment."
+  },
+  "pricingTeaser": {
+    "pricingTeaser_receber_novidades_do_pro": "Get Pro updates"
+  },
+  "leadCaptureForm": {
+    "leadCaptureForm_interesse_registrado_vamos_avisar_quando": "You are on the Pro interest list.",
+    "leadCaptureForm_este_e_mail_ja_esta": "This email is already on the Pro interest list."
+  }
+}

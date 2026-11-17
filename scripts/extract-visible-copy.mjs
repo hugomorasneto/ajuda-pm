@@ -9,6 +9,7 @@ const DEFAULT_TARGETS = [
   'src/components',
   'src/content',
   'src/i18n/locales',
+  'src/i18n/preview-copy',
   'src/hooks/usePageMetadata.js',
   'src/layout',
   'src/pages',
@@ -365,12 +366,14 @@ export function collectVisibleCopy(language = 'pt-BR') {
   return listCopyFiles().flatMap((absolutePath) => {
     const source = fs.readFileSync(absolutePath, 'utf8')
     const relativePath = toPosix(path.relative(ROOT_DIR, absolutePath))
-    const itemLanguage = /^(?:en\/|src\/(?:content|i18n\/locales)\/en\/)/.test(relativePath)
+    const previewCopy = relativePath.startsWith('src/i18n/preview-copy/')
+    const itemLanguage = relativePath === 'src/i18n/preview-copy/en.json' ||
+      /^(?:en\/|src\/(?:content|i18n\/locales)\/en\/)/.test(relativePath)
       ? 'en'
       : 'pt-BR'
     if (itemLanguage !== language) return []
 
-    if (relativePath.startsWith('src/i18n/locales/') || /(?:Metadata|learningEditorial|\.i18n)\.json$/.test(relativePath)) {
+    if (previewCopy || relativePath.startsWith('src/i18n/locales/') || /(?:Metadata|learningEditorial|\.i18n)\.json$/.test(relativePath)) {
       function values(object) {
         return Object.values(object).flatMap((value) => typeof value === 'string' ? [value] : values(value))
       }
