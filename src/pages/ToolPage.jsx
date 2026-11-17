@@ -337,7 +337,8 @@ function ToolPage() {
     if (selectedStoryEstimationStatus !== 'estimated') {
       query.set('storyId', selectedStoryId)
     }
-    navigate(`/roda?${query.toString()}`)
+    const path = `/roda?${query.toString()}`
+    navigate(preview ? localizeHref(path, language) : path)
   }
 
   async function handleOrganizeFromNextSteps() {

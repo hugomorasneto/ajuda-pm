@@ -86,7 +86,7 @@ describe('authRedirect', () => {
     expect(getAuthRedirectContext('https://example.com/roda')).toBe('workspace')
   })
 
-  it('preserva a codificação do destino e propaga o idioma só para Times', () => {
+  it('preserva a codificação do destino e propaga o idioma para Times e Roda', () => {
     const from = '/times?projectId=p&ref=a%26b%23c&lang=en#main-content'
     const path = buildAuthPath('/login', from, 'pt-BR')
     const search = path.slice(path.indexOf('?'))
@@ -95,7 +95,7 @@ describe('authRedirect', () => {
     expect(getAuthContinuation(from, 'en')).toBe(from)
     expect(getAuthContinuation(from, 'pt-BR')).toBe(from.replace('lang=en', 'lang=pt-BR'))
     const invite = '/roda?codigo=a%2Fb%26c#sessao'
-    expect(getAuthContinuation(invite, 'en')).toBe(invite)
+    expect(getAuthContinuation(invite, 'en')).toBe('/roda?codigo=a%2Fb%26c&lang=en#sessao')
   })
 
   it('mantém o destino explícito quando sessionStorage está indisponível', () => {

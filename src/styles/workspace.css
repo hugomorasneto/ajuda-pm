@@ -12681,7 +12681,10 @@
   gap: var(--space-2);
 }
 
-.planning-poker-room__invite-actions .btn {
+.workspace-shell--forge .planning-poker-room__invite-actions .btn {
+  border-color: var(--forge-border);
+  background: var(--forge-surface-2);
+  color: var(--forge-text-primary);
   white-space: normal;
   line-height: 1.25;
 }

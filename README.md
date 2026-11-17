@@ -34,13 +34,13 @@ Variáveis `VITE_*` podem aparecer no bundle do frontend. Use apenas a URL e a c
 
 ## Prévia de idiomas
 
-As páginas públicas principais, o Campo de Treino, a Bancada, o Histórico, Projetos, Times e as telas de autenticação têm uma prévia em português brasileiro e inglês, disponível apenas em endereço local. Use os valores fictícios descritos acima e rode:
+As páginas públicas principais, o Campo de Treino, a Bancada, o Histórico, Projetos, Times, a Roda da Fogueira e as telas de autenticação têm uma prévia em português brasileiro e inglês, disponível apenas em endereço local. Use os valores fictícios descritos acima e rode:
 
 ```sh
 npm run dev:i18n
 ```
 
-Abra a página inicial em [português](http://127.0.0.1:5173/) ou [inglês](http://127.0.0.1:5173/en/). Projetos e Times exigem sessão. O teste automatizado simula a sessão e as respostas do Supabase sem acessar serviços externos. Na prévia, links de confirmação retornam por /check-email para preservar o destino original e o idioma. Os testes simulam esse retorno sem enviar e-mails reais. Os modelos de e-mail do Supabase não fazem parte da prévia. O Campo de Treino tem guias e notas em [português](http://127.0.0.1:5173/aprender) e [inglês](http://127.0.0.1:5173/en/learn). O progresso da conta é compartilhado entre os idiomas. A Bancada e o Histórico aceitam a troca de idioma da interface. A geração continua em português (Brasil). A exportação acompanha os rótulos da interface e preserva o conteúdo original da história. Projetos e detalhes mantêm os mesmos endereços nos dois idiomas. Os diagnósticos já criados conservam o idioma original ao trocar a interface ou copiar o Markdown. Termos, política, consentimento, planos e demais textos públicos em inglês exigem revisão humana antes da publicação.
+Abra a página inicial em [português](http://127.0.0.1:5173/) ou [inglês](http://127.0.0.1:5173/en/). Projetos, Times e a Roda da Fogueira exigem sessão. O teste automatizado simula a sessão e as respostas do Supabase sem acessar serviços externos. Na prévia, links de confirmação retornam por /check-email para preservar o destino original e o idioma. Os testes simulam esse retorno sem enviar e-mails reais. Os modelos de e-mail do Supabase não fazem parte da prévia. O Campo de Treino tem guias e notas em [português](http://127.0.0.1:5173/aprender) e [inglês](http://127.0.0.1:5173/en/learn). O progresso da conta é compartilhado entre os idiomas. A Bancada e o Histórico aceitam a troca de idioma da interface. A geração continua em português (Brasil). A exportação acompanha os rótulos da interface e preserva o conteúdo original da história. Projetos e detalhes mantêm os mesmos endereços nos dois idiomas. Os diagnósticos já criados conservam o idioma original ao trocar a interface ou copiar o Markdown. Na Roda, o idioma acompanha os links locais da sala e o texto copiado. A prévia usa respostas simuladas nos testes de convite, sem enviar e-mails. Termos, política, consentimento, planos e demais textos públicos em inglês exigem revisão humana antes da publicação.
 
 ```sh
 npx playwright install chromium

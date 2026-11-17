@@ -18,7 +18,7 @@ describe('pilot language resolution', () => {
     expect(isLocalPreview('production', '127.0.0.1')).toBe(false)
     expect(resolveLanguage({ ...teams, enabled: false, search: '?lang=en' })).toBe('pt-BR')
     expect(resolveLanguage({ ...teams, pathname: '/login', saved: 'en' })).toBe('en')
-    expect(resolveLanguage({ ...teams, pathname: '/projetos/id/roda/session', saved: 'en' })).toBe('pt-BR')
+    expect(resolveLanguage({ ...teams, pathname: '/tool/admin', saved: 'en' })).toBe('pt-BR')
   })
 
   it('uses URL, account, visitor, compatible browser language and default in order', () => {
@@ -40,7 +40,7 @@ describe('pilot language resolution', () => {
     })
     expect(languageDestination({ pathname: '/login', search: '?from=%2Froda%3Fcodigo%3DABC' }, 'en').search)
       .toBe('?from=%2Froda%3Fcodigo%3DABC&lang=en')
-    expect(languageDestination({ pathname: '/projetos/id/roda/session' }, 'en')).toBeNull()
+    expect(languageDestination({ pathname: '/tool/admin' }, 'en')).toBeNull()
   })
 
   it('localizes project URLs without changing their paths, parameters, or anchors', () => {
@@ -48,7 +48,9 @@ describe('pilot language resolution', () => {
     expect(resolveLanguage({ ...teams, pathname: '/projetos/123', search: '?lang=pt-BR', saved: 'en' })).toBe('pt-BR')
     expect(localizeHref('/projetos/123?ref=a%20b&ref=c#historias-projeto', 'en'))
       .toBe('/projetos/123?ref=a%20b&ref=c&lang=en#historias-projeto')
-    expect(localizeHref('/projetos/123/roda/456', 'en')).toBe('/projetos/123/roda/456')
+    expect(localizeHref('/projetos/123/roda/456', 'en')).toBe('/projetos/123/roda/456?lang=en')
+    expect(localizeHref('/roda?codigo=a%2Bb&ref=a&ref=b#sessao', 'en'))
+      .toBe('/roda?codigo=a%2Bb&ref=a&ref=b&lang=en#sessao')
   })
 
   it('maps public links without changing encoded parameters and anchors', () => {

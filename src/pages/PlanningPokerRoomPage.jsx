@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useOutletContext, useParams } from 'react-router-dom'
+import { useOutletContext, useParams } from 'react-router-dom'
+import { useCopy, useLanguage } from '../i18n/context'
+import { formatNotice } from '../i18n/formatNotice'
+import Link from '../i18n/LocalizedLink'
+import { localizeHref } from '../i18n/routes'
 import { useAuth } from '../hooks/useAuth'
 import { addProjectMemberByEmail, checkCanManageProject, getProjectById } from '../services/projectsService'
 import {
@@ -34,12 +38,32 @@ import {
 } from '../services/planningPokerService'
 import { sendPlanningPokerInviteEmail } from '../services/planningPokerInviteService'
 
-function formatDateTime(value) {
+const voteErrorKeys = new Map([
+  ['Tempo de votação encerrado.', 'timed_out'],
+  ['Esta rodada não está aberta para votação.', 'round_not_open'],
+  ['Observadores não podem votar.', 'observer_cannot_vote'],
+  ['Esta sessão não permite alterar o voto.', 'revote_disabled'],
+  ['A revelação está configurada para acontecer somente após todos votarem.', 'reveal_requires_all'],
+  ['Revele uma rodada antes de selar a estimativa.', 'reveal_before_sealing'],
+  ['Apenas membros do projeto podem votar nesta sessão.', 'member_access_required'],
+  ['Carta inválida para a escala desta sessão.', 'invalid_card'],
+])
+
+const inviteEmailErrorKeys = {
+  INVITE_EMAIL_TIMEOUT: 'invite_timed_out',
+  UNAUTHENTICATED: 'invite_sign_in_again',
+}
+
+function getVoteLabel(vote, t) {
+  return vote.vote_kind === 'abstain' ? t('abstain') : vote.vote_value
+}
+
+function formatDateTime(value, language) {
   if (!value) return '-'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return '-'
 
-  return new Intl.DateTimeFormat('pt-BR', {
+  return new Intl.DateTimeFormat(language, {
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
@@ -47,10 +71,10 @@ function formatDateTime(value) {
   }).format(date)
 }
 
-function getParticipantLabel(participant, currentUserId, index) {
+function getParticipantLabel(participant, currentUserId, index, t) {
   if (!participant) return '-'
-  if (participant.user_id === currentUserId) return 'Você'
-  return participant.display_name || `Membro da guilda ${index + 1}`
+  if (participant.user_id === currentUserId) return t('you')
+  return participant.display_name || t('team_member', { p1: index + 1 })
 }
 
 function getMedian(values) {
@@ -63,19 +87,18 @@ function getMedian(values) {
   return (sorted[middle - 1] + sorted[middle]) / 2
 }
 
-function formatNumber(value) {
+function formatNumber(value, language = 'pt-BR') {
   if (value === null || value === undefined || Number.isNaN(Number(value))) return '-'
-  return Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 2 })
+  return Number(value).toLocaleString(language, { maximumFractionDigits: 2 })
 }
 
-function buildInviteUrl({ inviteCode, projectId, sessionId }) {
+function buildInviteUrl({ inviteCode, projectId, sessionId, language }) {
   if (typeof window === 'undefined') return ''
 
-  if (inviteCode) {
-    return new URL(`/roda?codigo=${encodeURIComponent(inviteCode)}`, window.location.origin).toString()
-  }
-
-  return new URL(`/projetos/${projectId}/roda/${sessionId}`, window.location.origin).toString()
+  const path = inviteCode
+    ? `/roda?codigo=${encodeURIComponent(inviteCode)}`
+    : `/projetos/${projectId}/roda/${sessionId}`
+  return new URL(language ? localizeHref(path, language) : path, window.location.origin).toString()
 }
 
 function buildVoteSummary(votes) {
@@ -114,38 +137,38 @@ function buildRoomResultMarkdown({
   story,
   summary,
   votes,
-}) {
-  const storyTitle = story?.user_story?.title ?? 'História sem título'
+}, t, language) {
+  const storyTitle = story?.user_story?.title ?? t('untitled_story')
   const storyText = story?.user_story?.user_story ?? story?.user_story?.input_context ?? ''
   const resultLabel = finalEstimate || summary?.suggestion || '-'
   const lines = [
-    '# Resultado da Roda da Fogueira',
+    t('planning_poker_result'),
     '',
-    `**Sessão:** ${session?.name ?? '-'}`,
-    `**História:** ${storyTitle}`,
-    `**Estimativa:** ${resultLabel}`,
+    t('session', { p1: session?.name ?? '-' }),
+    t('story_2', { p1: storyTitle }),
+    t('estimate', { p1: resultLabel }),
     '',
-    '## Métricas',
-    `- Média: ${formatNumber(summary?.average)}`,
-    `- Mediana: ${formatNumber(summary?.median)}`,
-    `- Menor voto: ${formatNumber(summary?.lowest)}`,
-    `- Maior voto: ${formatNumber(summary?.highest)}`,
-    `- Divergência: ${formatNumber(summary?.divergence)}`,
-    `- Votos: ${summary?.voteCount ?? '-'}`,
-    `- Abstenções: ${summary?.abstentionCount ?? '-'}`,
-    `- Não sei: ${summary?.unknownCount ?? '-'}`,
+    t('metrics'),
+    t('average', { p1: formatNumber(summary?.average, language) }),
+    t('median', { p1: formatNumber(summary?.median, language) }),
+    t('lowest_vote', { p1: formatNumber(summary?.lowest, language) }),
+    t('highest_vote', { p1: formatNumber(summary?.highest, language) }),
+    t('spread', { p1: formatNumber(summary?.divergence, language) }),
+    t('votes', { p1: summary?.voteCount ?? '-' }),
+    t('abstentions', { p1: summary?.abstentionCount ?? '-' }),
+    t('not_sure', { p1: summary?.unknownCount ?? '-' }),
   ]
 
   if (storyText) {
-    lines.push('', '## User story', storyText)
+    lines.push('', t('user_story'), storyText)
   }
 
   if (votes.length > 0) {
-    lines.push('', '## Votos revelados')
+    lines.push('', t('revealed_votes'))
     votes.forEach((vote) => {
       const participantIndex = participants.findIndex((participant) => participant.id === vote.participant_id)
       const participant = participants[participantIndex]
-      lines.push(`- ${getParticipantLabel(participant, currentUserId, participantIndex)}: ${vote.vote_value}`)
+      lines.push(`- ${getParticipantLabel(participant, currentUserId, participantIndex, t)}: ${getVoteLabel(vote, t)}`)
     })
   }
 
@@ -153,6 +176,8 @@ function buildRoomResultMarkdown({
 }
 
 function PlanningPokerRoomPage() {
+  const t = useCopy('planning')
+  const { language, preview } = useLanguage()
   const { projectId, sessionId } = useParams()
   const { user } = useAuth()
   const userId = user?.id ?? null
@@ -174,6 +199,7 @@ function PlanningPokerRoomPage() {
   const [isActing, setIsActing] = useState(false)
   const [message, setMessage] = useState('')
   const [inviteMessage, setInviteMessage] = useState('')
+  const [shareMessage, setShareMessage] = useState('')
   const [inviteEmail, setInviteEmail] = useState('')
   const [isAddingInviteMember, setIsAddingInviteMember] = useState(false)
   const [roomCopyFeedback, setRoomCopyFeedback] = useState('')
@@ -181,20 +207,19 @@ function PlanningPokerRoomPage() {
   const [notFound, setNotFound] = useState(false)
   const [nowTick, setNowTick] = useState(() => Date.now())
   const inviteUrl = useMemo(
-    () => buildInviteUrl({ inviteCode: session?.invite_code, projectId, sessionId }),
-    [projectId, session?.invite_code, sessionId],
+    () => buildInviteUrl({ inviteCode: session?.invite_code, projectId, sessionId, language: preview ? language : undefined }),
+    [language, preview, projectId, session?.invite_code, sessionId],
   )
   const roomAccessUrl = useMemo(() => {
-    if (typeof window === 'undefined') return `/projetos/${projectId}/roda/${sessionId}`
-    return new URL(`/projetos/${projectId}/roda/${sessionId}`, window.location.origin).toString()
-  }, [projectId, sessionId])
+    return buildInviteUrl({ projectId, sessionId, language: preview ? language : undefined })
+  }, [language, preview, projectId, sessionId])
   const roomAccessRequestMessage = useMemo(
     () =>
       buildPlanningAccessRequestMessage({
         email: user?.email ?? '',
         inviteUrl: roomAccessUrl,
-      }),
-    [roomAccessUrl, user?.email],
+      }, t),
+    [t, roomAccessUrl, user?.email],
   )
 
   const currentParticipant = useMemo(
@@ -303,8 +328,8 @@ function PlanningPokerRoomPage() {
     if (!hasNumericDivergence) {
       return {
         tone: 'neutral',
-        label: 'Sem consenso numérico',
-        description: 'A rodada teve votos não numéricos ou ainda não possui estimativas suficientes para calcular divergência.',
+        label: t('no_numeric_consensus'),
+        description: t('this_round_has_non_numeric_votes_or'),
         suggestion,
       }
     }
@@ -312,8 +337,8 @@ function PlanningPokerRoomPage() {
     if (numericDivergence === 0) {
       return {
         tone: 'strong',
-        label: 'Consenso forte',
-        description: 'Todos os votos numéricos convergiram para o mesmo valor. A estimativa já pode ser selada.',
+        label: t('strong_consensus'),
+        description: t('all_numeric_votes_match_you_can_seal'),
         suggestion,
       }
     }
@@ -321,8 +346,8 @@ function PlanningPokerRoomPage() {
     if (numericDivergence <= 2) {
       return {
         tone: 'good',
-        label: 'Alinhamento alto',
-        description: 'A divergência é baixa. Confirme se há algum ponto aberto antes de selar a estimativa.',
+        label: t('close_alignment'),
+        description: t('the_spread_is_small_check_for_open'),
         suggestion,
       }
     }
@@ -330,19 +355,19 @@ function PlanningPokerRoomPage() {
     if (numericDivergence <= 5) {
       return {
         tone: 'attention',
-        label: 'Divergência moderada',
-        description: 'Vale discutir os votos extremos antes de decidir se a mediana representa o consenso.',
+        label: t('moderate_spread'),
+        description: t('discuss_the_highest_and_lowest_votes_before'),
         suggestion,
       }
     }
 
     return {
       tone: 'risk',
-      label: 'Divergência alta',
-      description: 'A guilda está desalinhada. Reabra a conversa ou faça uma nova rodada após esclarecer a história.',
+      label: t('wide_spread'),
+      description: t('the_team_has_different_views_discuss_the'),
       suggestion,
     }
-  }, [shouldShowResult, storyFinalEstimate, visibleSummary])
+  }, [t, shouldShowResult, storyFinalEstimate, visibleSummary])
   const scoringValues = Array.isArray(session?.scoring_values) ? session.scoring_values : []
   const eligibleVoters = useMemo(
     () =>
@@ -368,36 +393,36 @@ function PlanningPokerRoomPage() {
     ? Math.min(100, Math.round((votedCount / eligibleVoters.length) * 100))
     : 0
   const votingProgressLabel = eligibleVoters.length > 0
-    ? `${votedCount}/${eligibleVoters.length} votantes`
-    : 'Sem votantes'
+    ? t('voters', { p1: votedCount, p2: eligibleVoters.length })
+    : t('no_voters')
   const roomClosed = session?.status === 'completed' || session?.status === 'canceled'
   const storyLocked = ['estimated', 'skipped'].includes(currentStory?.status)
   const voteVisibilityLabel = shouldShowResult
     ? roomClosed
-      ? 'Resultado salvo'
-      : 'Votos revelados'
+      ? t('result_saved')
+      : t('votes_revealed')
     : currentRound?.status === 'voting'
-      ? 'Votos ocultos'
-      : 'Sem rodada ativa'
+      ? t('votes_hidden')
+      : t('no_active_round')
   const resolvedStoriesCount = storyStatusCounts.estimated + storyStatusCounts.skipped
   const roomProgressLabel =
     sessionStories.length > 0
-      ? `${resolvedStoriesCount}/${sessionStories.length} histórias concluídas`
-      : 'Sem histórias'
+      ? t('stories_completed', { p1: resolvedStoriesCount, p2: sessionStories.length })
+      : t('no_stories')
   const roomProgressPercent =
     sessionStories.length > 0 ? Math.round((resolvedStoriesCount / sessionStories.length) * 100) : 0
   const unresolvedStoriesCount = sessionStories.length - resolvedStoriesCount
   const unresolvedStoriesLabel =
     unresolvedStoriesCount === 1
-      ? '1 história ainda aberta'
-      : `${Math.max(unresolvedStoriesCount, 0)} histórias ainda abertas`
+      ? t('1_story_still_open')
+      : t('stories_still_open', { p1: Math.max(unresolvedStoriesCount, 0) })
   const allStoriesResolved = Boolean(
     sessionStories.length > 0 &&
       sessionStories.every((story) => ['estimated', 'skipped'].includes(story.status)),
   )
   const sessionSummaryProgress = useMemo(
-    () => getPlanningSessionProgress(sessionStories),
-    [sessionStories],
+    () => getPlanningSessionProgress(sessionStories, t),
+    [t, sessionStories],
   )
   const votingExpired = Boolean(
     currentRound?.status === 'voting' && isRoundTimerExpired(currentRound.ends_at, nowTick),
@@ -425,16 +450,16 @@ function PlanningPokerRoomPage() {
   )
   const currentStoryPositionLabel =
     currentStoryIndex >= 0 && sessionStories.length > 0
-      ? `${currentStoryIndex + 1} de ${sessionStories.length}`
-      : 'Sem seleção'
+      ? t('of_2', { p1: currentStoryIndex + 1, p2: sessionStories.length })
+      : t('no_selection')
   const canSelectNextPendingStory = Boolean(nextPendingStory && canFacilitate && !roomClosed && !isActing)
   const storyContinuityPanel = useMemo(() => {
     if (sessionStories.length === 0) {
       return {
         tone: 'empty',
-        eyebrow: 'Sem artefatos',
-        title: 'Nenhuma história vinculada',
-        description: 'Crie uma Roda com histórias prontas para estimar antes de abrir a votação.',
+        eyebrow: t('no_artifacts'),
+        title: t('no_linked_stories_2'),
+        description: t('create_a_session_with_stories_ready_to'),
         action: null,
       }
     }
@@ -442,9 +467,9 @@ function PlanningPokerRoomPage() {
     if (roomClosed) {
       return {
         tone: 'closed',
-        eyebrow: 'Histórico da Roda',
-        title: 'Sessão disponível para consulta',
-        description: `${roomProgressLabel}. Revise as estimativas salvas e os votos revelados desta sessão.`,
+        eyebrow: t('session_history'),
+        title: t('session_available_for_review'),
+        description: t('review_the_saved_estimates_and_revealed_votes', { p1: roomProgressLabel }),
         action: null,
       }
     }
@@ -452,11 +477,11 @@ function PlanningPokerRoomPage() {
     if (allStoriesResolved) {
       return {
         tone: 'complete',
-        eyebrow: 'Sessão concluída',
-        title: 'Todas as histórias foram resolvidas',
+        eyebrow: t('session_complete'),
+        title: t('all_stories_are_resolved'),
         description: canFacilitate
-          ? 'Finalize a sessão para manter este resultado apenas como histórico.'
-          : 'Aguarde o facilitador encerrar a sessão.',
+          ? t('end_the_session_to_keep_this_result')
+          : t('wait_for_the_facilitator_to_end_the'),
         action: null,
       }
     }
@@ -464,9 +489,9 @@ function PlanningPokerRoomPage() {
     if (storyLocked && nextPendingStory) {
       return {
         tone: 'next',
-        eyebrow: 'Próximo passo',
-        title: 'Avançar para a próxima história',
-        description: `${nextPendingStory.user_story?.title ?? 'A próxima história pendente'} ainda está pendente nesta Roda.`,
+        eyebrow: t('next_step'),
+        title: t('move_to_the_next_story'),
+        description: t('is_still_pending_in_this_session', { p1: nextPendingStory.user_story?.title ?? t('the_next_pending_story') }),
         action: canFacilitate ? 'select-next' : null,
       }
     }
@@ -474,9 +499,9 @@ function PlanningPokerRoomPage() {
     if (currentRound?.status === 'revealed') {
       return {
         tone: 'decision',
-        eyebrow: 'Decisão aberta',
-        title: 'Discuta antes de selar',
-        description: 'Os votos estão visíveis. Confirme o consenso ou reacenda a fogueira para uma nova rodada.',
+        eyebrow: t('decision_open'),
+        title: t('discuss_before_sealing'),
+        description: t('votes_are_visible_confirm_consensus_or_start'),
         action: null,
       }
     }
@@ -484,15 +509,16 @@ function PlanningPokerRoomPage() {
     if (!currentRound && canFacilitate) {
       return {
         tone: 'ready',
-        eyebrow: 'Pronto para iniciar',
-        title: 'Abra a votação quando a guilda estiver pronta',
-        description: 'As cartas ficam ocultas até a revelação. Use a lista lateral para trocar de história.',
+        eyebrow: t('ready_to_start'),
+        title: t('open_voting_when_the_team_is_ready'),
+        description: t('cards_stay_hidden_until_the_reveal_use'),
         action: null,
       }
     }
 
     return null
   }, [
+      t,
     allStoriesResolved,
     canFacilitate,
     currentRound,
@@ -503,21 +529,21 @@ function PlanningPokerRoomPage() {
     storyLocked,
   ])
   const facilitatorStateLabel = roomClosed
-    ? getSessionStatusLabel(session?.status)
+    ? getSessionStatusLabel(session?.status, t)
     : storyLocked
-      ? getStoryStatusLabel(currentStory?.status)
+      ? getStoryStatusLabel(currentStory?.status, t)
       : ''
   const sessionCompletionLabel =
     session?.status === 'completed'
-      ? 'Sessão finalizada'
+      ? t('session_completed')
       : session?.status === 'canceled'
-        ? 'Sessão cancelada'
+        ? t('session_canceled')
         : ''
   const guildSummaryLabel = roomClosed
-    ? `${votedCount}/${eligibleVoters.length} votantes participaram da rodada selecionada.`
+    ? t('voters_participated_in_the_selected_round', { p1: votedCount, p2: eligibleVoters.length })
     : currentRound?.status === 'voting'
-      ? `${votedCount}/${eligibleVoters.length} votantes já registraram presença.`
-      : 'A presença da guilda será atualizada durante a votação.'
+      ? t('voters_have_submitted_a_vote', { p1: votedCount, p2: eligibleVoters.length })
+      : t('voting_progress_updates_during_the_round')
   const requiresFullVotingBeforeReveal = Boolean(session?.reveal_votes_after_all)
   const hasPendingVotes = eligibleVoters.length > 0 && votedCount < eligibleVoters.length
   const canRevealRound = Boolean(
@@ -545,17 +571,17 @@ function PlanningPokerRoomPage() {
       proposedFinalEstimate &&
       !isActing,
   )
-  const revotePolicyLabel = session?.allow_revote ? 'Novo voto permitido' : 'Voto único'
+  const revotePolicyLabel = session?.allow_revote ? t('vote_changes_allowed') : t('one_vote_per_person')
   const revealPolicyLabel = session?.reveal_votes_after_all
-    ? 'Revelação após todos votarem'
-    : 'Revelação pelo facilitador'
-  const scoringScaleLabel = getScoringScaleLabel(session?.scoring_scale)
+    ? t('reveal_after_everyone_votes_2')
+    : t('facilitator_reveals')
+  const scoringScaleLabel = getScoringScaleLabel(session?.scoring_scale, t)
   const sessionControlPanel = useMemo(() => {
     if (roomClosed) {
       return {
         tone: 'closed',
-        title: sessionCompletionLabel || 'Sessão encerrada',
-        description: 'A Roda está bloqueada para novas ações e segue disponível como histórico.',
+        title: sessionCompletionLabel || t('session_closed'),
+        description: t('this_session_is_closed_for_voting_and'),
         actionLabel: null,
       }
     }
@@ -563,76 +589,76 @@ function PlanningPokerRoomPage() {
     if (allStoriesResolved) {
       return {
         tone: 'complete',
-        title: 'Pronta para finalizar',
-        description: 'Todas as histórias foram resolvidas. Finalize a sessão para manter a Roda apenas como consulta.',
-        actionLabel: 'Finalizar sessão',
+        title: t('ready_to_complete'),
+        description: t('all_stories_are_resolved_end_the_session'),
+        actionLabel: t('end_session'),
       }
     }
 
     return {
       tone: 'active',
-      title: 'Sessão em andamento',
-      description: `${unresolvedStoriesLabel}. Encerre manualmente apenas se a Roda precisar parar antes do fim.`,
-      actionLabel: 'Encerrar manualmente',
+      title: t('session_in_progress'),
+      description: t('end_the_session_manually_only_if_it', { p1: unresolvedStoriesLabel }),
+      actionLabel: t('end_manually'),
     }
-  }, [allStoriesResolved, roomClosed, sessionCompletionLabel, unresolvedStoriesLabel])
+  }, [t, allStoriesResolved, roomClosed, sessionCompletionLabel, unresolvedStoriesLabel])
   const finalSessionPanel = useMemo(() => {
     if (!session || (!roomClosed && !allStoriesResolved)) return null
 
     if (session.status === 'canceled') {
       return {
         tone: 'canceled',
-        title: 'Sessão cancelada',
-        description: 'A Roda foi encerrada sem novas ações de votação.',
+        title: t('session_canceled'),
+        description: t('the_session_ended_with_no_further_voting'),
       }
     }
 
     if (session.status === 'completed' && allStoriesResolved) {
       return {
         tone: 'completed',
-        title: 'Sessão finalizada automaticamente',
-        description: 'Todas as histórias foram resolvidas e o histórico está pronto para consulta.',
+        title: t('session_completed_automatically'),
+        description: t('all_stories_were_resolved_and_the_history'),
       }
     }
 
     if (session.status === 'completed') {
       return {
         tone: 'manual',
-        title: 'Sessão encerrada manualmente',
-        description: 'A Roda foi finalizada antes de resolver todas as histórias.',
+        title: t('session_ended_manually'),
+        description: t('the_session_ended_before_all_stories_were'),
       }
     }
 
     return {
       tone: 'ready',
-      title: 'Todas as histórias foram resolvidas',
-      description: 'Finalize a sessão para bloquear novas ações e manter o histórico consolidado.',
+      title: t('all_stories_are_resolved'),
+      description: t('end_the_session_to_close_voting_and'),
     }
-  }, [allStoriesResolved, roomClosed, session])
+  }, [t, allStoriesResolved, roomClosed, session])
   const revealActionHint =
     currentRound?.status === 'voting'
       ? votingExpired
-        ? 'Tempo encerrado. Os votos restantes foram bloqueados e o facilitador pode revelar as runas.'
+        ? t('time_is_up_further_votes_are_blocked')
         : requiresFullVotingBeforeReveal && hasPendingVotes
-        ? 'A revelação está bloqueada até todos os votantes registrarem presença.'
-        : 'As runas podem ser reveladas pelo facilitador quando fizer sentido para a discussão.'
+        ? t('cards_stay_hidden_until_everyone_votes')
+        : t('the_facilitator_can_reveal_the_cards_when')
       : null
   const getParticipantRoomStatus = useCallback(
     (participant) => {
-      if (participant.role === 'observer') return 'Observador'
+      if (participant.role === 'observer') return t('observer')
 
       const voted = currentRoundVoteStatus.some(
         (status) => status.participant_id === participant.id && status.has_voted,
       )
 
-      if (voted) return roomClosed ? 'Voto registrado' : 'Votou'
-      if (roomClosed) return 'Sem voto'
-      if (currentRound?.status === 'revealed') return 'Não votou'
-      if (currentRound?.status === 'voting') return 'Aguardando voto'
+      if (voted) return roomClosed ? t('vote_submitted') : t('voted')
+      if (roomClosed) return t('no_vote')
+      if (currentRound?.status === 'revealed') return t('did_not_vote')
+      if (currentRound?.status === 'voting') return t('waiting_for_vote')
 
-      return 'Aguardando rodada'
+      return t('waiting_for_a_round')
     },
-    [currentRound?.status, currentRoundVoteStatus, roomClosed],
+    [t, currentRound?.status, currentRoundVoteStatus, roomClosed],
   )
   const getParticipantRoomTone = useCallback(
     (participant) => {
@@ -650,8 +676,8 @@ function PlanningPokerRoomPage() {
     [currentRound?.status, currentRoundVoteStatus, roomClosed],
   )
   const remainingTimeLabel = useMemo(() => {
-    return formatRemainingTime(currentRound?.status === 'voting' ? currentRound.ends_at : null, nowTick)
-  }, [currentRound?.ends_at, currentRound?.status, nowTick])
+    return formatRemainingTime(currentRound?.status === 'voting' ? currentRound.ends_at : null, nowTick, t)
+  }, [t, currentRound?.ends_at, currentRound?.status, nowTick])
   const timerProgressPercent = useMemo(() => {
     if (currentRound?.status !== 'voting' || !currentRound.started_at || !currentRound.ends_at) {
       return null
@@ -668,15 +694,16 @@ function PlanningPokerRoomPage() {
     return Math.max(0, Math.min(100, remainingPercent))
   }, [currentRound, nowTick])
   const revealReadinessLabel = useMemo(() => {
-    if (roomClosed) return 'Histórico'
-    if (storyLocked) return 'História encerrada'
-    if (currentRound?.status === 'revealed') return 'Runas abertas'
-    if (currentRound?.status !== 'voting') return 'Aguardando rodada'
-    if (votingExpired) return 'Pronto para revelar'
-    if (canRevealRound) return 'Revelação liberada'
-    if (requiresFullVotingBeforeReveal && hasPendingVotes) return 'Aguardando votos'
-    return 'Em votação'
+    if (roomClosed) return t('history')
+    if (storyLocked) return t('story_closed')
+    if (currentRound?.status === 'revealed') return t('cards_revealed')
+    if (currentRound?.status !== 'voting') return t('waiting_for_a_round')
+    if (votingExpired) return t('ready_to_reveal')
+    if (canRevealRound) return t('cards_can_be_revealed')
+    if (requiresFullVotingBeforeReveal && hasPendingVotes) return t('waiting_for_votes')
+    return t('voting')
   }, [
+      t,
     canRevealRound,
     currentRound,
     hasPendingVotes,
@@ -686,15 +713,16 @@ function PlanningPokerRoomPage() {
     votingExpired,
   ])
   const revealReadinessDescription = useMemo(() => {
-    if (roomClosed) return 'A sessão está disponível apenas para consulta.'
-    if (storyLocked) return 'Selecione uma história pendente para continuar.'
-    if (currentRound?.status === 'revealed') return 'Discuta a divergência e sele a estimativa.'
-    if (currentRound?.status !== 'voting') return 'O facilitador abre a próxima votação.'
-    if (votingExpired) return 'O tempo acabou; os votos restantes foram bloqueados.'
-    if (canRevealRound) return 'O facilitador já pode revelar as runas.'
-    if (requiresFullVotingBeforeReveal && hasPendingVotes) return 'A revelação libera quando todos votarem.'
-    return 'Os votos seguem ocultos até a revelação.'
+    if (roomClosed) return t('this_session_is_available_to_review')
+    if (storyLocked) return t('select_a_pending_story_to_continue')
+    if (currentRound?.status === 'revealed') return t('discuss_the_spread_and_choose_an_estimate')
+    if (currentRound?.status !== 'voting') return t('the_facilitator_opens_the_next_round')
+    if (votingExpired) return t('time_is_up_further_votes_are_blocked_2')
+    if (canRevealRound) return t('the_facilitator_can_reveal_the_cards_now')
+    if (requiresFullVotingBeforeReveal && hasPendingVotes) return t('cards_can_be_revealed_after_everyone_votes')
+    return t('votes_stay_hidden_until_the_reveal')
   }, [
+      t,
     canRevealRound,
     currentRound,
     hasPendingVotes,
@@ -707,109 +735,109 @@ function PlanningPokerRoomPage() {
     if (session?.status === 'completed') {
       return {
         tone: 'closed',
-        label: 'Roda finalizada',
+        label: t('planning_poker_completed'),
         description: allStoriesResolved
-          ? 'Todas as histórias foram concluídas e salvas no histórico.'
-          : 'A sessão foi finalizada e permanece disponível para consulta.',
+          ? t('all_stories_were_completed_and_saved_in')
+          : t('the_session_ended_and_remains_available_to'),
       }
     }
 
     if (session?.status === 'canceled') {
       return {
         tone: 'closed',
-        label: 'Roda cancelada',
-        description: 'A sessão foi encerrada sem novas votações.',
+        label: t('planning_poker_canceled'),
+        description: t('the_session_ended_with_no_further_voting_2'),
       }
     }
 
     if (currentRound?.status === 'revealed') {
       return {
         tone: 'revealed',
-        label: 'Runas reveladas',
-        description: 'Compare os votos, discuta a divergência e sele a estimativa final.',
+        label: t('cards_revealed_2'),
+        description: t('compare_the_votes_discuss_the_spread_and'),
       }
     }
 
     if (currentRound?.status === 'voting') {
       return {
         tone: votingExpired ? 'expired' : 'voting',
-        label: votingExpired ? 'Tempo encerrado' : 'Votação em andamento',
+        label: votingExpired ? t('time_is_up') : t('voting_in_progress'),
         description: votingExpired
-          ? 'Os votos restantes foram bloqueados. O facilitador pode revelar as runas.'
-          : 'As cartas seguem ocultas para todos até a revelação.',
+          ? t('further_votes_are_blocked_the_facilitator_can')
+          : t('cards_are_hidden_from_everyone_until_the'),
       }
     }
 
     if (currentStory?.status === 'estimated') {
       return {
         tone: 'closed',
-        label: 'História estimada',
-        description: 'Selecione outra história pendente ou finalize a sessão.',
+        label: t('story_estimated'),
+        description: t('select_another_pending_story_or_end_the'),
       }
     }
 
     if (currentStory?.status === 'skipped') {
       return {
         tone: 'closed',
-        label: 'História pulada',
-        description: 'Selecione outra história para continuar a Roda.',
+        label: t('story_skipped'),
+        description: t('select_another_story_to_continue'),
       }
     }
 
     return {
       tone: 'idle',
-      label: canFacilitate ? 'Pronta para iniciar' : 'Aguardando facilitador',
+      label: canFacilitate ? t('ready_to_start_2') : t('waiting_for_the_facilitator'),
       description: canFacilitate
-        ? 'Acenda a fogueira para abrir a votação da história atual.'
-        : 'O facilitador inicia a rodada quando a guilda estiver pronta.',
+        ? t('start_the_round_to_open_voting_for')
+        : t('the_facilitator_starts_the_round_when_the'),
     }
-  }, [allStoriesResolved, canFacilitate, currentRound?.status, currentStory?.status, session?.status, votingExpired])
+  }, [t, allStoriesResolved, canFacilitate, currentRound?.status, currentStory?.status, session?.status, votingExpired])
   const facilitatorPanel = useMemo(() => {
     if (roomClosed) {
       return {
-        title: 'Sessão encerrada',
-        description: 'As ações de facilitação ficam bloqueadas após o encerramento da Roda.',
+        title: t('session_closed'),
+        description: t('facilitator_controls_are_locked_after_the_session'),
       }
     }
 
     if (currentRound?.status === 'revealed') {
       return {
-        title: 'Selar ou reacender',
-        description: 'Use o consenso da conversa para selar a estimativa ou abra nova rodada se a divergência persistir.',
+        title: t('seal_the_estimate_or_start_another_round'),
+        description: t('seal_the_estimate_once_the_team_reaches'),
       }
     }
 
     if (currentRound?.status === 'voting') {
       return {
-        title: votingExpired ? 'Tempo encerrado' : 'Votação aberta',
+        title: votingExpired ? t('time_is_up') : t('voting_open'),
         description: votingExpired
-          ? 'Revele as runas para liberar a discussão dos votos.'
-          : 'Acompanhe a presença dos votos sem ver valores individuais.',
+          ? t('reveal_the_cards_to_discuss_the_votes')
+          : t('track_who_has_voted_while_keeping_individual'),
       }
     }
 
     if (storyLocked) {
       return {
-        title: 'História encerrada',
-        description: 'Escolha outra história pendente para continuar a estimativa.',
+        title: t('story_closed'),
+        description: t('choose_another_pending_story_to_continue_estimating'),
       }
     }
 
     return {
-      title: 'Comandos da Roda',
-      description: 'Inicie a votação, revele as runas ou pule a história quando necessário.',
+      title: t('session_controls'),
+      description: t('start_voting_reveal_the_cards_or_skip'),
     }
-  }, [currentRound?.status, roomClosed, storyLocked, votingExpired])
+  }, [t, currentRound?.status, roomClosed, storyLocked, votingExpired])
   const participantPanel = useMemo(() => {
-    const roleLabel = currentParticipant?.role === 'observer' ? 'Observador' : 'Votante'
+    const roleLabel = currentParticipant?.role === 'observer' ? t('observer') : t('voter')
 
     if (roomClosed) {
       return {
         tone: 'closed',
-        title: 'Roda encerrada',
-        description: 'A sessão terminou. Você ainda pode consultar o resultado das histórias estimadas.',
+        title: t('session_ended'),
+        description: t('the_session_has_ended_you_can_still'),
         role: roleLabel,
-        status: 'Consulta',
+        status: t('view_only'),
         action: 'Revisar resultado',
       }
     }
@@ -817,10 +845,10 @@ function PlanningPokerRoomPage() {
     if (!currentParticipant) {
       return {
         tone: 'idle',
-        title: 'Entrando na guilda',
-        description: 'Estamos registrando sua presença na sala antes de liberar a participação.',
+        title: t('joining_the_team'),
+        description: t('your_participation_is_being_registered_before_you'),
         role: 'Carregando',
-        status: 'Entrando',
+        status: t('joining'),
         action: 'Aguardar',
       }
     }
@@ -828,11 +856,11 @@ function PlanningPokerRoomPage() {
     if (currentParticipant.role === 'observer') {
       return {
         tone: 'observer',
-        title: 'Você está como observador',
-        description: 'Acompanhe a conversa e os resultados. Observadores não votam nesta Roda.',
+        title: t('you_re_an_observer'),
+        description: t('follow_the_discussion_and_results_observers_do'),
         role: roleLabel,
-        status: currentRound?.status === 'revealed' ? 'Votos revelados' : 'Sem voto',
-        action: currentRound?.status === 'revealed' ? 'Acompanhar discussão' : 'Aguardar revelação',
+        status: currentRound?.status === 'revealed' ? t('votes_revealed') : t('no_vote'),
+        action: currentRound?.status === 'revealed' ? t('follow_discussion') : t('wait_for_the_reveal'),
       }
     }
 
@@ -840,46 +868,46 @@ function PlanningPokerRoomPage() {
       if (votingExpired) {
         return {
           tone: 'expired',
-          title: 'Tempo encerrado',
-          description: 'A votação foi bloqueada pelo timer. Aguarde o facilitador revelar as runas.',
+          title: t('time_is_up'),
+          description: t('the_timer_closed_voting_wait_for_the'),
           role: roleLabel,
-          status: hasUserVoted ? 'Voto registrado' : 'Sem voto',
-          action: 'Aguardar revelação',
+          status: hasUserVoted ? t('vote_submitted') : t('no_vote'),
+          action: t('wait_for_the_reveal'),
         }
       }
 
       if (hasUserVoted) {
         return {
           tone: 'ready',
-          title: 'Voto registrado',
+          title: t('vote_submitted'),
           description: session?.allow_revote
-            ? 'Seu voto continua oculto. Você pode trocar a carta até a revelação.'
-            : 'Seu voto continua oculto. Esta Roda não permite troca antes da revelação.',
+            ? t('your_vote_stays_hidden_you_can_change')
+            : t('your_vote_stays_hidden_vote_changes_are'),
           role: roleLabel,
-          status: session?.allow_revote ? 'Troca permitida' : 'Troca bloqueada',
+          status: session?.allow_revote ? t('changes_allowed') : t('changes_disabled'),
           action: 'Aguardar a guilda',
         }
       }
 
       return {
         tone: canVote ? 'voting' : 'idle',
-        title: canVote ? 'Escolha sua carta' : 'Aguardando liberação',
+        title: canVote ? t('choose_your_card') : t('waiting_for_access'),
         description: canVote
-          ? 'Selecione uma runa. Ninguém vê o valor do seu voto antes da revelação.'
-          : 'A votação está aberta, mas sua participação ainda não está liberada para esta rodada.',
+          ? t('select_a_card_nobody_can_see_your')
+          : t('voting_is_open_you_don_t_have'),
         role: roleLabel,
-        status: canVote ? 'Voto pendente' : 'Sem ação',
-        action: canVote ? 'Votar agora' : 'Aguardar',
+        status: canVote ? t('vote_pending') : t('no_action'),
+        action: canVote ? t('vote_now') : t('wait'),
       }
     }
 
     if (currentRound?.status === 'revealed') {
       return {
         tone: 'revealed',
-        title: 'Runas reveladas',
-        description: 'Os votos estão visíveis. Participe da discussão antes da estimativa ser selada.',
+        title: t('cards_revealed_2'),
+        description: t('votes_are_visible_join_the_discussion_before'),
         role: roleLabel,
-        status: hasUserVoted ? 'Voto aberto' : 'Sem voto registrado',
+        status: hasUserVoted ? t('vote_revealed') : t('no_vote_submitted'),
         action: 'Discutir consenso',
       }
     }
@@ -887,23 +915,24 @@ function PlanningPokerRoomPage() {
     if (storyLocked) {
       return {
         tone: 'closed',
-        title: 'História encerrada',
-        description: 'Esta história já foi concluída nesta Roda. Aguarde a próxima seleção.',
+        title: t('story_closed'),
+        description: t('this_story_is_complete_wait_for_the'),
         role: roleLabel,
-        status: getStoryStatusLabel(currentStory?.status),
-        action: 'Aguardar próxima história',
+        status: getStoryStatusLabel(currentStory?.status, t),
+        action: t('wait_next_story'),
       }
     }
 
     return {
       tone: 'idle',
-      title: 'Aguardando facilitador',
-      description: 'A votação começa quando o facilitador acender a fogueira da história atual.',
+      title: t('waiting_for_the_facilitator'),
+      description: t('voting_begins_when_the_facilitator_starts_the'),
       role: roleLabel,
-      status: 'Sem rodada ativa',
-      action: 'Aguardar início',
+      status: t('no_active_round'),
+      action: t('wait_for_start'),
     }
   }, [
+      t,
     canVote,
     currentParticipant,
     currentRound?.status,
@@ -917,46 +946,47 @@ function PlanningPokerRoomPage() {
   const roomGuidance = useMemo(() => {
     if (session?.status === 'completed') {
       return allStoriesResolved
-        ? 'Todas as histórias foram concluídas e a Roda foi finalizada automaticamente.'
-        : 'Sessão finalizada. O histórico permanece disponível para consulta.'
+        ? t('all_stories_were_completed_and_the_session')
+        : t('session_completed_its_history_is_available_to')
     }
 
-    if (session?.status === 'canceled') return 'Sessão cancelada.'
+    if (session?.status === 'canceled') return t('session_canceled_2')
 
     if (currentRound?.status === 'voting') {
       if (votingExpired) {
         return canFacilitate
-          ? 'Tempo encerrado. Os votos restantes foram bloqueados; revele as runas para seguir com a discussão.'
-          : 'Tempo encerrado. Aguarde o facilitador revelar as runas.'
+          ? t('time_is_up_further_votes_are_blocked_3')
+          : t('time_is_up_wait_for_the_facilitator')
       }
 
       if (hasUserVoted) {
         const revoteCopy = session?.allow_revote
-          ? 'Você ainda pode trocar sua carta antes da revelação.'
-          : 'Esta Roda não permite novo voto.'
+          ? t('you_can_still_change_your_card_before')
+          : t('this_session_allows_one_vote_per_person')
 
         return votedCount < eligibleVoters.length
-          ? `Seu voto está registrado e segue oculto. ${revoteCopy} Aguardando outros membros da guilda.`
-          : `Todos os votantes registraram presença. ${revoteCopy} O facilitador pode revelar as runas.`
+          ? t('your_vote_is_recorded_and_hidden_waiting', { p1: revoteCopy })
+          : t('all_voters_have_voted_the_facilitator_can', { p1: revoteCopy })
       }
 
       return canVote && session?.reveal_votes_after_all
-        ? 'Escolha uma carta. Ninguém vê votos individuais antes da revelação, e as runas só liberam após todos votarem.'
+        ? t('choose_a_card_individual_votes_stay_hidden')
         : canVote
-          ? 'Escolha uma carta. Ninguém vê votos individuais antes da revelação.'
-        : 'Aguardando votos da guilda. Os valores permanecem ocultos até a revelação.'
+          ? t('choose_a_card_individual_votes_stay_hidden_2')
+        : t('waiting_for_votes_the_values_stay_hidden')
     }
 
     if (currentRound?.status === 'revealed') {
-      return 'Runas reveladas. Revise a divergência e sele a estimativa final.'
+      return t('cards_revealed_review_the_spread_and_choose')
     }
 
-    if (storyLocked) return 'Esta história já foi encerrada nesta Roda.'
+    if (storyLocked) return t('this_story_is_already_closed_in_this')
 
     return canFacilitate
-      ? 'Acenda a fogueira para abrir a votação desta história.'
-      : 'Aguardando o facilitador iniciar a rodada.'
+      ? t('start_a_round_to_open_voting_for')
+      : t('waiting_for_the_facilitator_to_start_the')
   }, [
+      t,
     allStoriesResolved,
     canFacilitate,
     canVote,
@@ -1079,18 +1109,18 @@ function PlanningPokerRoomPage() {
     if (typeof setTopbarStatus !== 'function') return
 
     setTopbarStatus({
-      label: 'Roda da Fogueira',
-      title: session?.name ?? 'Sala de estimativa',
+      label: t('planning_poker'),
+      title: session?.name ?? t('estimation_room'),
       pills: [
-        { text: getSessionStatusLabel(session?.status) },
-        { text: `${participants.length} membros` },
+        { text: getSessionStatusLabel(session?.status, t) },
+        { text: t('member_count', { count: participants.length }) },
         { text: scoringScaleLabel },
-        { text: currentRound ? getRoundStatusLabel(currentRound.status) : 'Sem rodada' },
+        { text: currentRound ? getRoundStatusLabel(currentRound.status, t) : t('no_round') },
       ],
     })
 
     return () => setTopbarStatus(null)
-  }, [currentRound, participants.length, scoringScaleLabel, session?.name, session?.status, setTopbarStatus])
+  }, [t, currentRound, participants.length, scoringScaleLabel, session?.name, session?.status, setTopbarStatus])
 
   async function runAction(action, successMessage) {
     setMessage('')
@@ -1099,7 +1129,7 @@ function PlanningPokerRoomPage() {
     setIsActing(false)
 
     if (!response.success) {
-      setMessage(response.error?.message ?? 'Não foi possível concluir a ação agora.')
+      setMessage(voteErrorKeys.get(response.error?.message) ?? 'could_not_complete_the_action_right_now')
       return null
     }
 
@@ -1111,15 +1141,15 @@ function PlanningPokerRoomPage() {
   async function handleCopyInviteLink() {
     if (!inviteUrl) return
 
-    setInviteMessage('')
+    setShareMessage('')
     setRoomCopyFeedback('')
     try {
       await copyTextToClipboard(inviteUrl)
-      setInviteMessage('Link copiado. Envie para pessoas já adicionadas ao projeto.')
-      setRoomCopyFeedback('Convite copiado')
+      setShareMessage('link_copied_send_it_to_people_who_2')
+      setRoomCopyFeedback('invite_copied')
     } catch {
-      setInviteMessage('Não foi possível copiar o link agora.')
-      setRoomCopyFeedback('Falha ao copiar')
+      setShareMessage('could_not_copy_the_link_right_now')
+      setRoomCopyFeedback('copy_failed')
     }
   }
 
@@ -1131,17 +1161,17 @@ function PlanningPokerRoomPage() {
     setRoomCopyFeedback('')
 
     if (!safeEmail) {
-      setInviteMessage('Informe o e-mail da pessoa que vai participar da Roda.')
+      setInviteMessage('enter_the_email_address_of_the_person')
       return
     }
 
     if (!safeEmail.includes('@')) {
-      setInviteMessage('Informe um e-mail válido para liberar o acesso ao projeto.')
+      setInviteMessage('enter_a_valid_email_address_to_grant')
       return
     }
 
     if (!canManageProject) {
-      setInviteMessage('Apenas responsáveis e administradores do projeto podem adicionar participantes.')
+      setInviteMessage('only_project_owners_and_administrators_can_add')
       return
     }
 
@@ -1154,11 +1184,9 @@ function PlanningPokerRoomPage() {
     })
     if (!response.success) {
       setIsAddingInviteMember(false)
-      const rawMessage = response.error?.message ?? 'Não foi possível adicionar esse e-mail ao projeto.'
-      const inviteHint = rawMessage.includes('Usuário não encontrado')
-        ? 'Esse e-mail ainda não tem conta confirmada no ProdForge. Peça para criar a conta pelo link e adicione o e-mail depois da confirmação.'
-        : rawMessage
-      setInviteMessage(inviteHint)
+      setInviteMessage(response.error?.message?.includes('Usuário não encontrado')
+        ? 'this_email_address_has_no_confirmed_prodforge'
+        : 'could_not_add_this_email_to_the')
       return
     }
 
@@ -1173,10 +1201,8 @@ function PlanningPokerRoomPage() {
     setInviteEmail('')
     setInviteMessage(
       emailResponse.success
-        ? 'Participante adicionado ao projeto e convite enviado por e-mail.'
-        : `Participante adicionado, mas o e-mail não foi enviado. ${
-            emailResponse.error?.message ?? 'Copie o convite e envie manualmente.'
-          }`,
+        ? 'participant_added_to_the_project_and_invited'
+        : inviteEmailErrorKeys[emailResponse.error?.code] ?? 'invite_partial',
     )
     await loadRoom()
   }
@@ -1184,15 +1210,15 @@ function PlanningPokerRoomPage() {
   async function handleCopyInviteCode() {
     if (!session?.invite_code) return
 
-    setInviteMessage('')
+    setShareMessage('')
     setRoomCopyFeedback('')
     try {
       await copyTextToClipboard(session.invite_code)
-      setInviteMessage('Código copiado.')
-      setRoomCopyFeedback('Código copiado')
+      setShareMessage('code_copied_2')
+      setRoomCopyFeedback('code_copied')
     } catch {
-      setInviteMessage('Não foi possível copiar o código agora.')
-      setRoomCopyFeedback('Falha ao copiar')
+      setShareMessage('could_not_copy_the_code_right_now')
+      setRoomCopyFeedback('copy_failed')
     }
   }
 
@@ -1210,11 +1236,11 @@ function PlanningPokerRoomPage() {
           story: currentStory,
           summary: visibleSummary,
           votes: currentRoundVotes,
-        }),
+        }, t, language),
       )
-      setMessage('Resultado da Roda copiado em Markdown.')
+      setMessage('planning_poker_result_copied_as_markdown')
     } catch {
-      setMessage('Não foi possível copiar o resultado agora.')
+      setMessage('could_not_copy_the_result_right_now')
     }
   }
 
@@ -1231,13 +1257,13 @@ function PlanningPokerRoomPage() {
           projectName: project?.name ?? '',
           session,
           stories: sessionStories,
-        }),
+        }, t),
       )
-      setMessage('Resumo copiado.')
-      setRoomCopyFeedback('Resumo copiado')
+      setMessage('summary_copied')
+      setRoomCopyFeedback('summary_copied_2')
     } catch {
-      setMessage('Não foi possível copiar o resumo agora.')
-      setRoomCopyFeedback('Falha ao copiar')
+      setMessage('could_not_copy_the_summary_right_now')
+      setRoomCopyFeedback('copy_failed')
     }
   }
 
@@ -1246,7 +1272,7 @@ function PlanningPokerRoomPage() {
 
     setSelectedSessionStoryId(nextPendingStory.id)
     setFinalEstimate('')
-    setMessage('Próxima história pendente selecionada.')
+    setMessage('next_pending_story_selected')
   }
 
   async function handleStartRound() {
@@ -1260,7 +1286,7 @@ function PlanningPokerRoomPage() {
           voteTimeLimitSeconds: session?.vote_time_limit_seconds ?? null,
           userId,
         }),
-      'Fogueira acesa. A votação está aberta.',
+      'round_started_voting_is_open',
     )
   }
 
@@ -1268,8 +1294,8 @@ function PlanningPokerRoomPage() {
     if (!currentRound) return
     if (!canCastVote) {
       setMessage(votingExpired
-        ? 'Tempo encerrado. Aguarde a revelação das runas.'
-        : 'Seu voto já foi registrado e esta Roda não permite troca.'
+        ? 'time_is_up_wait_for_the_cards'
+        : 'your_vote_has_been_recorded_this_session'
       )
       return
     }
@@ -1277,7 +1303,7 @@ function PlanningPokerRoomPage() {
     const voteKind = value === '?' ? 'unknown' : 'estimate'
     await runAction(
       () => castPlanningPokerVote({ roundId: currentRound.id, voteValue: value, voteKind, userId }),
-      'Voto registrado. Ele fica oculto até a revelação das runas.',
+      'vote_recorded_it_stays_hidden_until_the',
     )
   }
 
@@ -1285,8 +1311,8 @@ function PlanningPokerRoomPage() {
     if (!currentRound) return
     if (!canCastVote) {
       setMessage(votingExpired
-        ? 'Tempo encerrado. Aguarde a revelação das runas.'
-        : 'Seu voto já foi registrado e esta Roda não permite troca.'
+        ? 'time_is_up_wait_for_the_cards'
+        : 'your_vote_has_been_recorded_this_session'
       )
       return
     }
@@ -1299,7 +1325,7 @@ function PlanningPokerRoomPage() {
           voteKind: 'abstain',
           userId,
         }),
-      'Abstenção registrada. Ela fica oculta até a revelação das runas.',
+      'abstention_recorded_it_stays_hidden_until_the',
     )
   }
 
@@ -1308,20 +1334,20 @@ function PlanningPokerRoomPage() {
 
     await runAction(
       () => revealPlanningPokerRound({ roundId: currentRound.id, userId }),
-      'Runas reveladas.',
+      'cards_revealed_3',
     )
   }
 
   async function handleSealEstimate() {
     if (!currentStory) return
     if (!proposedFinalEstimate) {
-      setMessage('Informe ou escolha uma estimativa final antes de selar.')
+      setMessage('enter_or_choose_a_final_estimate_before')
       return
     }
 
     await runAction(
       () => sealPlanningPokerEstimate({ sessionStoryId: currentStory.id, finalEstimate: proposedFinalEstimate, userId }),
-      'Estimativa selada. Se todas as histórias foram concluídas, a Roda é finalizada automaticamente.',
+      'estimate_sealed_the_session_ends_automatically_once',
     )
   }
 
@@ -1330,7 +1356,7 @@ function PlanningPokerRoomPage() {
 
     await runAction(
       () => skipPlanningPokerStory({ sessionStoryId: currentStory.id, userId }),
-      'História pulada.',
+      'story_skipped_2',
     )
   }
 
@@ -1339,7 +1365,7 @@ function PlanningPokerRoomPage() {
 
     await runAction(
       () => completePlanningPokerSession({ sessionId: session.id, userId }),
-      'Sessão finalizada.',
+      'session_completed_2',
     )
   }
 
@@ -1347,9 +1373,9 @@ function PlanningPokerRoomPage() {
     setAccessRequestFeedback('')
     try {
       await copyTextToClipboard(roomAccessRequestMessage)
-      setAccessRequestFeedback('Mensagem copiada para enviar ao facilitador.')
+      setAccessRequestFeedback('message_copied_for_the_facilitator')
     } catch {
-      setAccessRequestFeedback('Não foi possível copiar automaticamente. Use a mensagem manual abaixo.')
+      setAccessRequestFeedback('could_not_copy_automatically_use_the_message')
     }
   }
 
@@ -1357,40 +1383,39 @@ function PlanningPokerRoomPage() {
     return (
       <div className="planning-poker-room">
         <section className="panel planning-poker-room__access-state">
-          <p className="projects-page__eyebrow">Roda da Fogueira</p>
-          <h1>Roda não encontrada ou sem acesso</h1>
+          <p className="projects-page__eyebrow">{t('planning_poker')}</p>
+          <h1>{t('session_unavailable_or_access_pending')}</h1>
           <p>
-            O link da Roda funciona para pessoas adicionadas ao projeto. Peça ao facilitador para incluir seu e-mail
-            no projeto e tente abrir o convite novamente.
+            {t('the_invite_works_for_people_with_project')}
           </p>
           <div className="planning-poker-room__access-request">
             <div className="planning-poker-room__access-request-copy">
-              <span>Acesso pendente</span>
-              <strong>Solicite liberação do projeto</strong>
+              <span>{t('access_pending')}</span>
+              <strong>{t('request_project_access')}</strong>
               <p>
-                Copie uma mensagem com seu e-mail e o link desta sala para enviar a quem criou a Roda.
+                {t('copy_a_message_with_your_email_and')}
               </p>
             </div>
             <div className="planning-poker-room__access-request-card">
-              <span>E-mail da sua conta</span>
-              <strong>{user?.email ?? 'Conta autenticada'}</strong>
-              <p>O facilitador precisa adicionar este e-mail ao projeto da Roda.</p>
+              <span>{t('your_account_email_2')}</span>
+              <strong>{user?.email ?? t('signed_in_account')}</strong>
+              <p>{t('the_facilitator_needs_to_add_this_email')}</p>
             </div>
             <div className="planning-poker-room__access-request-actions">
               <button type="button" className="btn btn-primary btn-small" onClick={handleCopyAccessRequestMessage}>
-                Copiar pedido de acesso
+                {t('copy_access_request')}
               </button>
-              {accessRequestFeedback ? <p className="projects-page__message">{accessRequestFeedback}</p> : null}
+              {accessRequestFeedback ? <p className="projects-page__message" role="status">{formatNotice(t, accessRequestFeedback)}</p> : null}
             </div>
             <details className="planning-poker-access-request__manual">
-              <summary>Copiar manualmente</summary>
+              <summary>{t('copy_manually')}</summary>
               <label>
-                <span>Mensagem para o facilitador</span>
+                <span>{t('message_to_the_facilitator')}</span>
                 <textarea
                   readOnly
                   rows={5}
                   value={roomAccessRequestMessage}
-                  aria-label="Mensagem de pedido de acesso para copiar manualmente"
+                  aria-label={t('access_request_message_for_manual_copying')}
                   onFocus={(event) => event.target.select()}
                 />
               </label>
@@ -1398,10 +1423,10 @@ function PlanningPokerRoomPage() {
           </div>
           <div className="planning-poker-room__final-summary-actions">
             <Link className="btn btn-primary btn-small" to="/roda">
-              Entrar por código
+              {t('join_with_a_code')}
             </Link>
             <Link className="btn btn-secondary btn-small" to="/tool">
-              Ir para a Bancada
+              {t('go_to_workbench')}
             </Link>
           </div>
         </section>
@@ -1413,15 +1438,15 @@ function PlanningPokerRoomPage() {
     <div className="planning-poker-room">
       <section className="panel planning-poker-room__hero">
         <div>
-          <p className="projects-page__eyebrow">Roda da Fogueira</p>
-          <h1>{session?.name ?? 'Carregando sala...'}</h1>
+          <p className="projects-page__eyebrow">{t('planning_poker')}</p>
+          <h1>{session?.name ?? t('loading_room')}</h1>
           <p>
-            Estime uma história por vez, mantenha os votos ocultos e revele as runas quando a rodada estiver pronta.
+            {t('estimate_one_story_at_a_time_keep')}
           </p>
         </div>
         <div className="planning-poker-room__hero-actions">
           <div className="planning-poker-room__invite-box">
-            <span>Código: {session?.invite_code ?? '-'}</span>
+            <span>{t('code_2')}{" "}{session?.invite_code ?? '-'}</span>
             <div className="planning-poker-room__invite-actions">
               <button
                 type="button"
@@ -1429,7 +1454,7 @@ function PlanningPokerRoomPage() {
                 onClick={handleCopyInviteLink}
                 disabled={!session}
               >
-                {roomCopyFeedback === 'Convite copiado' ? 'Link copiado' : 'Copiar link para membros'}
+                {roomCopyFeedback === 'invite_copied' ? t('link_copied') : t('copy_link_for_members')}
               </button>
               <button
                 type="button"
@@ -1437,45 +1462,45 @@ function PlanningPokerRoomPage() {
                 onClick={handleCopyInviteCode}
                 disabled={!session?.invite_code}
               >
-                {roomCopyFeedback === 'Código copiado' ? 'Código copiado' : 'Copiar código'}
+                {roomCopyFeedback === 'code_copied' ? t('code_copied') : t('copy_code')}
               </button>
             </div>
-            {inviteMessage ? <p className="planning-poker-room__invite-message">{inviteMessage}</p> : null}
+            {shareMessage ? <p className="planning-poker-room__invite-message" role="status">{formatNotice(t, shareMessage)}</p> : null}
           </div>
           <Link className="btn btn-secondary btn-small" to={`/projetos/${projectId}`}>
-            Voltar ao projeto
+            {t('back_to_project')}
           </Link>
         </div>
       </section>
 
-      {message ? <p className="projects-page__message">{message}</p> : null}
-      {isLoading ? <p className="projects-page__state">Carregando sala...</p> : null}
+      {message ? <p className="projects-page__message" role="status">{formatNotice(t, message)}</p> : null}
+      {isLoading ? <p className="projects-page__state">{t('loading_room')}</p> : null}
 
       {session ? (
         <section
           className={`panel planning-poker-room__command-bar planning-poker-room__command-bar--${roomStage.tone}`}
-          aria-label="Status operacional da Roda"
+          aria-label={t('planning_poker_operational_status')}
         >
           <div className="planning-poker-room__command-copy">
-            <p className="projects-page__eyebrow">Status da Roda</p>
+            <p className="projects-page__eyebrow">{t('session_status')}</p>
             <h2>{roomStage.label}</h2>
             <p>{roomStage.description}</p>
           </div>
-          <div className="planning-poker-room__command-metrics" aria-label="Resumo da sessão">
+          <div className="planning-poker-room__command-metrics" aria-label={t('session_overview')}>
             <span>
-              <small>Histórias</small>
+              <small>{t('stories')}</small>
               <strong>{roomProgressLabel}</strong>
             </span>
             <span>
-              <small>Votantes</small>
+              <small>{t('voters_2')}</small>
               <strong>{votingProgressLabel}</strong>
             </span>
             <span>
-              <small>Timer</small>
+              <small>{t('timer')}</small>
               <strong>{remainingTimeLabel}</strong>
             </span>
             <span>
-              <small>Privacidade</small>
+              <small>{t('privacy')}</small>
               <strong>{voteVisibilityLabel}</strong>
             </span>
           </div>
@@ -1485,42 +1510,42 @@ function PlanningPokerRoomPage() {
       {finalSessionPanel ? (
         <section
           className={`panel planning-poker-room__final-summary planning-poker-room__final-summary--${finalSessionPanel.tone}`}
-          aria-label="Resumo final da sessão"
+          aria-label={t('final_session_summary')}
         >
           <div className="planning-poker-room__final-summary-copy">
-            <p className="projects-page__eyebrow">Resumo final da sessão</p>
+            <p className="projects-page__eyebrow">{t('final_session_summary')}</p>
             <h2>{finalSessionPanel.title}</h2>
             <p>{finalSessionPanel.description}</p>
           </div>
 
-          <div className="planning-poker-room__final-summary-grid" aria-label="Indicadores finais da sessão">
+          <div className="planning-poker-room__final-summary-grid" aria-label={t('final_session_metrics')}>
             <span>
-              <small>Estimadas</small>
+              <small>{t('estimated')}</small>
               <strong>{sessionSummaryProgress.estimated}</strong>
             </span>
             <span>
-              <small>Puladas</small>
+              <small>{t('skipped')}</small>
               <strong>{sessionSummaryProgress.skipped}</strong>
             </span>
             <span>
-              <small>Pendentes</small>
+              <small>{t('pending')}</small>
               <strong>{sessionSummaryProgress.pending + sessionSummaryProgress.voting}</strong>
             </span>
             <span>
-              <small>Votantes</small>
+              <small>{t('voters_2')}</small>
               <strong>{eligibleVoters.length}</strong>
             </span>
             <span>
-              <small>Escala</small>
+              <small>{t('scale')}</small>
               <strong>{scoringScaleLabel}</strong>
             </span>
             <span>
-              <small>Timer</small>
-              <strong>{formatPlanningTimerDuration(session?.vote_time_limit_seconds)}</strong>
+              <small>{t('timer')}</small>
+              <strong>{formatPlanningTimerDuration(session?.vote_time_limit_seconds, t)}</strong>
             </span>
             <span>
-              <small>Data</small>
-              <strong>{formatDateTime(session?.completed_at ?? session?.canceled_at ?? session?.updated_at)}</strong>
+              <small>{t('date')}</small>
+              <strong>{formatDateTime(session?.completed_at ?? session?.canceled_at ?? session?.updated_at, language)}</strong>
             </span>
           </div>
 
@@ -1531,44 +1556,44 @@ function PlanningPokerRoomPage() {
               onClick={handleCopySessionSummary}
               disabled={!session}
             >
-              {roomCopyFeedback === 'Resumo copiado' ? 'Resumo copiado' : 'Copiar resumo'}
+              {roomCopyFeedback === 'summary_copied_2' ? t('summary_copied_2') : t('copy_summary')}
             </button>
             <Link className="btn btn-ghost btn-small" to={`/roda?projectId=${projectId}`}>
-              Voltar para Roda
+              {t('back_to_planning_poker')}
             </Link>
           </div>
         </section>
       ) : null}
 
       <div className="planning-poker-room__layout">
-        <aside className="panel planning-poker-room__stories" aria-label="Histórias da sessão">
+        <aside className="panel planning-poker-room__stories" aria-label={t('stories_in_this_session')}>
           <div className="projects-page__section-header">
             <div>
-              <p className="projects-page__eyebrow">Artefatos</p>
-              <h2>Histórias</h2>
+              <p className="projects-page__eyebrow">{t('artifacts')}</p>
+              <h2>{t('stories')}</h2>
             </div>
           </div>
 
-          <div className="planning-poker-room__story-progress" aria-label="Progresso das histórias da sessão">
+          <div className="planning-poker-room__story-progress" aria-label={t('session_story_progress')}>
             <div className="planning-poker-room__story-progress-header">
-              <span>Progresso</span>
+              <span>{t('progress')}</span>
               <strong>{roomProgressLabel}</strong>
             </div>
             <div
               className="planning-poker-room__story-progress-bar"
               role="progressbar"
-              aria-label="Histórias concluídas"
+              aria-label={t('completed_stories')}
               aria-valuemin="0"
               aria-valuemax="100"
               aria-valuenow={roomProgressPercent}
             >
               <span style={{ width: `${roomProgressPercent}%` }} />
             </div>
-            <div className="planning-poker-room__story-progress-chips" aria-label="Status das histórias">
-              <span>{storyStatusCounts.pending} pendentes</span>
-              <span>{storyStatusCounts.voting} em votação</span>
-              <span>{storyStatusCounts.estimated} estimadas</span>
-              <span>{storyStatusCounts.skipped} puladas</span>
+            <div className="planning-poker-room__story-progress-chips" aria-label={t('story_status')}>
+              <span>{t('pending_count', { count: storyStatusCounts.pending })}</span>
+              <span>{storyStatusCounts.voting}{" "}{t('voting_2')}</span>
+              <span>{t('estimated_count', { count: storyStatusCounts.estimated })}</span>
+              <span>{t('skipped_count', { count: storyStatusCounts.skipped })}</span>
             </div>
           </div>
 
@@ -1578,7 +1603,7 @@ function PlanningPokerRoomPage() {
                 const safeStatus = story.status ?? 'pending'
                 const isActive = story.id === currentStory?.id
                 const storyRoundCount = storyRoundCounts.get(story.id) ?? 0
-                const storyRoundLabel = storyRoundCount === 1 ? '1 rodada' : `${storyRoundCount} rodadas`
+                const storyRoundLabel = storyRoundCount === 1 ? t('1_round') : t('rounds', { p1: storyRoundCount })
 
                 return (
                   <button
@@ -1597,42 +1622,42 @@ function PlanningPokerRoomPage() {
                     }}
                   >
                     <div className="planning-poker-room__story-card-header">
-                      <strong>{story.user_story?.title ?? 'História sem título'}</strong>
-                      {isActive ? <span>Atual</span> : null}
+                      <strong>{story.user_story?.title ?? t('untitled_story')}</strong>
+                      {isActive ? <span>{t('current')}</span> : null}
                     </div>
                     <div className="planning-poker-room__story-card-meta">
                       <span className={`planning-poker-room__story-status planning-poker-room__story-status--${safeStatus}`}>
-                        {getStoryStatusLabel(safeStatus)}
+                        {getStoryStatusLabel(safeStatus, t)}
                       </span>
                       <span>{storyRoundLabel}</span>
-                      {story.final_estimate ? <span>Final: {story.final_estimate}</span> : null}
+                      {story.final_estimate ? <span>{t('final_2')}{" "}{story.final_estimate}</span> : null}
                     </div>
                   </button>
                 )
               })
             ) : (
-              <p className="projects-page__state">Nenhuma história vinculada a esta Roda.</p>
+              <p className="projects-page__state">{t('no_stories_linked_to_this_session')}</p>
             )}
           </div>
         </aside>
 
-        <main className="panel planning-poker-room__table" aria-label="Mesa de votação">
+        <main className="panel planning-poker-room__table" aria-label={t('voting_table')}>
           <div className="planning-poker-room__story-focus">
             <div className="planning-poker-room__story-focus-head">
               <div>
-                <p className="projects-page__eyebrow">História atual</p>
-                <h2>{currentStory?.user_story?.title ?? 'Selecione uma história'}</h2>
+                <p className="projects-page__eyebrow">{t('current_story')}</p>
+                <h2>{currentStory?.user_story?.title ?? t('choose_a_story')}</h2>
               </div>
               <span>{currentStoryPositionLabel}</span>
             </div>
             <p>
               {currentStory?.user_story?.user_story ??
                 currentStory?.user_story?.input_context ??
-                'Inicie uma rodada para estimar este item.'}
+                t('start_a_round_to_estimate_this_story')}
             </p>
             {storyFinalEstimate ? (
-              <div className="planning-poker-room__story-pills" aria-label="Estimativa da história">
-                <span>Estimativa selada: {storyFinalEstimate}</span>
+              <div className="planning-poker-room__story-pills" aria-label={t('story_estimate')}>
+                <span>{t('sealed_estimate')}{" "}{storyFinalEstimate}</span>
               </div>
             ) : null}
           </div>
@@ -1640,7 +1665,7 @@ function PlanningPokerRoomPage() {
           {storyContinuityPanel ? (
             <div
               className={`planning-poker-room__continuity planning-poker-room__continuity--${storyContinuityPanel.tone}`}
-              aria-label="Próximo passo da Roda"
+              aria-label={t('next_step_for_this_session')}
             >
               <div>
                 <p className="projects-page__eyebrow">{storyContinuityPanel.eyebrow}</p>
@@ -1654,43 +1679,43 @@ function PlanningPokerRoomPage() {
                   onClick={handleSelectNextPendingStory}
                   disabled={!canSelectNextPendingStory}
                 >
-                  Selecionar próxima
+                  {t('select_next')}
                 </button>
               ) : null}
             </div>
           ) : null}
 
-          <div className="planning-poker-room__round-status" aria-label="Resumo da rodada atual">
+          <div className="planning-poker-room__round-status" aria-label={t('current_round_summary')}>
             <span>
-              <small>Rodada</small>
-              <strong>{currentRound ? getRoundStatusLabel(currentRound.status) : 'Nenhuma rodada iniciada'}</strong>
+              <small>{t('round')}</small>
+              <strong>{currentRound ? getRoundStatusLabel(currentRound.status, t) : t('no_round_has_started')}</strong>
             </span>
             <span>
-              <small>Tempo</small>
+              <small>{t('time')}</small>
               <strong>{remainingTimeLabel}</strong>
             </span>
             <span>
-              <small>Presença</small>
+              <small>{t('participation')}</small>
               <strong>{votingProgressLabel}</strong>
             </span>
             {hasUserVoted && currentRound?.status === 'voting' ? (
               <span>
-                <small>Seu voto</small>
-                <strong>{session?.allow_revote ? 'Registrado; troca permitida' : 'Registrado; troca bloqueada'}</strong>
+                <small>{t('your_vote')}</small>
+                <strong>{session?.allow_revote ? t('recorded_changes_allowed') : t('recorded_changes_disabled')}</strong>
               </span>
             ) : null}
           </div>
 
-          <div className="planning-poker-room__live-progress" aria-label="Progresso ao vivo da rodada">
+          <div className="planning-poker-room__live-progress" aria-label={t('live_round_progress')}>
             <div className="planning-poker-room__live-progress-item">
               <div className="planning-poker-room__live-progress-head">
-                <span>Votos registrados</span>
+                <span>{t('votes_submitted')}</span>
                 <strong>{votingProgressLabel}</strong>
               </div>
               <div
                 className="planning-poker-room__live-progress-track"
                 role="progressbar"
-                aria-label="Progresso dos votos registrados"
+                aria-label={t('vote_submission_progress')}
                 aria-valuemin="0"
                 aria-valuemax="100"
                 aria-valuenow={votingProgressPercent}
@@ -1703,18 +1728,18 @@ function PlanningPokerRoomPage() {
 
             <div className="planning-poker-room__live-progress-item">
               <div className="planning-poker-room__live-progress-head">
-                <span>Tempo da rodada</span>
+                <span>{t('round_timer')}</span>
                 <strong>{remainingTimeLabel}</strong>
               </div>
               {timerProgressPercent === null ? (
-                <p>Sem limite ativo para esta rodada.</p>
+                <p>{t('this_round_has_no_active_time_limit')}</p>
               ) : (
                 <div
                   className={`planning-poker-room__live-progress-track planning-poker-room__live-progress-track--timer ${
                     votingExpired ? 'planning-poker-room__live-progress-track--expired' : ''
                   }`}
                   role="progressbar"
-                  aria-label="Tempo restante da rodada"
+                  aria-label={t('time_remaining_in_the_round')}
                   aria-valuemin="0"
                   aria-valuemax="100"
                   aria-valuenow={timerProgressPercent}
@@ -1728,7 +1753,7 @@ function PlanningPokerRoomPage() {
 
             <div className="planning-poker-room__live-progress-item planning-poker-room__live-progress-item--state">
               <div className="planning-poker-room__live-progress-head">
-                <span>Condução</span>
+                <span>{t('facilitation')}</span>
                 <strong>{revealReadinessLabel}</strong>
               </div>
               <p>{revealReadinessDescription}</p>
@@ -1739,24 +1764,24 @@ function PlanningPokerRoomPage() {
           {!canFacilitate && participantPanel ? (
             <div
               className={`planning-poker-room__participant-panel planning-poker-room__participant-panel--${participantPanel.tone}`}
-              aria-label="Sua participação na Roda"
+              aria-label={t('your_planning_poker_participation')}
             >
               <div className="planning-poker-room__participant-panel-copy">
-                <p className="projects-page__eyebrow">Sua participação</p>
+                <p className="projects-page__eyebrow">{t('your_participation')}</p>
                 <h3>{participantPanel.title}</h3>
                 <p>{participantPanel.description}</p>
               </div>
               <div className="planning-poker-room__participant-panel-meta">
                 <span>
-                  <small>Seu papel</small>
+                  <small>{t('your_role')}</small>
                   <strong>{participantPanel.role}</strong>
                 </span>
                 <span>
-                  <small>Status</small>
+                  <small>{t('status')}</small>
                   <strong>{participantPanel.status}</strong>
                 </span>
                 <span>
-                  <small>Próximo passo</small>
+                  <small>{t('next_step')}</small>
                   <strong>{participantPanel.action}</strong>
                 </span>
               </div>
@@ -1767,13 +1792,13 @@ function PlanningPokerRoomPage() {
             <>
               <div className="planning-poker-room__cards-headline">
                 <div>
-                  <p className="projects-page__eyebrow">Cartas da guilda</p>
-                  <h3>Escolha sua runa</h3>
+                  <p className="projects-page__eyebrow">{t('team_cards')}</p>
+                  <h3>{t('choose_your_card_2')}</h3>
                 </div>
-                <span>Ninguém vê votos antes da revelação</span>
+                <span>{t('nobody_sees_votes_before_the_reveal')}</span>
               </div>
 
-              <div className="planning-poker-room__cards" aria-label="Cartas de estimativa">
+              <div className="planning-poker-room__cards" aria-label={t('estimation_cards')}>
                 {scoringValues.map((value) => (
                   <button
                     key={value}
@@ -1792,20 +1817,20 @@ function PlanningPokerRoomPage() {
                     onClick={handleAbstain}
                     disabled={!canCastVote || isActing}
                   >
-                    Observar
+                    {t('abstain')}
                   </button>
                 ) : null}
               </div>
             </>
           ) : (
-            <div className="planning-poker-room__deck-state" aria-label="Estado das cartas da rodada">
+            <div className="planning-poker-room__deck-state" aria-label={t('round_card_status')}>
               <div>
-                <p className="projects-page__eyebrow">Cartas da guilda</p>
-                <h3>{roomClosed || storyLocked ? 'Votação encerrada' : 'Aguardando rodada'}</h3>
+                <p className="projects-page__eyebrow">{t('team_cards')}</p>
+                <h3>{roomClosed || storyLocked ? t('voting_closed') : t('waiting_for_a_round')}</h3>
                 <p>
                   {roomClosed || storyLocked
-                    ? 'As cartas ficam arquivadas neste histórico. Consulte os votos revelados e a estimativa selada abaixo.'
-                    : 'As cartas aparecem quando o facilitador abrir a votação desta história.'}
+                    ? t('the_cards_are_stored_in_the_history')
+                    : t('cards_appear_when_the_facilitator_opens_voting')}
                 </p>
               </div>
               <span>{voteVisibilityLabel}</span>
@@ -1813,9 +1838,9 @@ function PlanningPokerRoomPage() {
           )}
 
           {canFacilitate ? (
-            <div className="planning-poker-room__facilitator" aria-label="Comandos do facilitador">
+            <div className="planning-poker-room__facilitator" aria-label={t('facilitator_controls')}>
               <div className="planning-poker-room__facilitator-copy">
-                <p className="projects-page__eyebrow">Facilitador</p>
+                <p className="projects-page__eyebrow">{t('facilitator')}</p>
                 <h3>{facilitatorPanel.title}</h3>
                 <p>{facilitatorPanel.description}</p>
               </div>
@@ -1828,7 +1853,7 @@ function PlanningPokerRoomPage() {
                       onClick={handleStartRound}
                       disabled={!canStartRound}
                     >
-                      {currentRound ? 'Reacender a Fogueira' : 'Acender Fogueira'}
+                      {currentRound ? t('start_another_round') : t('start_round')}
                     </button>
                     <button
                       type="button"
@@ -1836,7 +1861,7 @@ function PlanningPokerRoomPage() {
                       onClick={handleRevealRound}
                       disabled={!canRevealRound}
                     >
-                      Revelar as Runas
+                      {t('reveal_cards')}
                     </button>
                     <button
                       type="button"
@@ -1844,7 +1869,7 @@ function PlanningPokerRoomPage() {
                       onClick={handleSkipStory}
                       disabled={!currentStory || currentStory.status === 'estimated' || isActing}
                     >
-                      Pular história
+                      {t('skip_story')}
                     </button>
                   </div>
                   {revealActionHint ? <p className="planning-poker-room__action-hint">{revealActionHint}</p> : null}
@@ -1854,8 +1879,8 @@ function PlanningPokerRoomPage() {
                   <span>{facilitatorStateLabel}</span>
                   <p>
                     {roomClosed
-                      ? 'Os comandos de facilitação foram encerrados. Use esta tela para consultar o histórico da votação.'
-                      : 'Selecione uma história pendente para reabrir os comandos da rodada.'}
+                      ? t('facilitator_controls_are_closed_use_this_page')
+                      : t('select_a_pending_story_to_reopen_the')}
                   </p>
                   {storyLocked && nextPendingStory ? (
                     <button
@@ -1864,7 +1889,7 @@ function PlanningPokerRoomPage() {
                       onClick={handleSelectNextPendingStory}
                       disabled={!canSelectNextPendingStory}
                     >
-                      Selecionar próxima pendente
+                      {t('select_next_pending_story')}
                     </button>
                   ) : null}
                 </div>
@@ -1873,18 +1898,18 @@ function PlanningPokerRoomPage() {
           ) : null}
 
           {shouldShowResult && visibleSummary ? (
-            <section className="planning-poker-room__result" aria-label="Resultado da rodada">
+            <section className="planning-poker-room__result" aria-label={t('round_result')}>
               {consensusInsight ? (
                 <div
                   className={`planning-poker-room__consensus planning-poker-room__consensus--${consensusInsight.tone}`}
                 >
                   <div>
-                    <p className="projects-page__eyebrow">Decisão da rodada</p>
+                    <p className="projects-page__eyebrow">{t('round_decision')}</p>
                     <h3>{consensusInsight.label}</h3>
                     <p>{consensusInsight.description}</p>
                   </div>
                   <div className="planning-poker-room__consensus-score">
-                    <span>Consenso sugerido</span>
+                    <span>{t('suggested_consensus')}</span>
                     <strong>{consensusInsight.suggestion || '-'}</strong>
                   </div>
                 </div>
@@ -1893,22 +1918,22 @@ function PlanningPokerRoomPage() {
               {storyFinalEstimate && currentStory?.status === 'estimated' ? (
                 <div className="planning-poker-room__sealed-result" role="status">
                   <div>
-                    <p className="projects-page__eyebrow">Estimativa selada</p>
+                    <p className="projects-page__eyebrow">{t('estimate_sealed')}</p>
                     <h3>{storyFinalEstimate}</h3>
-                    <p>Decisão final registrada no histórico desta Roda.</p>
+                    <p>{t('the_final_decision_is_recorded_in_the')}</p>
                   </div>
-                  <span>{formatDateTime(currentStoryResult?.created_at ?? currentStory?.updated_at)}</span>
+                  <span>{formatDateTime(currentStoryResult?.created_at ?? currentStory?.updated_at, language)}</span>
                 </div>
               ) : null}
 
-              <div className="planning-poker-room__result-actions" aria-label="Ações do resultado da rodada">
+              <div className="planning-poker-room__result-actions" aria-label={t('round_result_actions')}>
                 <button
                   type="button"
                   className="btn btn-secondary btn-small"
                   onClick={handleCopyRoundResult}
                   disabled={!visibleSummary}
                 >
-                  Copiar resultado
+                  {t('copy_result')}
                 </button>
                 {nextPendingStory ? (
                   <button
@@ -1916,41 +1941,41 @@ function PlanningPokerRoomPage() {
                     className="btn btn-ghost btn-small"
                     onClick={handleSelectNextPendingStory}
                   >
-                    Próxima pendente
+                    {t('next_pending_story')}
                   </button>
                 ) : null}
               </div>
 
               <details className="planning-poker-room__result-details" open={!storyFinalEstimate}>
                 <summary>
-                  <span>Métricas da rodada</span>
-                  <strong>{storyFinalEstimate ? `Final: ${storyFinalEstimate}` : `Sugestão: ${visibleSummary.suggestion || '-'}`}</strong>
+                  <span>{t('round_metrics')}</span>
+                  <strong>{storyFinalEstimate ? t('final', { p1: storyFinalEstimate }) : t('suggestion', { p1: visibleSummary.suggestion || '-' })}</strong>
                 </summary>
                 <div className="planning-poker-room__summary-grid">
-                  {storyFinalEstimate ? <span>Final: {storyFinalEstimate}</span> : null}
-                  <span>Média: {formatNumber(visibleSummary.average)}</span>
-                  <span>Mediana: {formatNumber(visibleSummary.median)}</span>
-                  <span>Menor: {formatNumber(visibleSummary.lowest)}</span>
-                  <span>Maior: {formatNumber(visibleSummary.highest)}</span>
-                  <span>Divergência: {formatNumber(visibleSummary.divergence)}</span>
+                  {storyFinalEstimate ? <span>{t('final_2')}{" "}{storyFinalEstimate}</span> : null}
+                  <span>{t('average_2')}{" "}{formatNumber(visibleSummary.average, language)}</span>
+                  <span>{t('median_2')}{" "}{formatNumber(visibleSummary.median, language)}</span>
+                  <span>{t('lowest')}{" "}{formatNumber(visibleSummary.lowest, language)}</span>
+                  <span>{t('highest')}{" "}{formatNumber(visibleSummary.highest, language)}</span>
+                  <span>{t('spread_2')}{" "}{formatNumber(visibleSummary.divergence, language)}</span>
                   {visibleSummary.voteCount !== null && visibleSummary.voteCount !== undefined ? (
-                    <span>Votos: {visibleSummary.voteCount}</span>
+                    <span>{t('votes_2')}{" "}{visibleSummary.voteCount}</span>
                   ) : null}
                   {visibleSummary.abstentionCount !== null && visibleSummary.abstentionCount !== undefined ? (
-                    <span>Abstenções: {visibleSummary.abstentionCount}</span>
+                    <span>{t('abstentions_2')}{" "}{visibleSummary.abstentionCount}</span>
                   ) : null}
                   {visibleSummary.unknownCount !== null && visibleSummary.unknownCount !== undefined ? (
-                    <span>Não sei: {visibleSummary.unknownCount}</span>
+                    <span>{t('not_sure_2')}{" "}{visibleSummary.unknownCount}</span>
                   ) : null}
                 </div>
               </details>
 
               <details className="planning-poker-room__result-details" open={!storyFinalEstimate}>
                 <summary>
-                  <span>Votos revelados</span>
-                  <strong>{currentRoundVotes.length} cartas abertas</strong>
+                  <span>{t('votes_revealed')}</span>
+                  <strong>{currentRoundVotes.length}{" "}{t('revealed_cards')}</strong>
                 </summary>
-                <div className="planning-poker-room__revealed-votes" aria-label="Votos revelados">
+                <div className="planning-poker-room__revealed-votes" aria-label={t('votes_revealed')}>
                   {currentRoundVotes.length > 0 ? (
                     currentRoundVotes.map((vote) => {
                       const participantIndex = participants.findIndex(
@@ -1960,14 +1985,14 @@ function PlanningPokerRoomPage() {
 
                       return (
                         <div key={vote.id} className="planning-poker-room__revealed-vote">
-                          <span>{getParticipantLabel(participant, userId, participantIndex)}</span>
-                          <strong>{vote.vote_value}</strong>
+                          <span>{getParticipantLabel(participant, userId, participantIndex, t)}</span>
+                          <strong>{getVoteLabel(vote, t)}</strong>
                         </div>
                       )
                     })
                   ) : (
                     <p className="planning-poker-room__result-note">
-                      Votos individuais disponíveis após a revelação das runas.
+                      {t('individual_votes_are_available_after_the_cards')}
                     </p>
                   )}
                 </div>
@@ -1975,7 +2000,7 @@ function PlanningPokerRoomPage() {
 
               {session?.status === 'completed' && allStoriesResolved ? (
                 <p className="planning-poker-room__result-note">
-                  Todas as histórias desta Roda foram concluídas; a sessão foi finalizada automaticamente.
+                  {t('all_stories_in_this_session_were_completed')}
                 </p>
               ) : null}
 
@@ -1988,20 +2013,20 @@ function PlanningPokerRoomPage() {
                   }}
                 >
                   <div className="planning-poker-room__seal-copy">
-                    <p className="projects-page__eyebrow">Estimativa final</p>
-                    <h3>Selar decisão</h3>
+                    <p className="projects-page__eyebrow">{t('final_estimate')}</p>
+                    <h3>{t('seal_decision')}</h3>
                     <p>
-                      Registre o valor acordado pela guilda. A sugestão usa a mediana dos votos numéricos revelados.
+                      {t('enter_the_agreed_estimate_the_suggestion_uses')}
                     </p>
                   </div>
                   <div className="planning-poker-room__seal-controls">
                     <label className="projects-page__field">
-                      <span>Valor final</span>
+                      <span>{t('final_value')}</span>
                       <input
                         type="text"
                         value={finalEstimate}
                         onChange={(event) => setFinalEstimate(event.target.value)}
-                        placeholder={visibleSummary.suggestion || 'Ex.: 5'}
+                        placeholder={visibleSummary.suggestion || t('e_g_5')}
                         disabled={isActing}
                       />
                     </label>
@@ -2012,15 +2037,15 @@ function PlanningPokerRoomPage() {
                         onClick={() => setFinalEstimate(consensusInsight.suggestion)}
                         disabled={isActing}
                       >
-                        Usar sugestão
+                        {t('use_suggestion')}
                       </button>
                     ) : null}
                     <button type="submit" className="btn btn-primary btn-small" disabled={!canSealEstimate}>
-                      Selar Estimativa
+                      {t('seal_estimate')}
                     </button>
                     {visibleSummary?.suggestion && !finalEstimate ? (
                       <p className="planning-poker-room__seal-note">
-                        Se nada for alterado, a sugestão {visibleSummary.suggestion} será usada.
+                        {t('if_you_leave_the_field_as_is')}{" "}{visibleSummary.suggestion}{" "}{t('will_be_used')}
                       </p>
                     ) : null}
                   </div>
@@ -2030,11 +2055,11 @@ function PlanningPokerRoomPage() {
           ) : null}
         </main>
 
-        <aside className="panel planning-poker-room__guild" aria-label="Membros da guilda">
+        <aside className="panel planning-poker-room__guild" aria-label={t('team_members')}>
           <div className="projects-page__section-header">
             <div>
-              <p className="projects-page__eyebrow">Guilda</p>
-              <h2>{participants.length} membros</h2>
+              <p className="projects-page__eyebrow">{t('team_2')}</p>
+              <h2>{t('member_count', { count: participants.length })}</h2>
               <p className="planning-poker-room__guild-summary">{guildSummaryLabel}</p>
             </div>
           </div>
@@ -2045,48 +2070,48 @@ function PlanningPokerRoomPage() {
                 key={participant.id}
                 className={`planning-poker-room__participant planning-poker-room__participant--${getParticipantRoomTone(participant)}`}
               >
-                <span>{getParticipantLabel(participant, userId, index)}</span>
+                <span>{getParticipantLabel(participant, userId, index, t)}</span>
                 <strong>{getParticipantRoomStatus(participant)}</strong>
               </div>
             ))}
           </div>
 
-          <div className="planning-poker-room__guild-progress" aria-label="Progresso de votos da guilda">
+          <div className="planning-poker-room__guild-progress" aria-label={t('team_voting_progress')}>
             <div className="planning-poker-room__guild-progress-header">
-              <span>Rodada atual</span>
+              <span>{t('current_round')}</span>
               <strong>{votingProgressLabel}</strong>
             </div>
             <div
               className="planning-poker-room__story-progress-bar"
               role="progressbar"
-              aria-label="Votos registrados pela guilda"
+              aria-label={t('votes_submitted_by_the_team')}
               aria-valuemin="0"
               aria-valuemax="100"
               aria-valuenow={votingProgressPercent}
             >
               <span style={{ width: `${votingProgressPercent}%` }} />
             </div>
-            <p>{voteVisibilityLabel}. Valores individuais permanecem protegidos até a revelação.</p>
+            <p>{t('hidden_vote_values', { visibility: voteVisibilityLabel })}</p>
           </div>
 
           {canFacilitate ? (
             <form className="planning-poker-room__invite-member" onSubmit={handleInviteProjectMember}>
               <div>
-                <span>Convidar participante</span>
-                <strong>Adicionar e enviar convite</strong>
+                <span>{t('invite_participant')}</span>
+                <strong>{t('add_and_send_invite')}</strong>
                 <p>
-                  O participante entra com a mesma conta deste e-mail. Ao adicionar, o ProdForge envia o link da Roda automaticamente.
+                  {t('the_participant_signs_in_with_this_email')}
                 </p>
               </div>
               {canManageProject ? (
                 <>
                   <label className="projects-page__field">
-                    <span>E-mail do participante</span>
+                    <span>{t('participant_email')}</span>
                     <input
                       type="email"
                       value={inviteEmail}
                       onChange={(event) => setInviteEmail(event.target.value)}
-                      placeholder="participante@empresa.com"
+                      placeholder={t('participant_example_com')}
                       disabled={isAddingInviteMember}
                     />
                   </label>
@@ -2095,25 +2120,25 @@ function PlanningPokerRoomPage() {
                     className="btn btn-secondary btn-small"
                     disabled={isAddingInviteMember || !session}
                   >
-                    {isAddingInviteMember ? 'Enviando convite...' : 'Adicionar e enviar convite'}
+                    {isAddingInviteMember ? t('sending_invite') : t('add_and_send_invite')}
                   </button>
                 </>
               ) : (
                 <p className="planning-poker-room__invite-note">
-                  Apenas responsáveis e administradores do projeto podem liberar novos e-mails.
+                  {t('only_project_owners_and_administrators_can_grant')}
                 </p>
               )}
-              {inviteMessage ? <p className="planning-poker-room__invite-note">{inviteMessage}</p> : null}
+              {inviteMessage ? <p className="planning-poker-room__invite-note" role="status">{formatNotice(t, inviteMessage)}</p> : null}
             </form>
           ) : null}
 
           <div className="planning-poker-room__session-meta">
-            <span>Status: {getSessionStatusLabel(session?.status)}</span>
-            <span>Escala: {scoringScaleLabel}</span>
-            <span>Participantes votantes: {eligibleVoters.length}</span>
+            <span>{t('status_2')}{" "}{getSessionStatusLabel(session?.status, t)}</span>
+            <span>{t('scale_2')}{" "}{scoringScaleLabel}</span>
+            <span>{t('voting_participants')}{" "}{eligibleVoters.length}</span>
             <span>{revotePolicyLabel}</span>
             <span>{revealPolicyLabel}</span>
-            <span>Criada em {formatDateTime(session?.created_at)}</span>
+            <span>{t('created_on')}{" "}{formatDateTime(session?.created_at, language)}</span>
           </div>
 
           {canFacilitate ? (

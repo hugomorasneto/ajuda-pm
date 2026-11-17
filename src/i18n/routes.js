@@ -20,6 +20,7 @@ const pilotPages = [
   { id: 'workspace', 'pt-BR': '/tool', workspace: true },
   { id: 'history', 'pt-BR': '/historico', workspace: true },
   { id: 'projects', 'pt-BR': '/projetos', workspace: true },
+  { id: 'planning', 'pt-BR': '/roda', workspace: true },
   { id: 'teams', 'pt-BR': '/times', workspace: true },
   { id: 'login', 'pt-BR': '/login', auth: true },
   { id: 'signup', 'pt-BR': '/signup', auth: true },
@@ -32,6 +33,9 @@ function normalizePath(path) {
 
 export function getPilotPage(pathname) {
   const path = normalizePath(pathname)
+  if (/^\/projetos\/[^/]+\/roda\/[^/]+$/.test(path)) {
+    return { id: 'planningRoom', 'pt-BR': path, workspace: true }
+  }
   if (/^\/projetos\/[^/]+$/.test(path)) {
     return { id: 'projectDetail', 'pt-BR': path, workspace: true }
   }

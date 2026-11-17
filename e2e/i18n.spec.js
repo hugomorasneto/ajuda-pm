@@ -1130,8 +1130,7 @@ test('Detalhe preserva edição, seleção e avisos e localiza quadro e diagnós
   await expect(boardSection.getByRole('heading', { name: 'Ready to estimate', exact: true })).toBeVisible()
   await expect(page.getByRole('checkbox', { name: 'Select for Planning Poker' })).toBeChecked()
   const sessionLink = page.getByRole('link', { name: 'Open Planning Poker with selected stories' })
-  await expect(sessionLink).toHaveAttribute('href', '/roda?projectId=project-a&storyIds=story-ready')
-  await expect(sessionLink).toHaveAttribute('hreflang', 'pt-BR')
+  await expect(sessionLink).toHaveAttribute('href', '/roda?projectId=project-a&storyIds=story-ready&lang=en')
   await expect(page.getByRole('heading', { name: 'Project diagnosis', exact: true })).toBeVisible()
   await expect(page.getByText(projectDiagnosisSummary, { exact: true }).first()).toBeVisible()
   expect(traffic).toHaveLength(beforeSwitch)
@@ -1210,4 +1209,299 @@ test('Link direto do projeto retorna após login e mantém perfil apenas de cons
   await expect(page.getByText('Visualizador do projeto', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Editar projeto', exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Adicionar membro', exact: true })).toHaveCount(0)
+})
+
+const pokerRoomPath = '/projetos/project-a/roda/poker-a'
+const pokerSessionName = 'Estimativas da entrega'
+const pokerStoryTitle = 'Validar endereço'
+const pokerStoryText = 'Como cliente, quero confirmar meu endereço de entrega.'
+
+async function mockPlanningPoker(context, {
+  authenticated = true, initialStatus = 'voting', holdInviteLookup = false,
+} = {}) {
+  const traffic = await mockWorkspace(context, user, { authenticated })
+  const project = { id: 'project-a', name: 'Checkout', owner_id: user.id }
+  const baseStory = {
+    id: 'checkout-address', title: pokerStoryTitle, user_story: pokerStoryText, estimation_status: 'ready_for_estimation',
+    created_at: '2026-08-14T13:00:00Z', total_count: 2,
+  }
+  const readyStories = [baseStory, { ...baseStory, id: 'checkout-delivery', title: 'Confirmar entrega' }]
+  const session = {
+    id: 'poker-a', name: pokerSessionName, project_id: project.id, facilitator_id: user.id,
+    invite_code: 'CAMPFIRE42', status: initialStatus, scoring_scale: 'fibonacci',
+    scoring_values: ['1', '3', '5', '?'], vote_time_limit_seconds: 300, allow_revote: true,
+    reveal_votes_after_all: false, allow_abstention: true, allow_observers: true, created_at: baseStory.created_at,
+  }
+  const roomStory = {
+    id: 'round-story', session_id: session.id, user_story_id: baseStory.id,
+    status: initialStatus === 'voting' ? 'voting' : 'pending', position: 1, user_story: baseStory,
+  }
+  const round = {
+    id: 'round-a', session_id: session.id, session_story_id: roomStory.id, status: 'voting', round_number: 1,
+    started_at: new Date(Date.now() - 30_000).toISOString(), ends_at: new Date(Date.now() + 300_000).toISOString(),
+  }
+  const participant = { id: 'participant-a', user_id: user.id, role: 'facilitator', status: 'joined' }
+  const other = { id: 'participant-b', user_id: 'user-b', display_name: 'Joana', role: 'participant', status: 'joined' }
+  const votes = [{ id: 'vote-b', round_id: round.id, participant_id: other.id, vote_kind: 'estimate', vote_value: '5', vote_numeric: 5 }]
+  let created = initialStatus !== 'draft'
+  let resumeLookup
+  const lookupGate = holdInviteLookup ? new Promise((resolve) => { resumeLookup = resolve }) : Promise.resolve()
+  const endpoints = new Set([
+    'projects', 'search_user_story_groups', 'planning_poker_sessions', 'planning_poker_session_stories',
+    'planning_poker_participants', 'planning_poker_rounds', 'planning_poker_vote_status', 'planning_poker_votes',
+    'planning_poker_results', 'create_planning_poker_session', 'join_planning_poker_session', 'cast_planning_poker_vote',
+    'reveal_planning_poker_round', 'seal_planning_poker_estimate', 'add_project_member_by_email', 'planning-poker-invite',
+  ])
+  await context.route((url) => url.origin === 'http://127.0.0.1:54321' &&
+    endpoints.has(url.pathname.split('/').at(-1)), async (route) => {
+    const request = route.request()
+    const { pathname, searchParams } = new URL(request.url())
+    const endpoint = pathname.split('/').at(-1)
+    const body = request.postDataJSON()
+    const byCode = searchParams.get('invite_code')
+    traffic.push({ pathname, method: request.method(), body, byCode })
+
+    switch (endpoint) {
+      case 'projects':
+        return route.fulfill({ json: [project] })
+      case 'search_user_story_groups':
+        return route.fulfill({ json: readyStories })
+      case 'planning_poker_sessions':
+        if (byCode) await lookupGate
+        return route.fulfill({ json: created && (!byCode || byCode === 'eq.' + session.invite_code) ? [session] : [] })
+      case 'planning_poker_session_stories':
+        return route.fulfill({ json: created ? [roomStory] : [] })
+      case 'planning_poker_participants':
+        return route.fulfill({ json: [participant, other] })
+      case 'planning_poker_rounds':
+        return route.fulfill({ json: initialStatus === 'voting' ? [round] : [] })
+      case 'planning_poker_vote_status':
+        return route.fulfill({ json: votes.map((vote) => ({
+          round_id: round.id, participant_id: vote.participant_id,
+          user_id: vote.participant_id === participant.id ? user.id : other.user_id, has_voted: true,
+        })) })
+      case 'planning_poker_votes':
+        return route.fulfill({ json: round.status === 'voting' ? [] : votes })
+      case 'planning_poker_results':
+        return route.fulfill({ json: [] })
+      case 'create_planning_poker_session': {
+        created = true
+        session.name = body.p_name
+        session.scoring_scale = body.p_scoring_scale
+        session.vote_time_limit_seconds = body.p_vote_time_limit_seconds
+        roomStory.user_story = readyStories.find((story) => story.id === body.p_user_story_ids[0])
+        roomStory.user_story_id = roomStory.user_story.id
+        return route.fulfill({ json: [session] })
+      }
+      case 'join_planning_poker_session':
+        return route.fulfill({ json: [participant] })
+      case 'cast_planning_poker_vote':
+        votes.push({
+          id: 'vote-a', round_id: round.id, participant_id: participant.id,
+          vote_kind: body.p_vote_kind, vote_value: body.p_vote_value,
+        })
+        return route.fulfill({ json: [votes.at(-1)] })
+      case 'reveal_planning_poker_round':
+        round.status = 'revealed'
+        session.status = 'revealed'
+        return route.fulfill({ json: [round] })
+      case 'seal_planning_poker_estimate':
+        roomStory.status = 'estimated'
+        roomStory.final_estimate = body.p_final_estimate
+        round.status = 'closed'
+        session.status = 'completed'
+        return route.fulfill({ json: [roomStory] })
+      case 'add_project_member_by_email':
+        return route.fulfill({ json: [{ user_id: 'invited', email: body.p_email, role: body.p_role }] })
+      case 'planning-poker-invite':
+        return route.fulfill({ status: 503, json: { success: false, error: 'Falha de envio simulada.' } })
+      default:
+        return route.abort()
+    }
+  })
+
+  return {
+    traffic,
+    calls: (endpoint) => traffic.filter(({ pathname }) => pathname.endsWith('/' + endpoint)),
+    resumeLookup,
+  }
+}
+
+async function checkPokerLayout(page) {
+  await checkWidth(page)
+  const overflowing = await page.locator(
+    '.planning-poker-dashboard > section, .planning-poker-room > section, ' +
+    '.planning-poker-room__layout > section, .planning-poker-room__guild, .planning-poker-room__card',
+  ).evaluateAll((entries) => entries.filter((entry) => {
+    const { left, right } = entry.getBoundingClientRect()
+    return left < -1 || right > window.innerWidth + 1
+  }).map((entry) => entry.className))
+  expect(overflowing).toEqual([])
+}
+
+test('Roda mantém regras, busca e seleção editada ao traduzir e cria uma única sessão', async ({ page, context }, testInfo) => {
+  const { traffic, calls } = await mockPlanningPoker(context, { initialStatus: 'draft' })
+  const path = '/roda?projectId=project-a&storyIds=checkout-address&ref=a%20b&lang=pt-BR#main-content'
+  await page.goto(path)
+  await expect(page.getByText('História selecionada para criar a Roda.', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Remover', exact: true }).click()
+  const search = page.getByRole('searchbox', { name: 'Buscar histórias', exact: true })
+  await search.fill('entrega')
+  await page.locator('.project-detail-page__campfire-story-option').filter({ hasText: 'Confirmar entrega' }).getByRole('checkbox').check()
+  await page.getByLabel('Nome da Roda').fill(pokerSessionName)
+  await page.getByRole('combobox', { name: 'Escala', exact: true }).first().selectOption('tshirt')
+  await page.getByRole('combobox', { name: 'Tempo de votação', exact: true }).selectOption('180')
+  await page.getByText('Regras avançadas', { exact: true }).click()
+  await page.getByRole('checkbox', { name: 'Permitir novo voto' }).uncheck()
+
+  const beforeSwitch = traffic.length
+  await page.getByRole('combobox', { name: 'Idioma' }).focus()
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('combobox', { name: 'Language' })).toBeFocused()
+  await expect(page).toHaveURL(path.replace('pt-BR', 'en'))
+  await expect(page).toHaveTitle('Planning Poker · ProdForge')
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await expect(page.getByLabel('Session name')).toHaveValue(pokerSessionName)
+  await expect(page.getByRole('combobox', { name: 'Scale', exact: true }).first()).toHaveValue('tshirt')
+  await expect(page.getByRole('combobox', { name: 'Voting time', exact: true })).toHaveValue('180')
+  await expect(page.getByRole('checkbox', { name: 'Allow vote changes' })).not.toBeChecked()
+  await expect(page.getByRole('searchbox', { name: 'Search stories', exact: true })).toHaveValue('entrega')
+  await expect(page.locator('.planning-poker-dashboard__selected-story')).toHaveCount(1)
+  await expect(page.locator('.planning-poker-dashboard__selected-story')).toContainText('Confirmar entrega')
+  expect(traffic).toHaveLength(beforeSwitch)
+
+  if (testInfo.project.name === 'celular') {
+    await page.getByRole('button', { name: 'Open navigation' }).click()
+    await expect(page.getByRole('navigation', { name: 'Workspace navigation' })).toBeVisible()
+    await page.locator('.workspace-sidebar__close').click()
+    await page.setViewportSize({ width: 320, height: 740 })
+  }
+  await checkPokerLayout(page)
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await expect(page.getByRole('combobox', { name: 'Language' })).toBeInViewport()
+  await evidence(page, testInfo, 'roda-en')
+
+  await page.getByRole('button', { name: 'Create Planning Poker session', exact: true }).click()
+  await expect(page).toHaveURL(pokerRoomPath + '?lang=en')
+  await expect(page.getByRole('heading', { name: pokerSessionName, exact: true, level: 1 })).toBeVisible()
+  expect(calls('create_planning_poker_session').map(({ body }) => body)).toEqual([expect.objectContaining({
+    p_name: pokerSessionName, p_user_story_ids: ['checkout-delivery'], p_scoring_scale: 'tshirt',
+    p_vote_time_limit_seconds: 180, p_allow_revote: false,
+  })])
+})
+
+test('Sala preserva voto, sigilo, estimativa e convite ao trocar de idioma', async ({ page, context }, testInfo) => {
+  const { traffic, calls } = await mockPlanningPoker(context)
+  const errors = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  const path = pokerRoomPath + '?ref=a%26b&lang=en#main-content'
+  await page.goto(path)
+  await expect(page.getByRole('button', { name: 'Abstain', exact: true })).toBeEnabled()
+  await expect(page.getByText('Votes hidden', { exact: true }).first()).toBeVisible()
+  const beforeSwitch = traffic.length
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  await expect(page).toHaveURL(path.replace('lang=en', 'lang=pt-BR'))
+  await expect(page.getByRole('button', { name: 'Abster-se', exact: true })).toBeEnabled()
+  expect(traffic).toHaveLength(beforeSwitch)
+  expect(calls('join_planning_poker_session')).toHaveLength(1)
+  expect(calls('planning_poker_votes')).toHaveLength(0)
+
+  await page.getByRole('button', { name: 'Abster-se', exact: true }).click()
+  await expect(page.getByText('Abstenção registrada. Ela fica oculta até a revelação das runas.', { exact: true })).toBeVisible()
+  expect(calls('cast_planning_poker_vote').map(({ body }) => body)).toEqual([
+    { p_round_id: 'round-a', p_vote_value: 'Abster-se', p_vote_kind: 'abstain' },
+  ])
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await expect(page.getByText('Abstention recorded. It stays hidden until the cards are revealed.', { exact: true })).toBeVisible()
+  expect(calls('planning_poker_votes')).toHaveLength(0)
+
+  await page.getByRole('button', { name: 'Reveal cards', exact: true }).click()
+  await expect(page.getByLabel('Final value')).toBeVisible()
+  await expect(page.locator('.planning-poker-room__revealed-votes').getByText('Abstain', { exact: true })).toBeVisible()
+  await page.getByLabel('Final value').fill('8')
+  await page.getByLabel('Participant email').fill('invitee@example.test')
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  await expect(page.getByLabel('Valor final')).toHaveValue('8')
+  await expect(page.getByLabel('E-mail do participante')).toHaveValue('invitee@example.test')
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.getByRole('button', { name: 'Copy result', exact: true }).click()
+  const result = await page.evaluate(() => navigator.clipboard.readText())
+  expect(result).toContain('# Planning Poker result')
+  expect(result).toContain(pokerStoryText)
+  expect(result).toContain('Abstain')
+  await page.getByRole('button', { name: 'Copy link for members', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Link copied', exact: true })).toBeVisible()
+  const invite = new URL(await page.evaluate(() => navigator.clipboard.readText()))
+  expect(invite.pathname + invite.search).toBe('/roda?codigo=CAMPFIRE42&lang=en')
+  await page.getByRole('button', { name: 'Add and send invite', exact: true }).click()
+  await expect(page.getByText('Participant added. The email could not be sent. Copy the invite and send it manually.', { exact: true }).first()).toBeVisible()
+  expect(calls('add_project_member_by_email')).toHaveLength(1)
+  expect(calls('planning-poker-invite')).toHaveLength(1)
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  await expect(page.getByText('Participante adicionado, mas o e-mail não foi enviado. Copie o convite e envie manualmente.', { exact: true }).first()).toBeVisible()
+  expect(calls('planning-poker-invite')).toHaveLength(1)
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+
+  if (testInfo.project.name === 'celular') await page.setViewportSize({ width: 320, height: 740 })
+  await checkPokerLayout(page)
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await evidence(page, testInfo, 'sala-en')
+  await page.getByRole('button', { name: 'Seal estimate', exact: true }).click()
+  await expect(page.getByRole('region', { name: 'Final session summary' })).toBeVisible()
+  expect(calls('seal_planning_poker_estimate').map(({ body }) => body)).toEqual([
+    { p_session_story_id: 'round-story', p_final_estimate: '8' },
+  ])
+  expect(calls('cast_planning_poker_vote')).toHaveLength(1)
+  expect(calls('reveal_planning_poker_round')).toHaveLength(1)
+  expect(calls('join_planning_poker_session')).toHaveLength(1)
+  await page.reload()
+  await expect(page.getByRole('combobox', { name: 'Language' })).toHaveValue('en')
+  await page.goto('http://127.0.0.1:4176' + pokerRoomPath + '?lang=en')
+  await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR')
+  await expect(page.getByRole('region', { name: 'Resumo final da sessão' })).toBeVisible()
+  await expect(page.getByRole('combobox', { name: 'Idioma' })).toHaveCount(0)
+  expect(errors).toEqual([])
+})
+
+test('Convite em inglês retorna após login e abre a sala no idioma escolhido durante a busca', async ({ page, context }) => {
+  const { traffic, resumeLookup } = await mockPlanningPoker(context, { authenticated: false, holdInviteLookup: true })
+  const destination = '/roda?codigo=CAMPFIRE42&ref=a%20b&lang=en#main-content'
+  await page.goto(destination)
+  await expect(page.getByRole('heading', { name: 'Sign in to your workspace' })).toBeVisible()
+  expect(new URL(page.url()).searchParams.get('from')).toBe(destination)
+  await page.getByRole('textbox', { name: 'Email' }).fill(user.email)
+  await page.getByLabel('Password', { exact: true }).fill('simulated-password')
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await expect(page).toHaveURL(destination)
+  const inviteLookups = () => traffic.filter(({ byCode }) => byCode === 'eq.CAMPFIRE42')
+  await expect.poll(() => inviteLookups().length).toBe(1)
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  await expect(page).toHaveURL(destination.replace('lang=en', 'lang=pt-BR'))
+  resumeLookup()
+  await expect(page).toHaveURL(pokerRoomPath + '?lang=pt-BR')
+  await expect(page.getByRole('heading', { name: pokerSessionName, exact: true, level: 1 })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Revelar as Runas', exact: true })).toBeVisible()
+  expect(inviteLookups()).toHaveLength(1)
+})
+
+test('Código inacessível mantém convite e traduz o pedido de liberação', async ({ page, context }) => {
+  const { traffic, calls } = await mockPlanningPoker(context)
+  const path = '/roda?codigo=DESCONHECIDO&ref=a%2Bb&lang=pt-BR#main-content'
+  await page.goto(path)
+  await expect(page.getByRole('heading', { name: 'Peça liberação ao facilitador' })).toBeVisible()
+  const lookups = () => traffic.filter(({ byCode }) => byCode === 'eq.DESCONHECIDO')
+  expect(lookups()).toHaveLength(1)
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await expect(page).toHaveURL(path.replace('pt-BR', 'en'))
+  await expect(page.getByRole('heading', { name: 'Request access from the facilitator' })).toBeVisible()
+  await expect(page.getByText(/Could not open this invite automatically/)).toBeVisible()
+  await page.getByText('Copy manually', { exact: true }).click()
+  await expect(page.getByRole('textbox', { name: 'Access request message for manual copying' }))
+    .toHaveValue(/My sign-in email is owner@example\.test\.\nSession code: DESCONHECIDO\./)
+  expect(lookups()).toHaveLength(1)
+  expect(calls('join_planning_poker_session')).toHaveLength(0)
+  expect(calls('planning-poker-invite')).toHaveLength(0)
 })

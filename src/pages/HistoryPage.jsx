@@ -855,7 +855,7 @@ function HistoryPage() {
     if (selectedStory.estimation_status !== 'estimated') {
       query.set('storyId', selectedStory.id)
     }
-    navigate(`/roda?${query.toString()}`)
+    navigate(localizedPath(`/roda?${query.toString()}`))
   }
 
   function toggleAdvancedSection(section, isOpen) {
