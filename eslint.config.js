@@ -37,7 +37,7 @@ export default defineConfig([
       'src/components/navigation/Public{Header,Footer}.jsx',
       'src/components/workspace/Workspace{Topbar,Sidebar,LoadingState,EmptyState,ErrorState}.jsx',
       'src/components/workspace/{BriefComposer,ProjectContextPanel,PromptChips,StoryDocument,QualityPanel,ExportActionsBar,VersionTimeline,VersionDiffSummary}.jsx',
-      'src/pages/{Tool,History}Page.jsx',
+      'src/pages/{Tool,History,Projects,ProjectDetail}Page.jsx',
       'src/components/privacy/PrivacyConsentBanner.jsx',
     ],
     rules: {

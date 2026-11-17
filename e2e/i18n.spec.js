@@ -276,10 +276,9 @@ test('login simulado retorna ao destino original e o modo padrão é em portugu�
   await expect(page.getByRole('banner').getByRole('heading', { name: 'Teams' })).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
   await page.getByRole('link', { name: 'View projects', exact: true }).click()
-  await expect(page).toHaveURL('/projetos')
-  await expect(page).toHaveTitle('Projetos · ProdForge')
-  await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR')
-  await expect(page.locator('.language-switcher option[value="en"]')).toBeDisabled()
+  await expect(page).toHaveURL('/projetos?lang=en')
+  await expect(page).toHaveTitle('Projects · ProdForge')
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
 
   await page.goto('http://127.0.0.1:4176/login?lang=en')
   await expect(page.getByRole('heading', { name: 'Entre na sua bancada' })).toBeVisible()
@@ -926,4 +925,289 @@ test('Histórico mantém busca, versão, comparação e exportação durante a t
   await page.reload()
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
   await expect(page.locator('.history-preview')).toContainText(forgeFixture.user_story)
+})
+
+async function checkProjectsLayout(page) {
+  await checkWidth(page)
+  const clipped = await page.locator(
+    '.projects-page > section, .projects-page__list-card, .projects-page__active-filter, ' +
+    '.project-detail-page__story-actions, .project-detail-page__kanban',
+  ).evaluateAll((sections) => sections.filter((section) => {
+    const { left, right } = section.getBoundingClientRect()
+    return left < -1 || right > window.innerWidth + 1
+  }).map((section) => section.className))
+  expect(clipped).toEqual([])
+}
+
+const projectFixtureDate = '2026-04-28T13:30:00Z'
+const projectStoryTitle = 'Validação de domínio'
+const projectDiagnosisSummary = 'Revisar as regras de domínio do cliente.'
+const projectPath = '/projetos/project-a'
+
+async function mockProjectDetails(context, { viewer = false, authenticated = true } = {}) {
+  const traffic = await mockWorkspace(context, user, { authenticated })
+  const owner = viewer ? { id: 'another-user', email: 'admin@example.test' } : user
+  let checkout = {
+    id: 'project-a', name: 'Checkout', description: 'Pagamentos recorrentes',
+    owner_id: owner.id, created_at: projectFixtureDate,
+  }
+  const catalog = { id: 'project-b', name: 'Catalog', description: 'Produtos', created_at: projectFixtureDate }
+  const readyStory = {
+    id: 'story-ready', title: projectStoryTitle, estimation_status: 'ready_for_estimation',
+    created_at: projectFixtureDate, version_number: 2, input_context: 'Restringir domínios pessoais',
+    user_story: 'Como cliente, quero validar meu domínio.',
+  }
+  const stories = [readyStory, {
+    ...readyStory, id: 'story-live', title: 'Confirmação de e-mail', version_number: 1,
+  }]
+  const board = stories.map((story) => ({
+    column_id: 'ready', column_name: 'Prontas para estimar', column_is_default: true,
+    column_status_base: 'ready_for_estimation', column_position: 10,
+    story_id: story.id, story_title: story.title, story_estimation_status: story.estimation_status,
+    story_created_at: story.created_at, story_version_number: story.version_number,
+    story_input_context: story.input_context, story_user_story: story.user_story,
+  }))
+  board.push(
+    { column_id: 'custom', column_name: 'Revisão do cliente', column_status_base: 'refining', column_position: 20 },
+    { column_id: 'renamed', column_name: 'Entrada da equipe', column_is_default: true, column_status_base: 'created', column_position: 30 },
+  )
+  const endpoints = [
+    'projects', 'can_manage_project', 'list_project_members', 'list_project_kanban_board',
+    'planning_poker_sessions', 'planning_poker_session_stories', 'search_user_story_groups',
+    'project_ai_diagnostics', 'add_project_member_by_email',
+  ]
+  let releaseMemberResponse
+  const memberResponse = new Promise((resolve) => { releaseMemberResponse = resolve })
+  await context.route((url) => url.origin === 'http://127.0.0.1:54321' &&
+    endpoints.includes(url.pathname.split('/').at(-1)), async (route) => {
+    const request = route.request()
+    const { pathname, searchParams } = new URL(request.url())
+    const endpoint = pathname.split('/').at(-1)
+    const method = request.method()
+    const body = request.postDataJSON()
+    traffic.push({ pathname, method, body })
+    switch (endpoint) {
+      case 'projects': {
+        if (method === 'PATCH') {
+          checkout = { ...checkout, ...body }
+          return route.fulfill({ json: checkout })
+        }
+        const records = [checkout, catalog].filter((item) =>
+          !searchParams.has('id') || searchParams.get('id') === 'eq.' + item.id)
+        return route.fulfill({ json: records })
+      }
+      case 'can_manage_project':
+        return route.fulfill({ json: !viewer })
+      case 'list_project_members':
+        return route.fulfill({ json: [
+          { user_id: owner.id, email: owner.email, role: 'owner' },
+          { user_id: viewer ? user.id : 'project-viewer', email: 'viewer@example.test', role: 'viewer' },
+        ] })
+      case 'list_project_kanban_board':
+        return route.fulfill({ json: board })
+      case 'planning_poker_sessions':
+        return route.fulfill({ json: [{ id: 'session-a', name: 'Estimativa de abril', status: 'voting' }] })
+      case 'planning_poker_session_stories':
+        return route.fulfill({ json: [{ session_id: 'session-a', user_story_id: 'story-live', status: 'voting' }] })
+      case 'search_user_story_groups': {
+        const matching = (body.p_project_id === checkout.id ? stories : [])
+          .filter((story) => !body.p_estimation_status || story.estimation_status === body.p_estimation_status)
+        return route.fulfill({ json: matching.slice(0, body.p_limit).map((story) => ({
+          ...story, total_count: matching.length,
+        })) })
+      }
+      case 'project_ai_diagnostics':
+        return route.fulfill({ json: searchParams.get('project_id') === 'eq.project-a' ? [{
+          id: 'diagnosis-a', project_id: 'project-a', created_at: projectFixtureDate,
+          input_story_count: 1, analyzed_story_count: 1,
+          health_label: 'Atenção moderada', summary: projectDiagnosisSummary,
+          risks: ['Regras de validação pouco claras.'],
+          refinement_questions: ['Quais domínios devem ser aceitos?'],
+          next_actions: ['Alinhar regras com o time.'],
+          estimation_candidates: [projectStoryTitle],
+        }] : [] })
+      case 'add_project_member_by_email':
+        await memberResponse
+        return route.fulfill({ status: 400, json: {
+          code: 'P0001', message: 'Usuário não encontrado para esse e-mail.',
+        } })
+      default:
+        return route.abort()
+    }
+  })
+  return { traffic, releaseMemberResponse }
+}
+
+test('Projetos preserva busca, filtros e rascunho na troca de idioma', async ({ page, context }, testInfo) => {
+  const { traffic } = await mockProjectDetails(context)
+  const path = '/projetos?ref=a%20b&ref=c&lang=pt-BR#criar-projeto'
+  await page.goto(path)
+  const portfolio = page.getByRole('region', { name: 'Lista de projetos' })
+  await expect(portfolio.getByRole('heading', { name: 'Checkout' })).toBeVisible()
+  const catalog = portfolio.getByRole('article').filter({ has: page.getByRole('heading', { name: 'Catalog' }) })
+  await expect(catalog.getByText('0 times', { exact: true })).toBeVisible()
+  const ready = portfolio.getByRole('button', { name: 'Prontos para Roda Com histórias prontas.' })
+  await ready.click()
+  await expect(portfolio.getByRole('heading', { name: 'Catalog' })).toHaveCount(0)
+  await portfolio.getByRole('searchbox').fill('pagamentos')
+  await portfolio.getByRole('combobox', { name: 'Ordenar projetos' }).selectOption('name')
+  await page.getByLabel('Nome do projeto').fill('Novo checkout')
+  await page.getByLabel('Descrição Opcional').fill('Contexto da jornada')
+  await expect(portfolio.getByText('Desatualizado', { exact: true })).toBeVisible()
+
+  const beforeSwitch = traffic.length
+  const language = page.getByRole('combobox', { name: 'Idioma' })
+  await language.focus()
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('combobox', { name: 'Language' })).toBeFocused()
+  await expect(page).toHaveURL('/projetos?ref=a%20b&ref=c&lang=en#criar-projeto')
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await expect(page).toHaveTitle('Projects · ProdForge')
+  await expect(page.getByLabel('Project name')).toHaveValue('Novo checkout')
+  await expect(page.getByLabel('Description Optional')).toHaveValue('Contexto da jornada')
+  const projectList = page.getByRole('region', { name: 'Project list' })
+  await expect(projectList.getByRole('searchbox')).toHaveValue('pagamentos')
+  await expect(projectList.getByRole('combobox', { name: 'Sort projects' })).toHaveValue('name')
+  await expect(projectList.getByRole('button', { name: 'Ready for Planning Poker With stories ready to estimate.' }))
+    .toHaveAttribute('aria-pressed', 'true')
+  await expect(projectList.getByText('Outdated', { exact: true })).toBeVisible()
+  await expect(projectList.getByText('Pagamentos recorrentes')).toBeVisible()
+  const link = projectList.getByRole('link', { name: 'Checkout' })
+  await expect(link).toHaveAttribute('href', projectPath + '?lang=en')
+  expect(traffic).toHaveLength(beforeSwitch)
+
+  if (testInfo.project.name === 'celular') {
+    await page.getByRole('button', { name: 'Open navigation' }).click()
+    await expect(page.getByRole('navigation', { name: 'Workspace navigation' })).toBeVisible()
+    await page.locator('.workspace-sidebar__close').click()
+    await page.setViewportSize({ width: 320, height: 740 })
+  }
+  await checkProjectsLayout(page)
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await expect(page.getByRole('combobox', { name: 'Language' })).toBeInViewport()
+  await evidence(page, testInfo, 'projetos-en')
+  await page.reload()
+  await expect(page.getByRole('combobox', { name: 'Language' })).toHaveValue('en')
+  await page.goto('/projetos')
+  await expect(page.getByRole('heading', { name: 'Your projects' })).toBeVisible()
+  await page.goto('/projetos?lang=pt-BR')
+  await expect(page.getByRole('heading', { name: 'Seus projetos' })).toBeVisible()
+  await page.goto('http://127.0.0.1:4176/projetos?lang=en')
+  await expect(page.getByRole('heading', { name: 'Seus projetos' })).toBeVisible()
+  await expect(page.getByRole('combobox', { name: 'Idioma' })).toHaveCount(0)
+})
+
+test('Detalhe preserva edição, seleção e avisos e localiza quadro e diagnóstico', async ({ page, context }, testInfo) => {
+  const { traffic, releaseMemberResponse } = await mockProjectDetails(context)
+  const errors = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  const suffix = '?ref=a%26b&lang=pt-BR#historias-projeto'
+  await page.goto(projectPath + suffix)
+  await expect(page.getByRole('heading', { name: 'Checkout', exact: true })).toBeVisible()
+  await expect(page.getByText('Responsável pelo projeto', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Prontas para estimar', exact: true })).toBeVisible()
+  await expect(page.getByRole('checkbox', { name: 'Já em Roda ativa' })).toBeDisabled()
+  await expect(page.getByText(projectDiagnosisSummary, { exact: true }).first()).toBeVisible()
+  await page.getByRole('button', { name: 'Editar projeto', exact: true }).click()
+  await page.getByLabel('Nome do projeto').fill('Checkout em revisão')
+  await page.getByLabel('Descrição opcional').fill('Rascunho do contexto')
+  const boardSection = page.locator('#historias-projeto')
+  await boardSection.getByRole('combobox', { name: 'Filtrar status' }).selectOption('ready_for_estimation')
+  await expect(boardSection.getByRole('combobox', { name: 'Filtrar status' })).toBeEnabled()
+  await page.getByLabel('Buscar no projeto').fill('domínio')
+  await page.getByRole('checkbox', { name: 'Selecionar para Roda' }).check()
+  const beforeSwitch = traffic.length
+
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await expect(page).toHaveURL(projectPath + suffix.replace('pt-BR', 'en'))
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await expect(page.getByLabel('Project name')).toHaveValue('Checkout em revisão')
+  await expect(page.getByLabel('Optional description')).toHaveValue('Rascunho do contexto')
+  await expect(page.getByLabel('Search this project')).toHaveValue('domínio')
+  await expect(boardSection.getByRole('combobox', { name: 'Filter by status' })).toHaveValue('ready_for_estimation')
+  await expect(boardSection.getByRole('heading', { name: projectStoryTitle })).toBeVisible()
+  await expect(boardSection.getByRole('heading', { name: 'Ready to estimate', exact: true })).toBeVisible()
+  await expect(page.getByRole('checkbox', { name: 'Select for Planning Poker' })).toBeChecked()
+  const sessionLink = page.getByRole('link', { name: 'Open Planning Poker with selected stories' })
+  await expect(sessionLink).toHaveAttribute('href', '/roda?projectId=project-a&storyIds=story-ready')
+  await expect(sessionLink).toHaveAttribute('hreflang', 'pt-BR')
+  await expect(page.getByRole('heading', { name: 'Project diagnosis', exact: true })).toBeVisible()
+  await expect(page.getByText(projectDiagnosisSummary, { exact: true }).first()).toBeVisible()
+  expect(traffic).toHaveLength(beforeSwitch)
+
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.getByRole('button', { name: 'Copy action plan', exact: true }).click()
+  await expect(page.getByText('Action plan copied as Markdown.', { exact: true })).toBeVisible()
+  const markdown = await page.evaluate(() => navigator.clipboard.readText())
+  expect(markdown).toContain('# Project action plan: Checkout')
+  expect(markdown).toContain(projectDiagnosisSummary)
+  expect(markdown).toContain('1 story added since this diagnosis.')
+
+  await page.getByRole('button', { name: 'Save project' }).click()
+  await expect(page.getByText('Project updated.', { exact: true })).toBeVisible()
+  expect(traffic.filter(({ method }) => method === 'PATCH')).toEqual([
+    { pathname: '/rest/v1/projects', method: 'PATCH', body: {
+      name: 'Checkout em revisão', description: 'Rascunho do contexto',
+    } },
+  ])
+
+  await page.getByLabel('Registered email').fill('missing@example.test')
+  await page.getByRole('button', { name: 'Add member' }).click()
+  const memberCalls = () => traffic.filter(({ pathname }) => pathname.endsWith('/add_project_member_by_email'))
+  await expect.poll(() => memberCalls().length).toBe(1)
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  releaseMemberResponse()
+  await expect(page.getByText('Usuário não encontrado para esse e-mail.', { exact: true })).toBeVisible()
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await expect(page.getByText('No user found for this email address.', { exact: true })).toBeVisible()
+  await expect(page.getByLabel('Registered email')).toHaveValue('missing@example.test')
+  expect(memberCalls()).toHaveLength(1)
+
+  await page.getByLabel('Search this project').clear()
+  await boardSection.getByRole('combobox', { name: 'Filter by status' }).selectOption('all')
+  await expect(boardSection.getByRole('heading', { name: 'Revisão do cliente' })).toBeVisible()
+  await expect(boardSection.getByRole('heading', { name: 'Entrada da equipe' })).toBeVisible()
+  await expect(boardSection.getByText('Estimativa de abril · Voting', { exact: true })).toBeVisible()
+  await expect(boardSection.getByRole('checkbox', { name: 'Already in an active session' })).toBeDisabled()
+  await boardSection.getByRole('button', { name: 'List', exact: true }).click()
+  await expect(boardSection.getByRole('heading', { name: projectStoryTitle })).toBeVisible()
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  await expect(boardSection.getByRole('button', { name: 'Lista', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(boardSection.getByRole('checkbox', { name: 'Selecionar para Roda' })).toBeChecked()
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await boardSection.getByRole('button', { name: 'Board', exact: true }).click()
+  await expect(boardSection.getByRole('heading', { name: 'Revisão do cliente' })).toBeVisible()
+  if (testInfo.project.name === 'celular') await page.setViewportSize({ width: 320, height: 740 })
+  await checkProjectsLayout(page)
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await expect(page.getByRole('combobox', { name: 'Language' })).toBeInViewport()
+  await evidence(page, testInfo, 'projeto-en')
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Checkout em revisão', exact: true })).toBeVisible()
+  await expect(page.getByRole('combobox', { name: 'Language' })).toHaveValue('en')
+  await page.getByRole('link', { name: 'Back', exact: true }).click()
+  await expect(page).toHaveURL('/projetos?lang=en')
+  expect(errors).toEqual([])
+})
+
+test('Link direto do projeto retorna após login e mantém perfil apenas de consulta', async ({ page, context }) => {
+  await mockProjectDetails(context, { authenticated: false, viewer: true })
+  const destination = projectPath + '?ref=a%2Bb&lang=en#historias-projeto'
+  await page.goto(destination)
+  await expect(page.getByRole('heading', { name: 'Sign in to your workspace' })).toBeVisible()
+  expect(new URL(page.url()).searchParams.get('from')).toBe(destination)
+  await page.getByRole('textbox', { name: 'Email' }).fill(user.email)
+  await page.getByLabel('Password', { exact: true }).fill('simulated-password')
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await expect(page).toHaveURL(destination)
+  await expect(page.getByText('Project viewer', { exact: true })).toBeVisible()
+  await expect(page.getByText('View-only board', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Edit project', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Add member', exact: true })).toHaveCount(0)
+  await expect(page.getByText('Move card', { exact: true })).toHaveCount(0)
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  await expect(page.getByText('Visualizador do projeto', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Editar projeto', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Adicionar membro', exact: true })).toHaveCount(0)
 })
