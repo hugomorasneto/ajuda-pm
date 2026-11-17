@@ -14,7 +14,8 @@ describe('pilot language resolution', () => {
     expect(isLocalPreview('i18n-preview', 'prodforge.techtupa.com.br')).toBe(false)
     expect(isLocalPreview('production', '127.0.0.1')).toBe(false)
     expect(resolveLanguage({ ...teams, enabled: false, search: '?lang=en' })).toBe('pt-BR')
-    expect(resolveLanguage({ ...teams, pathname: '/login', saved: 'en' })).toBe('pt-BR')
+    expect(resolveLanguage({ ...teams, pathname: '/login', saved: 'en' })).toBe('en')
+    expect(resolveLanguage({ ...teams, pathname: '/projetos', saved: 'en' })).toBe('pt-BR')
   })
 
   it('uses URL, account, visitor, compatible browser language and default in order', () => {
@@ -34,6 +35,8 @@ describe('pilot language resolution', () => {
     }, 'en')).toEqual({
       ...about, pathname: '/times', search: '?x=a%20b&projectId=123&x=c&lang=en',
     })
-    expect(languageDestination({ pathname: '/login' }, 'en')).toBeNull()
+    expect(languageDestination({ pathname: '/login', search: '?from=%2Froda%3Fcodigo%3DABC' }, 'en').search)
+      .toBe('?from=%2Froda%3Fcodigo%3DABC&lang=en')
+    expect(languageDestination({ pathname: '/projetos' }, 'en')).toBeNull()
   })
 })

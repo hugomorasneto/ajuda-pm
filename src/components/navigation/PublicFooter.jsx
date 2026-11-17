@@ -1,3 +1,4 @@
+import { buildAuthPath } from '../../utils/authRedirect'
 import { useCopy, useLanguage } from '../../i18n/context'
 import { Link } from 'react-router-dom'
 import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC, HUGO_MORAES_LINKEDIN_URL } from '../../constants/app'
@@ -12,7 +13,8 @@ const footerGuides = [
 
 function PublicFooter() {
   const t = useCopy('navigation')
-  const { language } = useLanguage()
+  const { canSwitch, language } = useLanguage()
+  const authLocale = canSwitch ? language : undefined
   const { user } = useAuth()
   const brandStatement = t('footerStatement')
   const bottomCopy = `© ${new Date().getFullYear()} ${APP_NAME} · ${t('builtFor')}`
@@ -34,7 +36,7 @@ function PublicFooter() {
             />
           </div>
           <p className="public-footer__brand-statement">{brandStatement}</p>
-          <Link to={user ? '/tool' : '/signup'} className={footerCtaClassName}>
+          <Link to={user ? '/tool' : buildAuthPath('/signup', undefined, authLocale)} className={footerCtaClassName}>
             {user ? t('openWorkspace') : t('createAccountArrow')}
           </Link>
         </div>

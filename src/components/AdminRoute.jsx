@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
+import { useCopy, useLanguage } from '../i18n/context'
+import { buildAuthPath, getAuthDestinationLanguage } from '../utils/authRedirect'
 import { useAuth } from '../hooks/useAuth'
 import { getUserProfile } from '../services/userProfilesService'
 
 function AdminRoute({ children }) {
   const { user, isAuthLoading } = useAuth()
+  const t = useCopy('auth')
+  const { preview } = useLanguage()
+  const { pathname, search, hash } = useLocation()
   const [isChecking, setIsChecking] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
 
@@ -39,14 +44,16 @@ function AdminRoute({ children }) {
     return (
       <div className="page auth-loading-page">
         <section className="panel panel-muted">
-          <h2>Validando acesso administrativo...</h2>
+          <h2>{t('checkingAdmin')}</h2>
         </section>
       </div>
     )
   }
 
   if (!user) {
-    return <Navigate to="/login" replace state={{ message: 'Entre para acessar a área administrativa.' }} />
+    const from = pathname + search + hash
+    const language = preview ? getAuthDestinationLanguage(from) : undefined
+    return <Navigate to={buildAuthPath('/login', from, language)} replace state={{ from, notice: 'noticeAdmin' }} />
   }
 
   if (!isAdmin) {

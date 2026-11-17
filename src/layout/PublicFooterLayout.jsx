@@ -7,7 +7,7 @@ import '../styles/public.css'
 function PublicFooterLayout() {
   const { preview } = useLanguage()
   const location = useLocation()
-  const hideFooter = ['/login', '/signup'].includes(location.pathname)
+  const hideFooter = ['/login', '/signup'].includes(location.pathname.replace(/\/+$/, ''))
 
   return (
     <div className="public-footer-layout theme-forge">

@@ -1,9 +1,10 @@
-import { useCopy } from '../../i18n/context'
+import { useCopy, useLanguage } from '../../i18n/context'
 import { useEffect, useState } from 'react'
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC } from '../../constants/app'
 import { useAuth } from '../../hooks/useAuth'
 import { useLearningProgress } from '../../hooks/useLearningProgress'
+import { buildAuthPath, getAuthDestinationLanguage } from '../../utils/authRedirect'
 import { getUserProfile } from '../../services/userProfilesService'
 
 const TRAIL_SLUGS = ['fundamentos-produto-agil', 'user-stories-na-pratica', 'backlog-e-refinamento']
@@ -131,8 +132,11 @@ function SidebarNavLink({ item, onClose }) {
 
 function WorkspaceSidebar({ isOpen, onClose }) {
   const t = useCopy('navigation')
+  const authCopy = useCopy('auth')
+  const { preview, language, canSwitch } = useLanguage()
+  const [isSigningOut, setIsSigningOut] = useState(false)
+  const [signOutFailed, setSignOutFailed] = useState(false)
   const location = useLocation()
-  const navigate = useNavigate()
   const { user, signOut } = useAuth()
   const { completedSlugs } = useLearningProgress()
   const [canSeeAdmin, setCanSeeAdmin] = useState(false)
@@ -223,12 +227,23 @@ function WorkspaceSidebar({ isOpen, onClose }) {
   ]
 
   async function handleSignOut() {
-    await signOut()
-    onClose()
-    navigate('/login', {
-      replace: true,
-      state: { message: 'Você saiu da conta.' },
-    })
+    if (isSigningOut) return
+    setIsSigningOut(true)
+    setSignOutFailed(false)
+    try {
+      const locale = preview
+        ? getAuthDestinationLanguage(location.pathname + location.search) ?? (canSwitch ? language : undefined)
+        : undefined
+      const { error } = await signOut({
+        path: buildAuthPath('/login', undefined, locale),
+        locationKey: location.key,
+      })
+      if (error) setSignOutFailed(true)
+    } catch {
+      setSignOutFailed(true)
+    } finally {
+      setIsSigningOut(false)
+    }
   }
 
   return (
@@ -298,10 +313,11 @@ function WorkspaceSidebar({ isOpen, onClose }) {
               <p className="workspace-sidebar__account-label">{t('activeAccount')}</p>
               <p className="workspace-sidebar__account-email">{user.email}</p>
             </div>
-            <button type="button" className="workspace-sidebar__signout" onClick={handleSignOut}>
+            <button type="button" className="workspace-sidebar__signout" onClick={handleSignOut} disabled={isSigningOut}>
               <IconSignOut />
-              <span>{t('signOut')}</span>
+              <span>{isSigningOut ? authCopy('signingOut') : t('signOut')}</span>
             </button>
+            {signOutFailed && <p role="alert">{authCopy('signOutFailed')}</p>}
           </div>
         ) : (
           <div className="workspace-sidebar__account workspace-sidebar__account--guest">

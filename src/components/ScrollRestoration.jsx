@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useLanguage } from '../i18n/context'
-import { getPilotPage } from '../i18n/routes'
+import { getPilotPage, withoutLanguage } from '../i18n/routes'
 import { useLocation } from 'react-router-dom'
 
 const MAX_HASH_SCROLL_ATTEMPTS = 20
@@ -43,8 +43,8 @@ function ScrollRestoration() {
   const { preview } = useLanguage()
   const pilotPage = preview ? getPilotPage(pathname) : undefined
   const scrollPath = pilotPage?.['pt-BR'] ?? pathname
-  const scrollSearch = pilotPage?.id === 'teams'
-    ? search.slice(1).split('&').filter((field) => !new URLSearchParams(field).has('lang')).join('&')
+  const scrollSearch = pilotPage && !pilotPage.en
+    ? withoutLanguage(search)
     : search
 
   useEffect(() => {

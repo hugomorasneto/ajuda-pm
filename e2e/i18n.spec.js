@@ -2,7 +2,10 @@ import { expect, test } from '@playwright/test'
 
 const user = { id: 'user-a', email: 'owner@example.test', aud: 'authenticated', app_metadata: {}, user_metadata: {} }
 
-async function mockWorkspace(context, activeUser = user, { empty = false, fail = false, authenticated = true } = {}) {
+async function mockWorkspace(context, activeUser = user, {
+  empty = false, fail = false, authenticated = true, pendingLogin = false,
+  resendFailsFirst = false, signOutFailsFirst = false,
+} = {}) {
   const traffic = []
   const projects = empty ? [] : [
     { id: 'project-a', name: 'Checkout', description: 'Payments', owner_id: activeUser.id },
@@ -24,8 +27,25 @@ async function mockWorkspace(context, activeUser = user, { empty = false, fail =
 
   await context.route('http://127.0.0.1:54321/**', async (route) => {
     const { pathname, searchParams } = new URL(route.request().url())
-    traffic.push({ pathname, method: route.request().method() })
+    traffic.push({ pathname, method: route.request().method(), redirectTo: searchParams.get('redirect_to') })
+    const attempts = traffic.filter((entry) => entry.pathname === pathname).length
+    if (pathname.endsWith('/signup')) {
+      return route.fulfill({ json: { ...activeUser, identities: [{ id: 'test-identity' }] } })
+    }
+    if (pathname.endsWith('/resend')) {
+      if (resendFailsFirst && attempts === 1) {
+        return route.fulfill({ status: 429, json: { code: 'over_email_send_rate_limit', message: 'Rate limit' } })
+      }
+      return route.fulfill({ json: {} })
+    }
+    if (pathname.endsWith('/logout')) {
+      if (signOutFailsFirst && attempts === 1) return route.fulfill({ status: 422, json: { message: 'Sign-out failed' } })
+      return route.fulfill({ status: 204 })
+    }
     if (pathname.endsWith('/token')) {
+      if (pendingLogin && attempts === 1) {
+        return route.fulfill({ status: 400, json: { code: 'email_not_confirmed', message: 'Email not confirmed' } })
+      }
       return route.fulfill({ json: {
         access_token: 'test-access-token',
         refresh_token: 'test-refresh-token',
@@ -246,12 +266,12 @@ test('login simulado retorna ao destino original e o modo padrão é em portugu�
   await mockWorkspace(context, user, { authenticated: false })
   const originalTarget = '/times?projectId=project-a&lang=en#main-content'
   await page.goto(originalTarget)
-  await expect(page.getByRole('heading', { name: 'Entre na sua bancada' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Sign in to your workspace' })).toBeVisible()
   expect(new URL(page.url()).searchParams.get('from')).toBe(originalTarget)
-  await expect(page.locator('.language-switcher option[value="en"]')).toBeDisabled()
-  await page.getByRole('textbox', { name: 'E-mail' }).fill(user.email)
-  await page.getByLabel('Senha', { exact: true }).fill('simulated-password')
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click()
+  await expect(page.getByRole('combobox', { name: 'Language' })).toHaveValue('en')
+  await page.getByRole('textbox', { name: 'Email' }).fill(user.email)
+  await page.getByLabel('Password', { exact: true }).fill('simulated-password')
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
   await expect(page).toHaveURL(originalTarget)
   await expect(page.getByRole('banner').getByRole('heading', { name: 'Teams' })).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
@@ -261,10 +281,141 @@ test('login simulado retorna ao destino original e o modo padrão é em portugu�
   await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR')
   await expect(page.locator('.language-switcher option[value="en"]')).toBeDisabled()
 
+  await page.goto('http://127.0.0.1:4176/login?lang=en')
+  await expect(page.getByRole('heading', { name: 'Entre na sua bancada' })).toBeVisible()
+  await expect(page.getByRole('combobox', { name: 'Idioma' })).toHaveCount(0)
+
   await page.goto('http://127.0.0.1:4176/sobre')
   await expect(page.getByRole('heading', { name: 'Sobre o ProdForge', level: 1 })).toBeVisible()
   await expect(page.getByRole('combobox', { name: 'Idioma' })).toHaveCount(0)
   await page.goto('http://127.0.0.1:4176/en/about')
   await expect(page).toHaveURL('http://127.0.0.1:4176/')
   await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR')
+})
+
+function authLink(route, from, lang) {
+  return route + '?' + new URLSearchParams({ from, lang })
+}
+
+test('login mantém campos e aviso, reenvia uma vez e encerra a sessão no mesmo idioma', async ({ page, context }, testInfo) => {
+  const traffic = await mockWorkspace(context, user, { authenticated: false, pendingLogin: true, signOutFailsFirst: true })
+  const from = '/times?projectId=project-a&ref=a%26b%23c&lang=en#main-content'
+  await page.goto(from)
+  await page.getByRole('button', { name: 'Reject optional' }).click()
+  await page.getByLabel('Email', { exact: true }).fill(user.email)
+  await page.getByLabel('Password', { exact: true }).fill('fake-password')
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await expect(page.getByRole('alert')).toHaveText('Confirm your email before signing in.')
+  const language = page.getByRole('combobox', { name: 'Language' })
+  await language.focus()
+  await page.keyboard.press('ArrowUp')
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('combobox', { name: 'Idioma' })).toBeFocused()
+  await expect(page.getByLabel('E-mail', { exact: true })).toHaveValue(user.email)
+  await expect(page.getByLabel('Senha', { exact: true })).toHaveValue('fake-password')
+  await expect(page.getByRole('alert')).toHaveText('Confirme seu e-mail antes de entrar.')
+  expect(new URL(page.url()).searchParams.get('from')).toBe(from)
+  await page.getByRole('button', { name: 'Reenviar confirmação' }).click()
+  await expect(page.getByText('Enviamos um novo link de confirmação para o seu e-mail.')).toBeVisible()
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await expect(page.getByText('We sent a new confirmation link to your email address.')).toBeVisible()
+  expect(traffic.filter(({ pathname }) => pathname.endsWith('/resend'))).toHaveLength(1)
+  await checkWidth(page)
+  await page.getByRole('combobox', { name: 'Language' }).scrollIntoViewIfNeeded()
+  await evidence(page, testInfo, 'login-en')
+
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await expect(page).toHaveURL(from)
+  const menu = page.getByRole('button', { name: 'Open navigation' })
+  if (testInfo.project.name === 'celular') {
+    await expect(menu).toBeVisible()
+    await menu.click()
+    await expect(page.locator('.workspace-sidebar--open')).toBeVisible()
+  }
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click()
+  await expect(page.getByRole('alert')).toHaveText('Could not sign out. Try again.')
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click()
+  await expect(page).toHaveURL('/login?lang=en')
+  await expect(page.getByText('You signed out.')).toBeVisible()
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  await expect(page.getByText('Você saiu da conta.')).toBeVisible()
+  expect(traffic.filter(({ pathname }) => pathname.endsWith('/logout'))).toHaveLength(2)
+
+  const nextTarget = '/times?projectId=project-b&lang=en#main-content'
+  // Open another route in this router instance without resetting the auth provider.
+  await page.evaluate((target) => {
+    window.history.pushState({ key: 'next-protected-link', idx: window.history.state.idx + 1 }, '', target)
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  }, nextTarget)
+  await expect(page.getByText('Sign in to access your workspace.')).toBeVisible()
+  expect(new URL(page.url()).searchParams.get('from')).toBe(nextTarget)
+  await expect(page.getByText('You signed out.')).toHaveCount(0)
+})
+
+test('cadastro e confirmação preservam o destino codificado e permitem reenviar sem sair da tela', async ({ page, context }, testInfo) => {
+  const traffic = await mockWorkspace(context, user, { authenticated: false, resendFailsFirst: true })
+  const from = '/times?projectId=project-b&ref=a%26b%23c#main-content'
+  await page.goto(authLink('/signup', from, 'pt-BR'))
+  await page.getByRole('button', { name: 'Recusar opcionais' }).click()
+  await page.getByLabel('E-mail', { exact: true }).fill(user.email)
+  await page.locator('input[type="password"]').fill('short')
+  await page.getByRole('button', { name: 'Criar conta grátis' }).click()
+  await expect(page.getByText('Use pelo menos 6 caracteres.')).toBeVisible()
+  await expect(page.locator('input[type="password"]')).toBeFocused()
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await expect(page.getByText('Use at least 6 characters.', { exact: true })).toBeVisible()
+  await expect(page.locator('#uso-de-dados').getByRole('link', { name: 'Terms of Use' })).toHaveAttribute('href', '/termos-de-uso')
+  await expect(page.locator('input[type="password"]')).toHaveValue('short')
+  await expect(page.getByLabel('Email', { exact: true })).toHaveValue(user.email)
+  await expect(page).toHaveTitle('Create a ProdForge account')
+  await page.locator('input[type="password"]').fill('test-password')
+  if (testInfo.project.name === 'celular') await page.setViewportSize({ width: 320, height: 740 })
+  await checkWidth(page)
+  await page.getByRole('combobox', { name: 'Language' }).scrollIntoViewIfNeeded()
+  await evidence(page, testInfo, 'cadastro-en')
+  await page.getByRole('button', { name: 'Create a free account' }).click()
+  await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible()
+  expect(page.url()).not.toContain(encodeURIComponent(user.email))
+  expect(new URL(page.url()).searchParams.get('from')).toBe(from)
+  await expect(page.getByText(/ow\*\*\*@example\.test/)).toBeVisible()
+  await page.getByRole('button', { name: 'Resend email' }).click()
+  await expect(page.getByRole('alert')).toHaveText(/Too many attempts/)
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  await expect(page.getByRole('alert')).toHaveText(/Limite temporário/)
+  await page.getByRole('button', { name: 'Reenviar e-mail' }).click()
+  await expect(page.getByText('Enviamos um novo link de confirmação para o seu e-mail.')).toBeVisible()
+  expect(traffic.filter(({ pathname }) => pathname.endsWith('/resend'))).toHaveLength(2)
+  await page.getByRole('combobox', { name: 'Idioma' }).scrollIntoViewIfNeeded()
+  await evidence(page, testInfo, 'confirmacao-pt-br')
+
+  const callback = new URL(traffic.find(({ pathname }) => pathname.endsWith('/signup')).redirectTo)
+  expect(callback.pathname).toBe('/check-email')
+  expect(callback.searchParams.get('from')).toBe(from)
+  expect(callback.searchParams.get('lang')).toBe('en')
+  expect(callback.hash).toBe('')
+  const confirmation = await context.newPage()
+  callback.hash = 'access_token=mock-access&refresh_token=mock-refresh&expires_in=3600&token_type=bearer&type=signup'
+  await confirmation.goto(callback.href)
+  await expect(confirmation).toHaveURL('/times?projectId=project-b&ref=a%26b%23c&lang=en#main-content')
+  await expect(confirmation.locator('html')).toHaveAttribute('lang', 'en')
+  await confirmation.close()
+})
+
+test('link expirado permite informar o e-mail e retomar o convite original', async ({ page, context }) => {
+  const traffic = await mockWorkspace(context, user, { authenticated: false })
+  const from = '/roda?codigo=a%2Fb%26c#sessao'
+  await page.goto(authLink('/check-email', from, 'en') + '#error=access_denied&error_code=otp_expired')
+  await expect(page.getByRole('alert')).toHaveText(/confirmation link expired/)
+  await page.getByRole('button', { name: 'Resend email' }).click()
+  await expect(page.getByText('Enter your email.', { exact: true })).toBeVisible()
+  await page.getByLabel('Email', { exact: true }).fill(user.email)
+  await page.getByRole('button', { name: 'Resend email' }).click()
+  await expect(page.getByText('We sent a new confirmation link to your email address.')).toBeVisible()
+  await expect(page.getByRole('alert')).toHaveCount(0)
+  const resent = traffic.find(({ pathname }) => pathname.endsWith('/resend'))
+  expect(new URL(resent.redirectTo).searchParams.get('from')).toBe(from)
+  await page.getByRole('link', { name: 'Go to sign in' }).click()
+  expect(new URL(page.url()).searchParams.get('from')).toBe(from)
+  await expect(page.getByText(/Once you confirm your email, sign in to access Planning Poker/)).toBeVisible()
+  await expect(page.getByLabel('Email', { exact: true })).toHaveValue(user.email)
 })

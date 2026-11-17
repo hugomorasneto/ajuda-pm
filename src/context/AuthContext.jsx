@@ -42,6 +42,8 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [user, setUser] = useState(null)
   const [hasResolvedAuth, setHasResolvedAuth] = useState(false)
+  const [signOutDestination, setSignOutDestination] = useState(null)
+  const signOutIntent = useRef(null)
 
   const supabaseRef = useRef(null)
   const subscriptionRef = useRef(null)
@@ -61,7 +63,13 @@ export function AuthProvider({ children }) {
       setUser(data.session?.user ?? null)
 
       if (!subscriptionRef.current) {
-        const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+        const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
+          if (event === 'SIGNED_OUT') {
+            setSignOutDestination(signOutIntent.current)
+            signOutIntent.current = null
+          } else if (nextSession?.user) {
+            setSignOutDestination(null)
+          }
           setSession(nextSession ?? null)
           setUser(nextSession?.user ?? null)
           setHasResolvedAuth(true)
@@ -110,9 +118,17 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const signOut = useCallback(async () => {
-    const supabase = supabaseRef.current ?? (await initializeAuth())
-    return supabase.auth.signOut()
+  const signOut = useCallback(async (destination = null) => {
+    signOutIntent.current = destination
+    try {
+      const supabase = supabaseRef.current ?? (await initializeAuth())
+      const result = await supabase.auth.signOut()
+      if (result.error) signOutIntent.current = null
+      return result
+    } catch (error) {
+      signOutIntent.current = null
+      throw error
+    }
   }, [initializeAuth])
 
   const isAuthLoading = needsImmediateAuth && !hasResolvedAuth
@@ -123,8 +139,9 @@ export function AuthProvider({ children }) {
       user,
       isAuthLoading,
       signOut,
+      signOutDestination,
     }),
-    [session, user, isAuthLoading, signOut],
+    [session, user, isAuthLoading, signOut, signOutDestination],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

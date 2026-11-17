@@ -34,13 +34,13 @@ Variáveis `VITE_*` podem aparecer no bundle do frontend. Use apenas a URL e a c
 
 ## Prévia de idiomas
 
-Sobre e Times têm uma prévia em português brasileiro e inglês, disponível apenas em endereço local. Use os valores fictícios descritos acima e rode:
+Sobre, Times e as telas de autenticação têm uma prévia em português brasileiro e inglês, disponível apenas em endereço local. Use os valores fictícios descritos acima e rode:
 
 ```sh
 npm run dev:i18n
 ```
 
-Abra [Sobre](http://127.0.0.1:5173/sobre) ou [About](http://127.0.0.1:5173/en/about). Times exige sessão. O teste automatizado simula a sessão e as respostas do Supabase sem acessar serviços externos.
+Abra [Sobre](http://127.0.0.1:5173/sobre) ou [About](http://127.0.0.1:5173/en/about). Times exige sessão. O teste automatizado simula a sessão e as respostas do Supabase sem acessar serviços externos. Na prévia, links de confirmação retornam por /check-email para preservar o destino original e o idioma. Os testes simulam esse retorno sem enviar e-mails reais. Os modelos de e-mail do Supabase não fazem parte da prévia.
 
 ```sh
 npx playwright install chromium

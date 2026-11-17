@@ -28,7 +28,7 @@ export default defineConfig([
   },
   {
     files: [
-      'src/pages/{AboutPage,TimesPage}.jsx',
+      'src/pages/{AboutPage,TimesPage,LoginPage,SignupPage,CheckEmailPage}.jsx',
       'src/components/projects/TeamMembersPanel.jsx',
       'src/components/navigation/Public{Header,Footer}.jsx',
       'src/components/workspace/Workspace{Topbar,Sidebar}.jsx',

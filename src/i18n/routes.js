@@ -5,6 +5,9 @@ export const PILOT_MODE = 'i18n-preview'
 const pilotPages = [
   { id: 'about', 'pt-BR': '/sobre', en: '/en/about' },
   { id: 'teams', 'pt-BR': '/times' },
+  { id: 'login', 'pt-BR': '/login', auth: true },
+  { id: 'signup', 'pt-BR': '/signup', auth: true },
+  { id: 'checkEmail', 'pt-BR': '/check-email', auth: true },
 ]
 
 export function getPilotPage(pathname) {
@@ -24,10 +27,18 @@ export function resolveLanguage({ pathname, search, enabled, saved, visitor, bro
   if (!page) return DEFAULT_LANGUAGE
   if (page.en) return pathname.startsWith('/en/') ? ENGLISH : DEFAULT_LANGUAGE
 
-  const explicit = new URLSearchParams(search).get('lang')
-  const urlLanguage = explicit === ENGLISH || explicit === DEFAULT_LANGUAGE ? explicit : undefined
-  return urlLanguage ?? normalizeLanguage(saved) ?? normalizeLanguage(visitor) ??
+  return getExplicitLanguage(search) ?? normalizeLanguage(saved) ?? normalizeLanguage(visitor) ??
     browser.map(normalizeLanguage).find(Boolean) ?? DEFAULT_LANGUAGE
+}
+
+export function getExplicitLanguage(search) {
+  const value = new URLSearchParams(search).get('lang')
+  return value === ENGLISH || value === DEFAULT_LANGUAGE ? value : undefined
+}
+
+export function withoutLanguage(search) {
+  const fields = search ? search.slice(1).split('&') : []
+  return fields.filter((field) => !new URLSearchParams(field).has('lang')).join('&')
 }
 
 export function languageDestination(location, language) {
@@ -37,10 +48,9 @@ export function languageDestination(location, language) {
   if (page.en) return { pathname: page[language], search, hash }
 
   // Keep opaque parameters as originally encoded, including duplicate values.
-  const fields = search ? search.slice(1).split('&') : []
-  const retained = fields.filter((field) => !new URLSearchParams(field).has('lang'))
-  retained.push('lang=' + language)
-  return { pathname, search: '?' + retained.join('&'), hash }
+  const retained = withoutLanguage(search)
+  const parameter = 'lang=' + language
+  return { pathname, search: '?' + (retained ? retained + '&' : '') + parameter, hash }
 }
 
 export function isLocalPreview(mode, hostname) {

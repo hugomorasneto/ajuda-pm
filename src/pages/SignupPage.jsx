@@ -1,31 +1,22 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC, PRO_PLAN_NAME } from '../constants/app'
-import { useAuth } from '../hooks/useAuth'
+import { Trans } from 'react-i18next'
+import AuthBrandBar from '../components/auth/AuthBrandBar'
+import AuthStoryExample from '../components/auth/AuthStoryExample'
+import { useAuthJourney } from '../hooks/useAuthJourney'
+import { useCopy } from '../i18n/context'
+import AuthReturnContext from '../components/auth/AuthReturnContext'
+import { getAuthErrorKey, isValidAuthEmail } from '../utils/authErrors'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { PRO_PLAN_NAME } from '../constants/app'
 import { usePageMetadata } from '../hooks/usePageMetadata'
 import '../styles/pages.css'
-import { getAuthErrorMessage, signUpWithEmail } from '../services/authService'
+import { signUpWithEmail } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
-import {
-  buildAuthPath,
-  clearAuthRedirect,
-  getAuthRedirectContext,
-  getAuthRedirectFromLocation,
-} from '../utils/authRedirect'
-
-function isValidEmail(value) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-}
 
 function SignupPage() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { user, isAuthLoading } = useAuth()
-  const redirectTo = useMemo(() => getAuthRedirectFromLocation(location), [location])
-  const redirectContext = useMemo(() => getAuthRedirectContext(redirectTo), [redirectTo])
-  const isPlanningInvite = redirectContext.key === 'planning'
-  const loginPath = useMemo(() => buildAuthPath('/login', redirectTo), [redirectTo])
-  const checkEmailPath = useMemo(() => buildAuthPath('/check-email', redirectTo), [redirectTo])
+  const t = useCopy('auth')
+  const { context, emailRedirectTo, from, language, location, pathTo, showCheckEmail } = useAuthJourney()
+  const isPlanningInvite = context === 'planning'
   const [email, setEmail] = useState(location.state?.email ?? '')
   const [password, setPassword] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
@@ -33,43 +24,35 @@ function SignupPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   usePageMetadata({
-    title: 'Criar conta no ProdForge',
-    description: 'Crie sua conta para testar a Bancada do ProdForge e gerar histórias de usuário com IA.',
+    language,
+    title: t('signupTitle'),
+    description: t('signupMetadata'),
     path: '/signup',
-    ogTitle: 'Criar conta no ProdForge',
-    ogDescription: 'Crie sua conta para testar a Bancada do ProdForge e gerar histórias de usuário com IA.',
-    twitterTitle: 'Criar conta no ProdForge',
-    twitterDescription: 'Crie sua conta para testar a Bancada do ProdForge e gerar histórias de usuário com IA.',
     robots: 'noindex,follow',
   })
 
-  useEffect(() => {
-    if (!isAuthLoading && user) {
-      clearAuthRedirect()
-      navigate(redirectTo, { replace: true })
-    }
-  }, [isAuthLoading, navigate, redirectTo, user])
-
   async function handleSubmit(event) {
     event.preventDefault()
+    if (isSubmitting) return
 
     const normalizedEmail = email.trim()
     const nextFieldErrors = {}
 
     if (!normalizedEmail) {
-      nextFieldErrors.email = 'Informe seu e-mail.'
-    } else if (!isValidEmail(normalizedEmail)) {
-      nextFieldErrors.email = 'Digite um e-mail válido.'
+      nextFieldErrors.email = 'emailRequired'
+    } else if (!isValidAuthEmail(normalizedEmail)) {
+      nextFieldErrors.email = 'emailInvalid'
     }
 
     if (!password) {
-      nextFieldErrors.password = 'A senha é obrigatória.'
+      nextFieldErrors.password = 'passwordRequired'
     } else if (password.length < 6) {
-      nextFieldErrors.password = 'Use pelo menos 6 caracteres.'
+      nextFieldErrors.password = 'passwordShort'
     }
 
     if (Object.keys(nextFieldErrors).length > 0) {
       setFieldErrors(nextFieldErrors)
+      event.currentTarget.querySelector(nextFieldErrors.email ? '#email' : '#password')?.focus()
       setErrorMessage('')
       return
     }
@@ -83,11 +66,11 @@ function SignupPage() {
     const { data, error } = await signUpWithEmail({
       email: normalizedEmail,
       password,
-      redirectTo,
+      redirectTo: emailRedirectTo,
     })
 
     if (error) {
-      setErrorMessage(getAuthErrorMessage(error))
+      setErrorMessage(getAuthErrorKey(error))
       setIsSubmitting(false)
       return
     }
@@ -98,15 +81,13 @@ function SignupPage() {
       data.user.identities.length === 0
 
     if (isExistingUser) {
-      setErrorMessage('Este e-mail já está cadastrado. Entre para continuar.')
+      setErrorMessage('alreadyRegistered')
       setIsSubmitting(false)
       return
     }
 
     if (data.session) {
       trackEvent({ event_name: 'signup_completed', event_category: 'auth', page_path: '/signup' })
-      clearAuthRedirect()
-      navigate(redirectTo, { replace: true })
       return
     }
 
@@ -116,10 +97,7 @@ function SignupPage() {
       page_path: '/signup',
       metadata: { confirmation_pending: true },
     })
-    navigate(checkEmailPath, {
-      replace: true,
-      state: { email: normalizedEmail, from: redirectTo, pendingConfirmation: true },
-    })
+    showCheckEmail(normalizedEmail)
   }
 
   function handleEmailChange(event) {
@@ -137,45 +115,29 @@ function SignupPage() {
   return (
     <div className="auth-shell auth-shell--signup">
       <div className="auth-card">
-        <div className="auth-card__topbar">
-          <Link to="/" className="auth-card__brand" aria-label="Voltar para o início do ProdForge">
-            <img
-              src={BRAND_LOGO_HORIZONTAL_SRC}
-              alt={APP_NAME}
-              className="auth-card__brand-logo"
-              loading="eager"
-            />
-          </Link>
-          <Link to="/" className="auth-card__home-link">
-            Início
-          </Link>
-        </div>
+        <AuthBrandBar />
 
         <div className="auth-card__header">
-          <p className="auth-card__eyebrow">Cadastro gratuito</p>
-          <h1 className="auth-card__title">Crie sua conta grátis</h1>
+          <p className="auth-card__eyebrow">{t('signupEyebrow')}</p>
+          <h1 className="auth-card__title">{t('signupHeading')}</h1>
           <p className="auth-card__description">
             {isPlanningInvite
-              ? 'Crie sua conta para voltar ao convite da Roda da Fogueira depois da confirmação.'
-              : 'Transforme briefings em user stories claras, com critérios de aceite e prontas para backlog.'}
+              ? t('signupPlanning')
+              : t('signupIntro')}
           </p>
         </div>
 
-        <div className={`auth-card__return-context auth-card__return-context--${redirectContext.key}`}>
-          <span>Destino após confirmação</span>
-          <strong>{redirectContext.label}</strong>
-          <p>{redirectContext.description}</p>
-        </div>
+        <AuthReturnContext destination={context} heading="afterConfirmation" />
 
         <form className="auth-card__form" onSubmit={handleSubmit} noValidate>
           <div className="auth-card__field">
-            <label className="auth-card__label" htmlFor="email">E-mail</label>
+            <label className="auth-card__label" htmlFor="email">{t('email')}</label>
             <input
               id="email"
               className="auth-card__input"
               type="email"
               autoComplete="email"
-              placeholder="seu@email.com"
+              placeholder={t('emailExample')}
               value={email}
               onChange={handleEmailChange}
               aria-invalid={Boolean(fieldErrors.email)}
@@ -183,14 +145,14 @@ function SignupPage() {
               required
             />
             {fieldErrors.email ? (
-              <p className="auth-card__field-error" id="signup-email-error">{fieldErrors.email}</p>
+              <p className="auth-card__field-error" id="signup-email-error">{t(fieldErrors.email)}</p>
             ) : null}
           </div>
 
           <div className="auth-card__field">
             <label className="auth-card__label" htmlFor="password">
-              Senha
-              <span className="auth-card__label-hint">mínimo 6 caracteres</span>
+              {t('password')}
+              <span className="auth-card__label-hint">{t('passwordHint')}</span>
             </label>
             <input
               id="password"
@@ -206,12 +168,12 @@ function SignupPage() {
               required
             />
             {fieldErrors.password ? (
-              <p className="auth-card__field-error" id="signup-password-error">{fieldErrors.password}</p>
+              <p className="auth-card__field-error" id="signup-password-error">{t(fieldErrors.password)}</p>
             ) : null}
           </div>
 
           {errorMessage ? (
-            <p className="auth-card__error" role="alert">{errorMessage}</p>
+            <p className="auth-card__error" role="alert">{t(errorMessage)}</p>
           ) : null}
 
           <button
@@ -219,55 +181,46 @@ function SignupPage() {
             className="auth-card__submit"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Criando conta...' : 'Criar conta grátis'}
+            {isSubmitting ? t('creating') : t('createFree')}
           </button>
 
           <p className="auth-card__terms" id="uso-de-dados">
-            Ao criar conta, você concorda com os{' '}
-            <Link to="/termos-de-uso" className="auth-card__link">Termos de Uso</Link>
-            {' '}e a{' '}
-            <Link to="/politica-de-privacidade" className="auth-card__link">Política de Privacidade</Link>.
+            <Trans
+              t={t}
+              ns="auth"
+              i18nKey="signupTerms"
+              components={{
+                terms: <Link to="/termos-de-uso" className="auth-card__link" />,
+                privacy: <Link to="/politica-de-privacidade" className="auth-card__link" />,
+              }}
+            />
           </p>
         </form>
 
         <p className="auth-card__switch">
-          Já tem conta?{' '}
-          <Link to={loginPath} className="auth-card__link" state={{ from: redirectTo, email: email.trim() }}>
-            Entrar
+          {t('hasAccount')}{' '}
+          <Link to={pathTo('/login')} className="auth-card__link" state={{ from, email: email.trim() }}>
+            {t('signIn')}
           </Link>
         </p>
       </div>
 
       <aside className="auth-side">
         <div className="auth-side__content">
-          <p className="auth-side__eyebrow">Grátis para começar</p>
+          <p className="auth-side__eyebrow">{t('signupSideLabel')}</p>
           <h2 className="auth-side__title">
-            Transforme briefings em user stories claras antes da próxima sprint.
+            {t('signupSideTitle')}
           </h2>
           <ul className="auth-side__list">
-            <li>Teste grátis a criação de user stories</li>
-            <li>Critérios de aceite e riscos de implementação</li>
-            <li>Histórico com versões por feature</li>
-            <li>Cópia em Markdown para uso no backlog</li>
+            <li>{t('signupSideTrial')}</li>
+            <li>{t('signupSideCriteria')}</li>
+            <li>{t('signupSideHistory')}</li>
+            <li>{t('signupSideMarkdown')}</li>
           </ul>
-          <div className="auth-side__preview">
-            <p className="auth-side__preview-label">O que você vai gerar</p>
-            <div className="auth-side__preview-card">
-              <p className="auth-side__preview-story">
-                "Como <em>responsável pelo cadastro</em>, quero{' '}
-                <em>validar o domínio corporativo</em> para concluir o
-                registro com menos retrabalho."
-              </p>
-              <ul className="auth-side__preview-criteria">
-                <li>Bloquear avanço com domínio inválido</li>
-                <li>Exibir mensagem orientando a correção</li>
-                <li>Registrar falha para análise do funil</li>
-              </ul>
-            </div>
-          </div>
+          <AuthStoryExample label="signupExample" />
           <div className="auth-side__upgrade">
-            <p className="auth-side__upgrade-label">Precisa de mais escala?</p>
-            <p>O plano {PRO_PLAN_NAME} entra quando você precisar de mais volume, versões e recursos avançados.</p>
+            <p className="auth-side__upgrade-label">{t('moreScale')}</p>
+            <p>{t('planDetails', { plan: PRO_PLAN_NAME })}</p>
           </div>
         </div>
       </aside>

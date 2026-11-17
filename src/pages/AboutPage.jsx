@@ -1,3 +1,4 @@
+import { buildAuthPath } from '../utils/authRedirect'
 import { getAboutContent } from '../content/about'
 import { getAboutMetadata } from '../i18n/aboutMetadata'
 import { useCopy, useLanguage } from '../i18n/context'
@@ -26,7 +27,8 @@ function AboutSection({ section, index }) {
 
 function AboutPage() {
   const { user } = useAuth()
-  const { language } = useLanguage()
+  const { canSwitch, language } = useLanguage()
+  const authLocale = canSwitch ? language : undefined
   const t = useCopy('about')
   const { heroSummary, transformationSteps, audienceCards, aboutSections, productPrinciples } =
     getAboutContent(language)
@@ -47,7 +49,7 @@ function AboutPage() {
           </p>
 
           <div className="privacy-policy-hero__actions">
-            <Link className="forge-button forge-button--ember forge-button--md" to={user ? '/tool' : '/signup'}>
+            <Link className="forge-button forge-button--ember forge-button--md" to={user ? '/tool' : buildAuthPath('/signup', undefined, authLocale)}>
               {user ? t('openWorkspace') : t('tryTool')}
             </Link>
             <Link className="forge-button forge-button--ghost forge-button--md" to="/">
@@ -151,7 +153,7 @@ function AboutPage() {
         </div>
 
         <div className="about-page__cta-actions">
-          <Link className="forge-button forge-button--ember forge-button--md" to={user ? '/tool' : '/signup'}>
+          <Link className="forge-button forge-button--ember forge-button--md" to={user ? '/tool' : buildAuthPath('/signup', undefined, authLocale)}>
             {user ? t('openWorkspace') : t('createAccount')}
           </Link>
           <Link className="forge-button forge-button--metal forge-button--md" to="/contato">

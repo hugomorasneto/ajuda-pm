@@ -1,3 +1,4 @@
+import { buildAuthPath } from '../../utils/authRedirect'
 import LanguageSwitcher from '../../i18n/LanguageSwitcher'
 import { useCopy, useLanguage } from '../../i18n/context'
 import { useState } from 'react'
@@ -46,7 +47,8 @@ function PublicNavLink({ item, pathname, mobile = false, onNavigate }) {
 
 function PublicHeader({ isHomeRoute = false, isLearningRoute = false, isLegalRoute = false }) {
   const t = useCopy('navigation')
-  const { preview } = useLanguage()
+  const { canSwitch, language, preview } = useLanguage()
+  const authLocale = canSwitch ? language : undefined
   const location = useLocation()
   const { user } = useAuth()
   const [menuOpenPath, setMenuOpenPath] = useState(null)
@@ -102,10 +104,10 @@ function PublicHeader({ isHomeRoute = false, isLearningRoute = false, isLegalRou
             </Link>
           ) : (
             <>
-              <Link to="/login" className={secondaryCtaClassName}>
+              <Link to={buildAuthPath('/login', undefined, authLocale)} className={secondaryCtaClassName}>
                 {t('signIn')}
               </Link>
-              <Link to="/signup" className={primaryCtaClassName}>
+              <Link to={buildAuthPath('/signup', undefined, authLocale)} className={primaryCtaClassName}>
                 {t('createAccount')}
               </Link>
             </>
@@ -148,10 +150,10 @@ function PublicHeader({ isHomeRoute = false, isLearningRoute = false, isLegalRou
               </Link>
             ) : (
               <>
-                <Link to="/login" className={secondaryCtaClassName}>
+                <Link to={buildAuthPath('/login', undefined, authLocale)} className={secondaryCtaClassName}>
                   {t('signIn')}
                 </Link>
-                <Link to="/signup" className={primaryCtaClassName}>
+                <Link to={buildAuthPath('/signup', undefined, authLocale)} className={primaryCtaClassName}>
                   {t('createAccount')}
                 </Link>
               </>

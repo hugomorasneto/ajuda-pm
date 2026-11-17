@@ -1,8 +1,9 @@
 import { useCallback, useLayoutEffect, useMemo, useSyncExternalStore } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { getAuthDestinationLanguage, getAuthRedirectFromLocation } from '../utils/authRedirect'
 import { useAuth } from '../hooks/useAuth'
 import { LanguageContext } from './context'
-import { getPilotPage, isLocalPreview, languageDestination, preferenceKey, resolveLanguage } from './routes'
+import { getExplicitLanguage, getPilotPage, isLocalPreview, languageDestination, preferenceKey, resolveLanguage } from './routes'
 
 const preferenceEvent = 'prodforge:language'
 const temporaryPreferences = new Map()
@@ -38,7 +39,7 @@ function savePreference(key, language) {
 export function LanguageProvider({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, isAuthLoading } = useAuth()
   const preview = isLocalPreview(import.meta.env.MODE, window.location.hostname)
   const key = preferenceKey(user?.id)
   const getSaved = useCallback(() => preview ? readPreference(key) : null, [key, preview])
@@ -46,9 +47,17 @@ export function LanguageProvider({ children }) {
   const saved = useSyncExternalStore(subscribe, getSaved)
   const visitor = useSyncExternalStore(subscribe, getVisitor)
   const page = preview ? getPilotPage(location.pathname) : undefined
+  const completingAuth = Boolean(page?.auth && isAuthLoading && (
+    new URLSearchParams(location.search).has('code') ||
+    new URLSearchParams(location.hash.slice(1)).has('access_token')
+  ))
+  const requested = getExplicitLanguage(location.search)
+  const destinationLanguage = page?.auth && !requested
+    ? getAuthDestinationLanguage(getAuthRedirectFromLocation(location))
+    : undefined
   const language = resolveLanguage({
     pathname: location.pathname,
-    search: location.search,
+    search: destinationLanguage ? '?lang=' + destinationLanguage : location.search,
     enabled: preview,
     saved,
     visitor,
@@ -60,20 +69,25 @@ export function LanguageProvider({ children }) {
   }, [language])
 
   const switchLanguage = useCallback((next) => {
-    if (!page || !['pt-BR', 'en'].includes(next) || next === language) return
+    if (!page || completingAuth || !['pt-BR', 'en'].includes(next) || next === language) return
     savePreference(key, next)
-    navigate(languageDestination(location, next), {
+    // Auth may consume callback parameters directly through browser history.
+    const current = page.auth
+      ? { ...location, search: window.location.search, hash: window.location.hash }
+      : location
+    navigate(languageDestination(current, next), {
       replace: !page.en,
       state: location.state,
     })
-  }, [key, language, location, navigate, page])
+  }, [completingAuth, key, language, location, navigate, page])
 
   const value = useMemo(() => ({
     language,
     preview,
     canSwitch: Boolean(page),
+    completingAuth,
     switchLanguage,
-  }), [language, page, preview, switchLanguage])
+  }), [completingAuth, language, page, preview, switchLanguage])
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
 }

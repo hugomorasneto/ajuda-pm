@@ -4,7 +4,7 @@ import './language-switcher.css'
 
 export default function LanguageSwitcher() {
   const t = useCopy('common')
-  const { preview, language, canSwitch, switchLanguage } = useLanguage()
+  const { preview, language, canSwitch, completingAuth, switchLanguage } = useLanguage()
   const hintId = useId()
   if (!preview) return null
 
@@ -14,6 +14,7 @@ export default function LanguageSwitcher() {
         <span>{t('language')}</span>
         <select
           value={language}
+          disabled={completingAuth}
           onChange={(event) => switchLanguage(event.target.value)}
           aria-describedby={canSwitch ? undefined : hintId}
         >
