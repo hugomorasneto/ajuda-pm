@@ -113,14 +113,14 @@ function getUserEffectiveForgeLimit(user) {
 
 function getUserRemainingForges(user) {
   return getRemainingForgeGenerations({
-    usageCount: user?.stories_count ?? 0,
+    usageCount: user?.generation_usage_count ?? 0,
     forgeLimit: getUserEffectiveForgeLimit(user),
   })
 }
 
 function isUserAtForgeLimit(user) {
   const limit = getUserEffectiveForgeLimit(user)
-  return limit !== null && Number(user?.stories_count ?? 0) >= limit
+  return limit !== null && Number(user?.generation_usage_count ?? 0) >= limit
 }
 
 function formatForgeLimit(limit, language, t) {
@@ -397,7 +397,7 @@ function UserAccessModal({ user, isSaving, feedback, onClose, onSave }) {
         <dl className="admin-access-summary">
           <AccessSummaryItem label={t('current_role')} value={formatRole(user.role, t)} />
           <AccessSummaryItem label={t('current_plan')} value={formatPlan(user.plan)} />
-          <AccessSummaryItem label={t('used')} value={formatNumber(user.stories_count, language)} />
+          <AccessSummaryItem label={t('used')} value={formatNumber(user.generation_usage_count, language)} />
           <AccessSummaryItem label={t('limit')} value={formatForgeLimit(currentLimit, language, t)} />
           <AccessSummaryItem label={t('remaining')} value={formatRemainingForges(remainingForges, language, t)} />
           <AccessSummaryItem label={t('last_activity')} value={formatDateTime(user.last_activity_at, language)} />

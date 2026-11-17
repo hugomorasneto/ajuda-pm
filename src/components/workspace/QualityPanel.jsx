@@ -327,7 +327,7 @@ function QualityPanel({
                 {hasUnlimitedAccess
                   ? t('pro_plan_active')
                   : hasReachedLimit
-                  ? t('limit_reached_upgrade_to_continue')
+                  ? t('generation_limit_reached')
                     : `${remainingGenerations} ${
                         remainingGenerations === 1 ? t('generation_remaining') : t('generations_remaining')
                       }`}

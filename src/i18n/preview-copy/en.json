@@ -44,7 +44,7 @@
     "landingCopy_para_comecar_sem_cartao_e": "with a usage limit and no card required",
     "landingCopy_comece_gratis_escale_quando_precisar": "Start with Free and get updates about Pro",
     "landingCopy_comece_sem_cartao_evolua_quando": "Start without a card. The Pro interest list is open.",
-    "landingCopy_geracoes_de_user_story_por": "In the workspace, Free has a default limit of {{p1}} saved user story records per account, including versions, with no monthly reset. Check your remaining allowance there.",
+    "landingCopy_geracoes_de_user_story_por": "In the workspace, Free includes {{p1}} successful, saved generations per account, with no monthly reset. Saved regenerations also count.",
     "landingCopy_mais_popular": "Interest list",
     "landingCopy_para_times_que_precisam_de": "We are evaluating the Pro plan.",
     "landingCopy_quer_testar_o_plano": "Interested in the {{p1}} plan?",

@@ -80,6 +80,9 @@ async function mockWorkspace(context, activeUser = user, {
     if (pathname.endsWith('/profiles')) {
       return route.fulfill({ json: { id: activeUser.id, role: 'user' } })
     }
+    if (pathname.endsWith('/get_story_generation_usage')) {
+      return route.fulfill({ json: { usage_count: 0, plan: 'free', effective_limit: 10, forge_limit_override: null } })
+    }
     if (['/learning_progress', '/project_ai_diagnostics', '/search_story_history_groups']
       .some((endpoint) => pathname.endsWith(endpoint))) return route.fulfill({ json: [] })
     return route.abort()
@@ -495,7 +498,7 @@ test('home mantém rascunho, âncora e validação da lista de interesse ao trad
   await page.goto('/?utm_source=demo#lead-capture-title')
   await page.getByRole('button', { name: 'Recusar opcionais' }).click()
   const plans = page.locator('#planos')
-  await expect(plans).toContainText('10 registros de histórias salvos por conta, incluindo versões, sem renovação mensal.')
+  await expect(plans).toContainText('10 gerações bem-sucedidas e salvas por conta, sem renovação mensal.')
   await expect(plans.locator('.landing-pricing__card--pro .landing-pricing__list')).toHaveCount(0)
   await page.locator('#lead-name').fill('Nome de teste')
   await page.getByRole('button', { name: 'Quero receber novidades do Pro' }).click()
@@ -504,7 +507,7 @@ test('home mantém rascunho, âncora e validação da lista de interesse ao trad
   await expect(page).toHaveURL('/en/?utm_source=demo#lead-capture-title')
   await expect(page.locator('#lead-name')).toHaveValue('Nome de teste')
   await expect(page.locator('#lead-email-error')).toHaveText('Enter your email address.')
-  await expect(plans).toContainText('10 saved user story records per account, including versions, with no monthly reset.')
+  await expect(plans).toContainText('10 successful, saved generations per account, with no monthly reset.')
   await expect(plans).toContainText('We are evaluating the Pro plan.')
   if (testInfo.project.name === 'desktop') {
     const freeButton = await plans.getByRole('link', { name: 'Create a free account' }).boundingBox()
@@ -815,26 +818,18 @@ async function mockStoryTraffic(context, initialVersions = []) {
   const reads = []
   await mockWorkspace(context)
   await context.route((url) => url.origin === 'http://127.0.0.1:54321' &&
-    ['/rest/v1/user_stories', '/rest/v1/rpc/search_user_story_groups'].includes(url.pathname), async (route) => {
+    ['/rest/v1/user_stories', '/rest/v1/rpc/search_user_story_groups', '/rest/v1/rpc/get_story_generation_usage'].includes(url.pathname), async (route) => {
     const request = route.request()
     const url = new URL(request.url())
     const method = request.method()
+    if (url.pathname.endsWith('/get_story_generation_usage')) {
+      return route.fulfill({ json: { usage_count: records.length, plan: 'free', effective_limit: 10, forge_limit_override: null } })
+    }
     if (url.pathname.endsWith('/search_user_story_groups')) {
       searches.push(request.postDataJSON())
       return route.fulfill({
         json: records.slice(0, 1).map((story) => ({ ...story, total_count: 1301, versions_count: records.length })),
       })
-    }
-    if (method === 'HEAD') {
-      reads.push(method)
-      return route.fulfill({ status: 200, headers: { 'content-range': '*/' + records.length } })
-    }
-    if (method === 'POST') {
-      const [payload] = request.postDataJSON()
-      writes.push(payload)
-      const story = { ...payload, id: 'generated-' + writes.length, estimation_status: 'created' }
-      records.unshift(story)
-      return route.fulfill({ status: 201, json: [story] })
     }
     if (method !== 'GET') {
       writes.push({ method, payload: request.postDataJSON() })
@@ -860,7 +855,8 @@ function showForgeTab(page, tab) {
 test('Bancada troca idioma durante geração, traduz erro e grava apenas a ação explícita', async ({ page, context }, testInfo) => {
   test.setTimeout(45_000)
   page.setDefaultTimeout(8000)
-  const traffic = await mockStoryTraffic(context)
+  const traffic = await mockStoryTraffic(context, Array.from({ length: 9 }, (_, index) =>
+    savedStory({ id: 'previous-' + index, story_group_id: 'group-' + index })))
   const payloads = []
   const releases = []
   const runtimeErrors = []
@@ -868,10 +864,18 @@ test('Bancada troca idioma durante geração, traduz erro e grava apenas a açã
   await context.route('http://127.0.0.1:54321/functions/v1/generate-user-story', async (route) => {
     const requestIndex = payloads.length
     payloads.push(route.request().postDataJSON())
-    await new Promise((resolve) => releases.push(resolve))
-    await route.fulfill(requestIndex === 0
-      ? { status: 429, json: { message: 'Mensagem do provedor em português.' } }
-      : { json: forgeFixture })
+    if (requestIndex < 2) await new Promise((resolve) => releases.push(resolve))
+    if (requestIndex === 0) return route.fulfill({ status: 429, json: { code: 'RATE_LIMIT' } })
+    if (requestIndex >= 2) return route.fulfill({ status: 403, json: {
+      code: 'QUOTA_EXHAUSTED',
+      usage: { usage_count: 10, plan: 'free', effective_limit: 10, forge_limit_override: null },
+    } })
+    const story = savedStory({
+      id: 'generated-1', story_group_id: 'generated-group', version_number: 1,
+      previous_version_id: null, input_context: payloads[1].input_context,
+    })
+    traffic.records.unshift(story)
+    return route.fulfill({ json: { ...forgeFixture, story } })
   })
 
   await page.goto('/tool?projectId=project-a&ref=teste%20local&lang=pt-BR#main-content')
@@ -904,7 +908,7 @@ test('Bancada troca idioma durante geração, traduz erro e grava apenas a açã
   await expect.poll(() => releases.length).toBe(2)
   await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
   releases[1]()
-  await expect.poll(() => traffic.writes.length).toBe(1)
+  await expect.poll(() => traffic.records.length).toBe(10)
   await showForgeTab(page, 'Artefato')
   await expect(page.getByRole('heading', { name: forgeFixture.title })).toBeVisible()
   await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
@@ -912,19 +916,38 @@ test('Bancada troca idioma durante geração, traduz erro e grava apenas a açã
   await expect(page.locator('.story-document')).toContainText(forgeFixture.user_story)
   await expect(page.locator('.story-document')).toContainText(forgeFixture.acceptance_criteria[0])
   expect(payloads).toHaveLength(2)
-  expect(payloads[1]).toEqual({ input_context: original, input_requirements: expect.any(String), input_adjustment: '' })
-  expect(traffic.writes[0]).toMatchObject({ title: forgeFixture.title, user_story: forgeFixture.user_story, project_id: 'project-a', version_number: 1 })
-  expect(traffic.writes[0]).not.toHaveProperty('output_language')
+  expect(payloads[1]).toEqual({
+    input_context: original, input_requirements: expect.any(String), input_adjustment: '',
+    request_id: payloads[0].request_id, regeneration_instruction: null,
+    project_id: 'project-a', previous_version_id: null,
+  })
+  expect(payloads[1].request_id).toMatch(/^[a-f0-9-]{36}$/)
   await page.locator('.story-document').getByRole('button', { name: 'Edit', exact: true }).first().click()
   await page.getByRole('textbox', { name: 'Edit user story' }).fill('Rascunho manual em português.')
   await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
   await expect(page.getByRole('textbox', { name: 'Editar user story' })).toHaveValue('Rascunho manual em português.')
   await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
   await expect(page.getByRole('textbox', { name: 'Edit user story' })).toHaveValue('Rascunho manual em português.')
-  expect(traffic.writes).toHaveLength(1)
+  expect(traffic.writes).toHaveLength(0)
   expect(payloads).toHaveLength(2)
+  await page.reload()
+  await expect(page.locator('.mode-pill-warning')).toHaveText('0 generations')
+  await showForgeTab(page, 'Workspace')
+  await brief.fill('A new brief for the eleventh generation.')
+  await page.getByRole('button', { name: 'Generate first version' }).click()
+  await expect.poll(() => payloads.length).toBe(3)
+  await showForgeTab(page, 'Artifact')
+  await expect(page.getByText(/You have reached the Free plan limit of 10 saved generations/i).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Try again', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Back to story history' })).toBeVisible()
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
+  await expect(page.getByText(/Você atingiu a cota do plano Free/i).first()).toBeVisible()
+  expect(traffic.records).toHaveLength(10)
+  expect(traffic.writes).toHaveLength(0)
   expect(runtimeErrors).toEqual([])
   await checkWidth(page)
+  await evidence(page, testInfo, 'bancada-cota-pt-br')
+  await page.getByRole('combobox', { name: 'Idioma' }).selectOption('en')
   await page.getByRole('combobox', { name: 'Language' }).scrollIntoViewIfNeeded()
   await evidence(page, testInfo, 'bancada-en')
 })
@@ -1621,7 +1644,10 @@ async function mockAdmin(context, {
   ]
   let releaseFirstSave
   const pendingSave = holdFirstSave ? new Promise((resolve) => { releaseFirstSave = resolve }) : Promise.resolve()
-  const endpoints = new Set(['profiles', 'tracking_events', 'leads', 'user_stories', 'learning_progress', 'admin_update_user_access'])
+  const endpoints = new Set([
+    'profiles', 'tracking_events', 'leads', 'user_stories', 'learning_progress',
+    'admin_update_user_access', 'admin_get_story_generation_usage',
+  ])
   let saveAttempts = 0
 
   await context.route((url) => url.origin === 'http://127.0.0.1:54321' &&
@@ -1641,7 +1667,7 @@ async function mockAdmin(context, {
       } else if (endpoint === 'profiles' && searchParams.has('created_at')) {
         count = 1
       } else if (endpoint === 'user_stories' && searchParams.has('user_id')) {
-        count = searchParams.get('user_id') === 'eq.access-user' ? 10 : 1
+        count = searchParams.get('user_id') === 'eq.access-user' ? 9 : 1
       }
       return route.fulfill({ headers: { 'content-range': '*/' + count, 'access-control-expose-headers': 'content-range' } })
     }
@@ -1674,6 +1700,8 @@ async function mockAdmin(context, {
         }])
       case 'learning_progress':
         return rows([{ id: 'progress-a', user_id: managedProfile.id, guide_slug: adminGuideSlug, completed_at: adminFixtureDate }])
+      case 'admin_get_story_generation_usage':
+        return route.fulfill({ json: body.p_user_id === managedProfile.id ? 10 : 1 })
       case 'admin_update_user_access':
         saveAttempts += 1
         if (holdFirstSave && saveAttempts === 1) {

@@ -470,17 +470,20 @@ function ToolPage() {
   ) : showBlockingErrorState ? (
       <WorkspaceErrorState
         message={formatNotice(t, workspaceError)}
-        title={showStoryDeepLinkError ? t('artifact_not_found_or_access_denied') : undefined}
+        eyebrow={workspaceError?.quotaReached ? null : undefined}
+        title={showStoryDeepLinkError ? t('artifact_not_found_or_access_denied')
+          : workspaceError?.quotaReached ? t('generation_limit_reached') : undefined}
         note={
           showStoryDeepLinkError
             ? t('the_link_may_have_been_removed')
-            : undefined
+            : workspaceError?.quotaReached ? t('generation_limit_note') : undefined
         }
         canRetry={showStoryDeepLinkError || Boolean(formValues.problemContext.trim())}
-        onRetry={showStoryDeepLinkError ? handleRetryStoryDeepLink : handleSubmitWithProject}
+        onRetry={showStoryDeepLinkError ? handleRetryStoryDeepLink
+          : workspaceError?.quotaReached ? null : handleSubmitWithProject}
         retryLabel={showStoryDeepLinkError ? t('try_loading_again') : undefined}
         secondaryAction={
-          showStoryDeepLinkError
+          showStoryDeepLinkError || workspaceError?.quotaReached
             ? {
                 label: t('back_to_story_history'),
                 onClick: handleGoToHistoryFromStoryError,

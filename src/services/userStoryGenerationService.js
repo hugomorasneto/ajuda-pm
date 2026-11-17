@@ -1,6 +1,16 @@
 import { supabase } from '../lib/supabaseClient'
 
-const GENERATION_TIMEOUT_MS = 20000
+const GENERATION_TIMEOUT_MS = 55000
+
+const serverErrorCodes = new Set([
+  'QUOTA_EXHAUSTED',
+  'SAVE_FAILED',
+  'GENERATION_IN_PROGRESS',
+  'TARGET_UNAVAILABLE',
+  'REQUEST_CONFLICT',
+  'RESERVATION_EXPIRED',
+  'STORY_REMOVED',
+])
 
 function withFallbackArray(value, fallbackItems) {
   if (Array.isArray(value)) {
@@ -38,6 +48,10 @@ function createGenerationError(code, message, details = {}) {
 }
 
 function mapGenerationHttpError(response, payload) {
+  if (serverErrorCodes.has(payload?.code)) {
+    return createGenerationError(payload.code, payload.code, { usage: payload.usage })
+  }
+
   if (response.status === 400) {
     return createGenerationError(
       'INVALID_INPUT',
@@ -119,7 +133,12 @@ export function normalizeUserStoryGeneration(rawResult) {
   }
 }
 
-export async function generateUserStory({ input_context, input_requirements, input_adjustment = '' }) {
+export async function getStoryGenerationUsage() {
+  const { data, error } = await supabase.rpc('get_story_generation_usage')
+  return error ? null : data
+}
+
+export async function generateUserStory(input) {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
@@ -146,7 +165,7 @@ export async function generateUserStory({ input_context, input_requirements, inp
         apikey: supabaseAnonKey,
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ input_context, input_requirements, input_adjustment }),
+      body: JSON.stringify(input),
       signal: controller.signal,
     })
 
@@ -156,7 +175,11 @@ export async function generateUserStory({ input_context, input_requirements, inp
       throw mapGenerationHttpError(response, payload)
     }
 
-    return normalizeUserStoryGeneration(payload)
+    if (!payload?.story?.id) {
+      throw createGenerationError('SAVE_FAILED', 'A geração não retornou uma versão salva.')
+    }
+
+    return { generated: normalizeUserStoryGeneration(payload), story: payload.story }
   } catch (error) {
     if (error?.name === 'AbortError') {
       throw createGenerationError(

@@ -49,6 +49,22 @@ npm run test:e2e:i18n
 
 Para conferir o HTML compilado, use `npm run build:i18n` e `npm run preview:i18n`. O build de prévia fica em `dist-i18n-preview/`. O build normal continua em `dist/` com a prévia desativada.
 
+## Cota do Free no servidor
+
+A migração `20261117171616_free_lifetime_story_generation_quota.sql` exige o esquema de histórias, perfis, Administração e Projetos. Ela registra as versões existentes como uso histórico e mantém o consumo após a exclusão de uma história. Versões apagadas antes da migração não podem ser reconstruídas pelos registros disponíveis.
+
+Cada geração ou regeneração bem-sucedida consome uma unidade ao salvar a versão. O Free inclui 10 unidades por conta, sem renovação mensal. Edições manuais, falhas e diagnósticos de projeto ficam fora da cota. O limite personalizado de cada conta continua disponível na Administração. O plano Pro mantém o padrão sem limite.
+
+A Bancada envia um identificador por tentativa e recebe a versão já salva pela função `generate-user-story`. A migração, a função e o frontend precisam ser ativados em conjunto em uma publicação futura. Esta implementação foi validada somente em ambiente local.
+
+Com Docker disponível, execute a validação isolada em PowerShell.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-free-quota-local.ps1
+```
+
+O script cria e remove containers exclusivos, usa contas fictícias, executa a migração e os testes SQL, e testa a função real com PostgREST e PostgreSQL locais. A autenticação e o Gemini são simulados. O teste cobre a última vaga concorrente, repetição de pedidos, falhas, versões, isolamento de contas e limites personalizados. As imagens Docker precisam estar disponíveis ou ser baixadas na primeira execução.
+
 ## Contribuição
 
 Leia o [guia de contribuição](CONTRIBUTING.md) e as [instruções para relatar problemas de segurança](SECURITY.md).

@@ -1,7 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  countUserStoriesByUser,
-  createUserStoryVersion,
   getUserStoryById,
   listRecentStoryGroups,
   listStoryVersions,
@@ -10,14 +8,13 @@ import {
 } from '../services/userStoriesService'
 import {
   generateUserStory,
+  getStoryGenerationUsage,
   normalizeUserStoryGeneration,
 } from '../services/userStoryGenerationService'
-import { getUserProfile } from '../services/userProfilesService'
 import { useAuth } from './useAuth'
 import { trackEvent } from '../services/analyticsService'
 import {
   FREE_GENERATION_LIMIT,
-  getEffectiveForgeLimit,
   getRemainingForgeGenerations,
 } from '../constants/app'
 import { defaultStoryFormat } from '../utils/storyFormat'
@@ -30,6 +27,12 @@ const generationErrorKeys = {
   PROVIDER_UNAVAILABLE: 'generation_provider',
   TIMEOUT: 'generation_timeout',
   NETWORK: 'generation_network',
+  SAVE_FAILED: 'version_save_failed',
+  GENERATION_IN_PROGRESS: 'generation_in_progress',
+  TARGET_UNAVAILABLE: 'generation_target_unavailable',
+  REQUEST_CONFLICT: 'generation_retry',
+  RESERVATION_EXPIRED: 'generation_retry',
+  STORY_REMOVED: 'generation_target_unavailable',
 }
 
 export function parseTextList(value) {
@@ -170,14 +173,17 @@ export function useUserStoryWorkspace(storyFormat = defaultStoryFormat) {
   const [versions, setVersions] = useState([])
   const [isLoadingVersions, setIsLoadingVersions] = useState(false)
   const [historyFilter, setHistoryFilter] = useState('7d')
-  const [usageCount, setUsageCount] = useState(0)
-  const [userPlan, setUserPlan] = useState('free')
-  const [forgeLimitOverride, setForgeLimitOverride] = useState(null)
+  const [accountUsage, setAccountUsage] = useState(null)
+  const usage = accountUsage?.userId === userId ? accountUsage.data : null
+  const isSubmittingRef = useRef(false)
+  const pendingGeneration = useRef(null)
+  const usageCount = usage?.usage_count ?? 0
+  const userPlan = usage?.plan ?? 'free'
+  const effectiveForgeLimit = usage ? usage.effective_limit : FREE_GENERATION_LIMIT
 
   const isEditing = Boolean(selectedStoryId)
   const canEditSelectedStory = Boolean(isEditing && selectedStoryOwnerId === userId)
   const isPremium = userPlan === 'premium'
-  const effectiveForgeLimit = getEffectiveForgeLimit({ plan: userPlan, forgeLimitOverride })
   const remainingGenerations = getRemainingForgeGenerations({
     usageCount,
     forgeLimit: effectiveForgeLimit,
@@ -202,22 +208,11 @@ export function useUserStoryWorkspace(storyFormat = defaultStoryFormat) {
   const loadUsage = useCallback(async () => {
     if (!userId) return
 
-    const [countResponse, profileResponse] = await Promise.all([
-      countUserStoriesByUser(userId),
-      getUserProfile(userId),
-    ])
-
-    if (countResponse.success) setUsageCount(countResponse.count)
-    if (profileResponse.success && profileResponse.data?.plan) {
-      setUserPlan(profileResponse.data.plan)
-      setForgeLimitOverride(
-        Number.isInteger(profileResponse.data.forge_limit_override)
-          ? profileResponse.data.forge_limit_override
-          : null,
-      )
+    const serverUsage = await getStoryGenerationUsage()
+    if (serverUsage) {
+      setAccountUsage({ userId, data: serverUsage })
     } else {
-      setUserPlan('free')
-      setForgeLimitOverride(null)
+      setWorkspaceError('generation_usage_unavailable')
     }
   }, [userId])
 
@@ -475,6 +470,8 @@ export function useUserStoryWorkspace(storyFormat = defaultStoryFormat) {
   }
 
   async function handleSubmitStory(options = {}) {
+    if (isSubmittingRef.current) return false
+
     const adjustmentOverride =
       typeof options.adjustment === 'string' ? options.adjustment : null
     const formValuesForSubmit = adjustmentOverride === null
@@ -495,27 +492,7 @@ export function useUserStoryWorkspace(storyFormat = defaultStoryFormat) {
       return false
     }
 
-    if (hasReachedLimit) {
-      trackEvent({
-        event_name: 'limit_reached_free_plan',
-        event_category: 'usage',
-        page_path: '/tool',
-        metadata: {
-          usage_count: usageCount,
-          free_limit: FREE_GENERATION_LIMIT,
-          effective_limit: effectiveForgeLimit,
-          forge_limit_override: forgeLimitOverride,
-        },
-      })
-      const limitMessage =
-        userPlan === 'free' && forgeLimitOverride === null && effectiveForgeLimit === FREE_GENERATION_LIMIT
-          ? { key: 'you_have_reached_the_free_plan', values: { p1: FREE_GENERATION_LIMIT } }
-          : { key: 'you_have_reached_your_limit_of', values: { p1: effectiveForgeLimit } }
-      setWorkspaceError(limitMessage)
-      setSaveMessage(limitMessage)
-      return false
-    }
-
+    isSubmittingRef.current = true
     setIsSubmitting(true)
     setSaveMessage('')
     setCopyMessage('')
@@ -548,11 +525,23 @@ export function useUserStoryWorkspace(storyFormat = defaultStoryFormat) {
         setTimeout(resolve, 450)
       })
 
-      const generated = await generateUserStory({
+      const input = {
         input_context: contextTrimmed,
         input_requirements: requirementsTrimmed,
         input_adjustment: generationAdjustment,
+        regeneration_instruction: adjustmentTrimmed || null,
+        project_id: shouldUseCurrentGroup ? selectedStoryProjectId : options.projectId || null,
+        previous_version_id: shouldUseCurrentGroup ? selectedStoryId : null,
+      }
+      const pendingInput = JSON.stringify([userId, input])
+      if (pendingGeneration.current?.input !== pendingInput) {
+        pendingGeneration.current = { input: pendingInput, id: crypto.randomUUID() }
+      }
+      const { generated, story: persisted } = await generateUserStory({
+        ...input,
+        request_id: pendingGeneration.current.id,
       })
+      pendingGeneration.current = null
       setResult(generated)
       setEditDraft({
         title: generated.title,
@@ -560,45 +549,6 @@ export function useUserStoryWorkspace(storyFormat = defaultStoryFormat) {
         acceptance_criteria: [...generated.acceptance_criteria],
       })
 
-      const payload = {
-        input_context: contextTrimmed,
-        input_requirements: requirementsTrimmed,
-        title: generated.title,
-        objective: generated.objective,
-        user_story: generated.user_story,
-        acceptance_criteria: toNullableText(generated.acceptance_criteria),
-        business_rules: toNullableText(generated.business_rules),
-        gaps: toNullableText(generated.gaps),
-        qa_checklist: toNullableText(generated.qa_checklist),
-        status: 'generated',
-        project_id: shouldUseCurrentGroup
-          ? selectedStoryProjectId
-          : options.projectId || null,
-        regeneration_instruction: adjustmentTrimmed || null,
-        created_at: new Date().toISOString(),
-      }
-
-      const actionResult = await createUserStoryVersion({
-        data: payload,
-        userId,
-        storyGroupId: shouldUseCurrentGroup ? selectedStoryGroupId : null,
-        previousVersionId: shouldUseCurrentGroup ? selectedStoryId : null,
-      })
-
-      if (!actionResult.success || !actionResult.data?.[0]) {
-        const errorMessage = actionResult.error?.message ?? 'Erro desconhecido ao persistir.'
-        console.error('Falha ao persistir user story:', actionResult.error)
-        setSaveMessage({ key: 'version_save_failed', tone: 'error' })
-        trackEvent({
-          event_name: 'user_story_generate_failed',
-          event_category: 'workspace',
-          page_path: '/tool',
-          metadata: { stage: 'persist', error_message: errorMessage },
-        })
-        return false
-      }
-
-      const persisted = actionResult.data[0]
       setSelectedStoryId(persisted.id)
       setSelectedStoryGroupId(persisted.story_group_id ?? persisted.id)
       setSelectedStoryOwnerId(persisted.user_id ?? userId)
@@ -648,6 +598,30 @@ export function useUserStoryWorkspace(storyFormat = defaultStoryFormat) {
 
       return true
     } catch (error) {
+      if (error?.code === 'QUOTA_EXHAUSTED' && error.details.usage) {
+        const serverUsage = error.details.usage
+        setAccountUsage({ userId, data: serverUsage })
+        const notice = {
+          key: serverUsage.plan === 'free' && serverUsage.forge_limit_override === null
+            ? 'you_have_reached_the_free_plan'
+            : 'you_have_reached_your_limit_of',
+          values: { p1: serverUsage.effective_limit },
+          quotaReached: true,
+          tone: 'error',
+        }
+        setWorkspaceError(notice)
+        setSaveMessage(notice)
+        trackEvent({
+          event_name: 'limit_reached_free_plan',
+          event_category: 'usage',
+          page_path: '/tool',
+          metadata: serverUsage,
+        })
+        return false
+      }
+      if (error?.code === 'REQUEST_CONFLICT' || error?.code === 'STORY_REMOVED') {
+        pendingGeneration.current = null
+      }
       console.error('Falha ao gerar user story com IA:', error)
       const notice = {
         key: generationErrorKeys[error?.code] ?? 'could_not_generate_a_story_try',
@@ -661,13 +635,14 @@ export function useUserStoryWorkspace(storyFormat = defaultStoryFormat) {
         event_category: 'workspace',
         page_path: '/tool',
         metadata: {
-          stage: 'generate',
+          stage: error?.code === 'SAVE_FAILED' ? 'persist' : 'generate',
           error_code: error instanceof Error ? error.code ?? null : null,
           error_message: error instanceof Error ? error.message : 'unknown_error',
         },
       })
       return false
     } finally {
+      isSubmittingRef.current = false
       setIsSubmitting(false)
     }
   }
@@ -794,7 +769,6 @@ export function useUserStoryWorkspace(storyFormat = defaultStoryFormat) {
     formValues,
     freeGenerationLimit: FREE_GENERATION_LIMIT,
     effectiveForgeLimit,
-    forgeLimitOverride,
     canEditSelectedStory,
     handleCopy,
     handleEditDraftChange,

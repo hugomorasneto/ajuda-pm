@@ -358,11 +358,12 @@ async function fetchLeads({ search, page, pageSize }) {
 }
 
 async function getUserStats(userId) {
-  const [stories, guides, activity] = await Promise.all([
+  const [stories, usage, guides, activity] = await Promise.all([
     supabase
       .from('user_stories')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId),
+    supabase.rpc('admin_get_story_generation_usage', { p_user_id: userId }),
     supabase
       .from('learning_progress')
       .select('id', { count: 'exact', head: true })
@@ -375,8 +376,11 @@ async function getUserStats(userId) {
       .limit(1),
   ])
 
+  if (usage.error) throw usage.error
+
   return {
     stories_count: stories.count ?? 0,
+    generation_usage_count: usage.data,
     guides_count: guides.count ?? 0,
     last_activity_at: activity.data?.[0]?.created_at ?? null,
   }
