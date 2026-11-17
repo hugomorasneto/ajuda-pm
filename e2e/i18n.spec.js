@@ -360,6 +360,7 @@ test('cadastro e confirmação preservam o destino codificado e permitem reenvia
   await page.goto(authLink('/signup', from, 'pt-BR'))
   await page.getByRole('button', { name: 'Recusar opcionais' }).click()
   await expect(page.locator('#uso-de-dados')).toContainText('aceita os Termos de Uso. Consulte a Política de Privacidade')
+  await expect(page.locator('#uso-de-dados')).toContainText('uso profissional por pessoas com 18 anos ou mais')
   await expect(page.locator('#uso-de-dados').getByRole('link', { name: 'Política de Privacidade' })).toHaveAttribute('href', '/politica-de-privacidade')
   await page.getByLabel('E-mail', { exact: true }).fill(user.email)
   await page.locator('input[type="password"]').fill('short')
@@ -370,6 +371,7 @@ test('cadastro e confirmação preservam o destino codificado e permitem reenvia
   await expect(page.getByText('Use at least 6 characters.', { exact: true })).toBeVisible()
   await expect(page.locator('#uso-de-dados').getByRole('link', { name: 'Terms of Use' })).toHaveAttribute('href', '/en/terms-of-use')
   await expect(page.locator('#uso-de-dados')).toContainText('agree to the Terms of Use. Read the Privacy Policy')
+  await expect(page.locator('#uso-de-dados')).toContainText('professional use by people aged 18 or older')
   await expect(page.locator('input[type="password"]')).toHaveValue('short')
   await expect(page.getByLabel('Email', { exact: true })).toHaveValue(user.email)
   await expect(page).toHaveTitle('Create a ProdForge account')
@@ -426,6 +428,13 @@ test('link expirado permite informar o e-mail e retomar o convite original', asy
 })
 
 test('rotas públicas abrem diretamente nos dois idiomas com metadados e vínculos equivalentes', async ({ page, request }, testInfo) => {
+  const remoteFontRequests = []
+  page.on('request', (request) => {
+    const hostname = new URL(request.url()).hostname
+    if (['fonts.googleapis.com', 'fonts.gstatic.com'].includes(hostname)) {
+      remoteFontRequests.push(hostname)
+    }
+  })
   const entries = [
     ['/en/', '/', 'Turn unclear briefs into clear user stories.', 'Transforme briefings confusos em user stories claras.'],
     ['/en/faq', '/faq', 'Frequently asked questions', 'Perguntas Frequentes'],
@@ -448,6 +457,10 @@ test('rotas públicas abrem diretamente nos dois idiomas com metadados e víncul
     await expect(page.getByRole('combobox', { name: 'Language' })).toBeVisible()
     await expect(page.locator('html')).toHaveAttribute('lang', 'en')
     await expect(page.locator('meta[property="og:locale"]')).toHaveAttribute('content', 'en_US')
+    await expect.poll(() => page.evaluate(async () => {
+      await document.fonts.load('400 16px Inter')
+      return [...document.fonts].some((font) => font.family === 'Inter' && font.status === 'loaded')
+    })).toBe(true)
     if (english === '/en/faq') {
       const schema = page.locator('script[type="application/ld+json"]')
       await expect(schema).toHaveCount(1)
@@ -456,6 +469,7 @@ test('rotas públicas abrem diretamente nos dois idiomas com metadados e víncul
     if (english === '/en/terms-of-use') {
       await expect(page.locator('#propriedade-intelectual')).toContainText('The MIT License governs use of the code released under it.')
       await expect(page.locator('#aceitacao-e-escopo')).toContainText('the Brazilian Portuguese version is the reference')
+      await expect(page.locator('#o-que-e-o-prodforge')).toContainText('professional use by people aged 18 or older')
       await expect(page.locator('#propriedade-intelectual')).toContainText('provide the features you request and operate the service securely')
       await expect(page.locator('#planos-limites-e-recursos')).toContainText('a default allowance of 10 successful, saved generations per account, with no monthly reset')
       await expect(page.locator('#planos-limites-e-recursos')).toContainText('Manual edits, failed attempts, and project diagnostics are outside this allowance.')
@@ -474,6 +488,8 @@ test('rotas públicas abrem diretamente nos dois idiomas com metadados e víncul
       await expect(page.locator('#quais-dados-podemos-coletar')).toContainText('generation counts and account limits')
       await expect(page.locator('.privacy-policy-hero__summary-date')).toHaveText('Effective date under review')
       await expect(page.locator('#retencao-dos-dados')).not.toContainText('90 days')
+      await expect(page.locator('#retencao-dos-dados')).toContainText('what needs to be kept, why, and for how long')
+      await expect(page.locator('#como-usamos-os-dados')).toContainText('Pro updates when you ask to receive them')
     }
     await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
     await expect(page).toHaveURL(portuguese)
@@ -481,6 +497,7 @@ test('rotas públicas abrem diretamente nos dois idiomas com metadados e víncul
     if (portuguese === '/termos-de-uso') {
       await expect(page.locator('#propriedade-intelectual')).toContainText('A revenda ou a sublicença de acesso ao serviço hospedado exige autorização expressa.')
       await expect(page.locator('#aceitacao-e-escopo')).toContainText('a versão em português brasileiro é a referência')
+      await expect(page.locator('#o-que-e-o-prodforge')).toContainText('uso profissional por pessoas com 18 anos ou mais')
       await expect(page.locator('#planos-limites-e-recursos')).toContainText('Excluir uma história salva não repõe o saldo.')
       await expect(page.locator('.privacy-policy-hero__summary-date')).toHaveText('Vigência em revisão')
     }
@@ -489,23 +506,31 @@ test('rotas públicas abrem diretamente nos dois idiomas com metadados e víncul
       await expect(page.locator('#cookies-e-tecnologias-similares')).toContainText('Cookies de marketing estão desativados.')
       await expect(page.locator('#quais-dados-podemos-coletar')).toContainText('contagem de gerações e limites da conta')
       await expect(page.locator('.privacy-policy-hero__summary-date')).toHaveText('Vigência em revisão')
+      await expect(page.locator('#retencao-dos-dados')).toContainText('com o motivo e o prazo aplicável')
+      await expect(page.locator('#como-usamos-os-dados')).toContainText('novidades do Pro quando você pedir para recebê-las')
     }
   }
 
   await page.goto('/preferencias-de-cookies?utm_source=old#privacy-preferences-info-title')
   await expect(page).toHaveURL('/preferencias-de-privacidade?utm_source=old#privacy-preferences-info-title')
+  expect(remoteFontRequests).toEqual([])
+  expect((await request.get('/fonts/inter/InterVariable.woff2')).status()).toBe(200)
   await page.goto('http://127.0.0.1:4176/en/contact')
   await expect(page).toHaveURL('http://127.0.0.1:4176/')
   await expect(page.getByRole('combobox', { name: 'Idioma' })).toHaveCount(0)
   await page.goto('http://127.0.0.1:4176/termos-de-uso')
   await expect(page.locator('.privacy-policy-hero__summary-date')).toContainText('2026')
   await expect(page.locator('#planos-limites-e-recursos')).not.toContainText('10 gerações bem-sucedidas')
+  await expect(page.locator('#o-que-e-o-prodforge')).not.toContainText('18 anos')
+  await expect.poll(() => remoteFontRequests.length).toBeGreaterThan(0)
   expect((await request.get('http://127.0.0.1:4176/revisao-de-textos/')).status()).toBe(404)
   const review = await request.get('/revisao-de-textos/')
   expect(review.ok()).toBe(true)
   const reviewHtml = await review.text()
-  expect(reviewHtml).toContain('Revisão da base <code>cf04407</code>')
+  expect(reviewHtml).toContain('base <code>50154be</code>')
   expect(reviewHtml).toContain('Confirme o custo previsto para as 10 gerações')
+  expect(reviewHtml).toContain('Mapa de bases aprovado para validação dos fluxos.')
+  expect(reviewHtml).toContain('O registro confiável e a reapresentação às contas existentes continuam pendentes de implementação.')
   await page.goto('/revisao-de-textos/#privacidade')
   await checkWidth(page)
   await page.getByRole('link', { name: 'Planos', exact: true }).click()

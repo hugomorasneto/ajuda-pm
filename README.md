@@ -49,6 +49,8 @@ npm run test:e2e:i18n
 
 Para conferir o HTML compilado, use `npm run build:i18n` e `npm run preview:i18n`. O build de prévia fica em `dist-i18n-preview/`. O build normal continua em `dist/` com a prévia desativada.
 
+Na prévia local, a fonte Inter é servida pelo próprio site. O arquivo, a licença SIL Open Font License 1.1 e a origem estão em `public/fonts/inter/`. Os Termos e o aviso de cadastro da prévia indicam o uso profissional por pessoas com 18 anos ou mais. As minutas em `revisao-de-textos/` registram as decisões aprovadas e os dados operacionais que ainda precisam de confirmação.
+
 ## Cota do Free no servidor
 
 A migração `20261117171616_free_lifetime_story_generation_quota.sql` exige o esquema de histórias, perfis, Administração e Projetos. Ela registra as versões existentes como uso histórico e mantém o consumo após a exclusão de uma história. Versões apagadas antes da migração não podem ser reconstruídas pelos registros disponíveis.

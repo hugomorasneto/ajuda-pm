@@ -1,0 +1,6 @@
+Inter variable font, normal style, distributed without modification.
+Upstream repository: https://github.com/rsms/inter
+Source revision: e3a3d4c57d5ecc01453a575621882a384c1995a3
+Source path: docs/font-files/InterVariable.woff2
+SHA-256: 693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3
+License: SIL Open Font License 1.1, included in LICENSE.txt.

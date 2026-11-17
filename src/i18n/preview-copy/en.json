@@ -1,11 +1,12 @@
 {
   "auth": {
-    "signupTerms": "By creating an account, you agree to the <terms>Terms of Use</terms>. Read the <privacy>Privacy Policy</privacy> to learn how we process your personal data."
+    "signupTerms": "By creating an account, you agree to the <terms>Terms of Use</terms>. Read the <privacy>Privacy Policy</privacy> to learn how we process your personal data. ProdForge is intended for professional use by people aged 18 or older."
   },
   "contactPage": {
     "privacyNote": "We use the information in this form to record your request, route it to our team, and respond. Read our <policy>Privacy Policy</policy> to learn how we handle this information."
   },
   "termsOfUsePage": {
+    "termsOfUsePage_o_produto_foi_pensado_para": "ProdForge is intended for professional use by people aged 18 or older, including PMs, POs, and product, development, and QA teams.",
     "termsOfUsePage_ultima_atualizacao": "Draft status",
     "termsOfUsePage_a_versao_publicada_nesta_pagina": "If the language versions differ, the Brazilian Portuguese version is the reference, subject to your rights under applicable law. Specific features may have additional rules when they become available.",
     "termsOfUsePage_a_marca_prodforge_identidade_visual": "The MIT License governs use of the code released under it. The ProdForge brand, visual identity, editorial materials, and other reserved items listed in the license scope are subject to the permissions that apply to each item.",
@@ -19,6 +20,8 @@
   "privacyPolicyPage": {
     "privacyPolicyPage_ultima_atualizacao": "Draft status",
     "privacyPolicyPage_historico_de_uso_versoes_geradas": "Usage history, generated versions, generation counts and account limits, preferences, projects, invited members, and actions taken in the workspace.",
+    "privacyPolicyPage_enviar_comunicacoes_relacionadas_a_conta": "Send necessary communications about your account and respond to your requests. Send Pro updates when you ask to receive them.",
+    "privacyPolicyPage_conteudos_salvos_na_bancada_versoes": "You can request deletion of your data through the contact channel listed in this Policy. In our response, we will explain what we deleted, what needs to be kept, why, and for how long.",
     "privacyPolicyPage_entender_uso_desempenho_erros_e": "Use aggregate metrics on usage, performance, and errors, calculated from authorized analytics events, to improve the product.",
     "privacyPolicyPage_dados_inseridos_pelo_usuario_podem": "When you request AI generation or analysis, we send the AI provider the context needed to produce a response, such as the brief or project information included in your request.",
     "privacyPolicyPage_nao_usamos_dados_pessoais_como": "We do not sell databases of personal data to third parties. We share data for the purposes described in this Policy and to the extent necessary for each purpose.",

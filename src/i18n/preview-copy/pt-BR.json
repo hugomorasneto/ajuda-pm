@@ -1,11 +1,12 @@
 {
   "auth": {
-    "signupTerms": "Ao criar uma conta, você aceita os <terms>Termos de Uso</terms>. Consulte a <privacy>Política de Privacidade</privacy> para saber como tratamos seus dados pessoais."
+    "signupTerms": "Ao criar uma conta, você aceita os <terms>Termos de Uso</terms>. Consulte a <privacy>Política de Privacidade</privacy> para saber como tratamos seus dados pessoais. O ProdForge é destinado ao uso profissional por pessoas com 18 anos ou mais."
   },
   "contactPage": {
     "privacyNote": "Usamos os dados deste formulário para registrar, encaminhar e responder à sua solicitação. Consulte a <policy>Política de Privacidade</policy> para saber como tratamos esses dados."
   },
   "termsOfUsePage": {
+    "termsOfUsePage_o_produto_foi_pensado_para": "O ProdForge é destinado ao uso profissional por pessoas com 18 anos ou mais, incluindo PMs, POs e times de produto, desenvolvimento e QA.",
     "termsOfUsePage_ultima_atualizacao": "Status da minuta",
     "termsOfUsePage_a_versao_publicada_nesta_pagina": "Em caso de divergência entre idiomas, a versão em português brasileiro é a referência, respeitados os direitos previstos na legislação aplicável. Recursos específicos podem ter regras complementares quando forem disponibilizados.",
     "termsOfUsePage_a_marca_prodforge_identidade_visual": "O código disponibilizado sob a licença MIT pode ser usado conforme as condições dessa licença. A marca ProdForge, a identidade visual, os materiais editoriais e os demais itens reservados no escopo da licença seguem as permissões aplicáveis a cada material.",
@@ -19,6 +20,8 @@
   "privacyPolicyPage": {
     "privacyPolicyPage_ultima_atualizacao": "Status da minuta",
     "privacyPolicyPage_historico_de_uso_versoes_geradas": "Histórico de uso, versões geradas, contagem de gerações e limites da conta, preferências, projetos, membros convidados e ações realizadas na Bancada.",
+    "privacyPolicyPage_enviar_comunicacoes_relacionadas_a_conta": "Enviar comunicações necessárias sobre sua conta e responder às suas solicitações. Enviar novidades do Pro quando você pedir para recebê-las.",
+    "privacyPolicyPage_conteudos_salvos_na_bancada_versoes": "Você pode solicitar a exclusão dos seus dados pelo canal de contato indicado nesta Política. Na resposta, informaremos quais dados foram excluídos e quais precisam ser conservados, com o motivo e o prazo aplicável.",
     "privacyPolicyPage_entender_uso_desempenho_erros_e": "Usar métricas agregadas de uso, desempenho e erros, calculadas a partir de eventos de analytics autorizados, para melhorar o produto.",
     "privacyPolicyPage_dados_inseridos_pelo_usuario_podem": "Quando você solicita geração ou análise por IA, enviamos ao fornecedor de IA o contexto necessário para produzir a resposta, como o briefing ou as informações do projeto incluídas na solicitação.",
     "privacyPolicyPage_nao_usamos_dados_pessoais_como": "Não usamos dados pessoais como produto para venda de bases a terceiros. Compartilhamos dados conforme as finalidades desta Política e na medida necessária para cada uma.",

@@ -6,6 +6,13 @@ import './i18n/init'
 import { LanguageProvider } from './i18n/LanguageProvider'
 import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext'
+import { isLocalPreview } from './i18n/routes'
+
+if (isLocalPreview(import.meta.env.MODE, window.location.hostname)) {
+  import('./styles/fonts-local.css')
+} else {
+  import('./styles/fonts-remote.css')
+}
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
