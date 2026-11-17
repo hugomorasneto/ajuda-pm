@@ -1,5 +1,13 @@
-export const PRIVACY_CONSENT_STORAGE_KEY = 'prodforge_privacy_consent'
-export const PRIVACY_CONSENT_VERSION = '2.1'
+import { isLocalPreview, PILOT_MODE } from '../i18n/routes.js'
+
+const defaultConsentStorageKey = 'prodforge_privacy_consent'
+const previewConsent = import.meta.env?.MODE === PILOT_MODE &&
+  typeof window !== 'undefined' && isLocalPreview(PILOT_MODE, window.location.hostname)
+
+export const PRIVACY_CONSENT_STORAGE_KEY = previewConsent
+  ? defaultConsentStorageKey + '_preview'
+  : defaultConsentStorageKey
+export const PRIVACY_CONSENT_VERSION = previewConsent ? '2.2' : '2.1'
 export const PRIVACY_CONSENT_CHANGE_EVENT = 'prodforge_privacy_consent_change'
 
 export const PRIVACY_CONSENT_STATUS = {
@@ -17,7 +25,7 @@ export const PRIVACY_CONSENT_CATEGORIES = {
 export const PRIVACY_CONSENT_CATEGORY_AVAILABILITY = {
   [PRIVACY_CONSENT_CATEGORIES.essential]: true,
   [PRIVACY_CONSENT_CATEGORIES.analytics]: true,
-  [PRIVACY_CONSENT_CATEGORIES.marketing]: true,
+  [PRIVACY_CONSENT_CATEGORIES.marketing]: !previewConsent,
 }
 
 const VALID_PRIVACY_CONSENT_STATUSES = new Set(Object.values(PRIVACY_CONSENT_STATUS))
@@ -85,12 +93,15 @@ function getCategoriesForStatus(status) {
   return DEFAULT_PRIVACY_CATEGORIES
 }
 
-function normalizePrivacyConsent(consent) {
+function normalizePrivacyConsent(consent, useLegacyAnalyticsOnly) {
   if (!consent || typeof consent !== 'object' || !VALID_PRIVACY_CONSENT_STATUSES.has(consent.status)) {
     return null
   }
 
-  const categories = createPrivacyConsentCategories(consent.categories ?? getCategoriesForStatus(consent.status))
+  const savedCategories = consent.categories ?? getCategoriesForStatus(consent.status)
+  const categories = createPrivacyConsentCategories(useLegacyAnalyticsOnly
+    ? { [PRIVACY_CONSENT_CATEGORIES.analytics]: savedCategories[PRIVACY_CONSENT_CATEGORIES.analytics] }
+    : savedCategories)
 
   return {
     status: getStatusForCategories(categories),
@@ -117,10 +128,12 @@ export function getPrivacyConsent() {
 
   try {
     const storedValue = window.localStorage.getItem(PRIVACY_CONSENT_STORAGE_KEY)
-    if (!storedValue) return null
-
-    const consent = JSON.parse(storedValue)
-    return normalizePrivacyConsent(consent)
+    const useLegacyAnalyticsOnly = previewConsent && storedValue === null
+    const legacyValue = useLegacyAnalyticsOnly
+      ? window.localStorage.getItem(defaultConsentStorageKey)
+      : null
+    const consent = JSON.parse(storedValue ?? legacyValue ?? 'null')
+    return normalizePrivacyConsent(consent, useLegacyAnalyticsOnly)
   } catch {
     return null
   }
@@ -168,7 +181,12 @@ export function clearPrivacyConsent() {
   if (!canUseLocalStorage()) return false
 
   try {
-    window.localStorage.removeItem(PRIVACY_CONSENT_STORAGE_KEY)
+    if (previewConsent) {
+      // Keep the old choice from reappearing after a reset in the preview.
+      window.localStorage.setItem(PRIVACY_CONSENT_STORAGE_KEY, 'null')
+    } else {
+      window.localStorage.removeItem(PRIVACY_CONSENT_STORAGE_KEY)
+    }
     notifyPrivacyConsentChange(null)
     return true
   } catch {

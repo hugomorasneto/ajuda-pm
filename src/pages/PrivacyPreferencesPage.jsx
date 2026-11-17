@@ -54,7 +54,9 @@ const getCookieCategories = (t) => [
   {
     id: PRIVACY_CONSENT_CATEGORIES.marketing,
     title: t('privacyPreferencesPage_cookies_de_marketing'),
-    badge: t('privacyPreferencesPage_opcional'),
+    badge: t(PRIVACY_CONSENT_CATEGORY_AVAILABILITY[PRIVACY_CONSENT_CATEGORIES.marketing]
+      ? 'privacyPreferencesPage_opcional'
+      : 'privacyPreferencesPage_indisponiveis'),
     description:
       t('privacyPreferencesPage_usados_futuramente_para_campanhas_e'),
   },

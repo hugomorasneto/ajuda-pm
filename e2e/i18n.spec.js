@@ -452,6 +452,8 @@ test('rotas públicas abrem diretamente nos dois idiomas com metadados e víncul
     }
     if (english === '/en/terms-of-use') {
       await expect(page.locator('#propriedade-intelectual')).toContainText('The MIT License governs use of the code released under it.')
+      await expect(page.locator('#aceitacao-e-escopo')).toContainText('the Brazilian Portuguese version is the reference')
+      await expect(page.locator('#propriedade-intelectual')).toContainText('provide the features you request and operate the service securely')
       await expect(page.locator('#planos-limites-e-recursos')).toContainText('Your account shows the Free plan\'s usage limit.')
       if (testInfo.project.name === 'celular') {
         await page.setViewportSize({ width: 320, height: 740 })
@@ -462,15 +464,18 @@ test('rotas públicas abrem diretamente nos dois idiomas com metadados e víncul
     }
     if (english === '/en/privacy-policy') {
       await expect(page.locator('#direitos-do-titular')).toContainText('a review of decisions made solely by automated means that affect your interests')
+      await expect(page.locator('#uso-de-inteligencia-artificial')).toContainText('the context needed to produce a response')
     }
     await page.getByRole('combobox', { name: 'Language' }).selectOption('pt-BR')
     await expect(page).toHaveURL(portuguese)
     await expect(page.getByRole('heading', { level: 1, name: ptHeading, exact: true })).toBeVisible()
     if (portuguese === '/termos-de-uso') {
       await expect(page.locator('#propriedade-intelectual')).toContainText('A revenda ou a sublicença de acesso ao serviço hospedado exige autorização expressa.')
+      await expect(page.locator('#aceitacao-e-escopo')).toContainText('a versão em português brasileiro é a referência')
     }
     if (portuguese === '/politica-de-privacidade') {
       await expect(page.locator('#direitos-do-titular')).toContainText('Agência Nacional de Proteção de Dados (ANPD)')
+      await expect(page.locator('#cookies-e-tecnologias-similares')).toContainText('Cookies de marketing estão desativados.')
     }
   }
 
@@ -490,7 +495,7 @@ test('home mantém rascunho, âncora e validação da lista de interesse ao trad
   await page.goto('/?utm_source=demo#lead-capture-title')
   await page.getByRole('button', { name: 'Recusar opcionais' }).click()
   const plans = page.locator('#planos')
-  await expect(plans).toContainText('O limite padrão do Free é de 10 gerações de histórias de usuário por conta.')
+  await expect(plans).toContainText('10 registros de histórias salvos por conta, incluindo versões, sem renovação mensal.')
   await expect(plans.locator('.landing-pricing__card--pro .landing-pricing__list')).toHaveCount(0)
   await page.locator('#lead-name').fill('Nome de teste')
   await page.getByRole('button', { name: 'Quero receber novidades do Pro' }).click()
@@ -499,7 +504,7 @@ test('home mantém rascunho, âncora e validação da lista de interesse ao trad
   await expect(page).toHaveURL('/en/?utm_source=demo#lead-capture-title')
   await expect(page.locator('#lead-name')).toHaveValue('Nome de teste')
   await expect(page.locator('#lead-email-error')).toHaveText('Enter your email address.')
-  await expect(plans).toContainText('The default Free limit is 10 user story generations per account.')
+  await expect(plans).toContainText('10 saved user story records per account, including versions, with no monthly reset.')
   await expect(plans).toContainText('We are evaluating the Pro plan.')
   if (testInfo.project.name === 'desktop') {
     const freeButton = await plans.getByRole('link', { name: 'Create a free account' }).boundingBox()
@@ -562,13 +567,15 @@ test('contato preserva dados e categoria, traduz erro do servidor e envia só po
 })
 
 test('consentimento, alterações pendentes e idioma ficam independentes', async ({ page }, testInfo) => {
-  const key = 'prodforge_privacy_consent'
+  const key = 'prodforge_privacy_consent_preview'
   await page.goto('/en/')
-  await expect(page.locator('#privacy-consent-description')).toContainText('The marketing setting saves your preference.')
+  await expect(page.locator('#privacy-consent-description')).toContainText('With your permission, we use analytics')
+  await expect(page.getByRole('button', { name: 'Allow analytics' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Manage preferences' })).toHaveAttribute('href', '/en/privacy-preferences')
   await page.getByRole('link', { name: 'Manage preferences' }).click()
   await expect(page).toHaveURL('/en/privacy-preferences')
   await expect(page.getByText(/referral sources and campaign parameters/)).toBeVisible()
+  await expect(page.locator('#privacy-preferences-marketing')).toBeDisabled()
   await expect(page.getByRole('heading', { name: 'Choose your privacy preferences' })).toHaveCount(0)
   await page.locator('#privacy-preferences-analytics').check()
   expect(await page.evaluate((key) => localStorage.getItem(key), key)).toBeNull()
@@ -587,10 +594,57 @@ test('consentimento, alterações pendentes e idioma ficam independentes', async
   await checkWidth(page)
   await evidence(page, testInfo, 'preferencias-en')
   await page.getByRole('button', { name: 'Reset choice' }).click()
-  expect(await page.evaluate((key) => localStorage.getItem(key), key)).toBeNull()
+  expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)), key)).toBeNull()
   await page.getByRole('link', { name: 'Privacy Policy', exact: true }).first().click()
   await expect(page).toHaveURL('/en/privacy-policy')
   await expect(page.getByRole('button', { name: 'Reject optional' })).toBeVisible()
+})
+
+test('prévia preserva analytics antigo, bloqueia marketing e isola a redefinição', async ({ page, context }, testInfo) => {
+  const legacyKey = 'prodforge_privacy_consent'
+  const previewKey = legacyKey + '_preview'
+  const legacy = JSON.stringify({ status: 'accepted', version: '2.1' })
+  await context.addInitScript(({ key, value }) => {
+    if (localStorage.getItem(key) === null) localStorage.setItem(key, value)
+  }, { key: legacyKey, value: legacy })
+  await context.route('http://127.0.0.1:54321/rest/v1/tracking_events', (route) =>
+    route.fulfill({ status: 201, json: [] }),
+  )
+
+  if (testInfo.project.name === 'celular') await page.setViewportSize({ width: 320, height: 740 })
+  await page.goto('/en/privacy-preferences')
+  await expect(page.getByText('Analytics allowed', { exact: true }).first()).toBeVisible()
+  const marketing = page.locator('#privacy-preferences-marketing')
+  await expect(marketing).toBeDisabled()
+  await expect(marketing).not.toBeChecked()
+  await expect(page.locator('#privacy-preferences-analytics')).toBeChecked()
+  expect(await page.evaluate((key) => localStorage.getItem(key), legacyKey)).toBe(legacy)
+  expect(await page.evaluate((key) => localStorage.getItem(key), previewKey)).toBeNull()
+
+  await page.getByRole('button', { name: 'Reset choice' }).click()
+  await page.goto('/en/')
+  const allow = page.getByRole('button', { name: 'Allow analytics' })
+  await allow.focus()
+  await expect(allow).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(allow).toHaveCount(0)
+  expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key)), previewKey)).toMatchObject({
+    version: '2.2',
+    categories: { essential: true, analytics: true, marketing: false },
+  })
+  expect(await page.evaluate((key) => localStorage.getItem(key), legacyKey)).toBe(legacy)
+
+  await page.goto('/en/privacy-preferences')
+  await page.getByRole('button', { name: 'Reject optional' }).click()
+  await page.reload()
+  await expect(page.locator('#privacy-preferences-analytics')).not.toBeChecked()
+  await expect(marketing).not.toBeChecked()
+  await checkWidth(page)
+
+  await page.goto('http://127.0.0.1:4176/preferencias-de-privacidade')
+  await expect(page.getByRole('button', { name: 'Aceitar todos' })).toBeVisible()
+  await expect(marketing).toBeEnabled()
+  await expect(marketing).toBeChecked()
 })
 
 test('Campo de Treino abre a trilha e os sete guias nos dois idiomas', async ({ page, request }, testInfo) => {
