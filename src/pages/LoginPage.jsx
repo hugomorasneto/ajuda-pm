@@ -1,81 +1,61 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC } from '../constants/app'
-import { useAuth } from '../hooks/useAuth'
+import AuthBrandBar from '../components/auth/AuthBrandBar'
+import AuthStoryExample from '../components/auth/AuthStoryExample'
+import { useAuthJourney } from '../hooks/useAuthJourney'
+import { useCopy } from '../i18n/context'
+import AuthReturnContext from '../components/auth/AuthReturnContext'
+import { getAuthErrorKey, isValidAuthEmail } from '../utils/authErrors'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { usePageMetadata } from '../hooks/usePageMetadata'
 import '../styles/pages.css'
 import {
-  getAuthErrorMessage,
-  isEmailConfirmationError,
   resendSignupConfirmation,
   signInWithEmail,
 } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
-import {
-  buildAuthPath,
-  clearAuthRedirect,
-  getAuthRedirectContext,
-  getAuthRedirectFromLocation,
-} from '../utils/authRedirect'
-
-function isValidEmail(value) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-}
 
 function LoginPage() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { user, isAuthLoading } = useAuth()
+  const t = useCopy('auth')
+  const { context, emailRedirectTo, from, language, location, pathTo } = useAuthJourney()
   const [email, setEmail] = useState(location.state?.email ?? '')
   const [password, setPassword] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
   const [errorMessage, setErrorMessage] = useState('')
-  const [infoMessage, setInfoMessage] = useState(location.state?.message ?? '')
+  const [infoMessage, setInfoMessage] = useState(location.state?.notice ?? '')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isResending, setIsResending] = useState(false)
   const [canResendConfirmation, setCanResendConfirmation] = useState(false)
 
-  const redirectTo = useMemo(() => getAuthRedirectFromLocation(location), [location])
-  const redirectContext = useMemo(() => getAuthRedirectContext(redirectTo), [redirectTo])
-  const isPlanningInvite = redirectContext.key === 'planning'
-  const signupPath = useMemo(() => buildAuthPath('/signup', redirectTo), [redirectTo])
+  const isPlanningInvite = context === 'planning'
 
   usePageMetadata({
-    title: 'Entrar no ProdForge',
-    description: 'Acesse sua conta ProdForge para continuar na Bancada de histórias de usuário com IA.',
+    language,
+    title: t('loginTitle'),
+    description: t('loginMetadata'),
     path: '/login',
-    ogTitle: 'Entrar no ProdForge',
-    ogDescription: 'Acesse sua conta ProdForge para continuar na Bancada de histórias de usuário com IA.',
-    twitterTitle: 'Entrar no ProdForge',
-    twitterDescription: 'Acesse sua conta ProdForge para continuar na Bancada de histórias de usuário com IA.',
     robots: 'noindex,follow',
   })
 
-  useEffect(() => {
-    if (!isAuthLoading && user) {
-      clearAuthRedirect()
-      navigate(redirectTo, { replace: true })
-    }
-  }, [isAuthLoading, navigate, redirectTo, user])
-
   async function handleSubmit(event) {
     event.preventDefault()
+    if (isSubmitting || isResending) return
 
     const normalizedEmail = email.trim()
     const nextFieldErrors = {}
 
     if (!normalizedEmail) {
-      nextFieldErrors.email = 'Informe seu e-mail.'
-    } else if (!isValidEmail(normalizedEmail)) {
-      nextFieldErrors.email = 'Digite um e-mail válido.'
+      nextFieldErrors.email = 'emailRequired'
+    } else if (!isValidAuthEmail(normalizedEmail)) {
+      nextFieldErrors.email = 'emailInvalid'
     }
 
     if (!password) {
-      nextFieldErrors.password = 'A senha é obrigatória.'
+      nextFieldErrors.password = 'passwordRequired'
     }
 
     if (Object.keys(nextFieldErrors).length > 0) {
       setFieldErrors(nextFieldErrors)
+      event.currentTarget.querySelector(nextFieldErrors.email ? '#email' : '#password')?.focus()
       setErrorMessage('')
       setInfoMessage('')
       setCanResendConfirmation(false)
@@ -94,25 +74,22 @@ function LoginPage() {
     })
 
     if (error) {
-      const needsConfirmation = isEmailConfirmationError(error)
-      setErrorMessage(getAuthErrorMessage(error))
-      setInfoMessage(
-        needsConfirmation
-          ? 'Confirme seu e-mail para entrar. Se necessário, reenvie a mensagem de confirmação.'
-          : '',
-      )
+      const errorKey = getAuthErrorKey(error)
+      const needsConfirmation = errorKey === 'notConfirmed'
+      setErrorMessage(errorKey)
+      setInfoMessage(needsConfirmation ? 'resendPrompt' : '')
       setCanResendConfirmation(needsConfirmation && Boolean(email.trim()))
       setIsSubmitting(false)
       return
     }
 
     trackEvent({ event_name: 'login_completed', event_category: 'auth', page_path: '/login' })
-    clearAuthRedirect()
-    navigate(redirectTo, { replace: true })
   }
 
   function handleEmailChange(event) {
     setEmail(event.target.value)
+    setCanResendConfirmation(false)
+    setInfoMessage('')
     setFieldErrors((current) => ({ ...current, email: '' }))
     setErrorMessage('')
   }
@@ -125,20 +102,20 @@ function LoginPage() {
 
   async function handleResendConfirmation() {
     const normalizedEmail = email.trim()
-    if (!normalizedEmail) return
+    if (!normalizedEmail || isSubmitting || isResending) return
 
     setIsResending(true)
     setErrorMessage('')
 
-    const { error } = await resendSignupConfirmation(normalizedEmail, redirectTo)
+    const { error } = await resendSignupConfirmation(normalizedEmail, emailRedirectTo)
     setIsResending(false)
 
     if (error) {
-      setErrorMessage(getAuthErrorMessage(error))
+      setErrorMessage(getAuthErrorKey(error))
       return
     }
 
-    setInfoMessage('Enviamos um novo link de confirmação para o seu e-mail.')
+    setInfoMessage('emailResent')
     trackEvent({
       event_name: 'signup_confirmation_resent',
       event_category: 'auth',
@@ -149,49 +126,33 @@ function LoginPage() {
   return (
     <div className="auth-shell auth-shell--login">
       <div className="auth-card">
-        <div className="auth-card__topbar">
-          <Link to="/" className="auth-card__brand" aria-label="Voltar para o início do ProdForge">
-            <img
-              src={BRAND_LOGO_HORIZONTAL_SRC}
-              alt={APP_NAME}
-              className="auth-card__brand-logo"
-              loading="eager"
-            />
-          </Link>
-          <Link to="/" className="auth-card__home-link">
-            Início
-          </Link>
-        </div>
+        <AuthBrandBar />
 
         <div className="auth-card__header">
-          <p className="auth-card__eyebrow">Acesso seguro</p>
-          <h1 className="auth-card__title">Entre na sua bancada</h1>
+          <p className="auth-card__eyebrow">{t('loginEyebrow')}</p>
+          <h1 className="auth-card__title">{t('loginHeading')}</h1>
           <p className="auth-card__description">
             {isPlanningInvite
-              ? 'Entre para voltar ao convite da Roda da Fogueira e participar da estimativa.'
-              : 'Continue refinando suas user stories com histórico, versões e critérios de aceite.'}
+              ? t('loginPlanning')
+              : t('loginIntro')}
           </p>
         </div>
 
-        <div className={`auth-card__return-context auth-card__return-context--${redirectContext.key}`}>
-          <span>Destino após o acesso</span>
-          <strong>{redirectContext.label}</strong>
-          <p>{redirectContext.description}</p>
-        </div>
+        <AuthReturnContext destination={context} heading="afterLogin" />
 
         {infoMessage ? (
-          <p className="auth-card__info" role="status">{infoMessage}</p>
+          <p className="auth-card__info" role="status">{t(infoMessage, { target: t('destinations.' + context + '.target') })}</p>
         ) : null}
 
         <form className="auth-card__form" onSubmit={handleSubmit} noValidate>
           <div className="auth-card__field">
-            <label className="auth-card__label" htmlFor="email">E-mail</label>
+            <label className="auth-card__label" htmlFor="email">{t('email')}</label>
             <input
               id="email"
               className="auth-card__input"
               type="email"
               autoComplete="email"
-              placeholder="seu@email.com"
+              placeholder={t('emailExample')}
               value={email}
               onChange={handleEmailChange}
               aria-invalid={Boolean(fieldErrors.email)}
@@ -199,12 +160,12 @@ function LoginPage() {
               required
             />
             {fieldErrors.email ? (
-              <p className="auth-card__field-error" id="login-email-error">{fieldErrors.email}</p>
+              <p className="auth-card__field-error" id="login-email-error">{t(fieldErrors.email)}</p>
             ) : null}
           </div>
 
           <div className="auth-card__field">
-            <label className="auth-card__label" htmlFor="password">Senha</label>
+            <label className="auth-card__label" htmlFor="password">{t('password')}</label>
             <input
               id="password"
               className="auth-card__input"
@@ -218,20 +179,20 @@ function LoginPage() {
               required
             />
             {fieldErrors.password ? (
-              <p className="auth-card__field-error" id="login-password-error">{fieldErrors.password}</p>
+              <p className="auth-card__field-error" id="login-password-error">{t(fieldErrors.password)}</p>
             ) : null}
           </div>
 
           {errorMessage ? (
-            <p className="auth-card__error" role="alert">{errorMessage}</p>
+            <p className="auth-card__error" role="alert">{t(errorMessage)}</p>
           ) : null}
 
           <button
             type="submit"
             className="auth-card__submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isResending}
           >
-            {isSubmitting ? 'Entrando...' : 'Entrar'}
+            {isSubmitting ? t('signingIn') : t('signIn')}
           </button>
 
           {canResendConfirmation ? (
@@ -239,52 +200,38 @@ function LoginPage() {
               type="button"
               className="auth-card__submit auth-card__submit--secondary"
               onClick={handleResendConfirmation}
-              disabled={isResending}
+              disabled={isResending || isSubmitting}
             >
-              {isResending ? 'Reenviando...' : 'Reenviar confirmação'}
+              {isResending ? t('resending') : t('resendConfirmation')}
             </button>
           ) : null}
         </form>
 
         <p className="auth-card__switch">
-          Não tem conta?{' '}
+          {t('noAccount')}{' '}
           <Link
-            to={signupPath}
+            to={pathTo('/signup')}
             className="auth-card__link"
-            state={{ from: redirectTo, email: email.trim() }}
+            state={{ from, email: email.trim() }}
           >
-            Criar conta grátis
+            {t('createFree')}
           </Link>
         </p>
       </div>
 
       <aside className="auth-side">
         <div className="auth-side__content">
-          <p className="auth-side__eyebrow">Continuidade de produto</p>
+          <p className="auth-side__eyebrow">{t('loginSideLabel')}</p>
           <h2 className="auth-side__title">
-            Sua bancada pronta para o próximo refinamento.
+            {t('loginSideTitle')}
           </h2>
           <ul className="auth-side__list">
-            <li>Histórico preservado por usuário</li>
-            <li>Versões salvas por feature</li>
-            <li>Critérios de aceite consistentes</li>
-            <li>Saída estruturada para backlog e refinamento</li>
+            <li>{t('loginSideHistory')}</li>
+            <li>{t('loginSideVersions')}</li>
+            <li>{t('loginSideCriteria')}</li>
+            <li>{t('loginSideOutput')}</li>
           </ul>
-          <div className="auth-side__preview">
-            <p className="auth-side__preview-label">Última peça na bancada</p>
-            <div className="auth-side__preview-card">
-              <p className="auth-side__preview-story">
-                "Como <em>responsável pelo cadastro</em>, quero{' '}
-                <em>validar o domínio corporativo</em> para concluir o
-                registro com menos retrabalho."
-              </p>
-              <ul className="auth-side__preview-criteria">
-                <li>Bloquear avanço com domínio inválido</li>
-                <li>Exibir mensagem orientando a correção</li>
-                <li>Registrar falha para análise do funil</li>
-              </ul>
-            </div>
-          </div>
+          <AuthStoryExample label="loginExample" />
         </div>
       </aside>
     </div>

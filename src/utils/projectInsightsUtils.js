@@ -1,18 +1,26 @@
-export function formatProjectStoryCount(count) {
-  const numericCount = Number(count ?? 0)
-  const safeCount = Number.isFinite(numericCount) && numericCount > 0 ? numericCount : 0
-  return `${safeCount} ${safeCount === 1 ? 'história' : 'histórias'}`
+import portuguese from '../i18n/locales/pt-BR/projectInsights.json'
+
+export function defaultProjectInsightCopy(key, values = {}) {
+  const suffix = values.count === 1 ? '_one' : '_other'
+  const template = portuguese[key] ?? portuguese[key + suffix]
+  return template.replace(/\{\{(\w+)\}\}/g, (_, name) => String(values[name]))
 }
 
-export function getProjectInsightFreshness(item, currentStoryCount) {
+export function formatProjectStoryCount(count, t = defaultProjectInsightCopy) {
+  const numericCount = Number(count ?? 0)
+  const safeCount = Number.isFinite(numericCount) && numericCount > 0 ? numericCount : 0
+  return t('story_count', { count: safeCount })
+}
+
+export function getProjectInsightFreshness(item, currentStoryCount, t = defaultProjectInsightCopy) {
   const savedStoryCount = Number(item?.input_story_count ?? item?.analysis?.meta?.analyzed_stories ?? 0)
   const numericCurrentCount = Number(currentStoryCount ?? 0)
   const safeCurrentCount = Number.isFinite(numericCurrentCount) && numericCurrentCount > 0 ? numericCurrentCount : 0
 
   if (!item) {
     return {
-      label: 'Sem referência salva',
-      description: 'Gere ou reabra um diagnóstico para comparar com o projeto atual.',
+      label: t('no_saved_baseline'),
+      description: t('no_saved_baseline_detail'),
       tone: 'idle',
       savedStoryCount: 0,
       isOutdated: false,
@@ -21,8 +29,8 @@ export function getProjectInsightFreshness(item, currentStoryCount) {
 
   if (!Number.isFinite(savedStoryCount) || savedStoryCount <= 0) {
     return {
-      label: 'Base não registrada',
-      description: 'Este diagnóstico não informa quantas histórias foram usadas na análise.',
+      label: t('missing_baseline'),
+      description: t('missing_baseline_detail'),
       tone: 'attention',
       savedStoryCount: Number.isFinite(savedStoryCount) ? savedStoryCount : 0,
       isOutdated: true,
@@ -32,8 +40,8 @@ export function getProjectInsightFreshness(item, currentStoryCount) {
   if (safeCurrentCount > savedStoryCount) {
     const diff = safeCurrentCount - savedStoryCount
     return {
-      label: 'Desatualizado',
-      description: `${formatProjectStoryCount(diff)} ${diff === 1 ? 'nova' : 'novas'} após este diagnóstico.`,
+      label: t('stale'),
+      description: t('new_stories', { count: diff }),
       tone: 'attention',
       savedStoryCount,
       isOutdated: true,
@@ -42,8 +50,11 @@ export function getProjectInsightFreshness(item, currentStoryCount) {
 
   if (safeCurrentCount < savedStoryCount) {
     return {
-      label: 'Recorte mudou',
-      description: `Criado com ${formatProjectStoryCount(savedStoryCount)}; o projeto tem ${formatProjectStoryCount(safeCurrentCount)} agora.`,
+      label: t('scope_changed'),
+      description: t('scope_changed_detail', {
+        saved: formatProjectStoryCount(savedStoryCount, t),
+        current: formatProjectStoryCount(safeCurrentCount, t),
+      }),
       tone: 'tech',
       savedStoryCount,
       isOutdated: true,
@@ -51,11 +62,8 @@ export function getProjectInsightFreshness(item, currentStoryCount) {
   }
 
   return {
-    label: 'Atualizado',
-    description:
-      safeCurrentCount === 1
-        ? 'Base alinhada com a história atual do projeto.'
-        : `Base alinhada com as ${formatProjectStoryCount(safeCurrentCount)} atuais do projeto.`,
+    label: t('up_to_date'),
+    description: t('aligned', { count: safeCurrentCount }),
     tone: 'ready',
     savedStoryCount,
     isOutdated: false,
@@ -91,15 +99,15 @@ function formatMarkdownChecklist(items, fallback) {
   return normalizedItems.map((item) => `- [ ] ${item}`).join('\n')
 }
 
-function formatCandidateStoryLine(item) {
-  const candidate = asProjectText(item?.candidate, 'Candidata sem nome')
+function formatCandidateStoryLine(item, t) {
+  const candidate = asProjectText(item?.candidate, t('untitled_candidate'))
   const storyTitle = asProjectText(item?.story?.title, '')
 
   if (!storyTitle) {
-    return `- [ ] ${candidate} — vincular manualmente a uma história do projeto`
+    return `- [ ] ${t('candidate_to_link', { candidate })}`
   }
 
-  return `- [ ] ${storyTitle} — sugestão da IA: ${candidate}`
+  return `- [ ] ${t('linked_candidate', { story: storyTitle, candidate })}`
 }
 
 export function buildProjectActionPlanMarkdown({
@@ -108,37 +116,37 @@ export function buildProjectActionPlanMarkdown({
   candidateStories = [],
   freshness,
   storyCount = 0,
-}) {
+}, t = defaultProjectInsightCopy) {
   if (!analysis) return ''
 
-  const projectName = asProjectText(project?.name, 'Projeto')
-  const healthLabel = asProjectText(analysis.health_label, 'Em organização')
-  const freshnessLabel = freshness?.label ? `${freshness.label} — ${freshness.description}` : 'Sem referência de atualização.'
+  const projectName = asProjectText(project?.name, t('project'))
+  const healthLabel = asProjectText(analysis.health_label, t('in_progress'))
+  const freshnessLabel = freshness?.label ? `${freshness.label} — ${freshness.description}` : t('no_freshness')
   const candidates = Array.isArray(candidateStories) ? candidateStories : []
   const candidateLines =
     candidates.length > 0
-      ? candidates.map(formatCandidateStoryLine).join('\n')
-      : '- [ ] Nenhuma candidata conectada automaticamente pelo diagnóstico.'
+      ? candidates.map((item) => formatCandidateStoryLine(item, t)).join('\n')
+      : `- [ ] ${t('no_linked_candidates')}`
 
   return [
-    `# Plano de ação do projeto: ${projectName}`,
-    `**Saúde do projeto:** ${healthLabel}`,
-    `**Status do diagnóstico:** ${freshnessLabel}`,
-    `**Histórias no projeto:** ${formatProjectStoryCount(storyCount)}`,
+    `# ${t('plan_title', { project: projectName })}`,
+    `**${t('health')}:** ${healthLabel}`,
+    `**${t('diagnosis_status')}:** ${freshnessLabel}`,
+    `**${t('project_story_count')}:** ${formatProjectStoryCount(storyCount, t)}`,
     '',
-    '## Resumo executivo',
-    asProjectText(analysis.summary, 'Nenhum resumo gerado.'),
+    `## ${t('summary')}`,
+    asProjectText(analysis.summary, t('no_summary')),
     '',
-    '## Próximos passos',
-    formatMarkdownChecklist(analysis.next_actions, 'Definir a próxima ação com o time.'),
+    `## ${t('next_steps')}`,
+    formatMarkdownChecklist(analysis.next_actions, t('decide_next_step')),
     '',
-    '## Perguntas para refinamento',
-    formatMarkdownChecklist(analysis.refinement_questions, 'Validar dúvidas abertas com PM, PO e time técnico.'),
+    `## ${t('questions')}`,
+    formatMarkdownChecklist(analysis.refinement_questions, t('check_questions')),
     '',
-    '## Riscos para endereçar',
-    formatMarkdownChecklist(analysis.risks, 'Nenhum risco relevante foi destacado.'),
+    `## ${t('risks_to_address')}`,
+    formatMarkdownChecklist(analysis.risks, t('no_risks')),
     '',
-    '## Candidatas para estimativa',
+    `## ${t('candidates')}`,
     candidateLines,
   ].join('\n')
 }

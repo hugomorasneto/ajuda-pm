@@ -14,6 +14,20 @@ O comando baixa o conteúdo listado pelo servidor, incluindo arquivos ocultos qu
 
 ## Troca e restauração
 
+### Cópia com os acessos já configurados no GitHub Actions
+
+Quando os acessos FTPS estão disponíveis somente nos secrets do repositório, use o workflow manual `backup-production.yml`, exclusivamente na `main`. Gere localmente um par RSA de pelo menos 3072 bits e mantenha a chave privada fora do Git, em uma pasta privada do responsável pela publicação. Passe somente a chave pública PEM codificada em base64 ao campo `backup_public_key_base64`.
+
+O workflow cria a mesma cópia verificada, registra o hash do manifesto e publica apenas um arquivo cifrado com AES-256-GCM, cuja chave é protegida com RSA-OAEP/SHA-256. O artefato fica disponível por sete dias. Baixe-o e recupere a cópia local antes da publicação, conferindo novamente seu manifesto. Nenhum acesso FTPS ou arquivo do site em texto simples é incluído no artefato.
+
+```sh
+node scripts/protect-release-backup.mjs decrypt site-backup.pfgbackup site-backup.tar.gz CAMINHO_PRIVADO_DA_CHAVE
+```
+
+Extraia o arquivo recuperado em uma pasta privada nova e guarde a chave, o manifesto e os arquivos para a recuperação. A restauração continua usando `ftps-release.py restore`, com os acessos FTPS por canal privado. O workflow de publicação existente recebe o hash do manifesto verificado e compara novamente o destino antes da primeira escrita. A cópia e a publicação compartilham o mesmo grupo de exclusão mútua no GitHub Actions.
+
+### Publicar ou restaurar
+
 Guarde também o `dist/` exato da revisão candidata em armazenamento privado para recuperação. Antes de autorizar o disparo, confirme a disponibilidade de `MLSD`, a sobrescrita por renomeação na hospedagem e a configuração de cache. Suspenda outras publicações durante a operação. Se o conteúdo do destino divergir do manifesto aprovado, a execução para antes da primeira escrita.
 
 Se a troca falhar durante a execução, o script tenta restaurar os arquivos alterados e mantém os ativos das duas versões. Para recuperar de uma interrupção que impediu a restauração automática, use a cópia verificada e o mesmo build da tentativa, com o acesso FTPS autorizado para escrita.

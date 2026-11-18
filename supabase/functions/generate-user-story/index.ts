@@ -101,41 +101,55 @@ function parseModelList(value: string | null): string[] {
     .filter(Boolean)
 }
 
-type AuthenticatedRequestContext = {
-  userId: string
-  role: string
-}
+const uuidPattern = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i
 
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
-  const parts = token.split('.')
-  if (parts.length < 2) return null
-
-  try {
-    const normalized = parts[1].replace(/-/g, '+').replace(/_/g, '/')
-    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=')
-    const decoded = atob(padded)
-    return JSON.parse(decoded)
-  } catch {
-    return null
-  }
-}
-
-function getAuthenticatedRequestContext(req: Request): AuthenticatedRequestContext | null {
-  const authorization = req.headers.get('Authorization') ?? req.headers.get('authorization')
+async function getAuthenticatedUser(req: Request, url: string, anonKey: string) {
+  const authorization = req.headers.get('Authorization')
   if (!authorization?.startsWith('Bearer ')) return null
 
-  const token = authorization.slice('Bearer '.length).trim()
-  if (!token) return null
+  const response = await fetch(`${url}/auth/v1/user`, {
+    headers: { Authorization: authorization, apikey: anonKey },
+    signal: AbortSignal.timeout(5000),
+  })
+  if ([400, 401, 403, 404].includes(response.status)) return null
+  if (!response.ok) throw new Error('Auth service unavailable')
 
-  const payload = decodeJwtPayload(token)
-  const role = typeof payload?.role === 'string' ? payload.role : ''
-  const userId = typeof payload?.sub === 'string' ? payload.sub : ''
+  const user = await response.json()
+  return typeof user?.id === 'string' && uuidPattern.test(user.id) ? user.id : null
+}
 
-  if (role !== 'authenticated' || !userId) {
-    return null
-  }
+async function fingerprint(input: object) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(input)))
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
+}
 
-  return { userId, role }
+type GenerationStoreResult = {
+  code: string
+  attempt_id?: string
+  story?: Record<string, unknown>
+  usage?: Record<string, unknown>
+  generation_meta?: GenerationMeta
+}
+
+const storeErrorStatuses: Record<string, number> = {
+  QUOTA_EXHAUSTED: 403,
+  TARGET_UNAVAILABLE: 409,
+  GENERATION_IN_PROGRESS: 409,
+  REQUEST_CONFLICT: 409,
+  RESERVATION_EXPIRED: 409,
+  STORY_REMOVED: 409,
+}
+
+function storeError(result: GenerationStoreResult) {
+  return responseJson(
+    { code: result.code, usage: result.usage },
+    storeErrorStatuses[result.code] ?? 500,
+  )
+}
+
+function replayStory(result: GenerationStoreResult) {
+  const story = result.story ?? {}
+  return responseJson({ ...story, story, generation_meta: result.generation_meta })
 }
 
 function shouldTryNextModel(status: number, payload: unknown): boolean {
@@ -358,35 +372,83 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  let releaseReservation: (() => Promise<unknown>) | undefined
   try {
     if (req.method !== 'POST') {
       return responseJson({ error: 'Método não permitido.' }, 405)
     }
 
-    const authContext = getAuthenticatedRequestContext(req)
-    if (!authContext) {
+    const url = Deno.env.get('SUPABASE_URL')
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    if (!url || !anonKey || !serviceKey) {
+      return responseJson({ code: 'PROVIDER_UNAVAILABLE' }, 500)
+    }
+
+    const userId = await getAuthenticatedUser(req, url, anonKey)
+    if (!userId) {
       return responseJson({ error: 'Autenticação obrigatória para gerar user stories.' }, 401)
     }
 
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY')
     const geminiModelRaw = Deno.env.get('GEMINI_MODEL') ?? 'gemini-flash-latest'
-    const fallbackModelsRaw = Deno.env.get('GEMINI_FALLBACK_MODELS')
-
-    if (!geminiApiKey) {
-      return responseJson({ error: 'Variável GEMINI_API_KEY não configurada.' }, 500)
-    }
+    const fallbackModelsRaw = Deno.env.get('GEMINI_FALLBACK_MODELS') ?? null
 
     const payload = await req.json().catch(() => ({}))
+    const requestId = asString(payload?.request_id).toLowerCase()
+    const projectId = asString(payload?.project_id).toLowerCase() || null
+    const previousVersionId = asString(payload?.previous_version_id).toLowerCase() || null
     const inputContext = asString(payload?.input_context)
     const inputRequirements = asString(payload?.input_requirements)
     const inputAdjustment = asString(payload?.input_adjustment)
-
-    if (!inputContext || !inputRequirements) {
-      return responseJson(
-        { error: 'Campos obrigatórios: input_context e input_requirements.' },
-        400,
-      )
+    const input = {
+      input_context: inputContext,
+      input_requirements: inputRequirements,
+      input_adjustment: inputAdjustment,
+      regeneration_instruction: asString(payload?.regeneration_instruction) || null,
+      project_id: projectId,
+      previous_version_id: previousVersionId,
     }
+
+    if (!inputContext || typeof payload?.input_requirements !== 'string' ||
+      !uuidPattern.test(requestId) ||
+      (payload?.project_id != null && (!projectId || !uuidPattern.test(projectId))) ||
+      (payload?.previous_version_id != null && (!previousVersionId || !uuidPattern.test(previousVersionId)))) {
+      return responseJson({ code: 'INVALID_INPUT' }, 400)
+    }
+
+    const requestIdentity = { p_user_id: userId, p_request_id: requestId }
+    const rpc = async (name: string, args: object) => {
+      const response = await fetch(`${url}/rest/v1/rpc/${name}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+        },
+        body: JSON.stringify({ ...requestIdentity, ...args }),
+        signal: AbortSignal.timeout(8000),
+      })
+      if (!response.ok) throw new Error(`Database RPC ${name} failed (${response.status})`)
+      return response.status === 204 ? null : await response.json()
+    }
+
+    let reservation: GenerationStoreResult
+    try {
+      reservation = await rpc('reserve_story_generation', {
+        p_fingerprint: await fingerprint(input),
+        p_project_id: projectId,
+        p_previous_version_id: previousVersionId,
+      })
+    } catch {
+      return responseJson({ code: 'SAVE_FAILED' }, 503)
+    }
+    if (reservation.code === 'SAVED') return replayStory(reservation)
+    if (reservation.code !== 'RESERVED' || !reservation.attempt_id) return storeError(reservation)
+
+    const attempt = { p_attempt_id: reservation.attempt_id }
+    releaseReservation = () => rpc('release_story_generation', attempt)
+    if (!geminiApiKey) return responseJson({ code: 'PROVIDER_UNAVAILABLE' }, 500)
 
     const candidateModels = [
       normalizeModelName(geminiModelRaw),
@@ -400,7 +462,7 @@ Deno.serve(async (req) => {
     let usedModel = ''
     let success = false
     let lastErrorStatus = 502
-    let lastErrorPayload: unknown = null
+    const providerTimeout = AbortSignal.timeout(30000)
 
     for (const model of candidateModels) {
       usedModel = model
@@ -409,6 +471,7 @@ Deno.serve(async (req) => {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          signal: providerTimeout,
           body: JSON.stringify({
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
             generationConfig: {
@@ -426,44 +489,60 @@ Deno.serve(async (req) => {
           ?.candidates?.[0]?.content?.parts
           ?.map((part: { text?: string }) => part?.text ?? '')
           .join('\n')
-          .trim()
+          .trim() ?? ''
         success = true
         break
       }
 
       lastErrorStatus = geminiResponse.status
-      lastErrorPayload = geminiPayload
       if (!shouldTryNextModel(geminiResponse.status, geminiPayload)) {
         break
       }
     }
 
     if (!success) {
-      return responseJson(
-        {
-          error: `Falha ao chamar Gemini (model: ${usedModel}).`,
-          details: lastErrorPayload,
-          tried_models: candidateModels,
-        },
-        lastErrorStatus >= 400 ? lastErrorStatus : 502,
-      )
+      return lastErrorStatus === 429
+        ? responseJson({ code: 'RATE_LIMIT' }, 429)
+        : responseJson({ code: 'PROVIDER_UNAVAILABLE' }, 502)
     }
 
     if (!rawText) {
       return responseJson({ error: 'Gemini retornou resposta vazia.' }, 502)
     }
 
-    let parsed: unknown = null
-    try {
-      parsed = safeJsonParse(rawText)
-    } catch {
-      parsed = null
+    const parsed = safeJsonParse(rawText) as Partial<GenerationResponse> | null
+    if (!asString(parsed?.user_story)) {
+      return responseJson({ code: 'PROVIDER_UNAVAILABLE' }, 502)
     }
 
     const normalized = normalizeOutput(parsed, inputContext, inputRequirements, usedModel)
-    return responseJson(normalized)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Erro interno inesperado.'
-    return responseJson({ error: message }, 500)
+    const toNullableText = (items: string[]) => items.length ? items.join('\n') : null
+    const output = {
+      ...normalized,
+      acceptance_criteria: toNullableText(normalized.acceptance_criteria),
+      business_rules: toNullableText(normalized.business_rules),
+      gaps: toNullableText(normalized.gaps),
+      qa_checklist: toNullableText(normalized.qa_checklist),
+    }
+    let saved: GenerationStoreResult
+    try {
+      saved = await rpc('save_story_generation', { ...attempt, p_input: input, p_output: output })
+    } catch {
+      return responseJson({ code: 'SAVE_FAILED' }, 503)
+    }
+    if (saved.code !== 'SAVED' || !saved.story?.id) return storeError(saved)
+    releaseReservation = undefined
+    return responseJson({ ...normalized, story: saved.story })
+  } catch {
+    return responseJson({ code: 'PROVIDER_UNAVAILABLE' }, 502)
+  } finally {
+    if (releaseReservation) {
+      try {
+        await releaseReservation()
+      } catch {
+        // The reservation expires on its own if the database is unavailable.
+        console.error('Could not release story generation reservation')
+      }
+    }
   }
 })

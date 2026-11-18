@@ -1,8 +1,12 @@
+import { useCopy, useLanguage } from '../../i18n/context'
+import LocalizedLink from '../../i18n/LocalizedLink'
+import { localizeHref } from '../../i18n/routes'
 import { useEffect, useState } from 'react'
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC } from '../../constants/app'
 import { useAuth } from '../../hooks/useAuth'
 import { useLearningProgress } from '../../hooks/useLearningProgress'
+import { buildAuthPath, getAuthDestinationLanguage } from '../../utils/authRedirect'
 import { getUserProfile } from '../../services/userProfilesService'
 
 const TRAIL_SLUGS = ['fundamentos-produto-agil', 'user-stories-na-pratica', 'backlog-e-refinamento']
@@ -112,9 +116,10 @@ function IconSignOut() {
 }
 
 function SidebarNavLink({ item, onClose }) {
+  const { preview, language } = useLanguage()
   return (
     <NavLink
-      to={item.path}
+      to={preview ? localizeHref(item.path, language) : item.path}
       end={item.end}
       onClick={onClose}
       className={({ isActive }) =>
@@ -129,8 +134,12 @@ function SidebarNavLink({ item, onClose }) {
 }
 
 function WorkspaceSidebar({ isOpen, onClose }) {
+  const t = useCopy('navigation')
+  const authCopy = useCopy('auth')
+  const { preview, language, canSwitch } = useLanguage()
+  const [isSigningOut, setIsSigningOut] = useState(false)
+  const [signOutFailed, setSignOutFailed] = useState(false)
   const location = useLocation()
-  const navigate = useNavigate()
   const { user, signOut } = useAuth()
   const { completedSlugs } = useLearningProgress()
   const [canSeeAdmin, setCanSeeAdmin] = useState(false)
@@ -162,48 +171,48 @@ function WorkspaceSidebar({ isOpen, onClose }) {
 
   const baseToolNavItems = [
     {
-      label: 'Bancada',
-      description: 'Espaço para transformar briefing em user story.',
+      label: t('workspace'),
+      description: t('workspaceDesc'),
       path: '/tool',
       end: true,
       icon: <IconWorkspace />,
     },
     {
-      label: 'Peças forjadas',
-      description: 'Histórico das user stories geradas.',
+      label: t('history'),
+      description: t('shortHistoryDesc'),
       path: '/historico',
       end: true,
       icon: <IconHistory />,
     },
     {
-      label: 'Projetos',
-      description: 'Organize histórias por jornada quando fizer sentido.',
+      label: t('projects'),
+      description: t('projectsDesc'),
       path: '/projetos',
       end: true,
       icon: <IconProjects />,
     },
     {
-      label: 'Times',
-      description: 'Gerencie guildas e membros por projeto.',
+      label: t('teams'),
+      description: t('teamsDesc'),
       path: '/times',
       end: false,
       icon: <IconTeams />,
     },
     {
-      label: 'Roda da Fogueira',
-      description: 'Crie e acompanhe estimativas colaborativas.',
+      label: t('planning'),
+      description: t('planningDesc'),
       path: '/roda',
       end: true,
       icon: <IconCampfire />,
     },
   ]
   const toolNavItems = canSeeAdmin || isAdminPath
-    ? [...baseToolNavItems, { label: 'Administração', path: '/tool/admin', end: false, icon: <IconAdmin /> }]
+    ? [...baseToolNavItems, { label: t('admin'), path: '/tool/admin', end: false, icon: <IconAdmin /> }]
     : baseToolNavItems
 
   const academyNavItems = [
     {
-      label: 'Guias práticos',
+      label: t('guides'),
       path: '/aprender',
       end: false,
       icon: <IconAcademy />,
@@ -211,7 +220,7 @@ function WorkspaceSidebar({ isOpen, onClose }) {
       markerClass: 'workspace-sidebar__link-marker--academy',
     },
     {
-      label: 'Stories na prática',
+      label: t('storiesGuide'),
       path: '/aprender/user-stories-na-pratica',
       end: true,
       icon: <IconStoryGuide />,
@@ -221,18 +230,29 @@ function WorkspaceSidebar({ isOpen, onClose }) {
   ]
 
   async function handleSignOut() {
-    await signOut()
-    onClose()
-    navigate('/login', {
-      replace: true,
-      state: { message: 'Você saiu da conta.' },
-    })
+    if (isSigningOut) return
+    setIsSigningOut(true)
+    setSignOutFailed(false)
+    try {
+      const locale = preview
+        ? getAuthDestinationLanguage(location.pathname + location.search) ?? (canSwitch ? language : undefined)
+        : undefined
+      const { error } = await signOut({
+        path: buildAuthPath('/login', undefined, locale),
+        locationKey: location.key,
+      })
+      if (error) setSignOutFailed(true)
+    } catch {
+      setSignOutFailed(true)
+    } finally {
+      setIsSigningOut(false)
+    }
   }
 
   return (
     <aside className={`workspace-sidebar ${isOpen ? 'workspace-sidebar--open' : ''}`}>
       <div className="workspace-sidebar__header">
-        <Link
+        <LocalizedLink
           to="/tool"
           className="brand-logo workspace-sidebar__brand"
           onClick={onClose}
@@ -243,14 +263,14 @@ function WorkspaceSidebar({ isOpen, onClose }) {
             alt={APP_NAME}
             className="brand-logo__image brand-logo--sidebar"
           />
-        </Link>
+        </LocalizedLink>
 
         <div className="workspace-sidebar__header-actions">
           <button
             type="button"
             className="workspace-sidebar__close"
             onClick={onClose}
-            aria-label="Fechar navegação"
+            aria-label={t('closeNav')}
           >
             <IconClose />
           </button>
@@ -258,22 +278,22 @@ function WorkspaceSidebar({ isOpen, onClose }) {
       </div>
 
       <div className="workspace-sidebar__summary">
-        <p className="workspace-sidebar__eyebrow">FORJA</p>
+        <p className="workspace-sidebar__eyebrow">{t('forge')}</p>
         <p className="workspace-sidebar__summary-copy">
-          Bancada para transformar briefing em user story pronta para inspeção.
+          {t('workspaceSummary')}
         </p>
       </div>
 
-      <nav className="workspace-sidebar__nav" aria-label="Navegação da bancada">
-        <p className="workspace-sidebar__section-label">Ferramentas</p>
+      <nav className="workspace-sidebar__nav" aria-label={t('workspaceNav')}>
+        <p className="workspace-sidebar__section-label">{t('tools')}</p>
         {toolNavItems.map((item) => (
           <SidebarNavLink key={item.path} item={item} onClose={onClose} />
         ))}
       </nav>
 
-      <nav className="workspace-sidebar__nav" aria-label="Campo de Treino ProdForge">
+      <nav className="workspace-sidebar__nav" aria-label={t('trainingNav')}>
         <div className="workspace-sidebar__section-header">
-          <p className="workspace-sidebar__section-label">Campo de Treino</p>
+          <p className="workspace-sidebar__section-label">{t('training')}</p>
           {completedCount > 0 ? (
             <span className="workspace-sidebar__progress-pill">
               {completedCount}/{totalCount}
@@ -281,7 +301,7 @@ function WorkspaceSidebar({ isOpen, onClose }) {
           ) : null}
         </div>
         <p className="workspace-sidebar__section-description">
-          Guias práticos para aprender e aplicar na Bancada.
+          {t('trainingDescription')}
         </p>
 
         {academyNavItems.map((item) => (
@@ -293,24 +313,25 @@ function WorkspaceSidebar({ isOpen, onClose }) {
         {user ? (
           <div className="workspace-sidebar__account">
             <div className="workspace-sidebar__account-meta">
-              <p className="workspace-sidebar__account-label">Conta ativa</p>
+              <p className="workspace-sidebar__account-label">{t('activeAccount')}</p>
               <p className="workspace-sidebar__account-email">{user.email}</p>
             </div>
-            <button type="button" className="workspace-sidebar__signout" onClick={handleSignOut}>
+            <button type="button" className="workspace-sidebar__signout" onClick={handleSignOut} disabled={isSigningOut}>
               <IconSignOut />
-              <span>Sair</span>
+              <span>{isSigningOut ? authCopy('signingOut') : t('signOut')}</span>
             </button>
+            {signOutFailed && <p role="alert">{authCopy('signOutFailed')}</p>}
           </div>
         ) : (
           <div className="workspace-sidebar__account workspace-sidebar__account--guest">
-            <p className="workspace-sidebar__account-label">Acesso</p>
+            <p className="workspace-sidebar__account-label">{t('access')}</p>
             <div className="workspace-sidebar__account-links">
-              <Link to="/login" onClick={onClose}>
-                Entrar
-              </Link>
-              <Link to="/signup" onClick={onClose}>
-                Criar conta
-              </Link>
+              <LocalizedLink to="/login" onClick={onClose}>
+                {t('signIn')}
+              </LocalizedLink>
+              <LocalizedLink to="/signup" onClick={onClose}>
+                {t('register')}
+              </LocalizedLink>
             </div>
           </div>
         )}

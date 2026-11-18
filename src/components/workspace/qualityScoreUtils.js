@@ -1,3 +1,5 @@
+import { defaultStoryFormat } from '../../utils/storyFormat'
+
 export function getFallbackScore(story) {
   if (!story) return 0
 
@@ -14,26 +16,26 @@ export function getFallbackScore(story) {
   return Math.min(100, Math.max(score, story.user_story ? 58 : 0))
 }
 
-export function getScoreMeta(score) {
+export function getScoreMeta(score, t = defaultStoryFormat) {
   if (score >= 85) {
     return {
-      label: 'Alta clareza',
-      note: 'Pronta para inspeção e encaminhamento.',
+      label: t('score_good'),
+      note: t('score_good_note'),
       toneClass: 'quality-score--good',
     }
   }
 
   if (score >= 70) {
     return {
-      label: 'Boa peça',
-      note: 'Utilizável. Revise trincas e teste de resistência.',
+      label: t('score_mid'),
+      note: t('score_mid_note'),
       toneClass: 'quality-score--mid',
     }
   }
 
   return {
-    label: 'Revisar',
-    note: 'Consolide os pontos antes de compartilhar.',
+    label: t('score_low'),
+    note: t('score_low_note'),
     toneClass: 'quality-score--low',
   }
 }

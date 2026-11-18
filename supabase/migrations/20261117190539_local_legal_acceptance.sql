@@ -1,0 +1,445 @@
+begin;
+create extension if not exists pgcrypto;
+
+create table public.local_legal_releases (
+  version text primary key,
+  content text not null,
+  sha256 text not null check (sha256 = encode(digest(content, 'sha256'), 'hex')),
+  is_current boolean not null default false,
+  created_at timestamptz not null default clock_timestamp(),
+  check ((content::jsonb)->>'version' = version),
+  check ((content::jsonb)->>'scope' = 'local-preview')
+);
+create unique index local_legal_one_current on public.local_legal_releases (is_current) where is_current;
+
+create table public.local_legal_acceptances (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  version text not null references public.local_legal_releases(version),
+  language text not null check (language in ('pt-BR', 'en')),
+  accepted_at timestamptz not null default clock_timestamp(),
+  source text not null check (source in ('signup', 'session')),
+  primary key (user_id, version)
+);
+
+alter table public.local_legal_releases enable row level security;
+alter table public.local_legal_acceptances enable row level security;
+revoke all on public.local_legal_releases, public.local_legal_acceptances from public, anon, authenticated;
+grant select, insert, update on public.local_legal_releases to service_role;
+grant select on public.local_legal_acceptances to service_role;
+
+create function public.protect_local_legal_release()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  if new.version is distinct from old.version or new.content is distinct from old.content
+    or new.sha256 is distinct from old.sha256 or new.created_at is distinct from old.created_at then
+    raise exception 'Legal release content is immutable' using errcode = '22023';
+  end if;
+  return new;
+end;
+$$;
+create trigger local_legal_release_immutable before update on public.local_legal_releases
+for each row execute function public.protect_local_legal_release();
+
+create function public.record_local_legal_acceptance(
+  p_user_id uuid, p_version text, p_sha256 text, p_language text, p_source text
+)
+returns jsonb language plpgsql set search_path = '' as $$
+declare
+  v_release public.local_legal_releases%rowtype;
+  v_receipt public.local_legal_acceptances%rowtype;
+begin
+  if p_language is null or p_language not in ('pt-BR', 'en') then
+    raise exception 'Invalid legal document language' using errcode = '22023';
+  end if;
+  select * into v_release from public.local_legal_releases where is_current for share;
+  if not found or v_release.version is distinct from p_version or v_release.sha256 is distinct from p_sha256 then
+    raise exception 'Legal release mismatch' using errcode = '22023';
+  end if;
+
+  insert into public.local_legal_acceptances (user_id, version, language, source)
+  values (p_user_id, v_release.version, p_language, p_source)
+  on conflict (user_id, version) do nothing;
+  select * into v_receipt from public.local_legal_acceptances
+  where user_id = p_user_id and version = v_release.version;
+  return jsonb_build_object(
+    'version', v_release.version, 'sha256', v_release.sha256, 'accepted', true,
+    'accepted_at', v_receipt.accepted_at, 'language', v_receipt.language
+  );
+end;
+$$;
+
+create function public.accept_local_legal_terms(p_version text, p_sha256 text, p_language text)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then raise exception 'Authentication required' using errcode = '42501'; end if;
+  return public.record_local_legal_acceptance(auth.uid(), p_version, p_sha256, p_language, 'session');
+end;
+$$;
+
+create function public.get_local_legal_status()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare
+  v_result jsonb;
+begin
+  if auth.uid() is null then raise exception 'Authentication required' using errcode = '42501'; end if;
+  select jsonb_build_object(
+    'version', release.version, 'sha256', release.sha256,
+    'accepted', receipt.user_id is not null, 'accepted_at', receipt.accepted_at,
+    'language', receipt.language
+  ) into v_result
+  from public.local_legal_releases release
+  left join public.local_legal_acceptances receipt
+    on receipt.version = release.version and receipt.user_id = auth.uid()
+  where release.is_current;
+  if v_result is null then raise exception 'Legal release unavailable' using errcode = '22023'; end if;
+  return v_result;
+end;
+$$;
+
+create function public.get_local_legal_release(p_version text)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object('version', version, 'sha256', sha256, 'content', content::jsonb)
+  from public.local_legal_releases where version = p_version;
+$$;
+
+-- Metadata is an assertion made in the signup request. Only this INSERT
+-- trigger copies a validated assertion into the server-owned receipt.
+-- Later edits to user_metadata never create or alter an acceptance.
+create function public.record_local_legal_signup()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare
+  v_claim jsonb := new.raw_user_meta_data->'prodforge_legal_acceptance';
+begin
+  if v_claim is null then return new; end if;
+  perform public.record_local_legal_acceptance(
+    new.id, v_claim->>'version', v_claim->>'sha256', v_claim->>'language', 'signup'
+  );
+  return new;
+end;
+$$;
+create trigger on_auth_user_created_local_legal
+after insert on auth.users for each row execute function public.record_local_legal_signup();
+
+revoke all on function public.protect_local_legal_release(),
+  public.record_local_legal_acceptance(uuid, text, text, text, text),
+  public.record_local_legal_signup()
+from public, anon, authenticated, service_role;
+revoke all on function public.accept_local_legal_terms(text, text, text),
+  public.get_local_legal_status(), public.get_local_legal_release(text)
+from public, anon;
+grant execute on function public.accept_local_legal_terms(text, text, text),
+  public.get_local_legal_status() to authenticated;
+grant execute on function public.get_local_legal_release(text) to anon, authenticated;
+
+insert into public.local_legal_releases (version, content, sha256, is_current)
+values (
+  '2026-11-17-preview.1',
+  replace($prodforge_legal${
+  "documents": {
+    "en": {
+      "privacyPolicyPage": {
+        "privacyPolicyPage_a_politica_foi_escrita_em": "Version completed for local validation. It will take effect in the published service on the date this version is authorized for publication.",
+        "privacyPolicyPage_a_qualidade_das_respostas_depende": "Response quality depends on the context submitted. Review all generated content before using it in a backlog, documentation, Jira, discovery, refinement, or stakeholder communications.",
+        "privacyPolicyPage_adotamos_medidas_tecnicas_e_organizacionais": "We use technical and organizational measures appropriate to the product's stage to protect information against unauthorized access, loss, misuse, alteration, or improper disclosure.",
+        "privacyPolicyPage_armazenamento_em_banco_de_dados": "Database storage for accounts, history, and projects",
+        "privacyPolicyPage_armazenamento_em_banco_de_dados_26": "Database storage",
+        "privacyPolicyPage_atualizacoes_desta_politica": "Updates to this policy",
+        "privacyPolicyPage_autoridades_publicas_quando_houver_obrigacao": "Public authorities where required by law, a valid order, or the need to protect rights, security, and product integrity.",
+        "privacyPolicyPage_briefings_historias_de_usuario_e": "Briefs, user stories, and acceptance criteria entered in the workspace",
+        "privacyPolicyPage_como_usamos_os_dados": "How we use data",
+        "privacyPolicyPage_compartilhamento_de_dados": "Data sharing",
+        "privacyPolicyPage_contato": "Contact",
+        "privacyPolicyPage_conteudos_inseridos_nos_formularios_como": "Content entered in forms, such as briefs, business problems, rules, constraints, user stories, acceptance criteria, technical notes, and project context.",
+        "privacyPolicyPage_conteudos_salvos_na_bancada_versoes": "You can request deletion of your data through the contact channel listed in this Policy. In our response, we will explain what we deleted, what needs to be kept, why, and for how long.",
+        "privacyPolicyPage_cookies_e_tecnologias_similares": "Cookies and similar technologies",
+        "privacyPolicyPage_cookies_essenciais_analiticos_e_categoria": "Essential technologies and optional analytics, with marketing disabled",
+        "privacyPolicyPage_cookies_essenciais_sao_necessarios_para": "We use essential technologies to keep you signed in, protect access, and make the service work. Analytics is optional. Marketing cookies are disabled. If we enable this category, we will ask for a new choice before using it.",
+        "privacyPolicyPage_criar_e_manter_sua_conta": "Create and maintain your account, authenticate access, and enable workspace features.",
+        "privacyPolicyPage_dados_de_cadastro_e_autenticacao": "Registration and authentication data, such as your name, email, password protected by the authentication provider, plan, role, and account identifiers.",
+        "privacyPolicyPage_dados_de_comunicacao_como_mensagens": "Communication data, such as messages submitted through forms, waitlist registrations, and requests made by email.",
+        "privacyPolicyPage_dados_de_conta_autenticacao_e": "Account, authentication, and platform usage data",
+        "privacyPolicyPage_dados_de_conta_projetos_preferencias": "Account data, projects, preferences, briefs, generated stories, versions, history, and operational events may be stored in databases and infrastructure services used to operate ProdForge.",
+        "privacyPolicyPage_dados_inseridos_pelo_usuario_podem": "When you request AI generation or analysis, we send the AI provider the context needed to produce a response, such as the brief or project information included in your request.",
+        "privacyPolicyPage_dados_tecnicos_de_navegacao_como": "Technical browsing data, such as pages visited, interaction events, device, browser, approximate IP address, date, time, and records needed for security and diagnostics.",
+        "privacyPolicyPage_direitos_do_titular_conforme_a": "Your rights under Brazil's General Data Protection Law (LGPD)",
+        "privacyPolicyPage_entender_uso_desempenho_erros_e": "Use aggregate metrics on usage, performance, and errors, calculated from authorized analytics events, to improve the product.",
+        "privacyPolicyPage_enviar_comunicacoes_relacionadas_a_conta": "Send necessary communications about your account and respond to your requests. Send Pro updates when you ask to receive them.",
+        "privacyPolicyPage_essas_medidas_podem_incluir_autenticacao": "These measures may include authentication, access controls, audit logs, permission policies, isolation by user or project, error monitoring, and established infrastructure providers. No platform can promise absolute security.",
+        "privacyPolicyPage_esse_armazenamento_permite_recuperar_conteudo": "This storage supports content recovery, workspace continuity, access controls, troubleshooting, abuse prevention, and responding to user requests. Internal access must be limited to what is needed for operations, security, and support.",
+        "privacyPolicyPage_esta_pagina_descreve_como_o": "This page explains how ProdForge collects, uses, stores, and protects data when transforming briefs, rules, and product context into user stories, acceptance criteria, technical insights, and improvement suggestions.",
+        "privacyPolicyPage_esta_politica_de_privacidade_descreve": "This Privacy Policy describes how ProdForge collects, uses, stores, and protects data when you use the website, public area, workspace, forms, and related features.",
+        "privacyPolicyPage_esta_politica_pode_ser_atualizada": "We may update this policy to reflect changes to the product, providers, features, security practices, analytics, AI, monetization, or applicable legal requirements.",
+        "privacyPolicyPage_falar_sobre_dados": "Contact us about data",
+        "privacyPolicyPage_ferramentas_de_pagamento_faturamento_prevencao": "Payment, billing, fraud prevention, and plan management tools when paid features are available.",
+        "privacyPolicyPage_gerar_revisar_salvar_versionar_e": "Generate, review, save, version, and organize user stories, acceptance criteria, technical insights, and improvement suggestions.",
+        "privacyPolicyPage_gerenciar_limites_de_uso_planos": "Manage usage limits, plans, and paid or experimental features when applicable.",
+        "privacyPolicyPage_historico_de_uso_versoes_geradas": "Usage history, generated versions, generation counts and account limits, preferences, projects, invited members, and actions taken in the workspace.",
+        "privacyPolicyPage_informacoes_necessarias_para_eventual_monetizacao": "Information needed for potential monetization, subscriptions, usage limits, billing, fraud prevention, and plan management when those features are available.",
+        "privacyPolicyPage_mantemos_dados_pelo_tempo_necessario": "We keep the data needed for your account and requested features while there is a purpose for that processing, subject to deletion requests and legal grounds for retention. If any data needs to be kept after a deletion request, we will explain the purpose and applicable period or criteria. Data sent to service providers is also subject to their processing and retention terms.",
+        "privacyPolicyPage_nao_usamos_dados_pessoais_como": "We do not sell databases of personal data to third parties. We share data for the purposes described in this Policy and to the extent necessary for each purpose.",
+        "privacyPolicyPage_nesta_politica": "In this policy",
+        "privacyPolicyPage_nos_termos_da_lgpd_voce": "Under Brazil's General Data Protection Law (LGPD), you may ask us to confirm whether we process your data and request access or corrections. Where the law provides for it, you may also request anonymization, blocking or deletion, data portability, and information about whom we shared your data with.",
+        "privacyPolicyPage_o_prodforge_e_uma_plataforma": "Hugo Cruz da Silva Moraes Neto is responsible for ProdForge and for processing the personal data needed to operate the service. For privacy questions and requests, contact contato@techtupa.com.br.",
+        "privacyPolicyPage_para_duvidas_solicitacoes_ou_comentarios": "For questions, requests, or comments about privacy and use of data in ProdForge, use the email address below.",
+        "privacyPolicyPage_para_exercer_esses_direitos_envie": "You may ask whether you can decline consent and what happens if you do, withdraw your consent, and request deletion of data processed on that basis, subject to legal exceptions. Where applicable, you may object to processing that violates the LGPD and ask for a review of decisions made solely by automated means that affect your interests. You may also file a petition with Brazil's data protection authority (ANPD). To exercise your rights, send a request through the contact channel listed in this policy. We may ask for information needed to verify your identity.",
+        "privacyPolicyPage_podemos_coletar_dados_informados_diretamente": "We may collect information you provide, data generated by product use, and technical data needed to keep the platform operating securely.",
+        "privacyPolicyPage_podemos_usar_cookies_armazenamento_local": "We may use cookies, local storage, technical identifiers, analytics events, and similar technologies for authentication, security, session management, usage measurement, and product improvements.",
+        "privacyPolicyPage_politica_de_privacidade": "Privacy Policy",
+        "privacyPolicyPage_privacidade_e_dados": "Privacy and data",
+        "privacyPolicyPage_processamento_por_servicos_de_ia": "Processing by AI services to support artifact generation",
+        "privacyPolicyPage_proteger_a_plataforma_contra_abuso": "Protect the platform against abuse, fraud, unauthorized access, operational failures, and use that harms other users.",
+        "privacyPolicyPage_provedores_de_infraestrutura_hospedagem_banco": "Infrastructure and hosting services, Supabase for authentication and the database, and the email service configured to forward messages and invitations.",
+        "privacyPolicyPage_quais_dados_podemos_coletar": "What data we may collect",
+        "privacyPolicyPage_quando_houver_mudancas_relevantes_poderemos": "We will announce significant changes to this Policy in the platform. The version identifier lets you look up the content presented when you accepted the Terms. Analytics choices are managed separately in Privacy Preferences.",
+        "privacyPolicyPage_quem_somos": "Who we are",
+        "privacyPolicyPage_resumo_da_politica": "Policy summary",
+        "privacyPolicyPage_retencao_dos_dados": "Data retention",
+        "privacyPolicyPage_secoes_da_politica_de_privacidade": "Privacy Policy sections",
+        "privacyPolicyPage_seguranca_das_informacoes": "Information security",
+        "privacyPolicyPage_sempre_que_possivel_remova_ou": "Whenever possible, remove or anonymize personal information before submitting a brief for AI processing.",
+        "privacyPolicyPage_servicos_de_ia_usados_para": "Google's Gemini API to produce the generations and analyses you request. The context sent may include your brief, requirements, and project information needed to produce the response.",
+        "privacyPolicyPage_ultima_atualizacao": "Local version",
+        "privacyPolicyPage_usamos_os_dados_para_entregar": "We use data to provide the core ProdForge experience, keep the platform secure, and improve product quality.",
+        "privacyPolicyPage_uso_de_inteligencia_artificial": "Use of artificial intelligence",
+        "privacyPolicyPage_vigencia_em_revisao": "2026-11-17-preview.1",
+        "privacyPolicyPage_voce_nao_deve_inserir_informacoes": "Do not enter sensitive or confidential information, trade secrets, credentials, restricted financial data, health data, data about minors, or third-party personal data without authorization.",
+        "privacyPolicyPage_voce_pode_aceitar_todos_os": "On the Privacy Preferences page, you can accept or reject optional technologies or save preferences by category. Your browser stores your choice, and you can change it at any time.",
+        "privacyPolicyPage_voltar_para_a_pagina_inicial": "Back to the homepage"
+      },
+      "termsOfUsePage": {
+        "termsOfUsePage_a_decisao_final_sobre_uso": "The user always makes the final decision to use, adapt, discard, or validate generated content.",
+        "termsOfUsePage_a_ia_pode_gerar_respostas": "AI may sometimes give incomplete, inaccurate, outdated, inconsistent, or unsuitable responses, particularly when the context is ambiguous, insufficient, or sensitive.",
+        "termsOfUsePage_a_marca_prodforge_identidade_visual": "The MIT License governs use of the code released under it. The ProdForge brand, visual identity, editorial materials, and other reserved items listed in the license scope are subject to the permissions that apply to each item.",
+        "termsOfUsePage_a_plataforma_ajuda_a_estruturar": "The platform helps structure product work, but does not replace discovery, prioritization, stakeholder alignment, technical review, business validation, or the team's professional judgment.",
+        "termsOfUsePage_a_plataforma_pode_passar_por": "The platform may undergo improvements, adjustments, maintenance, temporary outages, technical changes, provider limitations, external failures, or feature changes.",
+        "termsOfUsePage_a_versao_publicada_nesta_pagina": "If the language versions differ, the Brazilian Portuguese version is the reference, subject to your rights under applicable law. Specific features may have additional rules when they become available.",
+        "termsOfUsePage_abrir_preferencias_de_privacidade": "Open Privacy Preferences",
+        "termsOfUsePage_aceitacao_e_escopo": "Acceptance and scope",
+        "termsOfUsePage_ao_acessar_ou_usar_o": "By creating an account or accepting a new version of these Terms, you agree to the conditions presented. You can read the Terms and Privacy Policy through the links provided before accepting.",
+        "termsOfUsePage_ao_inserir_conteudo_no_prodforge": "By entering content in ProdForge, you state that you have the right or permission to use it and that it does not violate third-party rights, confidentiality, contracts, internal policies, or applicable laws.",
+        "termsOfUsePage_as_escolhas_de_privacidade_nao": "Privacy choices do not authorize misuse of the platform or remove your responsibility to review information you enter into ProdForge.",
+        "termsOfUsePage_as_respostas_geradas_por_ia": "AI-generated responses are suggestions. Review them critically before using them in your work, publishing them, adding them to Jira, refining them with stakeholders, handing them off to engineering or QA, or using them to make decisions.",
+        "termsOfUsePage_caso_identifique_acesso_indevido_suspeita": "If you notice unauthorized access, suspect a data leak, or discover unauthorized use of your account, use the contact channel listed in these terms.",
+        "termsOfUsePage_condutas_proibidas": "Prohibited conduct",
+        "termsOfUsePage_conta_e_acesso": "Account and access",
+        "termsOfUsePage_contato": "Contact",
+        "termsOfUsePage_conteudos_inseridos_pelo_usuario": "Content provided by users",
+        "termsOfUsePage_disponibilidade_e_mudancas": "Availability and changes",
+        "termsOfUsePage_esses_conteudos_podem_ser_armazenados": "We may store this content to maintain your history, recover context, troubleshoot issues, and prevent abuse, as described in the Privacy Policy.",
+        "termsOfUsePage_estes_termos_de_uso_regulam": "Hugo Cruz da Silva Moraes Neto is responsible for the hosted ProdForge service. These Terms of Use govern access to and use of the website, registration, authentication, workspace, AI features, history, projects, and learning materials. For questions and requests, contact contato@techtupa.com.br.",
+        "termsOfUsePage_estes_termos_foram_escritos_em": "Version completed for local validation. It will take effect in the published service on the date this version is authorized for publication.",
+        "termsOfUsePage_estes_termos_regulam_o_uso": "These terms govern use of ProdForge and explain how to use the platform, workspace, AI features, free allowances, and paid features responsibly.",
+        "termsOfUsePage_falar_sobre_os_termos": "Contact us about the terms",
+        "termsOfUsePage_inserir_conteudo_ilegal_discriminatorio_ofensivo": "Entering unlawful, discriminatory, offensive, violent, fraudulent, deceptive, or unauthorized confidential content, or content that violates third-party rights.",
+        "termsOfUsePage_ler_a_politica_de_privacidade": "Read the Privacy Policy",
+        "termsOfUsePage_links_de": "Links for {{p1}}",
+        "termsOfUsePage_na_medida_permitida_pela_legislacao": "To the extent permitted by applicable law, ProdForge is not responsible for business decisions, implementation failures, professional use without review, loss of context, indirect outcomes, temporary unavailability, or misuse of the platform.",
+        "termsOfUsePage_nao_insira_dados_confidenciais_segredos": "Do not enter confidential data, trade secrets, credentials, restricted strategic information, sensitive personal data, or third-party information without proper authorization.",
+        "termsOfUsePage_nestes_termos": "In these terms",
+        "termsOfUsePage_o_acesso_ao_prodforge_pode": "Access to ProdForge may be restricted, suspended, changed, or terminated in the event of abuse, fraud, attempts to bypass limits, misuse, security risks, a violation of these terms, or a legal obligation.",
+        "termsOfUsePage_o_prodforge_busca_entregar_uma": "ProdForge aims to provide a useful, secure, and consistent experience, but does not guarantee that generated content will be flawless, complete, accurate, sufficient, or appropriate in every context.",
+        "termsOfUsePage_o_prodforge_e_uma_plataforma": "ProdForge is an AI-assisted platform for creating, refining, and organizing user stories.",
+        "termsOfUsePage_o_prodforge_nao_substitui_julgamento": "ProdForge does not replace professional judgment, discovery, stakeholder alignment, user validation, technical or legal review, QA review, or your team's internal governance.",
+        "termsOfUsePage_o_prodforge_pode_alterar_estes": "ProdForge may update these terms in the future to reflect changes to the product, features, plans, providers, integrations, security practices, AI use, monetization, or legal requirements.",
+        "termsOfUsePage_o_prodforge_pode_oferecer_plano": "The Free plan includes a default allowance of 10 successful, saved generations per account, with no monthly reset. Each saved generation or regeneration uses one unit. Manual edits, failed attempts, and project diagnostics are outside this allowance. Deleting a saved story does not restore your allowance. Check your account's limit and remaining allowance in the workspace.",
+        "termsOfUsePage_o_prodforge_pode_usar_servicos": "ProdForge may use AI services to turn briefs, rules, business problems, and technical context into suggested user stories, acceptance criteria, refinement questions, technical insights, and improvements.",
+        "termsOfUsePage_o_produto_foi_pensado_para": "ProdForge is intended for professional use by people aged 18 or older, including PMs, POs, and product, development, and QA teams.",
+        "termsOfUsePage_o_que_e_o_prodforge": "What ProdForge is",
+        "termsOfUsePage_o_tratamento_de_dados_pessoais": "The ProdForge Privacy Policy describes how we handle personal and account data, submitted content, history, cookies, analytics, and preferences.",
+        "termsOfUsePage_o_uso_deve_respeitar_leis": "Use must comply with applicable laws, third-party rights, security best practices, and the platform's technical limitations.",
+        "termsOfUsePage_o_uso_profissional_de_historias": "You are responsible for professional use of generated user stories, acceptance criteria, technical insights, refinement questions, documents, and other artifacts.",
+        "termsOfUsePage_para_duvidas_solicitacoes_ou_comentarios": "For questions, requests, or comments about these Terms of Use, use the email address below.",
+        "termsOfUsePage_para_proteger_a_experiencia_de": "These rules apply to use of the hosted ProdForge service.",
+        "termsOfUsePage_para_usar_algumas_funcionalidades_voce": "Some features may require you to create an account and provide information such as your name, email address, and password. You are responsible for keeping that information accurate, current, and under your control.",
+        "termsOfUsePage_planos_limites_beneficios_precos_regras": "Plans, limits, benefits, prices, usage rules, and features may change as the product evolves and in response to operational needs, provider costs, security, and ProdForge's strategic direction.",
+        "termsOfUsePage_planos_limites_e_recursos": "Plans, limits, and features",
+        "termsOfUsePage_planos_limites_privacidade_e_canais": "Plans, limits, privacy, and official contact channels",
+        "termsOfUsePage_plataforma_de_apoio_para_historias": "An AI-assisted platform for creating user stories",
+        "termsOfUsePage_privacidade_cookies_e_preferencias": "Privacy, cookies, and preferences",
+        "termsOfUsePage_propriedade_intelectual": "Intellectual property",
+        "termsOfUsePage_proteja_suas_credenciais_e_nao": "Protect your credentials and do not share access with unauthorized people. Activities performed through your account may be attributed to you.",
+        "termsOfUsePage_quando_houver_mudancas_relevantes_poderemos": "We will announce significant changes to the Terms in the platform. When a new acceptance is required, the new version will be presented the next time you access the signed-in area.",
+        "termsOfUsePage_recursos_pagos_podem_depender_de": "If a paid offer becomes available, we will show its price, features, limits, and terms before you subscribe.",
+        "termsOfUsePage_remover_avisos_mascarar_identidade_simular": "Removing notices, concealing identity, misrepresenting a relationship with ProdForge, or using the brand without permission.",
+        "termsOfUsePage_responsabilidades_e_limitacoes": "Responsibilities and limitations",
+        "termsOfUsePage_respostas_da_ia_como_sugestoes": "AI responses as suggestions that require human review",
+        "termsOfUsePage_resumo_dos_termos": "Terms summary",
+        "termsOfUsePage_secoes_dos_termos_de_uso": "Terms of Use sections",
+        "termsOfUsePage_tentar_acessar_contas_dados_projetos": "Attempting to access accounts, data, projects, history, or administrative areas without authorization.",
+        "termsOfUsePage_termos_da_bancada": "Workspace terms",
+        "termsOfUsePage_termos_de_uso": "Terms of Use",
+        "termsOfUsePage_trabalhamos_para_manter_o_prodforge": "We work to keep ProdForge available and functional, but do not promise uninterrupted availability, error-free operation, or perfect functionality on every device, browser, network, or use case.",
+        "termsOfUsePage_ultima_atualizacao": "Local version",
+        "termsOfUsePage_usar_a_plataforma_para_gerar": "Using the platform to generate spam, scams, malware, harmful instructions, harassment, privacy violations, or any unlawful activity.",
+        "termsOfUsePage_usar_automacoes_abusivas_engenharia_reversa": "Using abusive automation, reverse engineering, scraping, overloading the service, exploiting vulnerabilities, or attempting to bypass usage limits.",
+        "termsOfUsePage_uso_de_inteligencia_artificial": "Use of artificial intelligence",
+        "termsOfUsePage_uso_permitido_da_plataforma": "Permitted use",
+        "termsOfUsePage_uso_responsavel_de_briefings_requisitos": "Responsible use of briefs, requirements, and product artifacts",
+        "termsOfUsePage_vigencia_em_revisao": "2026-11-17-preview.1",
+        "termsOfUsePage_voce_e_responsavel_pelos_conteudos": "You are responsible for what you enter on the platform, including briefs, business problems, rules, constraints, names, examples, criteria, material copied into text fields, and other information submitted for generation or improvement.",
+        "termsOfUsePage_voce_mantem_seus_direitos_sobre": "You retain the rights you already hold in the content you submit. We use your content to provide the features you request and operate the service securely, as described in the Privacy Policy.",
+        "termsOfUsePage_voce_nao_deve_usar_o": "You must not use ProdForge to enter, process, store, or generate unlawful, offensive, discriminatory, fraudulent, deceptive, or unauthorized sensitive content, or content that violates third-party rights.",
+        "termsOfUsePage_voce_nao_pode_copiar_revender": "Reselling or sublicensing access to the hosted service requires express permission.",
+        "termsOfUsePage_voce_pode_usar_o_prodforge": "You may use ProdForge to structure briefs, user stories, acceptance criteria, insights, refinement questions, technical risks, and other product artifacts.",
+        "termsOfUsePage_voce_tambem_pode_revisar_e": "You may also review and change your privacy and optional cookie preferences on the Privacy Preferences page where those controls are available.",
+        "termsOfUsePage_voltar_para_a_pagina_inicial": "Back to the homepage"
+      }
+    },
+    "pt-BR": {
+      "privacyPolicyPage": {
+        "privacyPolicyPage_a_politica_foi_escrita_em": "Versão concluída para validação local. A vigência no serviço publicado começará na data da publicação autorizada desta versão.",
+        "privacyPolicyPage_a_qualidade_das_respostas_depende": "A qualidade das respostas depende do contexto enviado. Por isso, revise todo conteúdo gerado antes de usar em backlog, documentação, Jira, discovery, refinamento ou comunicação com stakeholders.",
+        "privacyPolicyPage_adotamos_medidas_tecnicas_e_organizacionais": "Adotamos medidas técnicas e organizacionais compatíveis com o estágio do produto para proteger informações contra acesso não autorizado, perda, uso indevido, alteração ou divulgação indevida.",
+        "privacyPolicyPage_armazenamento_em_banco_de_dados": "Armazenamento em banco de dados para conta, histórico e projetos",
+        "privacyPolicyPage_armazenamento_em_banco_de_dados_26": "Armazenamento em banco de dados",
+        "privacyPolicyPage_atualizacoes_desta_politica": "Atualizações desta política",
+        "privacyPolicyPage_autoridades_publicas_quando_houver_obrigacao": "Autoridades públicas, quando houver obrigação legal, ordem válida ou necessidade de proteção de direitos, segurança e integridade do produto.",
+        "privacyPolicyPage_briefings_historias_de_usuario_e": "Briefings, histórias de usuário e critérios de aceite inseridos na Bancada",
+        "privacyPolicyPage_como_usamos_os_dados": "Como usamos os dados",
+        "privacyPolicyPage_compartilhamento_de_dados": "Compartilhamento de dados",
+        "privacyPolicyPage_contato": "Contato",
+        "privacyPolicyPage_conteudos_inseridos_nos_formularios_como": "Conteúdos inseridos nos formulários, como briefings, problemas de negócio, regras, restrições, histórias de usuário, critérios de aceite, observações técnicas e contexto de projeto.",
+        "privacyPolicyPage_conteudos_salvos_na_bancada_versoes": "Você pode solicitar a exclusão dos seus dados pelo canal de contato indicado nesta Política. Na resposta, informaremos quais dados foram excluídos e quais precisam ser conservados, com o motivo e o prazo aplicável.",
+        "privacyPolicyPage_cookies_e_tecnologias_similares": "Cookies e tecnologias similares",
+        "privacyPolicyPage_cookies_essenciais_analiticos_e_categoria": "Tecnologias essenciais e analytics opcional, com marketing desativado",
+        "privacyPolicyPage_cookies_essenciais_sao_necessarios_para": "Usamos tecnologias essenciais para manter a sessão, proteger o acesso e fazer o serviço funcionar. Analytics é opcional. Cookies de marketing estão desativados. Se ativarmos essa categoria, pediremos uma nova escolha antes de usá-la.",
+        "privacyPolicyPage_criar_e_manter_sua_conta": "Criar e manter sua conta, autenticar acesso e liberar recursos da Bancada.",
+        "privacyPolicyPage_dados_de_cadastro_e_autenticacao": "Dados de cadastro e autenticação, como nome, e-mail, senha protegida pelo provedor de autenticação, plano, função e identificadores de conta.",
+        "privacyPolicyPage_dados_de_comunicacao_como_mensagens": "Dados de comunicação, como mensagens enviadas por formulários, cadastros em listas de interesse e solicitações feitas por e-mail.",
+        "privacyPolicyPage_dados_de_conta_autenticacao_e": "Dados de conta, autenticação e uso da plataforma",
+        "privacyPolicyPage_dados_de_conta_projetos_preferencias": "Dados de conta, projetos, preferências, briefings, histórias geradas, versões, histórico e eventos operacionais podem ser armazenados em banco de dados e serviços de infraestrutura usados para operar o ProdForge.",
+        "privacyPolicyPage_dados_inseridos_pelo_usuario_podem": "Quando você solicita geração ou análise por IA, enviamos ao fornecedor de IA o contexto necessário para produzir a resposta, como o briefing ou as informações do projeto incluídas na solicitação.",
+        "privacyPolicyPage_dados_tecnicos_de_navegacao_como": "Dados técnicos de navegação, como páginas acessadas, eventos de interação, dispositivo, navegador, endereço IP aproximado, data, hora e registros necessários para segurança e diagnóstico.",
+        "privacyPolicyPage_direitos_do_titular_conforme_a": "Direitos do titular conforme a LGPD",
+        "privacyPolicyPage_entender_uso_desempenho_erros_e": "Usar métricas agregadas de uso, desempenho e erros, calculadas a partir de eventos de analytics autorizados, para melhorar o produto.",
+        "privacyPolicyPage_enviar_comunicacoes_relacionadas_a_conta": "Enviar comunicações necessárias sobre sua conta e responder às suas solicitações. Enviar novidades do Pro quando você pedir para recebê-las.",
+        "privacyPolicyPage_essas_medidas_podem_incluir_autenticacao": "Essas medidas podem incluir autenticação, controle de acesso, registros de auditoria, políticas de permissão, isolamento por usuário ou projeto, monitoramento de erros e uso de provedores reconhecidos de infraestrutura. Nenhuma plataforma, porém, consegue prometer segurança absoluta.",
+        "privacyPolicyPage_esse_armazenamento_permite_recuperar_conteudo": "Esse armazenamento permite recuperar conteúdo, manter a continuidade da Bancada, aplicar controles de acesso, diagnosticar falhas, prevenir abuso e atender solicitações do usuário. O acesso interno deve ser limitado ao necessário para operação, segurança e suporte.",
+        "privacyPolicyPage_esta_pagina_descreve_como_o": "Esta página descreve como o ProdForge coleta, usa, armazena e protege dados ao transformar briefings, regras e contexto de produto em histórias de usuário, critérios de aceite, insights técnicos e sugestões de melhoria.",
+        "privacyPolicyPage_esta_politica_de_privacidade_descreve": "Esta Política de Privacidade descreve como o ProdForge coleta, usa, armazena e protege dados durante o uso do site, da área pública, da Bancada, dos formulários e dos recursos relacionados ao produto.",
+        "privacyPolicyPage_esta_politica_pode_ser_atualizada": "Esta política pode ser atualizada para refletir mudanças no produto, em fornecedores, funcionalidades, práticas de segurança, analytics, IA, monetização ou requisitos legais aplicáveis.",
+        "privacyPolicyPage_falar_sobre_dados": "Falar sobre dados",
+        "privacyPolicyPage_ferramentas_de_pagamento_faturamento_prevencao": "Ferramentas de pagamento, faturamento, prevenção a fraude e gestão de planos, quando recursos pagos estiverem disponíveis.",
+        "privacyPolicyPage_gerar_revisar_salvar_versionar_e": "Gerar, revisar, salvar, versionar e organizar histórias de usuário, critérios de aceite, insights técnicos e sugestões de melhoria.",
+        "privacyPolicyPage_gerenciar_limites_de_uso_planos": "Gerenciar limites de uso, planos, recursos pagos ou experimentais, quando aplicável.",
+        "privacyPolicyPage_historico_de_uso_versoes_geradas": "Histórico de uso, versões geradas, contagem de gerações e limites da conta, preferências, projetos, membros convidados e ações realizadas na Bancada.",
+        "privacyPolicyPage_informacoes_necessarias_para_eventual_monetizacao": "Informações necessárias para eventual monetização, assinatura, limite de uso, faturamento, prevenção a fraude e gestão de plano, quando esses recursos estiverem disponíveis.",
+        "privacyPolicyPage_mantemos_dados_pelo_tempo_necessario": "Mantemos os dados necessários à conta e aos recursos solicitados enquanto houver finalidade para esse tratamento, observados os pedidos de exclusão e as hipóteses legais de conservação. Se algum dado precisar ser conservado após um pedido de exclusão, informaremos a finalidade e o prazo ou critério aplicável. Dados encaminhados aos fornecedores também estão sujeitos às condições de tratamento e retenção desses serviços.",
+        "privacyPolicyPage_nao_usamos_dados_pessoais_como": "Não usamos dados pessoais como produto para venda de bases a terceiros. Compartilhamos dados conforme as finalidades desta Política e na medida necessária para cada uma.",
+        "privacyPolicyPage_nesta_politica": "Nesta política",
+        "privacyPolicyPage_nos_termos_da_lgpd_voce": "Nos termos da LGPD, você pode pedir confirmação do tratamento, acesso e correção dos seus dados. Nos casos previstos em lei, você também pode pedir anonimização, bloqueio ou eliminação, portabilidade e informação sobre com quem seus dados foram compartilhados.",
+        "privacyPolicyPage_o_prodforge_e_uma_plataforma": "Hugo Cruz da Silva Moraes Neto é o responsável pelo ProdForge e pelo tratamento dos dados pessoais necessários à operação do serviço. Para dúvidas e pedidos de privacidade, entre em contato por contato@techtupa.com.br.",
+        "privacyPolicyPage_para_duvidas_solicitacoes_ou_comentarios": "Para dúvidas, solicitações ou comentários sobre privacidade e uso de dados no ProdForge, entre em contato pelo e-mail abaixo.",
+        "privacyPolicyPage_para_exercer_esses_direitos_envie": "Você pode saber se é possível recusar o consentimento e quais são as consequências da recusa, revogar o consentimento e solicitar a exclusão de dados tratados com base nele, observadas as exceções legais. Quando aplicável, você pode se opor ao tratamento em desacordo com a LGPD e pedir revisão de decisões exclusivamente automatizadas que afetem seus interesses. Você também pode peticionar à Agência Nacional de Proteção de Dados (ANPD). Para exercer seus direitos, envie uma solicitação pelo canal de contato indicado nesta política. Podemos pedir informações necessárias para verificar sua identidade.",
+        "privacyPolicyPage_podemos_coletar_dados_informados_diretamente": "Podemos coletar dados informados diretamente por você, dados gerados pelo uso do produto e dados técnicos necessários para manter a plataforma funcionando com segurança.",
+        "privacyPolicyPage_podemos_usar_cookies_armazenamento_local": "Podemos usar cookies, armazenamento local, identificadores técnicos, eventos de analytics e tecnologias similares para autenticação, segurança, manutenção de sessão, medição de uso e melhoria da experiência.",
+        "privacyPolicyPage_politica_de_privacidade": "Política de Privacidade",
+        "privacyPolicyPage_privacidade_e_dados": "Privacidade e dados",
+        "privacyPolicyPage_processamento_por_servicos_de_ia": "Processamento por serviços de IA para apoiar a geração de artefatos",
+        "privacyPolicyPage_proteger_a_plataforma_contra_abuso": "Proteger a plataforma contra abuso, fraude, acesso indevido, falhas operacionais e uso que prejudique outros usuários.",
+        "privacyPolicyPage_provedores_de_infraestrutura_hospedagem_banco": "Serviços de infraestrutura e hospedagem, Supabase para autenticação e banco de dados e serviço de e-mail configurado para encaminhar mensagens e convites.",
+        "privacyPolicyPage_quais_dados_podemos_coletar": "Quais dados podemos coletar",
+        "privacyPolicyPage_quando_houver_mudancas_relevantes_poderemos": "Mudanças relevantes nesta Política serão informadas na plataforma. A identificação da versão permite consultar o conteúdo apresentado na ocasião do aceite dos Termos. As escolhas de analytics são gerenciadas separadamente nas Preferências de Privacidade.",
+        "privacyPolicyPage_quem_somos": "Quem somos",
+        "privacyPolicyPage_resumo_da_politica": "Resumo da política",
+        "privacyPolicyPage_retencao_dos_dados": "Retenção dos dados",
+        "privacyPolicyPage_secoes_da_politica_de_privacidade": "Seções da Política de Privacidade",
+        "privacyPolicyPage_seguranca_das_informacoes": "Segurança das informações",
+        "privacyPolicyPage_sempre_que_possivel_remova_ou": "Sempre que possível, remova ou anonimize informações pessoais antes de enviar um briefing para processamento por IA.",
+        "privacyPolicyPage_servicos_de_ia_usados_para": "API Gemini, do Google, para produzir as gerações e análises solicitadas. O contexto enviado pode incluir o briefing, os requisitos e as informações do projeto necessárias à resposta.",
+        "privacyPolicyPage_ultima_atualizacao": "Versão local",
+        "privacyPolicyPage_usamos_os_dados_para_entregar": "Usamos os dados para entregar a experiência principal do ProdForge, manter a plataforma segura e melhorar a qualidade do produto.",
+        "privacyPolicyPage_uso_de_inteligencia_artificial": "Uso de inteligência artificial",
+        "privacyPolicyPage_vigencia_em_revisao": "2026-11-17-preview.1",
+        "privacyPolicyPage_voce_nao_deve_inserir_informacoes": "Você não deve inserir informações sensíveis, confidenciais, segredos comerciais, credenciais, dados financeiros restritos, dados de saúde, dados de menores ou dados pessoais de terceiros sem autorização.",
+        "privacyPolicyPage_voce_pode_aceitar_todos_os": "Você pode aceitar todos os recursos opcionais disponíveis, recusar opcionais ou salvar preferências por categoria na página de Preferências de Privacidade. A escolha fica salva no navegador e pode ser alterada a qualquer momento.",
+        "privacyPolicyPage_voltar_para_a_pagina_inicial": "Voltar para a página inicial"
+      },
+      "termsOfUsePage": {
+        "termsOfUsePage_a_decisao_final_sobre_uso": "A decisão final sobre uso, adaptação, descarte e validação de qualquer conteúdo gerado é sempre do usuário.",
+        "termsOfUsePage_a_ia_pode_gerar_respostas": "A IA pode gerar respostas incompletas, imprecisas, desatualizadas, inconsistentes ou inadequadas em alguns casos, especialmente quando o contexto enviado estiver ambíguo, insuficiente ou sensível.",
+        "termsOfUsePage_a_marca_prodforge_identidade_visual": "O código disponibilizado sob a licença MIT pode ser usado conforme as condições dessa licença. A marca ProdForge, a identidade visual, os materiais editoriais e os demais itens reservados no escopo da licença seguem as permissões aplicáveis a cada material.",
+        "termsOfUsePage_a_plataforma_ajuda_a_estruturar": "A plataforma ajuda a estruturar trabalho de produto, mas não substitui discovery, priorização, alinhamento com stakeholders, revisão técnica, validação de negócio ou decisão profissional do time.",
+        "termsOfUsePage_a_plataforma_pode_passar_por": "A plataforma pode passar por melhorias, ajustes, manutenção, indisponibilidades temporárias, mudanças técnicas, limitações de fornecedores, falhas externas ou alterações de funcionalidades.",
+        "termsOfUsePage_a_versao_publicada_nesta_pagina": "Em caso de divergência entre idiomas, a versão em português brasileiro é a referência, respeitados os direitos previstos na legislação aplicável. Recursos específicos podem ter regras complementares quando forem disponibilizados.",
+        "termsOfUsePage_abrir_preferencias_de_privacidade": "Abrir Preferências de Privacidade",
+        "termsOfUsePage_aceitacao_e_escopo": "Aceitação e escopo",
+        "termsOfUsePage_ao_acessar_ou_usar_o": "Ao criar uma conta ou aceitar uma nova versão destes Termos, você concorda com as condições apresentadas. Você pode consultar os Termos e a Política de Privacidade pelos links disponíveis antes de aceitar.",
+        "termsOfUsePage_ao_inserir_conteudo_no_prodforge": "Ao inserir conteúdo no ProdForge, você declara que tem direito ou autorização para usá-lo e que esse conteúdo não viola direitos de terceiros, confidencialidade, contratos, políticas internas ou leis aplicáveis.",
+        "termsOfUsePage_as_escolhas_de_privacidade_nao": "As escolhas de privacidade não autorizam uso indevido da plataforma nem eliminam a responsabilidade de revisar os dados que você decide inserir no ProdForge.",
+        "termsOfUsePage_as_respostas_geradas_por_ia": "As respostas geradas por IA são sugestões de apoio. Elas devem ser revisadas criticamente antes de uso profissional, publicação, envio para Jira, refinamento com stakeholders, entrega para desenvolvimento, QA ou tomada de decisão.",
+        "termsOfUsePage_caso_identifique_acesso_indevido_suspeita": "Caso identifique acesso indevido, suspeita de vazamento ou uso não autorizado da sua conta, entre em contato pelo canal indicado nestes termos.",
+        "termsOfUsePage_condutas_proibidas": "Condutas proibidas",
+        "termsOfUsePage_conta_e_acesso": "Conta e acesso",
+        "termsOfUsePage_contato": "Contato",
+        "termsOfUsePage_conteudos_inseridos_pelo_usuario": "Conteúdos inseridos pelo usuário",
+        "termsOfUsePage_disponibilidade_e_mudancas": "Disponibilidade e mudanças",
+        "termsOfUsePage_esses_conteudos_podem_ser_armazenados": "Podemos armazenar esses conteúdos para manter seu histórico, recuperar contexto, diagnosticar falhas e prevenir abuso, conforme descrito na Política de Privacidade.",
+        "termsOfUsePage_estes_termos_de_uso_regulam": "Hugo Cruz da Silva Moraes Neto é o responsável pelo serviço hospedado ProdForge. Estes Termos de Uso regulam o acesso e o uso do site, cadastro, autenticação, Bancada, recursos com IA, histórico, projetos e materiais de aprendizado. O contato para dúvidas e solicitações é contato@techtupa.com.br.",
+        "termsOfUsePage_estes_termos_foram_escritos_em": "Versão concluída para validação local. A vigência no serviço publicado começará na data da publicação autorizada desta versão.",
+        "termsOfUsePage_estes_termos_regulam_o_uso": "Estes termos regulam o uso do ProdForge e ajudam a deixar claro como a plataforma, a Bancada, os recursos com IA, os limites gratuitos e os recursos pagos devem ser usados com responsabilidade.",
+        "termsOfUsePage_falar_sobre_os_termos": "Falar sobre os termos",
+        "termsOfUsePage_inserir_conteudo_ilegal_discriminatorio_ofensivo": "Inserir conteúdo ilegal, discriminatório, ofensivo, violento, fraudulento, enganoso, sigiloso sem autorização ou que viole direitos de terceiros.",
+        "termsOfUsePage_ler_a_politica_de_privacidade": "Ler a Política de Privacidade",
+        "termsOfUsePage_links_de": "Links de {{p1}}",
+        "termsOfUsePage_na_medida_permitida_pela_legislacao": "Na medida permitida pela legislação aplicável, o ProdForge não se responsabiliza por decisões de negócio, falhas de implementação, uso profissional sem revisão, perda de contexto, resultados indiretos, indisponibilidade temporária ou uso indevido da plataforma.",
+        "termsOfUsePage_nao_insira_dados_confidenciais_segredos": "Não insira dados confidenciais, segredos comerciais, credenciais, informações estratégicas restritas, dados pessoais sensíveis ou informações de terceiros sem autorização adequada.",
+        "termsOfUsePage_nestes_termos": "Nestes termos",
+        "termsOfUsePage_o_acesso_ao_prodforge_pode": "O acesso ao ProdForge pode ser limitado, suspenso, alterado ou encerrado em caso de abuso, fraude, tentativa de burlar limites, uso indevido, risco à segurança, violação destes termos ou obrigação legal.",
+        "termsOfUsePage_o_prodforge_busca_entregar_uma": "O ProdForge busca entregar uma experiência útil, segura e consistente, mas não garante que todo conteúdo gerado será perfeito, completo, correto, suficiente ou adequado para todos os contextos.",
+        "termsOfUsePage_o_prodforge_e_uma_plataforma": "O ProdForge é uma plataforma de apoio para criação, refinamento e organização de histórias de usuário com IA.",
+        "termsOfUsePage_o_prodforge_nao_substitui_julgamento": "O ProdForge não substitui julgamento profissional, discovery, alinhamento com stakeholders, validação com usuários, revisão técnica, análise jurídica, revisão de QA ou governança interna do seu time.",
+        "termsOfUsePage_o_prodforge_pode_alterar_estes": "O ProdForge pode alterar estes termos futuramente para refletir mudanças no produto, em recursos, planos, fornecedores, integrações, práticas de segurança, uso de IA, monetização ou requisitos legais.",
+        "termsOfUsePage_o_prodforge_pode_oferecer_plano": "O plano Free inclui uma cota padrão de 10 gerações bem-sucedidas e salvas por conta, sem renovação mensal. Cada geração ou regeneração salva consome uma unidade. Edições manuais, falhas e diagnósticos de projeto ficam fora da cota. Excluir uma história salva não repõe o saldo. Consulte na Bancada o limite e o saldo da sua conta.",
+        "termsOfUsePage_o_prodforge_pode_usar_servicos": "O ProdForge pode usar serviços de IA para transformar briefings, regras, dores de negócio e contexto técnico em sugestões de histórias de usuário, critérios de aceite, perguntas de refinamento, insights técnicos e melhorias.",
+        "termsOfUsePage_o_produto_foi_pensado_para": "O ProdForge é destinado ao uso profissional por pessoas com 18 anos ou mais, incluindo PMs, POs e times de produto, desenvolvimento e QA.",
+        "termsOfUsePage_o_que_e_o_prodforge": "O que é o ProdForge",
+        "termsOfUsePage_o_tratamento_de_dados_pessoais": "O tratamento de dados pessoais, dados de conta, conteúdos inseridos, histórico, cookies, analytics e preferências é descrito na Política de Privacidade do ProdForge.",
+        "termsOfUsePage_o_uso_deve_respeitar_leis": "O uso deve respeitar leis aplicáveis, direitos de terceiros, boas práticas de segurança e as limitações técnicas da plataforma.",
+        "termsOfUsePage_o_uso_profissional_de_historias": "O uso profissional de histórias de usuário, critérios de aceite, insights técnicos, perguntas de refinamento, documentos e demais artefatos gerados é responsabilidade do usuário.",
+        "termsOfUsePage_para_duvidas_solicitacoes_ou_comentarios": "Para dúvidas, solicitações ou comentários sobre estes Termos de Uso, entre em contato pelo e-mail abaixo.",
+        "termsOfUsePage_para_proteger_a_experiencia_de": "Estas regras se aplicam ao uso do serviço hospedado do ProdForge.",
+        "termsOfUsePage_para_usar_algumas_funcionalidades_voce": "Para usar algumas funcionalidades, você pode precisar criar uma conta e informar dados como nome, e-mail e senha. Você é responsável por manter essas informações corretas, atualizadas e sob seu controle.",
+        "termsOfUsePage_planos_limites_beneficios_precos_regras": "Planos, limites, benefícios, preços, regras de uso e funcionalidades podem mudar conforme a evolução do produto, necessidades operacionais, custos de fornecedores, segurança e direção estratégica do ProdForge.",
+        "termsOfUsePage_planos_limites_e_recursos": "Planos, limites e recursos",
+        "termsOfUsePage_planos_limites_privacidade_e_canais": "Planos, limites, privacidade e canais oficiais de contato",
+        "termsOfUsePage_plataforma_de_apoio_para_historias": "Plataforma de apoio para histórias de usuário com IA",
+        "termsOfUsePage_privacidade_cookies_e_preferencias": "Privacidade, cookies e preferências",
+        "termsOfUsePage_propriedade_intelectual": "Propriedade intelectual",
+        "termsOfUsePage_proteja_suas_credenciais_e_nao": "Proteja suas credenciais e não compartilhe acesso com pessoas não autorizadas. Todas as atividades realizadas pela sua conta podem ser atribuídas a você.",
+        "termsOfUsePage_quando_houver_mudancas_relevantes_poderemos": "Mudanças relevantes nos Termos serão informadas na plataforma. Quando exigirem um novo aceite, a nova versão será apresentada no próximo acesso à área logada.",
+        "termsOfUsePage_recursos_pagos_podem_depender_de": "Quando uma oferta paga estiver disponível, apresentaremos preço, recursos, limites e condições antes da contratação.",
+        "termsOfUsePage_remover_avisos_mascarar_identidade_simular": "Remover avisos, mascarar identidade, simular relação com o ProdForge ou usar a marca sem permissão.",
+        "termsOfUsePage_responsabilidades_e_limitacoes": "Responsabilidades e limitações",
+        "termsOfUsePage_respostas_da_ia_como_sugestoes": "Respostas da IA como sugestões que exigem revisão humana",
+        "termsOfUsePage_resumo_dos_termos": "Resumo dos termos",
+        "termsOfUsePage_secoes_dos_termos_de_uso": "Seções dos Termos de Uso",
+        "termsOfUsePage_tentar_acessar_contas_dados_projetos": "Tentar acessar contas, dados, projetos, histórico ou áreas administrativas sem autorização.",
+        "termsOfUsePage_termos_da_bancada": "Termos da Bancada",
+        "termsOfUsePage_termos_de_uso": "Termos de Uso",
+        "termsOfUsePage_trabalhamos_para_manter_o_prodforge": "Trabalhamos para manter o ProdForge disponível e funcional, mas não prometemos disponibilidade ininterrupta, ausência total de erros ou funcionamento perfeito em todos os dispositivos, navegadores, redes e cenários de uso.",
+        "termsOfUsePage_ultima_atualizacao": "Versão local",
+        "termsOfUsePage_usar_a_plataforma_para_gerar": "Usar a plataforma para gerar spam, golpes, malware, instruções prejudiciais, assédio, violação de privacidade ou qualquer atividade ilícita.",
+        "termsOfUsePage_usar_automacoes_abusivas_engenharia_reversa": "Usar automações abusivas, engenharia reversa, scraping, sobrecarga, exploração de falhas ou tentativa de burlar limites de uso.",
+        "termsOfUsePage_uso_de_inteligencia_artificial": "Uso de inteligência artificial",
+        "termsOfUsePage_uso_permitido_da_plataforma": "Uso permitido da plataforma",
+        "termsOfUsePage_uso_responsavel_de_briefings_requisitos": "Uso responsável de briefings, requisitos e artefatos de produto",
+        "termsOfUsePage_vigencia_em_revisao": "2026-11-17-preview.1",
+        "termsOfUsePage_voce_e_responsavel_pelos_conteudos": "Você é responsável pelos conteúdos que insere na plataforma, incluindo briefings, problemas de negócio, regras, restrições, nomes, exemplos, critérios, arquivos copiados para campos de texto e qualquer informação enviada para geração ou melhoria.",
+        "termsOfUsePage_voce_mantem_seus_direitos_sobre": "Você mantém os direitos que já tem sobre o conteúdo que envia. Usamos seu conteúdo para fornecer os recursos solicitados e operar o serviço com segurança, conforme a Política de Privacidade.",
+        "termsOfUsePage_voce_nao_deve_usar_o": "Você não deve usar o ProdForge para inserir, processar, armazenar ou gerar conteúdo ilegal, ofensivo, discriminatório, fraudulento, enganoso, sensível sem autorização ou que viole direitos de terceiros.",
+        "termsOfUsePage_voce_nao_pode_copiar_revender": "A revenda ou a sublicença de acesso ao serviço hospedado exige autorização expressa.",
+        "termsOfUsePage_voce_pode_usar_o_prodforge": "Você pode usar o ProdForge para estruturar briefings, histórias de usuário, critérios de aceite, insights, perguntas de refinamento, riscos técnicos e outros artefatos relacionados a produto.",
+        "termsOfUsePage_voce_tambem_pode_revisar_e": "Você também pode revisar e alterar preferências de privacidade e cookies opcionais na página de Preferências de Privacidade, quando esses controles estiverem disponíveis para o seu navegador e contexto de uso.",
+        "termsOfUsePage_voltar_para_a_pagina_inicial": "Voltar para a página inicial"
+      }
+    }
+  },
+  "scope": "local-preview",
+  "version": "2026-11-17-preview.1"
+}$prodforge_legal$, chr(13) || chr(10), chr(10)),
+  'e22892ce933e45f96d08f8fa29ccc0544aee169a54d90f346c7cd4cb0c408a45',
+  true
+);
+
+commit;

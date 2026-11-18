@@ -1,5 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
+import { useCopy, useLanguage } from '../i18n/context'
+import { formatNotice } from '../i18n/formatNotice'
+import Link from '../i18n/LocalizedLink'
+import { localizeHref } from '../i18n/routes'
 import { useAuth } from '../hooks/useAuth'
 import { checkCanManageProject, listProjects } from '../services/projectsService'
 import {
@@ -27,32 +31,32 @@ import {
 import { copyTextToClipboard } from '../utils/storyExport'
 
 const PLANNING_SESSION_FILTER_OPTIONS = [
-  { value: 'all', label: 'Todas' },
-  { value: 'active_group', label: 'Em andamento' },
-  { value: 'draft', label: 'Rascunho' },
-  { value: 'active', label: 'Ativa' },
-  { value: 'voting', label: 'Em votação' },
-  { value: 'revealed', label: 'Votos revelados' },
-  { value: 'completed', label: 'Finalizada' },
-  { value: 'canceled', label: 'Cancelada' },
+  { value: 'all', label: 'all' },
+  { value: 'active_group', label: 'in_progress' },
+  { value: 'draft', label: 'draft' },
+  { value: 'active', label: 'active' },
+  { value: 'voting', label: 'voting' },
+  { value: 'revealed', label: 'votes_revealed' },
+  { value: 'completed', label: 'completed' },
+  { value: 'canceled', label: 'canceled' },
 ]
 
 const PLANNING_TIMER_OPTIONS = [
-  { value: 60, label: '1 minuto' },
-  { value: 180, label: '3 minutos' },
-  { value: 300, label: '5 minutos' },
-  { value: 600, label: '10 minutos' },
+  { value: 60, label: '1_minute' },
+  { value: 180, label: '3_minutes' },
+  { value: 300, label: '5_minutes' },
+  { value: 600, label: '10_minutes' },
 ]
 
 const PLANNING_SCORING_SCALE_OPTIONS = [
-  { value: 'fibonacci', label: 'Fibonacci' },
-  { value: 'tshirt', label: 'Tamanho de camiseta' },
+  { value: 'fibonacci', label: 'fibonacci' },
+  { value: 'tshirt', label: 't_shirt_sizes' },
 ]
 
 const PLANNING_SCORING_SCALE_FILTER_OPTIONS = [
-  { value: 'all', label: 'Todas' },
+  { value: 'all', label: 'all' },
   ...PLANNING_SCORING_SCALE_OPTIONS,
-  { value: 'custom', label: 'Customizada' },
+  { value: 'custom', label: 'custom' },
 ]
 
 function normalizeInviteCode(value) {
@@ -61,12 +65,12 @@ function normalizeInviteCode(value) {
     .toUpperCase()
 }
 
-function formatPlanningDateTime(value) {
+function formatPlanningDateTime(value, language = 'pt-BR') {
   if (!value) return '-'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return '-'
 
-  return new Intl.DateTimeFormat('pt-BR', {
+  return new Intl.DateTimeFormat(language, {
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
@@ -74,28 +78,34 @@ function formatPlanningDateTime(value) {
   }).format(date)
 }
 
-function buildPlanningInviteUrl(inviteCode) {
+function buildPlanningInviteUrl(inviteCode, language) {
   if (typeof window === 'undefined' || !inviteCode) return ''
-  return new URL(`/roda?codigo=${encodeURIComponent(inviteCode)}`, window.location.origin).toString()
+  const path = `/roda?codigo=${encodeURIComponent(inviteCode)}`
+  return new URL(language ? localizeHref(path, language) : path, window.location.origin).toString()
 }
 
 function PlanningPokerJoinPage() {
+  const t = useCopy('planning')
+  const { language, preview } = useLanguage()
   const navigate = useNavigate()
+  const currentLanguage = useRef(language)
+  useLayoutEffect(() => { currentLanguage.current = language }, [language])
   const { user } = useAuth()
   const userId = user?.id ?? null
   const { setTopbarStatus } = useOutletContext() ?? {}
   const [searchParams, setSearchParams] = useSearchParams()
   const autoJoinCodeAttemptedRef = useRef('')
-  const codeFromUrl = useMemo(() => normalizeInviteCode(searchParams.get('codigo')), [searchParams])
+  const codeFromUrl = normalizeInviteCode(searchParams.get('codigo'))
   const projectIdFromUrl = searchParams.get('projectId') ?? ''
   const storyIdFromUrl = searchParams.get('storyId') ?? ''
+  const rawStoryIds = searchParams.get('storyIds') ?? ''
   const storyIdsFromUrl = useMemo(
     () =>
-      String(searchParams.get('storyIds') ?? '')
+      rawStoryIds
         .split(',')
         .map((storyId) => storyId.trim())
         .filter(Boolean),
-    [searchParams],
+    [rawStoryIds],
   )
   const [inviteCode, setInviteCode] = useState(() => codeFromUrl)
   const [projects, setProjects] = useState([])
@@ -146,9 +156,8 @@ function PlanningPokerJoinPage() {
   )
   const selectedTimerLabel = useMemo(
     () =>
-      PLANNING_TIMER_OPTIONS.find((option) => option.value === planningVoteTimeLimit)?.label ??
-      formatPlanningTimerDuration(planningVoteTimeLimit),
-    [planningVoteTimeLimit],
+      formatPlanningTimerDuration(planningVoteTimeLimit, t),
+    [t, planningVoteTimeLimit],
   )
   const selectedStories = useMemo(
     () => readyStories.filter((story) => selectedStoryIds.includes(story.id)),
@@ -161,34 +170,34 @@ function PlanningPokerJoinPage() {
   const hasSelectedStoryPreview = selectedStoryPreview.length > 0
   const remainingSelectedStoryCount = selectedStoryIds.length - selectedStoryPreview.length
   const remainingSelectedStoryLabel =
-    remainingSelectedStoryCount > 0 ? `Mais ${remainingSelectedStoryCount} selecionadas` : ''
+    remainingSelectedStoryCount > 0 ? t('more_selected', { p1: remainingSelectedStoryCount }) : ''
   const selectedStoriesPanelLabel =
     selectedStoryIds.length === 1
-      ? '1 história selecionada para a Roda'
-      : `${selectedStoryIds.length} histórias selecionadas para a Roda`
+      ? t('1_story_selected_for_planning_poker')
+      : t('stories_selected_for_planning_poker', { p1: selectedStoryIds.length })
   const planningRuleSummary = useMemo(
     () => [
-      planningAllowRevote ? 'Novo voto permitido' : 'Voto único',
-      planningRevealAfterAll ? 'Revelar após todos votarem' : 'Revelação pelo facilitador',
-      planningAllowAbstention ? 'Abstenção permitida' : 'Sem abstenção',
-      planningAllowObservers ? 'Observadores permitidos' : 'Sem observadores',
+      planningAllowRevote ? t('vote_changes_allowed') : t('one_vote_per_person'),
+      planningRevealAfterAll ? t('reveal_after_everyone_votes') : t('facilitator_reveals'),
+      planningAllowAbstention ? t('abstentions_allowed') : t('no_abstentions'),
+      planningAllowObservers ? t('observers_allowed') : t('no_observers'),
     ],
-    [planningAllowAbstention, planningAllowObservers, planningAllowRevote, planningRevealAfterAll],
+    [t, planningAllowAbstention, planningAllowObservers, planningAllowRevote, planningRevealAfterAll],
   )
   const accessRequestMessage = useMemo(
     () =>
       buildPlanningAccessRequestMessage({
         email: user?.email ?? '',
         inviteCode: accessRequestCode,
-      }),
-    [accessRequestCode, user?.email],
+      }, t),
+    [t, accessRequestCode, user?.email],
   )
   const readyStoriesLabel = useMemo(
     () =>
       `${readyStories.length} ${
-        readyStories.length === 1 ? 'história pronta' : 'histórias prontas'
+        readyStories.length === 1 ? t('ready_story') : t('ready_stories')
       }`,
-    [readyStories.length],
+    [t, readyStories.length],
   )
   const filteredReadyStories = useMemo(() => {
     const search = readyStorySearch.trim().toLocaleLowerCase('pt-BR')
@@ -211,9 +220,9 @@ function PlanningPokerJoinPage() {
   const planningSessionsLabel = useMemo(
     () =>
       `${planningSessions.length} ${
-        planningSessions.length === 1 ? 'roda criada' : 'rodas criadas'
+        planningSessions.length === 1 ? t('session_created') : t('sessions_created')
       }`,
-    [planningSessions.length],
+    [t, planningSessions.length],
   )
   const activePlanningSessionsCount = useMemo(
     () => planningSessions.filter((session) => LIVE_PLANNING_SESSION_STATUSES.includes(session.status)).length,
@@ -247,10 +256,10 @@ function PlanningPokerJoinPage() {
     () =>
       formatPlanningCount(
         accessiblePlanningSessions.length,
-        'Roda acessível',
-        'Rodas acessíveis',
+        t('accessible_session'),
+        t('accessible_sessions'),
       ),
-    [accessiblePlanningSessions.length],
+    [t, accessiblePlanningSessions.length],
   )
   const filteredAccessiblePlanningSessions = useMemo(() => {
     const search = accessiblePlanningSearch.trim().toLocaleLowerCase('pt-BR')
@@ -302,12 +311,13 @@ function PlanningPokerJoinPage() {
   )
   const accessiblePlanningFilterOptions = useMemo(
     () => [
-      { value: 'all', label: 'Todas', count: accessiblePlanningSessions.length },
-      { value: 'active_group', label: 'Em andamento', count: accessibleActivePlanningSessionsCount },
-      { value: 'completed', label: 'Finalizadas', count: accessibleCompletedPlanningSessionsCount },
-      { value: 'canceled', label: 'Canceladas', count: accessibleCanceledPlanningSessionsCount },
+      { value: 'all', label: t('all'), count: accessiblePlanningSessions.length },
+      { value: 'active_group', label: t('in_progress'), count: accessibleActivePlanningSessionsCount },
+      { value: 'completed', label: t('completed_2'), count: accessibleCompletedPlanningSessionsCount },
+      { value: 'canceled', label: t('canceled_2'), count: accessibleCanceledPlanningSessionsCount },
     ],
     [
+      t,
       accessibleActivePlanningSessionsCount,
       accessibleCanceledPlanningSessionsCount,
       accessibleCompletedPlanningSessionsCount,
@@ -330,35 +340,35 @@ function PlanningPokerJoinPage() {
   const dashboardOverviewCards = useMemo(
     () => [
       {
-        label: 'Projeto',
-        value: selectedProject?.name ?? 'Nenhum projeto selecionado',
+        label: t('project'),
+        value: selectedProject?.name ?? t('no_project_selected'),
         description: selectedProject
-          ? 'Contexto carregado para criar e consultar Rodas.'
-          : 'Escolha um projeto para carregar histórias e sessões.',
+          ? t('project_loaded_for_creating_and_viewing_sessions')
+          : t('choose_a_project_to_load_stories_and'),
       },
       {
-        label: 'Histórias prontas',
+        label: t('ready_stories_2'),
         value: readyStoriesLabel,
         description:
           readyStories.length > 0
-            ? 'Disponíveis para entrar em uma nova Roda.'
-            : 'Marque histórias como prontas para estimar no projeto.',
+            ? t('available_for_a_new_session')
+            : t('mark_stories_as_ready_to_estimate_in'),
       },
       {
-        label: 'Rodas ativas',
+        label: t('active_sessions'),
         value: `${activePlanningSessionsCount} em andamento`,
         description:
           activePlanningSessionsCount > 0
-            ? 'Há sessões abertas para continuar.'
-            : 'Nenhuma sessão operacional neste projeto.',
+            ? t('there_are_open_sessions_you_can_continue')
+            : t('there_are_no_active_sessions_in_this'),
       },
       {
-        label: 'Histórico',
+        label: t('history'),
         value: `${completedPlanningSessionsCount} finalizadas`,
-        description: 'Sessões concluídas permanecem disponíveis para consulta.',
+        description: t('completed_sessions_are_available_to_review'),
       },
     ],
-    [activePlanningSessionsCount, completedPlanningSessionsCount, readyStories.length, readyStoriesLabel, selectedProject],
+    [t, activePlanningSessionsCount, completedPlanningSessionsCount, readyStories.length, readyStoriesLabel, selectedProject],
   )
   const filteredPlanningSessions = useMemo(() => {
     const search = planningSessionSearch.trim().toLocaleLowerCase('pt-BR')
@@ -438,28 +448,28 @@ function PlanningPokerJoinPage() {
     () => [
       {
         value: 'all',
-        label: 'Todas',
+        label: t('all'),
         count: planningSessions.length,
       },
       {
         value: 'active_group',
-        label: 'Em andamento',
+        label: t('in_progress'),
         count: activePlanningSessionsCount,
       },
       {
         value: 'completed',
-        label: 'Finalizadas',
+        label: t('completed_2'),
         count: completedPlanningSessionsCount,
       },
     ],
-    [activePlanningSessionsCount, completedPlanningSessionsCount, planningSessions.length],
+    [t, activePlanningSessionsCount, completedPlanningSessionsCount, planningSessions.length],
   )
   const planningSessionProgressById = useMemo(() => {
-    return getPlanningSessionProgressById(planningSessions, planningSessionStoriesBySession)
-  }, [planningSessionStoriesBySession, planningSessions])
+    return getPlanningSessionProgressById(planningSessions, planningSessionStoriesBySession, t)
+  }, [t, planningSessionStoriesBySession, planningSessions])
   const accessiblePlanningSessionProgressById = useMemo(() => {
-    return getPlanningSessionProgressById(accessiblePlanningSessions, accessiblePlanningStoriesBySession)
-  }, [accessiblePlanningSessions, accessiblePlanningStoriesBySession])
+    return getPlanningSessionProgressById(accessiblePlanningSessions, accessiblePlanningStoriesBySession, t)
+  }, [t, accessiblePlanningSessions, accessiblePlanningStoriesBySession])
   const activePlanningStorySessionByStoryId = useMemo(() => {
     return getActivePlanningStorySessionByStoryId(planningSessions, planningSessionStoriesBySession)
   }, [planningSessionStoriesBySession, planningSessions])
@@ -482,16 +492,16 @@ function PlanningPokerJoinPage() {
   const visibleReadyStoriesLabel = useMemo(
     () =>
       `${visibleReadyStories.length} ${
-        visibleReadyStories.length === 1 ? 'história visível' : 'histórias visíveis'
+        visibleReadyStories.length === 1 ? t('visible_story') : t('visible_stories')
       }`,
-    [visibleReadyStories.length],
+    [t, visibleReadyStories.length],
   )
   const readyStoryFilterHint =
     readyStoriesInActiveSessionsCount > 0
       ? hideActiveSessionStories
-        ? `${formatPlanningCount(readyStoriesInActiveSessionsCount, 'história ocultada por Roda ativa', 'histórias ocultadas por Rodas ativas')}.`
-        : `${formatPlanningCount(readyStoriesInActiveSessionsCount, 'história já está em Roda ativa', 'histórias já estão em Rodas ativas')}.`
-      : 'Nenhuma história pronta aparece em Roda ativa.'
+        ? `${formatPlanningCount(readyStoriesInActiveSessionsCount, t('story_hidden_because_it_s_in_an'), t('stories_hidden_because_they_re_in_active'))}.`
+        : `${formatPlanningCount(readyStoriesInActiveSessionsCount, t('story_is_already_in_an_active_session'), t('stories_are_already_in_active_sessions'))}.`
+      : t('no_ready_stories_are_in_an_active')
   const selectedStoriesInActiveSessions = useMemo(
     () =>
       selectedStories
@@ -504,8 +514,8 @@ function PlanningPokerJoinPage() {
   )
   const selectedStoriesConflictLabel =
     selectedStoriesInActiveSessions.length === 1
-      ? '1 história já aparece em uma Roda ativa'
-      : `${selectedStoriesInActiveSessions.length} histórias já aparecem em Rodas ativas`
+      ? t('1_story_is_already_in_an_active')
+      : t('stories_are_already_in_active_sessions_2', { p1: selectedStoriesInActiveSessions.length })
   const planningSessionsWithEstimateCount = useMemo(
     () => planningSessions.filter((session) => (planningSessionProgressById[session.id]?.estimated ?? 0) > 0).length,
     [planningSessionProgressById, planningSessions],
@@ -536,41 +546,42 @@ function PlanningPokerJoinPage() {
   const planningReadinessItems = useMemo(
     () => [
       {
-        label: 'Projeto',
-        value: selectedProject?.name ?? 'Selecione um projeto',
+        label: t('project'),
+        value: selectedProject?.name ?? t('select_a_project'),
         isReady: Boolean(selectedProject),
       },
       {
-        label: 'Permissão',
+        label: t('permission'),
         value: canManageSelectedProject
-          ? 'Você pode criar Rodas'
+          ? t('you_can_create_sessions')
           : selectedProject
-            ? 'Consulta disponível'
-            : 'Aguardando projeto',
+            ? t('view_only_access')
+            : t('waiting_for_a_project'),
         isReady: canManageSelectedProject,
       },
       {
-        label: 'Histórias',
+        label: t('stories'),
         value:
           selectedStoryIds.length > 0
-            ? formatPlanningCount(selectedStoryIds.length, 'selecionada', 'selecionadas')
+            ? t('selected_count', { count: selectedStoryIds.length })
             : readyStories.length > 0
-              ? 'Selecione histórias prontas'
-              : 'Sem histórias prontas',
+              ? t('select_ready_stories')
+              : t('no_ready_stories'),
         isReady: selectedStoryIds.length > 0,
       },
       {
-        label: 'Duplicidade',
+        label: t('overlap'),
         value:
           selectedStoryIds.length === 0
-            ? 'Aguardando seleção'
+            ? t('waiting_for_a_selection')
             : selectedStoriesInActiveSessions.length > 0
               ? selectedStoriesConflictLabel
-              : 'Sem Roda ativa duplicada',
+              : t('no_overlap_with_active_sessions'),
         isReady: selectedStoryIds.length > 0 && selectedStoriesInActiveSessions.length === 0,
       },
     ],
     [
+      t,
       canManageSelectedProject,
       readyStories.length,
       selectedProject,
@@ -581,27 +592,27 @@ function PlanningPokerJoinPage() {
   )
   const planningCreateHint = canCreatePlanningSession
     ? selectedStoriesInActiveSessions.length > 0
-      ? 'Há histórias selecionadas em Rodas ativas. Revise antes de criar outra sessão.'
-      : 'Tudo pronto para abrir a sessão para a guilda.'
+      ? t('some_selected_stories_are_already_in_an')
+      : t('everything_is_ready_to_open_the_session')
     : !selectedProject
-      ? 'Selecione um projeto para carregar histórias e permissões.'
+      ? t('select_a_project_to_load_stories_and')
       : !canManageSelectedProject
-        ? 'Você pode consultar Rodas, mas não criar novas sessões neste projeto.'
+        ? t('you_can_view_sessions_in_this_project')
         : readyStories.length === 0
-          ? 'Marque histórias deste projeto como prontas para estimar.'
+          ? t('mark_stories_in_this_project_as_ready')
           : selectedStoriesInActiveSessions.length > 0
-            ? 'Remova histórias que já estão em Rodas ativas ou continue a sessão existente.'
-          : 'Selecione ao menos uma história para criar a Roda.'
+            ? t('remove_stories_that_are_already_in_an')
+          : t('select_at_least_one_story_to_create')
   const dashboardNextAction = useMemo(() => {
     if (primaryActivePlanningSession && selectedProjectId) {
       return {
         tone: 'live',
-        label: 'Roda ativa',
+        label: t('active_session'),
         title: primaryActivePlanningSession.name,
-        description: 'Há uma sessão em andamento neste projeto. Continue a votação antes de abrir uma nova Roda.',
-        primaryText: 'Continuar Roda',
+        description: t('this_project_has_a_session_in_progress'),
+        primaryText: t('continue_session'),
         primaryTo: `/projetos/${selectedProjectId}/roda/${primaryActivePlanningSession.id}`,
-        secondaryText: latestCompletedPlanningSession ? 'Consultar último resultado' : '',
+        secondaryText: latestCompletedPlanningSession ? t('view_latest_result') : '',
         secondaryTo: latestCompletedPlanningSession
           ? `/projetos/${selectedProjectId}/roda/${latestCompletedPlanningSession.id}`
           : '',
@@ -611,10 +622,10 @@ function PlanningPokerJoinPage() {
     if (!selectedProject) {
       return {
         tone: 'setup',
-        label: 'Primeiro passo',
-        title: 'Escolha ou crie um projeto',
-        description: 'A Roda depende de um projeto com histórias prontas para estimar.',
-        primaryText: 'Gerenciar projetos',
+        label: t('first_step'),
+        title: t('choose_or_create_a_project'),
+        description: t('planning_poker_requires_a_project_with_stories'),
+        primaryText: t('manage_projects'),
         primaryTo: '/projetos',
         secondaryText: '',
         secondaryTo: '',
@@ -624,12 +635,12 @@ function PlanningPokerJoinPage() {
     if (!canManageSelectedProject) {
       return {
         tone: 'readonly',
-        label: 'Consulta',
-        title: 'Você pode acompanhar este projeto',
-        description: 'A criação de novas Rodas fica restrita a responsáveis e administradores do projeto.',
-        primaryText: 'Abrir projeto',
+        label: t('view_only'),
+        title: t('you_can_follow_this_project'),
+        description: t('only_project_owners_and_administrators_can_create'),
+        primaryText: t('open_project'),
         primaryTo: `/projetos/${selectedProjectId}`,
-        secondaryText: latestCompletedPlanningSession ? 'Consultar histórico' : '',
+        secondaryText: latestCompletedPlanningSession ? t('browse_history') : '',
         secondaryTo: latestCompletedPlanningSession
           ? `/projetos/${selectedProjectId}/roda/${latestCompletedPlanningSession.id}`
           : '',
@@ -639,10 +650,10 @@ function PlanningPokerJoinPage() {
     if (readyStories.length === 0) {
       return {
         tone: 'setup',
-        label: 'Preparação',
-        title: 'Prepare histórias para estimar',
-        description: 'Abra o projeto e marque histórias como prontas para estimativa antes de criar a Roda.',
-        primaryText: 'Abrir projeto',
+        label: t('preparation'),
+        title: t('prepare_stories_for_estimation'),
+        description: t('open_the_project_and_mark_stories_as'),
+        primaryText: t('open_project'),
         primaryTo: `/projetos/${selectedProjectId}`,
         secondaryText: '',
         secondaryTo: '',
@@ -652,9 +663,9 @@ function PlanningPokerJoinPage() {
     if (selectedStoryIds.length === 0) {
       return {
         tone: 'select',
-        label: 'Seleção',
-        title: 'Escolha as histórias da sessão',
-        description: 'Selecione uma ou mais histórias prontas na lista para liberar a criação da Roda.',
+        label: t('selection'),
+        title: t('choose_stories_for_the_session'),
+        description: t('select_one_or_more_ready_stories_in'),
         primaryText: '',
         primaryTo: '',
         secondaryText: '',
@@ -664,15 +675,16 @@ function PlanningPokerJoinPage() {
 
     return {
       tone: 'ready',
-      label: 'Pronta',
-      title: 'Roda pronta para criar',
-      description: 'Revise o resumo, confirme as regras e abra a sessão para a guilda.',
+      label: t('ready'),
+      title: t('ready_to_create_a_session'),
+      description: t('review_the_summary_confirm_the_rules_and'),
       primaryText: '',
       primaryTo: '',
       secondaryText: '',
       secondaryTo: '',
     }
   }, [
+      t,
     canManageSelectedProject,
     latestCompletedPlanningSession,
     primaryActivePlanningSession,
@@ -690,14 +702,14 @@ function PlanningPokerJoinPage() {
 
       const safeInviteCode = normalizeInviteCode(rawCode)
       if (!safeInviteCode) {
-        setMessage('Informe o código da sala para entrar na Roda.')
+        setMessage('enter_the_room_code_to_join_the')
         setAccessRequestCode('')
         setAccessRequestFeedback('')
         return false
       }
 
       if (!userId) {
-        setMessage('Entre para acessar a Roda da Fogueira.')
+        setMessage('sign_in_to_access_planning_poker')
         return false
       }
 
@@ -716,18 +728,19 @@ function PlanningPokerJoinPage() {
         setAccessRequestFeedback('')
         setMessage(
           isAutomatic
-            ? 'Não foi possível abrir este convite automaticamente. Confirme se seu e-mail foi adicionado ao projeto ou tente entrar pelo código.'
-            : 'Não encontramos uma Roda acessível com esse código. Se você recebeu um convite, peça ao facilitador para adicionar seu e-mail ao projeto.',
+            ? 'could_not_open_this_invite_automatically_check'
+            : 'no_accessible_session_was_found_for_that',
         )
         return false
       }
 
       setAccessRequestCode('')
       setAccessRequestFeedback('')
-      navigate(`/projetos/${response.data.project_id}/roda/${response.data.id}`)
+      const path = `/projetos/${response.data.project_id}/roda/${response.data.id}`
+      navigate(preview ? localizeHref(path, currentLanguage.current) : path)
       return true
     },
-    [navigate, userId],
+    [navigate, preview, userId],
   )
 
   const loadProjects = useCallback(async () => {
@@ -740,7 +753,7 @@ function PlanningPokerJoinPage() {
     if (!response.success) {
       setProjects([])
       setSelectedProjectId('')
-      setMessage('Não foi possível carregar os projetos agora.')
+      setMessage('could_not_load_projects_right_now')
       return
     }
 
@@ -824,7 +837,7 @@ function PlanningPokerJoinPage() {
     } else {
       setPlanningSessions([])
       setPlanningSessionStoriesBySession({})
-      setPlanningMessage('Não foi possível carregar as Rodas da Fogueira agora.')
+      setPlanningMessage('could_not_load_planning_poker_sessions_right')
     }
 
     setIsLoadingProjectContext(false)
@@ -925,7 +938,7 @@ function PlanningPokerJoinPage() {
 
     const timerId = window.setTimeout(() => {
       autoJoinCodeAttemptedRef.current = codeFromUrl
-      setMessage('Abrindo convite da Roda...')
+      setMessage('opening_planning_poker_invite')
       openPlanningSessionByCode(codeFromUrl, { isAutomatic: true })
     }, 0)
 
@@ -950,8 +963,8 @@ function PlanningPokerJoinPage() {
         if (readyStories.length > 0) {
           setPlanningMessage(
             blockedStoryCount > 0
-              ? 'As histórias enviadas pelo Projeto já estão em Rodas ativas. Continue a sessão existente ou escolha histórias livres.'
-              : 'As histórias enviadas pelo Projeto não estão disponíveis entre as histórias prontas deste contexto.',
+              ? 'the_stories_selected_in_the_project_are'
+              : 'the_stories_selected_in_the_project_are_2',
           )
         }
         return
@@ -964,10 +977,10 @@ function PlanningPokerJoinPage() {
       setHideActiveSessionStories(false)
       setPlanningMessage(
         blockedStoryCount > 0
-          ? `${availableStoryIds.length} histórias livres selecionadas. ${blockedStoryCount} já estão em Rodas ativas e ficaram fora do lote.`
+          ? { key: 'selected_available_stories_were_already_in_active', values: { p1: availableStoryIds.length, p2: blockedStoryCount } }
           : availableStoryIds.length === 1
-            ? 'História selecionada para criar a Roda.'
-            : `${availableStoryIds.length} histórias selecionadas para criar a Roda.`,
+            ? 'story_selected_for_the_new_session'
+            : { key: 'stories_selected_for_the_new_session', values: { p1: availableStoryIds.length } },
       )
     }, 0)
 
@@ -985,17 +998,17 @@ function PlanningPokerJoinPage() {
     if (typeof setTopbarStatus !== 'function') return
 
     setTopbarStatus({
-      label: 'Roda da Fogueira',
-      title: 'Estimativas colaborativas',
+      label: t('planning_poker'),
+      title: t('collaborative_estimation'),
       pills: [
         { text: planningSessionsLabel },
         { text: readyStoriesLabel },
-        { text: selectedProject?.name ?? 'Escolha um projeto' },
+        { text: selectedProject?.name ?? t('choose_a_project') },
       ],
     })
 
     return () => setTopbarStatus(null)
-  }, [planningSessionsLabel, readyStoriesLabel, selectedProject?.name, setTopbarStatus])
+  }, [t, planningSessionsLabel, readyStoriesLabel, selectedProject?.name, setTopbarStatus])
 
   function handleProjectSelection(projectId) {
     setSelectedProjectId(projectId)
@@ -1031,7 +1044,7 @@ function PlanningPokerJoinPage() {
       !selectedStoryIds.includes(storyId) &&
       activePlanningStorySessionByStoryId[storyId]
     ) {
-      setPlanningMessage('Esta história já está em uma Roda ativa. Continue a sessão existente ou escolha uma história livre.')
+      setPlanningMessage('this_story_is_already_in_an_active')
       return
     }
 
@@ -1048,8 +1061,8 @@ function PlanningPokerJoinPage() {
     setSelectedStoryIds((current) => Array.from(new Set([...current, ...visibleStoryIds])))
     setPlanningMessage(
       visibleStoryIds.length === 0
-        ? 'Nenhuma história livre visível para selecionar.'
-        : 'Histórias livres visíveis selecionadas para a Roda.',
+        ? 'no_visible_stories_are_available_to_select'
+        : 'selected_visible_stories_available_for_planning_poker',
     )
   }
 
@@ -1059,8 +1072,8 @@ function PlanningPokerJoinPage() {
     setSelectedStoryIds((current) => Array.from(new Set([...current, ...availableStoryIds])))
     setPlanningMessage(
       availableStoryIds.length === 0
-        ? 'Nenhuma história livre disponível para selecionar.'
-        : 'Histórias livres do projeto selecionadas para a Roda.',
+        ? 'no_available_stories_to_select'
+        : 'selected_available_project_stories_for_planning_poker',
     )
   }
 
@@ -1070,8 +1083,8 @@ function PlanningPokerJoinPage() {
     setSelectedStoryIds(availableStoryIds)
     setPlanningMessage(
       readyStoriesInActiveSessionsCount > 0
-        ? 'Histórias livres selecionadas. Histórias em Rodas ativas ficaram fora do lote.'
-        : 'Todas as histórias prontas foram selecionadas para a Roda.',
+        ? 'selected_available_stories_stories_in_active_sessions'
+        : 'all_ready_stories_were_selected_for_planning',
     )
   }
 
@@ -1096,9 +1109,9 @@ function PlanningPokerJoinPage() {
     setAccessRequestFeedback('')
     try {
       await copyTextToClipboard(accessRequestMessage)
-      setAccessRequestFeedback('Mensagem copiada para enviar ao facilitador.')
+      setAccessRequestFeedback('message_copied_for_the_facilitator')
     } catch {
-      setAccessRequestFeedback('Não foi possível copiar automaticamente. Use a mensagem manual abaixo.')
+      setAccessRequestFeedback('could_not_copy_automatically_use_the_message')
     }
   }
 
@@ -1107,29 +1120,29 @@ function PlanningPokerJoinPage() {
     setPlanningMessage('')
 
     if (!selectedProjectId) {
-      setPlanningMessage('Selecione um projeto para criar a Roda da Fogueira.')
+      setPlanningMessage('select_a_project_to_create_a_planning')
       return
     }
 
     if (!canManageSelectedProject) {
-      setPlanningMessage('Apenas responsáveis e administradores podem criar uma Roda da Fogueira.')
+      setPlanningMessage('only_owners_and_administrators_can_create_a')
       return
     }
 
     if (selectedStoryIds.length === 0) {
-      setPlanningMessage('Selecione ao menos uma história pronta para estimar.')
+      setPlanningMessage('select_at_least_one_story_ready_to')
       return
     }
 
     if (selectedStoriesInActiveSessions.length > 0) {
-      setPlanningMessage('Remova histórias que já estão em Rodas ativas antes de criar uma nova sessão.')
+      setPlanningMessage('remove_stories_that_are_already_in_active')
       return
     }
 
     setIsCreatingPlanningSession(true)
     const response = await createPlanningPokerSession({
       projectId: selectedProjectId,
-      name: planningSessionName || `Roda da Fogueira - ${selectedProject?.name ?? 'Projeto'}`,
+      name: planningSessionName || `Roda da Fogueira - ${selectedProject?.name ?? t('project')}`,
       userStoryIds: selectedStoryIds,
       teamId: planningTeamId || null,
       scoringScale: planningScoringScale,
@@ -1143,7 +1156,7 @@ function PlanningPokerJoinPage() {
     setIsCreatingPlanningSession(false)
 
     if (!response.success || !response.data) {
-      setPlanningMessage(response.error?.message ?? 'Não foi possível criar a Roda da Fogueira agora.')
+      setPlanningMessage('could_not_create_a_planning_poker_session')
       return
     }
 
@@ -1151,8 +1164,9 @@ function PlanningPokerJoinPage() {
     setPlanningTeamId('')
     setPlanningScoringScale('fibonacci')
     setSelectedStoryIds([])
-    setPlanningMessage('Roda da Fogueira criada.')
-    navigate(`/projetos/${selectedProjectId}/roda/${response.data.id}`)
+    setPlanningMessage('planning_poker_session_created')
+    const path = `/projetos/${selectedProjectId}/roda/${response.data.id}`
+    navigate(preview ? localizeHref(path, currentLanguage.current) : path)
   }
 
   async function handleCopySessionInvite(session, copyType) {
@@ -1161,21 +1175,21 @@ function PlanningPokerJoinPage() {
     const safeInviteCode = normalizeInviteCode(session?.invite_code)
 
     if (!safeInviteCode) {
-      setCopyMessage('Esta Roda ainda não possui código de convite.')
-      setCopyFeedbackBySessionId((current) => ({ ...current, [session?.id]: 'Convite indisponível' }))
+      setCopyMessage('this_session_has_no_invite_code_yet')
+      setCopyFeedbackBySessionId((current) => ({ ...current, [session?.id]: 'invite_unavailable' }))
       return
     }
 
-    const textToCopy = copyType === 'link' ? buildPlanningInviteUrl(safeInviteCode) : safeInviteCode
+    const textToCopy = copyType === 'link' ? buildPlanningInviteUrl(safeInviteCode, preview ? language : undefined) : safeInviteCode
 
     try {
       await copyTextToClipboard(textToCopy)
-      const nextMessage = copyType === 'link' ? 'Link copiado' : 'Código copiado'
-      setCopyMessage(copyType === 'link' ? 'Link copiado. Envie para pessoas adicionadas ao projeto.' : `${nextMessage}.`)
+      const nextMessage = copyType === 'link' ? 'link_copied' : 'code_copied'
+      setCopyMessage(copyType === 'link' ? 'link_copied_send_it_to_people_who' : 'code_copied_2')
       setCopyFeedbackBySessionId((current) => ({ ...current, [session.id]: nextMessage }))
     } catch {
-      setCopyMessage('Não foi possível copiar o convite agora.')
-      setCopyFeedbackBySessionId((current) => ({ ...current, [session.id]: 'Falha ao copiar' }))
+      setCopyMessage('could_not_copy_the_invite_right_now')
+      setCopyFeedbackBySessionId((current) => ({ ...current, [session.id]: 'copy_failed' }))
     }
   }
 
@@ -1193,11 +1207,11 @@ function PlanningPokerJoinPage() {
           stories: planningSessionStoriesBySession[session.id] ?? [],
         }),
       )
-      setCopyMessage('Resumo copiado.')
-      setCopyFeedbackBySessionId((current) => ({ ...current, [session.id]: 'Resumo copiado' }))
+      setCopyMessage('summary_copied')
+      setCopyFeedbackBySessionId((current) => ({ ...current, [session.id]: 'summary_copied_2' }))
     } catch {
-      setCopyMessage('Não foi possível copiar o resumo agora.')
-      setCopyFeedbackBySessionId((current) => ({ ...current, [session.id]: 'Falha ao copiar' }))
+      setCopyMessage('could_not_copy_the_summary_right_now')
+      setCopyFeedbackBySessionId((current) => ({ ...current, [session.id]: 'copy_failed' }))
     }
   }
 
@@ -1205,17 +1219,16 @@ function PlanningPokerJoinPage() {
     <div className="projects-page planning-poker-join planning-poker-dashboard">
       <section className="panel projects-page__hero planning-poker-join__hero">
         <div className="planning-poker-join__copy">
-          <p className="projects-page__eyebrow">Roda da Fogueira</p>
-          <h1>Estimativas colaborativas</h1>
+          <p className="projects-page__eyebrow">{t('planning_poker')}</p>
+          <h1>{t('collaborative_estimation')}</h1>
           <p>
-            Crie Rodas por projeto, escolha histórias prontas para estimar e acompanhe o histórico sem ocupar a tela de
-            detalhe do projeto.
+            {t('create_sessions_by_project_select_stories_ready')}
           </p>
         </div>
 
         <form className="planning-poker-join__form" onSubmit={handleJoinByCode}>
           <label className="projects-page__field">
-            <span>Entrar por código</span>
+            <span>{t('join_with_a_code')}</span>
             <input
               type="text"
               value={inviteCode}
@@ -1227,7 +1240,7 @@ function PlanningPokerJoinPage() {
                   setAccessRequestFeedback('')
                 }
               }}
-              placeholder="Ex.: 136CE7AB2E"
+              placeholder={t('e_g_136ce7ab2e')}
               autoComplete="off"
               className="planning-poker-join__code-input"
               disabled={isSearching}
@@ -1235,36 +1248,34 @@ function PlanningPokerJoinPage() {
           </label>
 
           <button type="submit" className="btn btn-secondary" disabled={isSearching}>
-            {isSearching ? 'Buscando Roda...' : 'Entrar na Roda'}
+            {isSearching ? t('finding_session') : t('join_session')}
           </button>
 
           <p className="planning-poker-join__access-note">
-            Links com código tentam abrir a sala automaticamente. O acesso exige que seu e-mail esteja no projeto da
-            Roda.
+            {t('invite_links_open_the_room_automatically_when')}
           </p>
 
-          {message ? <p className="projects-page__message">{message}</p> : null}
+          {message ? <p className="projects-page__message" role="status">{formatNotice(t, message)}</p> : null}
         </form>
       </section>
 
       {accessRequestCode ? (
-        <section className="panel planning-poker-join__access-request" aria-label="Pedido de liberação para a Roda">
+        <section className="panel planning-poker-join__access-request" aria-label={t('planning_poker_access_request')}>
           <div className="planning-poker-join__access-request-copy">
-            <p className="projects-page__eyebrow">Acesso pendente</p>
-            <h2>Peça liberação ao facilitador</h2>
+            <p className="projects-page__eyebrow">{t('access_pending')}</p>
+            <h2>{t('request_access_from_the_facilitator')}</h2>
             <p>
-              O link da Roda confirma o destino, mas a entrada depende do seu e-mail estar no projeto. Copie a mensagem
-              abaixo e envie para quem criou a sessão.
+              {t('the_invite_identifies_the_session_to_join')}
             </p>
           </div>
           <div className="planning-poker-join__access-request-card">
-            <span>Código recebido</span>
+            <span>{t('code_received')}</span>
             <strong>{accessRequestCode}</strong>
-            <p>{user?.email ? `E-mail da sua conta: ${user.email}` : 'Use o e-mail cadastrado no ProdForge.'}</p>
+            <p>{user?.email ? t('your_account_email', { p1: user.email }) : t('use_the_email_registered_with_prodforge')}</p>
           </div>
           <div className="planning-poker-join__access-request-actions">
             <button type="button" className="btn btn-primary btn-small" onClick={handleCopyAccessRequestMessage}>
-              Copiar pedido de acesso
+              {t('copy_access_request')}
             </button>
             <button
               type="button"
@@ -1275,19 +1286,19 @@ function PlanningPokerJoinPage() {
                 setMessage('')
               }}
             >
-              Dispensar aviso
+              {t('dismiss_notice')}
             </button>
-            {accessRequestFeedback ? <p className="projects-page__message">{accessRequestFeedback}</p> : null}
+            {accessRequestFeedback ? <p className="projects-page__message" role="status">{formatNotice(t, accessRequestFeedback)}</p> : null}
           </div>
           <details className="planning-poker-access-request__manual">
-            <summary>Copiar manualmente</summary>
+            <summary>{t('copy_manually')}</summary>
             <label>
-              <span>Mensagem para o facilitador</span>
+              <span>{t('message_to_the_facilitator')}</span>
               <textarea
                 readOnly
                 rows={5}
                 value={accessRequestMessage}
-                aria-label="Mensagem de pedido de acesso para copiar manualmente"
+                aria-label={t('access_request_message_for_manual_copying')}
                 onFocus={(event) => event.target.select()}
               />
             </label>
@@ -1295,7 +1306,7 @@ function PlanningPokerJoinPage() {
         </section>
       ) : null}
 
-      <section className="planning-poker-dashboard__overview" aria-label="Resumo operacional da Roda da Fogueira">
+      <section className="planning-poker-dashboard__overview" aria-label={t('planning_poker_overview')}>
         {dashboardOverviewCards.map((card) => (
           <article key={card.label}>
             <span>{card.label}</span>
@@ -1307,7 +1318,7 @@ function PlanningPokerJoinPage() {
 
       <section
         className={`planning-poker-dashboard__next-action planning-poker-dashboard__next-action--${dashboardNextAction.tone}`}
-        aria-label="Próxima ação recomendada"
+        aria-label={t('recommended_next_action')}
       >
         <div>
           <p className="projects-page__eyebrow">{dashboardNextAction.label}</p>
@@ -1328,46 +1339,45 @@ function PlanningPokerJoinPage() {
         </div>
       </section>
 
-      <section className="panel planning-poker-dashboard__accessible" aria-label="Rodas acessíveis para sua conta">
+      <section className="panel planning-poker-dashboard__accessible" aria-label={t('sessions_accessible_to_your_account')}>
         <div className="planning-poker-dashboard__accessible-header">
           <div>
-            <p className="projects-page__eyebrow">Minha participação</p>
-            <h2>Rodas acessíveis</h2>
+            <p className="projects-page__eyebrow">{t('my_participation')}</p>
+            <h2>{t('accessible_sessions')}</h2>
             <p>
-              Quem cria a Roda define a participação adicionando e-mails ao projeto. Depois disso, as sessões aparecem
-              aqui e o link leva direto para a sala.
+              {t('the_facilitator_adds_email_addresses_to_the')}
             </p>
           </div>
-          <div className="planning-poker-dashboard__accessible-metrics" aria-label="Resumo das Rodas acessíveis">
+          <div className="planning-poker-dashboard__accessible-metrics" aria-label={t('accessible_sessions_overview')}>
             <span>{accessiblePlanningSessionsLabel}</span>
-            <strong>{formatPlanningCount(accessibleActivePlanningSessionsCount, 'ativa', 'ativas')}</strong>
+            <strong>{t('active_count', { count: accessibleActivePlanningSessionsCount })}</strong>
           </div>
         </div>
 
-        <div className="planning-poker-dashboard__access-steps" aria-label="Como funciona o acesso por convite">
+        <div className="planning-poker-dashboard__access-steps" aria-label={t('how_invite_access_works')}>
           <article>
             <span>1</span>
-            <strong>Facilitador adiciona</strong>
-            <p>O e-mail precisa estar no projeto da Roda.</p>
+            <strong>{t('facilitator_grants_access')}</strong>
+            <p>{t('your_email_must_be_added_to_the')}</p>
           </article>
           <article>
             <span>2</span>
-            <strong>Convite abre a sala</strong>
-            <p>O link ou código leva para a Roda quando o acesso está liberado.</p>
+            <strong>{t('invite_opens_the_room')}</strong>
+            <p>{t('the_link_or_code_opens_the_room')}</p>
           </article>
           <article>
             <span>3</span>
-            <strong>Participante acompanha</strong>
-            <p>Rodas acessíveis ficam listadas nesta área.</p>
+            <strong>{t('participant_follows_the_session')}</strong>
+            <p>{t('sessions_you_can_access_appear_here')}</p>
           </article>
         </div>
 
         {isLoadingAccessiblePlanningSessions ? (
-          <p className="projects-page__state">Carregando Rodas acessíveis...</p>
+          <p className="projects-page__state">{t('loading_accessible_sessions')}</p>
         ) : null}
 
         {canFilterAccessiblePlanningSessions ? (
-          <div className="planning-poker-dashboard__accessible-tools" aria-label="Filtros das Rodas acessíveis">
+          <div className="planning-poker-dashboard__accessible-tools" aria-label={t('accessible_session_filters')}>
             <div className="planning-poker-dashboard__quick-filters">
               {accessiblePlanningFilterOptions.map((filter) => (
                 <button
@@ -1385,12 +1395,12 @@ function PlanningPokerJoinPage() {
 
             <div className="planning-poker-dashboard__accessible-search">
               <label className="projects-page__field">
-                <span>Buscar nas minhas Rodas</span>
+                <span>{t('search_my_sessions')}</span>
                 <input
                   type="search"
                   value={accessiblePlanningSearch}
                   onChange={(event) => setAccessiblePlanningSearch(event.target.value)}
-                  placeholder="Nome, projeto, código ou história"
+                  placeholder={t('name_project_code_or_story')}
                 />
               </label>
               <button
@@ -1399,7 +1409,7 @@ function PlanningPokerJoinPage() {
                 onClick={handleClearAccessiblePlanningFilters}
                 disabled={!hasAccessiblePlanningFilters}
               >
-                Limpar filtros
+                {t('clear_filters')}
               </button>
             </div>
           </div>
@@ -1407,20 +1417,19 @@ function PlanningPokerJoinPage() {
 
         {hasNoAccessiblePlanningSessions ? (
           <div className="planning-poker-dashboard__accessible-empty">
-            <strong>Nenhuma Roda acessível ainda</strong>
+            <strong>{t('no_accessible_sessions_yet')}</strong>
             <p>
-              Peça ao facilitador para adicionar seu e-mail ao projeto da Roda. Depois disso, você pode entrar pelo link,
-              pelo código ou por esta lista.
+              {t('ask_the_facilitator_to_add_your_email')}
             </p>
           </div>
         ) : null}
 
         {hasFilteredAccessiblePlanningNoResults ? (
           <div className="planning-poker-dashboard__accessible-empty">
-            <strong>Nenhuma Roda encontrada</strong>
-            <p>Limpe os filtros para consultar outras Rodas acessíveis para sua conta.</p>
+            <strong>{t('no_sessions_found')}</strong>
+            <p>{t('clear_the_filters_to_see_other_sessions')}</p>
             <button type="button" className="btn btn-secondary btn-small" onClick={handleClearAccessiblePlanningFilters}>
-              Limpar filtros
+              {t('clear_filters')}
             </button>
           </div>
         ) : null}
@@ -1430,7 +1439,7 @@ function PlanningPokerJoinPage() {
             {accessiblePlanningSessionsPreview.map((session) => {
               const isLiveSession = LIVE_PLANNING_SESSION_STATUSES.includes(session.status)
               const progress = accessiblePlanningSessionProgressById[session.id] ?? {
-                label: 'Sem histórias vinculadas',
+                label: t('no_linked_stories'),
                 progressPercent: 0,
               }
 
@@ -1442,18 +1451,18 @@ function PlanningPokerJoinPage() {
                   }`.trim()}
                 >
                   <div>
-                    <span>{session.projectName ?? 'Projeto sem nome'}</span>
+                    <span>{session.projectName ?? t('untitled_project')}</span>
                     <h3>{session.name}</h3>
                     <p>
-                      {getPlanningSessionStatusLabel(session.status)} · {getPlanningScoringScaleLabel(session.scoring_scale)}
+                      {getPlanningSessionStatusLabel(session.status, t)} · {getPlanningScoringScaleLabel(session.scoring_scale, t)}
                     </p>
                   </div>
-                  <div className="planning-poker-dashboard__accessible-progress" aria-label={`Progresso de ${session.name}`}>
+                  <div className="planning-poker-dashboard__accessible-progress" aria-label={t('progress_for', { p1: session.name })}>
                     <span>{progress.label}</span>
                     <strong>{progress.progressPercent}%</strong>
                   </div>
                   <Link className="btn btn-secondary btn-small" to={`/projetos/${session.project_id}/roda/${session.id}`}>
-                    {isLiveSession ? 'Entrar na Roda' : 'Consultar Roda'}
+                    {isLiveSession ? t('join_session') : t('view_session')}
                   </Link>
                 </article>
               )
@@ -1463,31 +1472,31 @@ function PlanningPokerJoinPage() {
 
         {shouldShowAccessiblePlanningLimit ? (
           <p className="projects-page__state">
-            Mostrando {accessiblePlanningSessionsPreview.length} de{' '}
-            {formatPlanningCount(filteredAccessiblePlanningSessions.length, 'Roda acessível', 'Rodas acessíveis')}.
+            {t('showing')}{" "}{accessiblePlanningSessionsPreview.length}{" "}{t('of')}{' '}
+            {formatPlanningCount(filteredAccessiblePlanningSessions.length, t('accessible_session'), t('accessible_sessions'))}.
           </p>
         ) : null}
       </section>
 
       <div className="projects-page__layout">
-        <section className="panel projects-page__form-card" aria-label="Criar Roda da Fogueira">
+        <section className="panel projects-page__form-card" aria-label={t('create_planning_poker_session')}>
           <div className="projects-page__card-header">
-            <p className="projects-page__eyebrow">Nova Roda</p>
-            <h2>Criar sessão</h2>
-            <p>Selecione um projeto, histórias prontas e as regras da votação.</p>
+            <p className="projects-page__eyebrow">{t('new_session')}</p>
+            <h2>{t('create_session')}</h2>
+            <p>{t('choose_a_project_ready_stories_and_voting')}</p>
           </div>
 
-          {isLoadingProjects ? <p className="projects-page__state">Carregando projetos...</p> : null}
+          {isLoadingProjects ? <p className="projects-page__state">{t('loading_projects')}</p> : null}
 
           <form className="project-detail-page__campfire-form" onSubmit={handleCreatePlanningSession}>
             <label className="projects-page__field">
-              <span>Projeto</span>
+              <span>{t('project')}</span>
               <select
                 value={selectedProjectId}
                 onChange={(event) => handleProjectSelection(event.target.value)}
                 disabled={isLoadingProjects || isCreatingPlanningSession || projects.length === 0}
               >
-                {projects.length === 0 ? <option value="">Nenhum projeto disponível</option> : null}
+                {projects.length === 0 ? <option value="">{t('no_projects_available')}</option> : null}
                 {projects.map((project) => (
                   <option key={project.id} value={project.id}>
                     {project.name}
@@ -1498,24 +1507,24 @@ function PlanningPokerJoinPage() {
 
             <div className="project-detail-page__campfire-grid">
               <label className="projects-page__field">
-                <span>Nome da Roda</span>
+                <span>{t('session_name')}</span>
                 <input
                   type="text"
                   value={planningSessionName}
                   onChange={(event) => setPlanningSessionName(event.target.value)}
-                  placeholder={`Roda da Fogueira - ${selectedProject?.name ?? 'Projeto'}`}
+                  placeholder={`Roda da Fogueira - ${selectedProject?.name ?? t('project')}`}
                   disabled={isCreatingPlanningSession || !selectedProjectId}
                 />
               </label>
 
               <label className="projects-page__field">
-                <span>Time</span>
+                <span>{t('team')}</span>
                 <select
                   value={planningTeamId}
                   onChange={(event) => setPlanningTeamId(event.target.value)}
                   disabled={isCreatingPlanningSession || !selectedProjectId}
                 >
-                  <option value="">Projeto inteiro</option>
+                  <option value="">{t('entire_project')}</option>
                   {teams.map((team) => (
                     <option key={team.id} value={team.id}>
                       {team.name}
@@ -1525,7 +1534,7 @@ function PlanningPokerJoinPage() {
               </label>
 
               <label className="projects-page__field">
-                <span>Escala</span>
+                <span>{t('scale')}</span>
                 <select
                   value={planningScoringScale}
                   onChange={(event) => setPlanningScoringScale(event.target.value)}
@@ -1533,14 +1542,14 @@ function PlanningPokerJoinPage() {
                 >
                   {PLANNING_SCORING_SCALE_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
-                      {option.label}
+                      {t(option.label)}
                     </option>
                   ))}
                 </select>
               </label>
 
               <label className="projects-page__field">
-                <span>Tempo de votação</span>
+                <span>{t('voting_time')}</span>
                 <select
                   value={planningVoteTimeLimit}
                   onChange={(event) => setPlanningVoteTimeLimit(Number(event.target.value))}
@@ -1548,7 +1557,7 @@ function PlanningPokerJoinPage() {
                 >
                   {PLANNING_TIMER_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
-                      {option.label}
+                      {t(option.label)}
                     </option>
                   ))}
                 </select>
@@ -1557,10 +1566,10 @@ function PlanningPokerJoinPage() {
 
             <details className="planning-poker-dashboard__advanced">
               <summary>
-                <span>Regras avançadas</span>
-                <strong>{planningRuleSummary.length} regras definidas</strong>
+                <span>{t('advanced_rules')}</span>
+                <strong>{planningRuleSummary.length}{" "}{t('rules_configured')}</strong>
               </summary>
-              <div className="project-detail-page__campfire-options" aria-label="Configurações da Roda">
+              <div className="project-detail-page__campfire-options" aria-label={t('session_settings')}>
                 <label>
                   <input
                     type="checkbox"
@@ -1568,7 +1577,7 @@ function PlanningPokerJoinPage() {
                     onChange={(event) => setPlanningAllowRevote(event.target.checked)}
                     disabled={isCreatingPlanningSession}
                   />
-                  <span>Permitir novo voto</span>
+                  <span>{t('allow_vote_changes')}</span>
                 </label>
                 <label>
                   <input
@@ -1577,7 +1586,7 @@ function PlanningPokerJoinPage() {
                     onChange={(event) => setPlanningRevealAfterAll(event.target.checked)}
                     disabled={isCreatingPlanningSession}
                   />
-                  <span>Revelar após todos votarem</span>
+                  <span>{t('reveal_after_everyone_votes')}</span>
                 </label>
                 <label>
                   <input
@@ -1586,7 +1595,7 @@ function PlanningPokerJoinPage() {
                     onChange={(event) => setPlanningAllowAbstention(event.target.checked)}
                     disabled={isCreatingPlanningSession}
                   />
-                  <span>Permitir abstenção</span>
+                  <span>{t('allow_abstentions')}</span>
                 </label>
                 <label>
                   <input
@@ -1595,27 +1604,27 @@ function PlanningPokerJoinPage() {
                     onChange={(event) => setPlanningAllowObservers(event.target.checked)}
                     disabled={isCreatingPlanningSession}
                   />
-                  <span>Permitir observadores</span>
+                  <span>{t('allow_observers')}</span>
                 </label>
               </div>
             </details>
 
             <div className="project-detail-page__campfire-stories">
               <div>
-                <h3>Histórias prontas para estimar</h3>
-                <p>{selectedStoryIds.length} selecionadas. {readyStoriesLabel} disponíveis.</p>
+                <h3>{t('stories_ready_to_estimate')}</h3>
+                <p>{selectedStoryIds.length}{" "}{t('selected')}{" "}{readyStoriesLabel}{" "}{t('available')}</p>
               </div>
 
               {isLoadingProjectContext ? (
-                <p className="projects-page__state">Carregando contexto da Roda...</p>
+                <p className="projects-page__state">{t('loading_session_context')}</p>
               ) : null}
 
               {!isLoadingProjectContext && selectedProjectId && readyStories.length === 0 ? (
                 <div className="projects-page__empty">
-                  <h3>Nenhuma história pronta para estimar</h3>
-                  <p>Marque histórias do projeto como prontas para estimar antes de criar uma Roda.</p>
+                  <h3>{t('no_stories_ready_to_estimate')}</h3>
+                  <p>{t('mark_project_stories_as_ready_to_estimate')}</p>
                   <Link className="btn btn-secondary btn-small" to={`/projetos/${selectedProjectId}`}>
-                    Preparar histórias
+                    {t('prepare_stories')}
                   </Link>
                 </div>
               ) : null}
@@ -1624,12 +1633,12 @@ function PlanningPokerJoinPage() {
                 <>
                   <div className="project-detail-page__campfire-story-tools">
                     <label className="projects-page__field">
-                      <span>Buscar histórias</span>
+                      <span>{t('search_stories')}</span>
                       <input
                         type="search"
                         value={readyStorySearch}
                         onChange={(event) => setReadyStorySearch(event.target.value)}
-                        placeholder="Título ou contexto"
+                        placeholder={t('title_or_context')}
                         disabled={isCreatingPlanningSession}
                       />
                     </label>
@@ -1641,7 +1650,7 @@ function PlanningPokerJoinPage() {
                         onClick={() => setHideActiveSessionStories((current) => !current)}
                         disabled={isCreatingPlanningSession || readyStoriesInActiveSessionsCount === 0}
                       >
-                        {hideActiveSessionStories ? 'Ver todas' : 'Ocultar em Roda ativa'}
+                        {hideActiveSessionStories ? t('show_all') : t('hide_stories_in_active_sessions')}
                       </button>
                       <button
                         type="button"
@@ -1649,7 +1658,7 @@ function PlanningPokerJoinPage() {
                         onClick={handleSelectVisibleStories}
                         disabled={isCreatingPlanningSession || visibleReadyStoriesWithoutActiveSession.length === 0}
                       >
-                        Selecionar livres visíveis
+                        {t('select_visible_available_stories')}
                       </button>
                       <button
                         type="button"
@@ -1657,7 +1666,7 @@ function PlanningPokerJoinPage() {
                         onClick={handleSelectAvailableStories}
                         disabled={isCreatingPlanningSession || readyStoriesWithoutActiveSession.length === 0}
                       >
-                        Selecionar livres
+                        {t('select_available_stories')}
                       </button>
                       <button
                         type="button"
@@ -1665,7 +1674,7 @@ function PlanningPokerJoinPage() {
                         onClick={handleSelectAllReadyStories}
                         disabled={isCreatingPlanningSession || readyStoriesWithoutActiveSession.length === 0}
                       >
-                        Selecionar todas livres
+                        {t('select_all_available_stories')}
                       </button>
                       <button
                         type="button"
@@ -1673,7 +1682,7 @@ function PlanningPokerJoinPage() {
                         onClick={handleClearStorySelection}
                         disabled={isCreatingPlanningSession || selectedStoryIds.length === 0}
                       >
-                        Limpar seleção
+                        {t('clear_selection')}
                       </button>
                     </div>
                   </div>
@@ -1682,11 +1691,11 @@ function PlanningPokerJoinPage() {
                   {selectedStories.length > 0 ? (
                     <div
                       className="planning-poker-dashboard__selected-stories"
-                      aria-label="Histórias selecionadas para a Roda"
+                      aria-label={t('stories_selected_for_planning_poker_2')}
                     >
                       <div className="planning-poker-dashboard__selected-stories-header">
                         <div>
-                          <p className="projects-page__eyebrow">Seleção atual</p>
+                          <p className="projects-page__eyebrow">{t('current_selection')}</p>
                           <h3>{selectedStoriesPanelLabel}</h3>
                         </div>
                         <button
@@ -1695,7 +1704,7 @@ function PlanningPokerJoinPage() {
                           onClick={handleClearStorySelection}
                           disabled={isCreatingPlanningSession}
                         >
-                          Limpar seleção
+                          {t('clear_selection')}
                         </button>
                       </div>
                       {selectedStoriesInActiveSessions.length > 0 ? (
@@ -1703,7 +1712,7 @@ function PlanningPokerJoinPage() {
                           <div>
                             <strong>{selectedStoriesConflictLabel}</strong>
                             <p>
-                              Remova essas histórias do lote ou continue a Roda já aberta antes de criar uma nova sessão.
+                              {t('remove_these_stories_from_the_selection_or')}
                             </p>
                           </div>
                           {selectedStoriesInActiveSessions[0]?.session ? (
@@ -1711,7 +1720,7 @@ function PlanningPokerJoinPage() {
                               className="btn btn-secondary btn-small"
                               to={`/projetos/${selectedProjectId}/roda/${selectedStoriesInActiveSessions[0].session.id}`}
                             >
-                              Abrir Roda ativa
+                              {t('open_active_session')}
                             </Link>
                           ) : null}
                         </div>
@@ -1728,11 +1737,11 @@ function PlanningPokerJoinPage() {
                               }`.trim()}
                             >
                               <div>
-                                <strong>{story.title ?? 'História sem título'}</strong>
+                                <strong>{story.title ?? t('untitled_story')}</strong>
                                 <span>
                                   {activeSession
-                                    ? `Em Roda ativa: ${activeSession.name}`
-                                    : formatPlanningDateTime(story.created_at)}
+                                    ? t('in_an_active_session', { p1: activeSession.name })
+                                    : formatPlanningDateTime(story.created_at, language)}
                                 </span>
                               </div>
                               <button
@@ -1741,7 +1750,7 @@ function PlanningPokerJoinPage() {
                                 onClick={() => handleRemovePlanningStory(story.id)}
                                 disabled={isCreatingPlanningSession}
                               >
-                                Remover
+                                {t('remove')}
                               </button>
                             </article>
                           )
@@ -1754,13 +1763,13 @@ function PlanningPokerJoinPage() {
                     <div className="projects-page__empty">
                       <h3>
                         {hideActiveSessionStories && filteredReadyStories.length > 0
-                          ? 'Todas as histórias visíveis estão em Rodas ativas'
-                          : 'Nenhuma história encontrada'}
+                          ? t('all_visible_stories_are_in_active_sessions')
+                          : t('no_stories_found')}
                       </h3>
                       <p>
                         {hideActiveSessionStories && filteredReadyStories.length > 0
-                          ? 'Desative o filtro para visualizar também histórias que já participam de uma Roda em andamento.'
-                          : 'Limpe a busca para ver outras histórias prontas deste projeto.'}
+                          ? t('turn_off_the_filter_to_also_see')
+                          : t('clear_the_search_to_see_other_ready')}
                       </p>
                       {hideActiveSessionStories && filteredReadyStories.length > 0 ? (
                         <button
@@ -1769,7 +1778,7 @@ function PlanningPokerJoinPage() {
                           onClick={() => setHideActiveSessionStories(false)}
                           disabled={isCreatingPlanningSession}
                         >
-                          Ver todas
+                          {t('show_all')}
                         </button>
                       ) : null}
                     </div>
@@ -1798,9 +1807,9 @@ function PlanningPokerJoinPage() {
                             />
                             <span>
                               <strong>{story.title}</strong>
-                              <small>{formatPlanningDateTime(story.created_at)}</small>
-                              <em>{isSelected ? 'Selecionada' : activeSession ? 'Já em Roda ativa' : 'Pronta para estimar'}</em>
-                              {activeSession ? <small>Em andamento: {activeSession.name}</small> : null}
+                              <small>{formatPlanningDateTime(story.created_at, language)}</small>
+                              <em>{isSelected ? t('selected_2') : activeSession ? t('already_in_an_active_session') : t('ready_to_estimate')}</em>
+                              {activeSession ? <small>{t('in_progress_2')}{" "}{activeSession.name}</small> : null}
                             </span>
                           </label>
                         )
@@ -1811,37 +1820,37 @@ function PlanningPokerJoinPage() {
               ) : null}
             </div>
 
-            <div className="project-detail-page__campfire-create-summary" aria-label="Resumo antes de criar a Roda">
+            <div className="project-detail-page__campfire-create-summary" aria-label={t('review_before_creating_a_session')}>
               <div>
-                <p className="projects-page__eyebrow">Conferência</p>
-                <h3>Resumo da Roda</h3>
-                <p>Revise o contexto antes de abrir a sessão para a guilda.</p>
+                <p className="projects-page__eyebrow">{t('review')}</p>
+                <h3>{t('session_summary')}</h3>
+                <p>{t('review_the_details_before_opening_the_session')}</p>
               </div>
 
               <dl>
                 <div>
-                  <dt>Projeto</dt>
-                  <dd>{selectedProject?.name ?? 'Selecione um projeto'}</dd>
+                  <dt>{t('project')}</dt>
+                  <dd>{selectedProject?.name ?? t('select_a_project')}</dd>
                 </div>
                 <div>
-                  <dt>Time</dt>
-                  <dd>{selectedTeam?.name ?? 'Projeto inteiro'}</dd>
+                  <dt>{t('team')}</dt>
+                  <dd>{selectedTeam?.name ?? t('entire_project')}</dd>
                 </div>
                 <div>
-                  <dt>Histórias</dt>
-                  <dd>{formatPlanningCount(selectedStoryIds.length, 'selecionada', 'selecionadas')}</dd>
+                  <dt>{t('stories')}</dt>
+                  <dd>{t('selected_count', { count: selectedStoryIds.length })}</dd>
                 </div>
                 <div>
-                  <dt>Escala</dt>
-                  <dd>{getPlanningScoringScaleLabel(planningScoringScale)}</dd>
+                  <dt>{t('scale')}</dt>
+                  <dd>{getPlanningScoringScaleLabel(planningScoringScale, t)}</dd>
                 </div>
                 <div>
-                  <dt>Timer</dt>
+                  <dt>{t('timer')}</dt>
                   <dd>{selectedTimerLabel}</dd>
                 </div>
               </dl>
 
-              <div className="project-detail-page__campfire-create-rules" aria-label="Regras ativas da Roda">
+              <div className="project-detail-page__campfire-create-rules" aria-label={t('active_session_rules')}>
                 {planningRuleSummary.map((rule) => (
                   <span key={rule}>{rule}</span>
                 ))}
@@ -1855,14 +1864,14 @@ function PlanningPokerJoinPage() {
               </ul>
 
               {!hasSelectedStoryPreview ? (
-                <p className="projects-page__state">Selecione ao menos uma história pronta para estimar.</p>
+                <p className="projects-page__state">{t('select_at_least_one_story_ready_to')}</p>
               ) : null}
             </div>
 
-            <div className="planning-poker-dashboard__readiness" aria-label="Pré-requisitos para criar a Roda">
+            <div className="planning-poker-dashboard__readiness" aria-label={t('requirements_for_creating_a_session')}>
               <div>
-                <p className="projects-page__eyebrow">Pronto para criar?</p>
-                <h3>{canCreatePlanningSession ? 'Roda pronta para abrir' : 'Complete os requisitos'}</h3>
+                <p className="projects-page__eyebrow">{t('ready_to_create')}</p>
+                <h3>{canCreatePlanningSession ? t('session_ready_to_open') : t('complete_the_requirements')}</h3>
                 <p>{planningCreateHint}</p>
               </div>
               <ul>
@@ -1880,43 +1889,43 @@ function PlanningPokerJoinPage() {
               className="btn btn-primary"
               disabled={isCreatingPlanningSession || !canCreatePlanningSession}
             >
-              {isCreatingPlanningSession ? 'Criando Roda...' : 'Criar Roda da Fogueira'}
+              {isCreatingPlanningSession ? t('creating_session') : t('create_planning_poker_session')}
             </button>
           </form>
 
           {!selectedProjectId && projects.length === 0 ? (
             <div className="projects-page__empty">
-              <h3>Nenhum projeto criado ainda</h3>
-              <p>Crie um projeto para usar a Roda da Fogueira.</p>
+              <h3>{t('no_projects_yet')}</h3>
+              <p>{t('create_a_project_to_use_planning_poker')}</p>
               <Link className="btn btn-secondary btn-small" to="/projetos">
-                Criar projeto
+                {t('create_project')}
               </Link>
             </div>
           ) : null}
           {selectedProjectId && !canManageSelectedProject ? (
             <div className="projects-page__empty">
-              <h3>Modo consulta neste projeto</h3>
-              <p>Você pode consultar Rodas deste projeto. Apenas responsáveis e administradores criam novas sessões.</p>
+              <h3>{t('view_only_mode_for_this_project')}</h3>
+              <p>{t('you_can_view_this_project_s_sessions')}</p>
               <Link className="btn btn-secondary btn-small" to={`/projetos/${selectedProjectId}`}>
-                Abrir projeto
+                {t('open_project')}
               </Link>
             </div>
           ) : null}
-          {planningMessage ? <p className="projects-page__message">{planningMessage}</p> : null}
+          {planningMessage ? <p className="projects-page__message" role="status">{formatNotice(t, planningMessage)}</p> : null}
         </section>
 
-        <section className="panel projects-page__list-card" aria-label="Histórico da Roda da Fogueira">
+        <section className="panel projects-page__list-card" aria-label={t('planning_poker_history')}>
           <div className="projects-page__section-header">
             <div>
-              <p className="projects-page__eyebrow">Histórico</p>
+              <p className="projects-page__eyebrow">{t('history')}</p>
               <h2>{planningSessionsLabel}</h2>
-              <p>{selectedProject ? `Sessões de ${selectedProject.name}.` : 'Escolha um projeto para consultar as Rodas.'}</p>
+              <p>{selectedProject ? t('sessions_for', { p1: selectedProject.name }) : t('choose_a_project_to_browse_its_sessions')}</p>
             </div>
           </div>
 
           {hasPlanningSessions ? (
             <>
-              <div className="planning-poker-dashboard__quick-filters" aria-label="Filtros rápidos de Rodas">
+              <div className="planning-poker-dashboard__quick-filters" aria-label={t('quick_session_filters')}>
                 {planningSessionQuickFilters.map((filter) => (
                   <button
                     key={filter.value}
@@ -1931,11 +1940,11 @@ function PlanningPokerJoinPage() {
                 ))}
               </div>
 
-              <div className="planning-poker-dashboard__quick-filters" aria-label="Filtros rápidos por histórias">
+              <div className="planning-poker-dashboard__quick-filters" aria-label={t('quick_story_filters')}>
                 {[
-                  { value: 'estimated_group', label: 'Com estimativa', count: planningSessionsWithEstimateCount },
-                  { value: 'pending_group', label: 'Com pendências', count: planningSessionsWithPendingCount },
-                  { value: 'skipped_group', label: 'Puladas', count: planningSessionsWithSkippedCount },
+                  { value: 'estimated_group', label: t('with_estimates'), count: planningSessionsWithEstimateCount },
+                  { value: 'pending_group', label: t('with_pending_stories'), count: planningSessionsWithPendingCount },
+                  { value: 'skipped_group', label: t('skipped'), count: planningSessionsWithSkippedCount },
                 ].map((filter) => (
                   <button
                     key={filter.value}
@@ -1952,20 +1961,20 @@ function PlanningPokerJoinPage() {
                 ))}
               </div>
 
-              <div className="project-detail-page__campfire-filters" aria-label="Filtros de Rodas da Fogueira">
+              <div className="project-detail-page__campfire-filters" aria-label={t('planning_poker_session_filters')}>
                 <label className="projects-page__field">
-                  <span>Buscar Roda</span>
+                  <span>{t('search_sessions')}</span>
                   <input
                     type="search"
                     value={planningSessionSearch}
                     onChange={(event) => setPlanningSessionSearch(event.target.value)}
-                    placeholder="Nome ou código da sala"
+                    placeholder={t('room_name_or_code')}
                     disabled={isLoadingProjectContext}
                   />
                 </label>
 
                 <label className="projects-page__field">
-                  <span>Status</span>
+                  <span>{t('status')}</span>
                   <select
                     value={planningSessionStatusFilter}
                     onChange={(event) => setPlanningSessionStatusFilter(event.target.value)}
@@ -1973,14 +1982,14 @@ function PlanningPokerJoinPage() {
                   >
                     {PLANNING_SESSION_FILTER_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
-                        {option.label}
+                        {t(option.label)}
                       </option>
                     ))}
                   </select>
                 </label>
 
                 <label className="projects-page__field">
-                  <span>Escala</span>
+                  <span>{t('scale')}</span>
                   <select
                     value={planningSessionScaleFilter}
                     onChange={(event) => setPlanningSessionScaleFilter(event.target.value)}
@@ -1988,46 +1997,46 @@ function PlanningPokerJoinPage() {
                   >
                     {PLANNING_SCORING_SCALE_FILTER_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
-                        {option.label}
+                        {t(option.label)}
                       </option>
                     ))}
                   </select>
                 </label>
 
                 <div className="project-detail-page__campfire-filter-summary">
-                  <span>{formatPlanningCount(filteredPlanningSessions.length, 'roda encontrada', 'rodas encontradas')}</span>
+                  <span>{formatPlanningCount(filteredPlanningSessions.length, t('session_found'), t('sessions_found'))}</span>
                   <button
                     type="button"
                     className="btn btn-secondary btn-small"
                     onClick={handleClearPlanningSessionFilters}
                     disabled={!hasActivePlanningSessionFilters || isLoadingProjectContext}
                   >
-                    Limpar filtros
+                    {t('clear_filters')}
                   </button>
                 </div>
               </div>
             </>
           ) : null}
 
-          {isLoadingProjectContext ? <p className="projects-page__state">Carregando Rodas...</p> : null}
+          {isLoadingProjectContext ? <p className="projects-page__state">{t('loading_sessions')}</p> : null}
           {!isLoadingProjectContext && selectedProjectId && !hasPlanningSessions ? (
             <div className="projects-page__empty">
-              <h3>Nenhuma Roda criada</h3>
-              <p>Crie uma Roda da Fogueira com histórias prontas para estimar e acompanhe o histórico aqui.</p>
+              <h3>{t('no_sessions_yet')}</h3>
+              <p>{t('create_a_planning_poker_session_with_stories')}</p>
               {readyStories.length === 0 ? (
                 <Link className="btn btn-secondary btn-small" to={`/projetos/${selectedProjectId}`}>
-                  Preparar histórias
+                  {t('prepare_stories')}
                 </Link>
               ) : null}
             </div>
           ) : null}
           {!isLoadingProjectContext && hasPlanningSessions && filteredPlanningSessions.length === 0 ? (
             <div className="projects-page__empty">
-              <h3>Nenhuma Roda encontrada</h3>
-              <p>Ajuste os filtros para consultar outras sessões deste projeto.</p>
+              <h3>{t('no_sessions_found')}</h3>
+              <p>{t('change_the_filters_to_see_other_sessions')}</p>
             </div>
           ) : null}
-          {copyMessage ? <p className="projects-page__message">{copyMessage}</p> : null}
+          {copyMessage ? <p className="projects-page__message" role="status">{formatNotice(t, copyMessage)}</p> : null}
 
           <div className="project-detail-page__campfire-session-list">
             {filteredPlanningSessions.map((session) => {
@@ -2035,19 +2044,19 @@ function PlanningPokerJoinPage() {
               const sessionStories = planningSessionStoriesBySession[session.id] ?? []
               const progress = planningSessionProgressById[session.id] ?? {
                 estimated: 0,
-                label: 'Sem histórias vinculadas',
+                label: t('no_linked_stories'),
                 pending: 0,
                 progressPercent: 0,
                 skipped: 0,
                 total: 0,
                 voting: 0,
               }
-              const sessionStatusLabel = getPlanningSessionStatusLabel(session.status)
+              const sessionStatusLabel = getPlanningSessionStatusLabel(session.status, t)
               const sessionActionLabel = isLiveSession
-                ? 'Continuar Roda'
+                ? t('continue_session')
                 : session.status === 'completed'
-                  ? 'Consultar resultado'
-                  : 'Abrir sala'
+                  ? t('view_result')
+                  : t('open_room')
               const copyFeedback = copyFeedbackBySessionId[session.id]
 
               return (
@@ -2064,14 +2073,14 @@ function PlanningPokerJoinPage() {
                         <span className={isLiveSession ? 'is-live' : ''}>{sessionStatusLabel}</span>
                       </div>
                       <p>
-                        Código {session.invite_code} · {getPlanningScoringScaleLabel(session.scoring_scale)} ·{' '}
-                        {formatPlanningTimerDuration(session.vote_time_limit_seconds)}
+                        {t('code')}{" "}{session.invite_code} · {getPlanningScoringScaleLabel(session.scoring_scale, t)} ·{' '}
+                        {formatPlanningTimerDuration(session.vote_time_limit_seconds, t)}
                       </p>
                     </div>
 
                     <div
                       className="project-detail-page__campfire-session-progress"
-                      aria-label={`Progresso da Roda ${session.name}`}
+                      aria-label={t('progress_for_session', { p1: session.name })}
                     >
                       <div className="project-detail-page__campfire-session-progress-header">
                         <span>{progress.label}</span>
@@ -2081,18 +2090,18 @@ function PlanningPokerJoinPage() {
                         <span style={{ width: `${progress.progressPercent}%` }} />
                       </div>
                       <div className="project-detail-page__campfire-session-progress-chips">
-                        <span>{formatPlanningCount(progress.estimated, 'estimada', 'estimadas')}</span>
-                        <span>{formatPlanningCount(progress.voting, 'em votação', 'em votação')}</span>
-                        <span>{formatPlanningCount(progress.pending, 'pendente', 'pendentes')}</span>
+                        <span>{t('estimated_count', { count: progress.estimated })}</span>
+                        <span>{formatPlanningCount(progress.voting, t('voting_2'), t('voting_2'))}</span>
+                        <span>{t('pending_count', { count: progress.pending })}</span>
                         {progress.skipped > 0 ? (
-                          <span>{formatPlanningCount(progress.skipped, 'pulada', 'puladas')}</span>
+                          <span>{t('skipped_count', { count: progress.skipped })}</span>
                         ) : null}
                       </div>
                     </div>
 
                     <details className="planning-poker-dashboard__session-stories">
                       <summary>
-                        <span>Histórias da Roda</span>
+                        <span>{t('session_stories')}</span>
                         <strong>{progress.label}</strong>
                       </summary>
                       {sessionStories.length > 0 ? (
@@ -2100,46 +2109,46 @@ function PlanningPokerJoinPage() {
                           {sessionStories.map((story, index) => (
                             <div key={story.id} className="planning-poker-dashboard__session-story">
                               <div>
-                                <strong>{story.user_story?.title ?? `História ${index + 1}`}</strong>
-                                <span>{getPlanningStoryStatusLabel(story.status)}</span>
+                                <strong>{story.user_story?.title ?? t('story', { p1: index + 1 })}</strong>
+                                <span>{getPlanningStoryStatusLabel(story.status, t)}</span>
                               </div>
-                              <em>{story.final_estimate ? `Final: ${story.final_estimate}` : 'Sem estimativa final'}</em>
+                              <em>{story.final_estimate ? t('final', { p1: story.final_estimate }) : t('no_final_estimate')}</em>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <p className="projects-page__state">Nenhuma história vinculada a esta Roda.</p>
+                        <p className="projects-page__state">{t('no_stories_linked_to_this_session')}</p>
                       )}
                     </details>
                   </div>
 
                   <div className="project-detail-page__campfire-session-meta">
-                    <span>Criada em {formatPlanningDateTime(session.created_at)}</span>
+                    <span>{t('created_on')}{" "}{formatPlanningDateTime(session.created_at, language)}</span>
                     <button
                       type="button"
                       className="btn btn-secondary btn-small"
                       onClick={() => handleCopySessionInvite(session, 'code')}
                     >
-                      Copiar código
+                      {t('copy_code')}
                     </button>
                     <button
                       type="button"
                       className="btn btn-secondary btn-small"
                       onClick={() => handleCopySessionInvite(session, 'link')}
                     >
-                      Copiar link para membros
+                      {t('copy_link_for_members')}
                     </button>
                     <button
                       type="button"
                       className="btn btn-secondary btn-small"
                       onClick={() => handleCopySessionSummary(session, progress)}
                     >
-                      Copiar resumo
+                      {t('copy_summary')}
                     </button>
                     <Link className="btn btn-secondary btn-small" to={`/projetos/${selectedProjectId}/roda/${session.id}`}>
                       {sessionActionLabel}
                     </Link>
-                    {copyFeedback ? <span className="planning-poker-dashboard__copy-feedback">{copyFeedback}</span> : null}
+                    {copyFeedback ? <span className="planning-poker-dashboard__copy-feedback">{formatNotice(t, copyFeedback)}</span> : null}
                   </div>
                 </article>
               )

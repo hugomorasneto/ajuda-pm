@@ -1,13 +1,18 @@
+import { buildAuthPath } from '../../utils/authRedirect'
+import LanguageSwitcher from '../../i18n/LanguageSwitcher'
+import { useCopy, useLanguage } from '../../i18n/context'
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import Link from '../../i18n/LocalizedLink'
+import { getPilotPage } from '../../i18n/routes'
 import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC } from '../../constants/app'
 import { useAuth } from '../../hooks/useAuth'
 
-const publicNavItems = [
-  { label: 'Produto', to: '/#produto', activeOn: ['/'] },
-  { label: 'Como funciona', to: '/#como-funciona' },
-  { label: 'Campo de Treino', to: '/aprender', activeOn: ['/aprender'] },
-  { label: 'Planos', to: '/#planos' },
+const publicNavItems = (t) => [
+  { label: t('product'), to: '/#produto', activeOn: ['/'] },
+  { label: t('how'), to: '/#como-funciona' },
+  { label: t('training'), to: '/aprender', activeOn: ['/aprender', '/en/learn'] },
+  { label: t('plans'), to: '/#planos' },
 ]
 
 function isItemActive(item, pathname) {
@@ -16,7 +21,7 @@ function isItemActive(item, pathname) {
   }
 
   return item.activeOn.some((activePath) =>
-    activePath === '/' ? pathname === '/' : pathname.startsWith(activePath)
+    activePath === '/' ? getPilotPage(pathname)?.id === 'home' : pathname.startsWith(activePath)
   )
 }
 
@@ -43,12 +48,16 @@ function PublicNavLink({ item, pathname, mobile = false, onNavigate }) {
 }
 
 function PublicHeader({ isHomeRoute = false, isLearningRoute = false, isLegalRoute = false }) {
+  const t = useCopy('navigation')
+  const { canSwitch, language, preview } = useLanguage()
+  const authLocale = canSwitch ? language : undefined
   const location = useLocation()
   const { user } = useAuth()
   const [menuOpenPath, setMenuOpenPath] = useState(null)
-  const isMenuOpen = menuOpenPath === location.pathname
+  const navPage = getPilotPage(location.pathname)?.id ?? location.pathname
+  const isMenuOpen = menuOpenPath === navPage
   const isForgeHeader = isHomeRoute || isLearningRoute || isLegalRoute
-  const navItems = publicNavItems
+  const navItems = publicNavItems(t)
   const headerClassName = ['public-header', isForgeHeader ? 'public-header--forge-home' : '']
     .filter(Boolean)
     .join(' ')
@@ -85,7 +94,7 @@ function PublicHeader({ isHomeRoute = false, isLearningRoute = false, isLegalRou
           />
         </Link>
 
-        <nav className="public-header__nav" aria-label="Navegação pública">
+        <nav className="public-header__nav" aria-label={t('publicNav')}>
           {navItems.map((item) => (
             <PublicNavLink key={item.to ?? item.href} item={item} pathname={location.pathname} />
           ))}
@@ -94,15 +103,15 @@ function PublicHeader({ isHomeRoute = false, isLearningRoute = false, isLegalRou
         <div className="public-header__actions">
           {user ? (
             <Link to="/tool" className={primaryCtaClassName}>
-              Abrir bancada
+              {t('openWorkspace')}
             </Link>
           ) : (
             <>
-              <Link to="/login" className={secondaryCtaClassName}>
-                Entrar
+              <Link to={buildAuthPath('/login', undefined, authLocale)} className={secondaryCtaClassName}>
+                {t('signIn')}
               </Link>
-              <Link to="/signup" className={primaryCtaClassName}>
-                Criar conta grátis
+              <Link to={buildAuthPath('/signup', undefined, authLocale)} className={primaryCtaClassName}>
+                {t('createAccount')}
               </Link>
             </>
           )}
@@ -112,18 +121,20 @@ function PublicHeader({ isHomeRoute = false, isLearningRoute = false, isLegalRou
           type="button"
           className={menuButtonClassName}
           onClick={() =>
-            setMenuOpenPath((currentPath) => (currentPath === location.pathname ? null : location.pathname))
+            setMenuOpenPath((currentPath) => (currentPath === navPage ? null : navPage))
           }
           aria-expanded={isMenuOpen}
-          aria-label={isMenuOpen ? 'Fechar navegação' : 'Abrir navegação'}
+          aria-label={isMenuOpen ? t('closeNav') : t('openPublicMenu')}
         >
-          {isMenuOpen ? 'Fechar' : 'Menu'}
+          {isMenuOpen ? t('close') : t('menu')}
         </button>
       </div>
 
+      {preview && <div className="public-header__language"><LanguageSwitcher /></div>}
+
       {isMenuOpen ? (
         <div className="public-header__mobile-panel">
-          <nav className="public-header__mobile-nav" aria-label="Navegação pública — mobile">
+          <nav className="public-header__mobile-nav" aria-label={t('mobileNav')}>
             {navItems.map((item) => (
               <PublicNavLink
                 key={item.to ?? item.href}
@@ -138,15 +149,15 @@ function PublicHeader({ isHomeRoute = false, isLearningRoute = false, isLegalRou
           <div className="public-header__mobile-actions">
             {user ? (
               <Link to="/tool" className={primaryCtaClassName}>
-                Abrir bancada
+                {t('openWorkspace')}
               </Link>
             ) : (
               <>
-                <Link to="/login" className={secondaryCtaClassName}>
-                  Entrar
+                <Link to={buildAuthPath('/login', undefined, authLocale)} className={secondaryCtaClassName}>
+                  {t('signIn')}
                 </Link>
-                <Link to="/signup" className={primaryCtaClassName}>
-                  Criar conta grátis
+                <Link to={buildAuthPath('/signup', undefined, authLocale)} className={primaryCtaClassName}>
+                  {t('createAccount')}
                 </Link>
               </>
             )}

@@ -1,23 +1,23 @@
-import { Link } from 'react-router-dom'
+import { buildAuthPath } from '../../utils/authRedirect'
+import { useCopy, useLanguage } from '../../i18n/context'
+import Link from '../../i18n/LocalizedLink'
 import { APP_NAME, BRAND_LOGO_HORIZONTAL_SRC, HUGO_MORAES_LINKEDIN_URL } from '../../constants/app'
-import { getLearningGuidesBySlugs } from '../../content/learningContent'
 import { useAuth } from '../../hooks/useAuth'
 
-const footerGuides = getLearningGuidesBySlugs([
-  'fundamentos-produto-agil',
-  'user-stories-na-pratica',
-  'backlog-e-refinamento',
-])
-
-const footerGuideLabels = {
-  'fundamentos-produto-agil': 'Fundamentos de produto ágil para PMs e POs',
-}
+const creatorName = 'Hugo Moraes Neto'
+const footerGuides = [
+  { slug: 'fundamentos-produto-agil', label: 'agileGuide' },
+  { slug: 'user-stories-na-pratica', label: 'storiesGuide' },
+  { slug: 'backlog-e-refinamento', label: 'backlogGuide' },
+]
 
 function PublicFooter() {
+  const t = useCopy('navigation')
+  const { canSwitch, language } = useLanguage()
+  const authLocale = canSwitch ? language : undefined
   const { user } = useAuth()
-  const brandStatement =
-    'Transforme briefings confusos em user stories claras, testáveis e prontas para Dev, QA e negócio.'
-  const bottomCopy = `© ${new Date().getFullYear()} ${APP_NAME} · Feito para times que precisam de stories mais claras`
+  const brandStatement = t('footerStatement')
+  const bottomCopy = `© ${new Date().getFullYear()} ${APP_NAME} · ${t('builtFor')}`
   const footerClassName = 'public-footer public-footer--forge-home'
   const footerCtaClassName = ['public-footer__cta', 'forge-button forge-button--metal forge-button--sm']
     .filter(Boolean)
@@ -36,40 +36,40 @@ function PublicFooter() {
             />
           </div>
           <p className="public-footer__brand-statement">{brandStatement}</p>
-          <Link to={user ? '/tool' : '/signup'} className={footerCtaClassName}>
-            {user ? 'Abrir bancada' : 'Criar conta grátis →'}
+          <Link to={user ? '/tool' : buildAuthPath('/signup', undefined, authLocale)} className={footerCtaClassName}>
+            {user ? t('openWorkspace') : t('createAccountArrow')}
           </Link>
         </div>
 
         <div className="public-footer__links">
-          <nav className="public-footer__nav" aria-label="Produto">
-            <p className="public-footer__nav-title">Produto</p>
-            <Link to="/">Produto</Link>
-            <Link to="/#como-funciona">Como funciona</Link>
-            <Link to="/#antes-depois">Antes e depois</Link>
-            <Link to="/#planos">Planos</Link>
+          <nav className="public-footer__nav" aria-label={t('product')}>
+            <p className="public-footer__nav-title">{t('product')}</p>
+            <Link to="/">{t('product')}</Link>
+            <Link to="/#como-funciona">{t('how')}</Link>
+            <Link to="/#antes-depois">{t('beforeAfter')}</Link>
+            <Link to="/#planos">{t('plans')}</Link>
           </nav>
 
-          <nav className="public-footer__nav" aria-label="Campo de Treino">
-            <p className="public-footer__nav-title">Campo de Treino</p>
+          <nav className="public-footer__nav" aria-label={t('training')}>
+            <p className="public-footer__nav-title">{t('training')}</p>
             {footerGuides.map((guide) => (
               <Link key={guide.slug} to={`/aprender/${guide.slug}`}>
-                {footerGuideLabels[guide.slug] ?? guide.title}
+                {t(guide.label)}
               </Link>
             ))}
-            <Link to="/aprender">Ver todos os guias →</Link>
+            <Link to="/aprender">{t('allGuides')}</Link>
           </nav>
 
-          <nav className="public-footer__nav" aria-label="Institucional e legal">
-            <p className="public-footer__nav-title">Institucional</p>
-            <Link to="/sobre">Sobre</Link>
-            <Link to="/faq">FAQ</Link>
-            <Link to="/politica-de-privacidade">Política de Privacidade</Link>
-            <Link to="/preferencias-de-privacidade">Preferências de Privacidade</Link>
-            <Link to="/termos-de-uso">Termos de Uso</Link>
-            <Link to="/contato">Contato</Link>
+          <nav className="public-footer__nav" aria-label={t('institutionalAria')}>
+            <p className="public-footer__nav-title">{t('institutional')}</p>
+            <Link to={language === 'en' ? '/en/about' : '/sobre'}>{t('about')}</Link>
+            <Link to="/faq">{t('faq')}</Link>
+            <Link to="/politica-de-privacidade">{t('privacy')}</Link>
+            <Link to="/preferencias-de-privacidade">{t('privacyPreferences')}</Link>
+            <Link to="/termos-de-uso">{t('terms')}</Link>
+            <Link to="/contato">{t('contact')}</Link>
             <a href={HUGO_MORAES_LINKEDIN_URL} target="_blank" rel="noopener noreferrer">
-              LinkedIn do criador
+              {t('creatorLinkedIn')}
             </a>
           </nav>
         </div>
@@ -79,11 +79,11 @@ function PublicFooter() {
         <div className="public-footer__bottom-inner">
           <p>{bottomCopy}</p>
           <p className="public-footer__signature">
-            Desenvolvido por{' '}
+            {t('developedBy')}{' '}
             <a href={HUGO_MORAES_LINKEDIN_URL} target="_blank" rel="noopener noreferrer">
-              Hugo Moraes Neto
+              {creatorName}
             </a>
-            , Product Manager & Builder, como parte da Tech Tupã — tecnologia com raízes.
+            {t('signature')}
           </p>
         </div>
       </div>

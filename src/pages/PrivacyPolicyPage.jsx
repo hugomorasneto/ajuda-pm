@@ -1,136 +1,136 @@
-import { Link } from 'react-router-dom'
-import { APP_NAME } from '../constants/app'
-import { usePageMetadata } from '../hooks/usePageMetadata'
+import { useCopy, useLanguage } from '../i18n/context'
+import Link from '../i18n/LocalizedLink'
+import { formatPublicDate, usePublicPageMetadata } from '../hooks/usePublicPageMetadata'
 
-const POLICY_LAST_UPDATED = '06/05/2026'
+const POLICY_LAST_UPDATED = '2026-05-06'
 // TODO: revisar este e-mail quando o canal oficial de privacidade estiver definido.
 const CONTACT_EMAIL = 'contato@techtupa.com.br'
 
-const policySummary = [
-  'Dados de conta, autenticação e uso da plataforma',
-  'Briefings, histórias de usuário e critérios de aceite inseridos na Bancada',
-  'Armazenamento em banco de dados para conta, histórico e projetos',
-  'Cookies essenciais, analíticos e categoria de marketing desativada nesta fase',
-  'Processamento por serviços de IA para apoiar a geração de artefatos',
+const getPolicySummary = (t) => [
+  t('privacyPolicyPage_dados_de_conta_autenticacao_e'),
+  t('privacyPolicyPage_briefings_historias_de_usuario_e'),
+  t('privacyPolicyPage_armazenamento_em_banco_de_dados'),
+  t('privacyPolicyPage_cookies_essenciais_analiticos_e_categoria'),
+  t('privacyPolicyPage_processamento_por_servicos_de_ia'),
 ]
 
-const policySections = [
+const getPolicySections = (t) => [
   {
     id: 'quem-somos',
-    title: 'Quem somos',
+    title: t('privacyPolicyPage_quem_somos'),
     paragraphs: [
-      'O ProdForge é uma plataforma web com IA para ajudar Product Managers, POs e times de produto a criarem, melhorarem e padronizarem histórias de usuário, critérios de aceite, insights técnicos e sugestões de melhoria.',
-      'Esta Política de Privacidade descreve como o ProdForge coleta, usa, armazena e protege dados durante o uso do site, da área pública, da Bancada, dos formulários e dos recursos relacionados ao produto.',
+      t('privacyPolicyPage_o_prodforge_e_uma_plataforma'),
+      t('privacyPolicyPage_esta_politica_de_privacidade_descreve'),
     ],
   },
   {
     id: 'quais-dados-podemos-coletar',
-    title: 'Quais dados podemos coletar',
+    title: t('privacyPolicyPage_quais_dados_podemos_coletar'),
     paragraphs: [
-      'Podemos coletar dados informados diretamente por você, dados gerados pelo uso do produto e dados técnicos necessários para manter a plataforma funcionando com segurança.',
+      t('privacyPolicyPage_podemos_coletar_dados_informados_diretamente'),
     ],
     bullets: [
-      'Dados de cadastro e autenticação, como nome, e-mail, senha protegida pelo provedor de autenticação, plano, função e identificadores de conta.',
-      'Conteúdos inseridos nos formulários, como briefings, problemas de negócio, regras, restrições, histórias de usuário, critérios de aceite, observações técnicas e contexto de projeto.',
-      'Histórico de uso, versões geradas, preferências, projetos, membros convidados e ações realizadas na Bancada.',
-      'Dados técnicos de navegação, como páginas acessadas, eventos de interação, dispositivo, navegador, endereço IP aproximado, data, hora e registros necessários para segurança e diagnóstico.',
-      'Dados de comunicação, como mensagens enviadas por formulários, cadastros em listas de interesse e solicitações feitas por e-mail.',
-      'Informações necessárias para eventual monetização, assinatura, limite de uso, faturamento, prevenção a fraude e gestão de plano, quando esses recursos estiverem disponíveis.',
+      t('privacyPolicyPage_dados_de_cadastro_e_autenticacao'),
+      t('privacyPolicyPage_conteudos_inseridos_nos_formularios_como'),
+      t('privacyPolicyPage_historico_de_uso_versoes_geradas'),
+      t('privacyPolicyPage_dados_tecnicos_de_navegacao_como'),
+      t('privacyPolicyPage_dados_de_comunicacao_como_mensagens'),
+      t('privacyPolicyPage_informacoes_necessarias_para_eventual_monetizacao'),
     ],
   },
   {
     id: 'como-usamos-os-dados',
-    title: 'Como usamos os dados',
+    title: t('privacyPolicyPage_como_usamos_os_dados'),
     paragraphs: [
-      'Usamos os dados para entregar a experiência principal do ProdForge, manter a plataforma segura e melhorar a qualidade do produto.',
+      t('privacyPolicyPage_usamos_os_dados_para_entregar'),
     ],
     bullets: [
-      'Criar e manter sua conta, autenticar acesso e liberar recursos da Bancada.',
-      'Gerar, revisar, salvar, versionar e organizar histórias de usuário, critérios de aceite, insights técnicos e sugestões de melhoria.',
-      'Entender uso, desempenho, erros e pontos de fricção para melhorar fluxos, copy, interface, modelos e recursos do produto.',
-      'Enviar comunicações relacionadas à conta, confirmação de e-mail, novidades do produto, respostas a solicitações e avisos importantes.',
-      'Proteger a plataforma contra abuso, fraude, acesso indevido, falhas operacionais e uso que prejudique outros usuários.',
-      'Gerenciar limites de uso, planos, recursos pagos ou experimentais, quando aplicável.',
+      t('privacyPolicyPage_criar_e_manter_sua_conta'),
+      t('privacyPolicyPage_gerar_revisar_salvar_versionar_e'),
+      t('privacyPolicyPage_entender_uso_desempenho_erros_e'),
+      t('privacyPolicyPage_enviar_comunicacoes_relacionadas_a_conta'),
+      t('privacyPolicyPage_proteger_a_plataforma_contra_abuso'),
+      t('privacyPolicyPage_gerenciar_limites_de_uso_planos'),
     ],
   },
   {
     id: 'armazenamento-em-banco-de-dados',
-    title: 'Armazenamento em banco de dados',
+    title: t('privacyPolicyPage_armazenamento_em_banco_de_dados_26'),
     paragraphs: [
-      'Dados de conta, projetos, preferências, briefings, histórias geradas, versões, histórico e eventos operacionais podem ser armazenados em banco de dados e serviços de infraestrutura usados para operar o ProdForge.',
-      'Esse armazenamento permite recuperar conteúdo, manter a continuidade da Bancada, aplicar controles de acesso, diagnosticar falhas, prevenir abuso e atender solicitações do usuário. O acesso interno deve ser limitado ao necessário para operação, segurança e suporte.',
+      t('privacyPolicyPage_dados_de_conta_projetos_preferencias'),
+      t('privacyPolicyPage_esse_armazenamento_permite_recuperar_conteudo'),
     ],
   },
   {
     id: 'uso-de-inteligencia-artificial',
-    title: 'Uso de inteligência artificial',
+    title: t('privacyPolicyPage_uso_de_inteligencia_artificial'),
     paragraphs: [
-      'Dados inseridos pelo usuário podem ser processados por serviços de IA para gerar, melhorar ou complementar histórias de usuário, critérios de aceite, insights técnicos, perguntas de refinamento e sugestões de melhoria.',
-      'A qualidade das respostas depende do contexto enviado. Por isso, revise todo conteúdo gerado antes de usar em backlog, documentação, Jira, discovery, refinamento ou comunicação com stakeholders.',
-      'Você não deve inserir informações sensíveis, confidenciais, segredos comerciais, credenciais, dados financeiros restritos, dados de saúde, dados de menores ou dados pessoais de terceiros sem autorização.',
+      t('privacyPolicyPage_dados_inseridos_pelo_usuario_podem'),
+      t('privacyPolicyPage_a_qualidade_das_respostas_depende'),
+      t('privacyPolicyPage_voce_nao_deve_inserir_informacoes'),
     ],
-    note: 'Sempre que possível, remova ou anonimize informações pessoais antes de enviar um briefing para processamento por IA.',
+    note: t('privacyPolicyPage_sempre_que_possivel_remova_ou'),
   },
   {
     id: 'cookies-e-tecnologias-similares',
-    title: 'Cookies e tecnologias similares',
+    title: t('privacyPolicyPage_cookies_e_tecnologias_similares'),
     paragraphs: [
-      'Podemos usar cookies, armazenamento local, identificadores técnicos, eventos de analytics e tecnologias similares para autenticação, segurança, manutenção de sessão, medição de uso e melhoria da experiência.',
-      'Cookies essenciais são necessários para o funcionamento básico do site e da plataforma. Cookies analíticos são opcionais e podem apoiar métricas agregadas de uso, erros, desempenho e evolução do produto. Cookies de marketing estão previstos para transparência, mas permanecem desativados nesta fase.',
-      'Você pode aceitar todos os recursos opcionais disponíveis, recusar opcionais ou salvar preferências por categoria na página de Preferências de Privacidade. A escolha fica salva no navegador e pode ser alterada a qualquer momento.',
+      t('privacyPolicyPage_podemos_usar_cookies_armazenamento_local'),
+      t('privacyPolicyPage_cookies_essenciais_sao_necessarios_para'),
+      t('privacyPolicyPage_voce_pode_aceitar_todos_os'),
     ],
   },
   {
     id: 'compartilhamento-de-dados',
-    title: 'Compartilhamento de dados',
+    title: t('privacyPolicyPage_compartilhamento_de_dados'),
     paragraphs: [
-      'Não usamos dados pessoais como produto para venda de bases a terceiros. Podemos compartilhar dados apenas quando isso for necessário para operar, proteger, analisar ou melhorar o ProdForge.',
+      t('privacyPolicyPage_nao_usamos_dados_pessoais_como'),
     ],
     bullets: [
-      'Provedores de infraestrutura, hospedagem, banco de dados, autenticação, envio de e-mail, monitoramento e analytics.',
-      'Serviços de IA usados para processar instruções, briefings e respostas necessárias às funcionalidades da plataforma.',
-      'Ferramentas de pagamento, faturamento, prevenção a fraude e gestão de planos, quando recursos pagos estiverem disponíveis.',
-      'Autoridades públicas, quando houver obrigação legal, ordem válida ou necessidade de proteção de direitos, segurança e integridade do produto.',
+      t('privacyPolicyPage_provedores_de_infraestrutura_hospedagem_banco'),
+      t('privacyPolicyPage_servicos_de_ia_usados_para'),
+      t('privacyPolicyPage_ferramentas_de_pagamento_faturamento_prevencao'),
+      t('privacyPolicyPage_autoridades_publicas_quando_houver_obrigacao'),
     ],
   },
   {
     id: 'seguranca-das-informacoes',
-    title: 'Segurança das informações',
+    title: t('privacyPolicyPage_seguranca_das_informacoes'),
     paragraphs: [
-      'Adotamos medidas técnicas e organizacionais compatíveis com o estágio do produto para proteger informações contra acesso não autorizado, perda, uso indevido, alteração ou divulgação indevida.',
-      'Essas medidas podem incluir autenticação, controle de acesso, registros de auditoria, políticas de permissão, isolamento por usuário ou projeto, monitoramento de erros e uso de provedores reconhecidos de infraestrutura. Nenhuma plataforma, porém, consegue prometer segurança absoluta.',
+      t('privacyPolicyPage_adotamos_medidas_tecnicas_e_organizacionais'),
+      t('privacyPolicyPage_essas_medidas_podem_incluir_autenticacao'),
     ],
   },
   {
     id: 'retencao-dos-dados',
-    title: 'Retenção dos dados',
+    title: t('privacyPolicyPage_retencao_dos_dados'),
     paragraphs: [
-      'Mantemos dados pelo tempo necessário para fornecer o produto, cumprir obrigações operacionais, preservar histórico solicitado pelo usuário, resolver disputas, prevenir abuso e atender requisitos legais ou regulatórios quando aplicável.',
-      'Conteúdos salvos na Bancada, versões e histórico podem permanecer associados à conta enquanto forem úteis para a experiência do produto. Quando uma exclusão for solicitada, avaliaremos o pedido conforme a viabilidade técnica, obrigações aplicáveis e necessidade de preservar registros mínimos de segurança.',
+      t('privacyPolicyPage_mantemos_dados_pelo_tempo_necessario'),
+      t('privacyPolicyPage_conteudos_salvos_na_bancada_versoes'),
     ],
   },
   {
     id: 'direitos-do-titular',
-    title: 'Direitos do titular conforme a LGPD',
+    title: t('privacyPolicyPage_direitos_do_titular_conforme_a'),
     paragraphs: [
-      'Nos termos da LGPD, você pode solicitar confirmação da existência de tratamento, acesso aos dados, correção de dados incompletos, inexatos ou desatualizados, anonimização, bloqueio ou eliminação de dados desnecessários ou tratados em desconformidade, portabilidade quando aplicável, informação sobre compartilhamento, revisão de consentimentos, revogação de consentimento e oposição a tratamentos irregulares.',
-      'Para exercer esses direitos, envie uma solicitação pelo canal de contato indicado nesta política. Alguns pedidos podem depender de validação de identidade, limites técnicos, preservação de registros mínimos, cumprimento de obrigação legal ou proteção de direitos.',
+      t('privacyPolicyPage_nos_termos_da_lgpd_voce'),
+      t('privacyPolicyPage_para_exercer_esses_direitos_envie'),
     ],
   },
   {
     id: 'contato',
-    title: 'Contato',
+    title: t('privacyPolicyPage_contato'),
     paragraphs: [
-      'Para dúvidas, solicitações ou comentários sobre privacidade e uso de dados no ProdForge, entre em contato pelo e-mail abaixo.',
+      t('privacyPolicyPage_para_duvidas_solicitacoes_ou_comentarios'),
     ],
     contact: CONTACT_EMAIL,
   },
   {
     id: 'atualizacoes-desta-politica',
-    title: 'Atualizações desta política',
+    title: t('privacyPolicyPage_atualizacoes_desta_politica'),
     paragraphs: [
-      'Esta política pode ser atualizada para refletir mudanças no produto, em fornecedores, funcionalidades, práticas de segurança, analytics, IA, monetização ou requisitos legais aplicáveis.',
-      'Quando houver mudanças relevantes, poderemos destacar a atualização no site, na Bancada ou por outro canal apropriado. A versão publicada nesta página indica a data da última atualização.',
+      t('privacyPolicyPage_esta_politica_pode_ser_atualizada'),
+      t('privacyPolicyPage_quando_houver_mudancas_relevantes_poderemos'),
     ],
   },
 ]
@@ -171,58 +171,37 @@ function PrivacySection({ section, index }) {
 }
 
 function PrivacyPolicyPage() {
-  const pageDescription =
-    'Entenda como o ProdForge coleta, usa, armazena e protege dados em formulários, autenticação, analytics, recursos de IA e fluxos da Bancada.'
-
-  usePageMetadata({
-    title: 'Política de Privacidade | ProdForge',
-    description: pageDescription,
-    path: '/politica-de-privacidade',
-    ogTitle: 'Política de Privacidade | ProdForge',
-    ogDescription: pageDescription,
-    twitterTitle: 'Política de Privacidade | ProdForge',
-    twitterDescription: pageDescription,
-    robots: 'noindex,follow',
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'WebPage',
-      name: 'Política de Privacidade',
-      description: pageDescription,
-      inLanguage: 'pt-BR',
-      isPartOf: {
-        '@type': 'WebSite',
-        name: APP_NAME,
-        url: 'https://prodforge.techtupa.com.br/',
-      },
-      dateModified: '2026-05-06',
-    },
-  })
+  const t = useCopy('privacyPolicyPage')
+  const { language, preview } = useLanguage()
+  const policySections = getPolicySections(t)
+  const policySummary = getPolicySummary(t)
+  usePublicPageMetadata('privacyPolicy')
 
   return (
     <div className="page privacy-policy-page">
       <section className="privacy-policy-hero forge-panel forge-panel--metal forge-texture-layer">
         <div className="privacy-policy-hero__copy">
-          <p className="privacy-policy-page__eyebrow forge-badge forge-badge--ember">Privacidade e dados</p>
-          <h1>Política de Privacidade</h1>
+          <p className="privacy-policy-page__eyebrow forge-badge forge-badge--ember">{t('privacyPolicyPage_privacidade_e_dados')}</p>
+          <h1>{t('privacyPolicyPage_politica_de_privacidade')}</h1>
           <p>
-            Esta página descreve como o ProdForge coleta, usa, armazena e protege dados ao transformar
-            briefings, regras e contexto de produto em histórias de usuário, critérios de aceite,
-            insights técnicos e sugestões de melhoria.
+            {t('privacyPolicyPage_esta_pagina_descreve_como_o')}
           </p>
 
           <div className="privacy-policy-hero__actions">
             <Link className="forge-button forge-button--metal forge-button--md" to="/">
-              Voltar para a página inicial
+              {t('privacyPolicyPage_voltar_para_a_pagina_inicial')}
             </Link>
             <a className="forge-button forge-button--ghost forge-button--md" href={`mailto:${CONTACT_EMAIL}`}>
-              Falar sobre dados
+              {t('privacyPolicyPage_falar_sobre_dados')}
             </a>
           </div>
         </div>
 
-        <aside className="privacy-policy-hero__summary" aria-label="Resumo da política">
-          <p className="privacy-policy-hero__summary-label">Última atualização</p>
-          <p className="privacy-policy-hero__summary-date">{POLICY_LAST_UPDATED}</p>
+        <aside className="privacy-policy-hero__summary" aria-label={t('privacyPolicyPage_resumo_da_politica')}>
+          <p className="privacy-policy-hero__summary-label">{t('privacyPolicyPage_ultima_atualizacao')}</p>
+          <p className="privacy-policy-hero__summary-date">
+            {preview ? t('privacyPolicyPage_vigencia_em_revisao') : formatPublicDate(POLICY_LAST_UPDATED, language)}
+          </p>
           <ul>
             {policySummary.map((item) => (
               <li key={item}>{item}</li>
@@ -232,8 +211,8 @@ function PrivacyPolicyPage() {
       </section>
 
       <div className="privacy-policy-content">
-        <aside className="privacy-policy-toc" aria-label="Seções da Política de Privacidade">
-          <p className="privacy-policy-toc__title">Nesta política</p>
+        <aside className="privacy-policy-toc" aria-label={t('privacyPolicyPage_secoes_da_politica_de_privacidade')}>
+          <p className="privacy-policy-toc__title">{t('privacyPolicyPage_nesta_politica')}</p>
           <nav>
             {policySections.map((section, index) => (
               <a key={section.id} href={`#${section.id}`}>
@@ -246,9 +225,7 @@ function PrivacyPolicyPage() {
 
         <div className="privacy-policy-sections">
           <p className="privacy-policy-intro">
-            A política foi escrita em linguagem direta para explicar práticas atuais e esperadas do
-            produto. Ela não promete conformidade jurídica absoluta nem substitui avaliação jurídica
-            específica para casos sensíveis, contratos ou exigências regulatórias do seu negócio.
+            {t('privacyPolicyPage_a_politica_foi_escrita_em')}
           </p>
 
           {policySections.map((section, index) => (

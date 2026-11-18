@@ -1,63 +1,59 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuthJourney } from '../hooks/useAuthJourney'
+import { useCopy } from '../i18n/context'
+import AuthReturnContext from '../components/auth/AuthReturnContext'
+import { getAuthErrorKey, getConfirmationErrorKey, isValidAuthEmail } from '../utils/authErrors'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { APP_NAME, FREE_GENERATION_LIMIT } from '../constants/app'
-import { useAuth } from '../hooks/useAuth'
 import { usePageMetadata } from '../hooks/usePageMetadata'
 import '../styles/pages.css'
-import { getAuthErrorMessage, maskEmail, resendSignupConfirmation } from '../services/authService'
+import { maskEmail, resendSignupConfirmation } from '../services/authService'
 import { trackEvent } from '../services/analyticsService'
-import {
-  buildAuthPath,
-  clearAuthRedirect,
-  getAuthRedirectContext,
-  getAuthRedirectFromLocation,
-} from '../utils/authRedirect'
 
 function CheckEmailPage() {
-  const location = useLocation()
-  const navigate = useNavigate()
-  const { user, isAuthLoading } = useAuth()
-  const email = typeof location.state?.email === 'string' ? location.state.email.trim() : ''
-  const redirectTo = useMemo(() => getAuthRedirectFromLocation(location), [location])
-  const redirectContext = useMemo(() => getAuthRedirectContext(redirectTo), [redirectTo])
-  const loginPath = useMemo(() => buildAuthPath('/login', redirectTo), [redirectTo])
+  const t = useCopy('auth')
+  const { context, emailRedirectTo, from, isAuthLoading, language, location, pathTo } = useAuthJourney()
+  const knownEmail = typeof location.state?.email === 'string' ? location.state.email.trim() : ''
+  const [email, setEmail] = useState(knownEmail)
+  const [sentEmail, setSentEmail] = useState(knownEmail)
+  const [callbackError, setCallbackError] = useState(() => getConfirmationErrorKey(location))
+  const [fieldError, setFieldError] = useState('')
+  const target = t('destinations.' + context + '.target')
   const [feedbackMessage, setFeedbackMessage] = useState('')
   const [feedbackTone, setFeedbackTone] = useState('info')
   const [isResending, setIsResending] = useState(false)
 
   usePageMetadata({
-    title: 'Verifique seu e-mail | ProdForge',
-    description: 'Confirme seu e-mail para liberar o acesso à Bancada do ProdForge.',
+    language,
+    title: t('checkTitle'),
+    description: t('checkMetadata'),
     path: '/check-email',
-    ogTitle: 'Verifique seu e-mail | ProdForge',
-    ogDescription: 'Confirme seu e-mail para liberar o acesso à Bancada do ProdForge.',
-    twitterTitle: 'Verifique seu e-mail | ProdForge',
-    twitterDescription: 'Confirme seu e-mail para liberar o acesso à Bancada do ProdForge.',
     robots: 'noindex,follow',
   })
 
-  const maskedEmail = useMemo(() => maskEmail(email), [email])
+  const maskedEmail = maskEmail(sentEmail)
 
-  useEffect(() => {
-    if (!isAuthLoading && user) {
-      clearAuthRedirect()
-      navigate(redirectTo, { replace: true })
+  async function handleResend(event) {
+    event.preventDefault()
+    if (isResending) return
+    const address = email.trim()
+    if (!isValidAuthEmail(address)) {
+      setFieldError(address ? 'emailInvalid' : 'emailRequired')
+      event.currentTarget.querySelector('#resend-email')?.focus()
+      return
     }
-  }, [isAuthLoading, navigate, redirectTo, user])
-
-  async function handleResend() {
-    if (!email) return
+    setFieldError('')
 
     setIsResending(true)
     setFeedbackMessage('')
     setFeedbackTone('info')
 
-    const { error } = await resendSignupConfirmation(email, redirectTo)
+    const { error } = await resendSignupConfirmation(address, emailRedirectTo)
     setIsResending(false)
 
     if (error) {
       setFeedbackTone('error')
-      setFeedbackMessage(getAuthErrorMessage(error))
+      setFeedbackMessage(getAuthErrorKey(error))
       return
     }
 
@@ -67,7 +63,9 @@ function CheckEmailPage() {
       page_path: '/check-email',
     })
     setFeedbackTone('info')
-    setFeedbackMessage('Enviamos um novo link de confirmação para o seu e-mail.')
+    setCallbackError('')
+    setSentEmail(address)
+    setFeedbackMessage('emailResent')
   }
 
   if (isAuthLoading) {
@@ -79,10 +77,10 @@ function CheckEmailPage() {
             <span className="auth-card__brand-name">{APP_NAME}</span>
           </div>
           <div className="auth-card__header">
-            <p className="auth-card__eyebrow">Validando sessão</p>
-            <h1 className="auth-card__title">Carregando acesso</h1>
+            <p className="auth-card__eyebrow">{t('checkingSession')}</p>
+            <h1 className="auth-card__title">{t('loadingAccess')}</h1>
             <p className="auth-card__description">
-              Aguarde enquanto verificamos sua sessão atual.
+              {t('loadingDetail')}
             </p>
           </div>
         </div>
@@ -99,79 +97,94 @@ function CheckEmailPage() {
         </div>
 
         <div className="auth-card__header">
-          <p className="auth-card__eyebrow">Confirme seu acesso</p>
-          <h1 className="auth-card__title">Verifique seu e-mail</h1>
+          <p className="auth-card__eyebrow">{t('checkEyebrow')}</p>
+          <h1 className="auth-card__title">{t('checkHeading')}</h1>
           <p className="auth-card__description">
-            Enviamos um link de confirmação para finalizar o cadastro e liberar sua bancada.
+            {t(maskedEmail && !callbackError ? 'checkIntro' : 'checkReopen')}
           </p>
         </div>
 
         <p className="auth-card__info" role="status">
           {maskedEmail
-            ? `E-mail enviado para ${maskedEmail}. Depois de confirmar, você volta para ${redirectContext.targetText}.`
-            : `Abra o e-mail usado no cadastro, confirme a conta e depois entre para acessar ${redirectContext.targetText}.`}
+            ? t('checkMasked', { email: maskedEmail, target })
+            : t('checkUnmasked', { target })}
         </p>
 
-        <div className={`auth-card__return-context auth-card__return-context--${redirectContext.key}`}>
-          <span>Destino após confirmação</span>
-          <strong>{redirectContext.label}</strong>
-          <p>{redirectContext.description}</p>
-        </div>
+        <AuthReturnContext destination={context} heading="afterConfirmation" />
+
+        {callbackError && <p className="auth-card__error" role="alert">{t(callbackError)}</p>}
 
         {feedbackMessage ? (
           <p
             className={feedbackTone === 'error' ? 'auth-card__error' : 'auth-card__info'}
             role={feedbackTone === 'error' ? 'alert' : 'status'}
           >
-            {feedbackMessage}
+            {t(feedbackMessage)}
           </p>
         ) : null}
 
         <div className="auth-card__helper-block">
-          <p className="auth-card__helper-title">Próximos passos</p>
+          <p className="auth-card__helper-title">{t('nextSteps')}</p>
           <ul className="auth-card__helper-list">
-            <li>Abra o e-mail mais recente enviado pelo ProdForge.</li>
-            <li>Clique no link de confirmação para ativar a conta.</li>
-            <li>Se não encontrar a mensagem, confira spam ou promoções.</li>
+            <li>{t('stepInbox')}</li>
+            <li>{t('stepConfirm')}</li>
+            <li>{t('stepSpam')}</li>
           </ul>
         </div>
 
         <div className="auth-card__actions">
-          <button
-            type="button"
-            className="auth-card__submit"
-            onClick={handleResend}
-            disabled={isResending || !email}
-          >
-            {isResending ? 'Reenviando…' : 'Reenviar e-mail'}
-          </button>
+          <form className="auth-card__form" onSubmit={handleResend} noValidate>
+            {!knownEmail && (
+              <div className="auth-card__field">
+                <label className="auth-card__label" htmlFor="resend-email">{t('email')}</label>
+                <input
+                  id="resend-email"
+                  className="auth-card__input"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(event) => {
+                    setEmail(event.target.value)
+                    setFieldError('')
+                  }}
+                  required
+                  aria-invalid={Boolean(fieldError)}
+                  aria-describedby={fieldError ? 'resend-email-error' : undefined}
+                />
+                {fieldError && <p className="auth-card__field-error" id="resend-email-error">{t(fieldError)}</p>}
+              </div>
+            )}
+            <button type="submit" className="auth-card__submit" disabled={isResending}>
+              {isResending ? t('checkResending') : t('resendEmail')}
+            </button>
+          </form>
 
           <Link
-            to={loginPath}
+            to={pathTo('/login')}
             replace
             state={{
-              email,
-              from: redirectTo,
-              message: `Depois de confirmar o e-mail, entre para acessar ${redirectContext.targetText}.`,
+              email: email.trim(),
+              from,
+              notice: 'noticeConfirmed',
             }}
             className="auth-card__submit auth-card__submit--secondary"
           >
-            Ir para o login
+            {t('loginLink')}
           </Link>
         </div>
       </div>
 
       <aside className="auth-side">
         <div className="auth-side__content">
-          <p className="auth-side__eyebrow">O que você libera ao entrar</p>
+          <p className="auth-side__eyebrow">{t('checkSideLabel')}</p>
           <h2 className="auth-side__title">
-            Bancada, peças salvas e inspeção no mesmo fluxo.
+            {t('checkSideTitle')}
           </h2>
           <ul className="auth-side__list">
-            <li>{FREE_GENERATION_LIMIT} gerações iniciais para validar o produto.</li>
-            <li>User story com objetivo, critérios, trincas e teste de resistência.</li>
-            <li>Peças forjadas salvas por usuário para continuar o refinamento.</li>
-            <li>Cópia rápida para levar a saída ao backlog.</li>
+            <li>{t('checkSideCredits', { count: FREE_GENERATION_LIMIT })}</li>
+            <li>{t('checkSideStructure')}</li>
+            <li>{t('checkSideSaved')}</li>
+            <li>{t('checkSideCopy')}</li>
           </ul>
         </div>
       </aside>

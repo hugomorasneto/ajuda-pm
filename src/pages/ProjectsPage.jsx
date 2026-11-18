@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useOutletContext } from 'react-router-dom'
+import { useOutletContext } from 'react-router-dom'
+import { useCopy, useLanguage } from '../i18n/context'
+import { formatNotice } from '../i18n/formatNotice'
+import Link from '../i18n/LocalizedLink'
 import { useAuth } from '../hooks/useAuth'
 import { createProject, listProjects } from '../services/projectsService'
 import { listProjectAnalyses } from '../services/projectAiService'
@@ -14,70 +17,69 @@ const EMPTY_PROJECT_STATS = {
   hasDiagnostic: false,
   diagnosticHealthLabel: '',
   latestDiagnosticAt: null,
-  diagnosticFreshnessLabel: '',
-  diagnosticFreshnessDescription: '',
+  latestDiagnostic: null,
   isDiagnosticOutdated: false,
 }
 
 const PROJECT_PORTFOLIO_FILTERS = [
   {
     value: 'all',
-    label: 'Todos',
-    description: 'Projetos cadastrados.',
+    label: 'all',
+    description: 'registered_projects',
   },
   {
     value: 'with_ready_stories',
-    label: 'Prontos para Roda',
-    description: 'Com histórias prontas.',
+    label: 'ready_for_planning_poker',
+    description: 'with_stories_ready_to_estimate',
   },
   {
     value: 'with_teams',
-    label: 'Com times',
-    description: 'Colaboração ativa.',
+    label: 'with_teams',
+    description: 'active_collaboration',
   },
   {
     value: 'with_diagnostics',
-    label: 'Com diagnóstico',
-    description: 'Já analisados com IA.',
+    label: 'with_a_diagnosis',
+    description: 'already_analyzed_with_ai',
   },
   {
     value: 'without_diagnostics',
-    label: 'Sem diagnóstico',
-    description: 'Com histórias sem leitura.',
+    label: 'no_diagnosis',
+    description: 'stories_awaiting_analysis',
   },
   {
     value: 'stale_diagnostics',
-    label: 'IA desatualizada',
-    description: 'Pedem nova leitura.',
+    label: 'outdated_diagnosis',
+    description: 'ready_for_a_fresh_analysis',
   },
   {
     value: 'without_stories',
-    label: 'Sem histórias',
-    description: 'Ainda sem peças.',
+    label: 'no_stories',
+    description: 'no_stories_linked_yet',
   },
 ]
 
 const PROJECT_SORT_OPTIONS = [
   {
     value: 'recommended',
-    label: 'Próxima ação',
+    label: 'next_action',
   },
   {
     value: 'recent',
-    label: 'Mais recentes',
+    label: 'most_recent',
   },
   {
     value: 'name',
-    label: 'Nome A-Z',
+    label: 'name_a_z',
   },
 ]
 
-function formatProjectDate(value) {
+function formatProjectDate(value, language) {
   if (!value) return '-'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return '-'
 
-  return new Intl.DateTimeFormat('pt-BR', {
+  return new Intl.DateTimeFormat(language, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -109,56 +111,59 @@ function getProjectActionPriority(stats = EMPTY_PROJECT_STATS) {
   return 3
 }
 
-function getProjectNextAction(project, stats = EMPTY_PROJECT_STATS) {
+function getProjectNextAction(project, stats, diagnosticFreshness, t) {
   if (stats.storyCount === 0) {
     return {
-      label: 'Forjar primeira história',
+      label: t('forge_your_first_story'),
       href: `/tool?projectId=${project.id}`,
-      description: 'Comece criando a primeira peça neste projeto.',
+      description: t('start_by_creating_your_first_story_in'),
       tone: 'empty',
     }
   }
 
   if (stats.isDiagnosticOutdated) {
     return {
-      label: 'Atualizar diagnóstico',
+      label: t('update_diagnosis'),
       href: `/projetos/${project.id}#diagnostico-projeto`,
-      description: stats.diagnosticFreshnessDescription || 'Atualize a leitura de IA com as histórias atuais.',
+      description: diagnosticFreshness?.description || t('run_the_analysis_with_the_latest_stories'),
       tone: 'warning',
     }
   }
 
   if (stats.readyStoryCount > 0) {
     return {
-      label: 'Abrir Roda',
+      label: t('open_planning_poker'),
       href: `/roda?projectId=${project.id}`,
-      description: `${formatProjectMetric(
+      description: t('to_estimate', { p1: formatProjectMetric(
         stats.readyStoryCount,
-        'história pronta',
-        'histórias prontas',
-      )} para estimar.`,
+        t('story_ready'),
+        t('stories_ready'),
+      ) }),
       tone: 'ready',
     }
   }
 
   if (!stats.hasDiagnostic) {
     return {
-      label: 'Gerar diagnóstico',
+      label: t('generate_diagnosis'),
       href: `/projetos/${project.id}#diagnostico-projeto`,
-      description: 'Use a IA do projeto para mapear riscos e próximos passos.',
+      description: t('use_project_ai_to_identify_risks_and'),
       tone: 'ai',
     }
   }
 
   return {
-    label: 'Abrir quadro',
+    label: t('open_board'),
     href: `/projetos/${project.id}`,
-    description: 'Revise o Kanban e prepare histórias para estimativa.',
+    description: t('review_the_kanban_board_and_get_stories'),
     tone: 'neutral',
   }
 }
 
 function ProjectsPage() {
+  const t = useCopy('projects')
+  const tInsights = useCopy('projectInsights')
+  const { language } = useLanguage()
   const { user } = useAuth()
   const userId = user?.id ?? null
   const { setTopbarStatus } = useOutletContext() ?? {}
@@ -176,8 +181,8 @@ function ProjectsPage() {
   const nameInputRef = useRef(null)
 
   const projectCountLabel = useMemo(
-    () => `${projects.length} ${projects.length === 1 ? 'projeto' : 'projetos'}`,
-    [projects.length],
+    () => `${projects.length} ${t('project', { count: projects.length })}`,
+    [t, projects.length],
   )
   const portfolioTotals = useMemo(
     () =>
@@ -270,10 +275,10 @@ function ProjectsPage() {
     () =>
       formatProjectMetric(
         filteredProjects.length,
-        'projeto encontrado',
-        'projetos encontrados',
+        t('project_found'),
+        t('projects_found'),
       ),
-    [filteredProjects.length],
+    [t, filteredProjects.length],
   )
   const activePortfolioFilter = useMemo(
     () =>
@@ -292,8 +297,8 @@ function ProjectsPage() {
       pills.push({
         text:
           portfolioTotals.readyStoryCount === 1
-            ? '1 pronta para Roda'
-            : `${portfolioTotals.readyStoryCount} prontas para Roda`,
+            ? t('1_ready_for_planning_poker')
+            : t('ready_for_planning_poker_2', { p1: portfolioTotals.readyStoryCount }),
       })
     }
 
@@ -301,26 +306,27 @@ function ProjectsPage() {
       pills.push({
         text:
           portfolioTotals.staleDiagnosticCount === 1
-            ? '1 diagnóstico desatualizado'
-            : `${portfolioTotals.staleDiagnosticCount} diagnósticos desatualizados`,
+            ? t('1_outdated_diagnosis')
+            : t('outdated_diagnoses', { p1: portfolioTotals.staleDiagnosticCount }),
       })
     } else if (portfolioTotals.missingDiagnosticCount > 0) {
       pills.push({
         text:
           portfolioTotals.missingDiagnosticCount === 1
-            ? '1 sem diagnóstico'
-            : `${portfolioTotals.missingDiagnosticCount} sem diagnóstico`,
+            ? t('1_without_a_diagnosis')
+            : t('without_a_diagnosis', { p1: portfolioTotals.missingDiagnosticCount }),
       })
     } else {
-      pills.push({ text: 'Bancada continua livre' })
+      pills.push({ text: t('the_workbench_is_still_available') })
     }
 
     if (hasActivePortfolioRecorte) {
-      pills.push({ text: `Recorte: ${activePortfolioFilter.label}` })
+      pills.push({ text: t('filter', { p1: t(activePortfolioFilter.label) }) })
     }
 
     return pills
   }, [
+      t,
     activePortfolioFilter.label,
     filteredProjectCountLabel,
     hasActivePortfolioRecorte,
@@ -342,49 +348,50 @@ function ProjectsPage() {
   const portfolioSummaryItems = useMemo(
     () => [
       {
-        label: 'Histórias',
+        label: t('stories'),
         value: portfolioTotals.storyCount,
-        detail: 'vinculadas a projetos',
+        detail: t('linked_to_projects'),
         filter: 'all',
       },
       {
-        label: 'Prontas',
+        label: t('ready'),
         value: portfolioTotals.readyStoryCount,
-        detail: 'para a Roda',
+        detail: t('for_planning_poker'),
         filter: 'with_ready_stories',
       },
       {
-        label: 'Times',
+        label: t('teams'),
         value: portfolioTotals.teamCount,
-        detail: 'vinculados',
+        detail: t('linked_teams'),
         filter: 'with_teams',
       },
       {
-        label: 'Diagnósticos',
+        label: t('diagnoses'),
         value: portfolioTotals.diagnosticCount,
-        detail: 'com leitura de IA',
+        detail: t('with_an_ai_analysis'),
         filter: 'with_diagnostics',
       },
       {
-        label: 'Sem diagnóstico',
+        label: t('no_diagnosis'),
         value: portfolioTotals.missingDiagnosticCount,
-        detail: 'com histórias',
+        detail: t('with_stories'),
         filter: 'without_diagnostics',
       },
       {
-        label: 'IA desatualizada',
+        label: t('outdated_diagnosis'),
         value: portfolioTotals.staleDiagnosticCount,
-        detail: 'pedem nova leitura',
+        detail: t('need_a_fresh_analysis'),
         filter: 'stale_diagnostics',
       },
       {
-        label: 'Sem histórias',
+        label: t('no_stories'),
         value: emptyProjectCount,
-        detail: 'pedem primeira peça',
+        detail: t('need_their_first_story'),
         filter: 'without_stories',
       },
     ],
     [
+      t,
       emptyProjectCount,
       portfolioTotals.diagnosticCount,
       portfolioTotals.missingDiagnosticCount,
@@ -438,9 +445,8 @@ function ProjectsPage() {
               teamCount: teamsResponse.success ? (teamsResponse.data?.length ?? 0) : 0,
               hasDiagnostic: Boolean(latestDiagnostic),
               diagnosticHealthLabel: latestDiagnostic?.analysis?.health_label ?? '',
+              latestDiagnostic,
               latestDiagnosticAt: latestDiagnostic?.created_at ?? null,
-              diagnosticFreshnessLabel: diagnosticFreshness?.label ?? '',
-              diagnosticFreshnessDescription: diagnosticFreshness?.description ?? '',
               isDiagnosticOutdated: Boolean(diagnosticFreshness?.isOutdated),
             },
           ]
@@ -466,7 +472,7 @@ function ProjectsPage() {
       return
     }
 
-    setMessage('Não foi possível carregar os projetos agora.')
+    setMessage('could_not_load_projects_right_now')
   }, [loadProjectStats, userId])
 
   useEffect(() => {
@@ -481,13 +487,13 @@ function ProjectsPage() {
     if (typeof setTopbarStatus !== 'function') return
 
     setTopbarStatus({
-      label: 'Organização opcional',
-      title: 'Projetos',
+      label: t('optional_organization'),
+      title: t('projects'),
       pills: projectTopbarPills,
     })
 
     return () => setTopbarStatus(null)
-  }, [projectTopbarPills, setTopbarStatus])
+  }, [t, projectTopbarPills, setTopbarStatus])
 
   async function handleCreateProject(event) {
     event.preventDefault()
@@ -502,13 +508,15 @@ function ProjectsPage() {
     setIsCreating(false)
 
     if (!response.success) {
-      setMessage(response.error?.message ?? 'Não foi possível criar o projeto agora.')
+      setMessage(response.error?.message === 'Informe um nome para o projeto.'
+        ? 'project_name_required'
+        : 'could_not_create_the_project_right_now')
       return
     }
 
     setName('')
     setDescription('')
-    setMessage('Projeto criado. Você já pode selecionar esse contexto na Bancada.')
+    setMessage('project_created_you_can_now_select_it')
     await loadProjects()
   }
 
@@ -517,68 +525,67 @@ function ProjectsPage() {
   }
 
   return (
-    <div className="projects-page">
+    <div className="projects-page projects-page--list">
       <section className="panel projects-page__hero">
         <div className="projects-page__hero-copy">
-          <p className="projects-page__eyebrow">Organização opcional</p>
-          <h1>Projetos</h1>
+          <p className="projects-page__eyebrow">{t('optional_organization')}</p>
+          <h1>{t('projects')}</h1>
           <p>
-            Agrupe histórias por jornada, squad ou iniciativa quando fizer sentido. Se quiser começar direto,
-            a Bancada continua funcionando sem projeto.
+            {t('group_stories_by_journey_squad_or_initiative')}
           </p>
-          <div className="projects-page__hero-indicators" aria-label="Resumo da organização por projetos">
+          <div className="projects-page__hero-indicators" aria-label={t('project_organization_summary')}>
             <span className="projects-page__indicator">
               <strong>{projects.length}</strong>
-              {projects.length === 1 ? 'projeto' : 'projetos'}
+              {t('project', { count: projects.length })}
             </span>
             <span className="projects-page__indicator">
               <strong>{portfolioTotals.storyCount}</strong>
-              {portfolioTotals.storyCount === 1 ? 'história' : 'histórias'}
+              {portfolioTotals.storyCount === 1 ? t('story') : t('stories_2')}
             </span>
             <span className="projects-page__indicator projects-page__indicator--ready">
               <strong>{portfolioTotals.readyStoryCount}</strong>
-              {portfolioTotals.readyStoryCount === 1 ? 'pronta para Roda' : 'prontas para Roda'}
+              {portfolioTotals.readyStoryCount === 1 ? t('ready_for_planning_poker_3') : t('ready_for_planning_poker_4')}
             </span>
             <span className="projects-page__indicator projects-page__indicator--ai">
               <strong>{portfolioTotals.diagnosticCount}</strong>
-              {portfolioTotals.diagnosticCount === 1 ? 'projeto com diagnóstico' : 'projetos com diagnóstico'}
+              {portfolioTotals.diagnosticCount === 1 ? t('project_with_a_diagnosis') : t('projects_with_a_diagnosis')}
             </span>
             {portfolioTotals.staleDiagnosticCount > 0 ? (
               <span className="projects-page__indicator projects-page__indicator--warning">
                 <strong>{portfolioTotals.staleDiagnosticCount}</strong>
                 {portfolioTotals.staleDiagnosticCount === 1
-                  ? 'diagnóstico desatualizado'
-                  : 'diagnósticos desatualizados'}
+                  ? t('outdated_diagnosis_2')
+                  : t('outdated_diagnoses_2')}
               </span>
             ) : null}
             <span className="projects-page__indicator projects-page__indicator--free">
-              Bancada continua livre
+              {t('the_workbench_is_still_available')}
             </span>
           </div>
         </div>
         <div className="projects-page__hero-actions">
           <Link className="btn btn-secondary btn-small" to="/tool">
-            Abrir Bancada
+            {t('open_workbench')}
           </Link>
         </div>
       </section>
 
       <div className="projects-page__layout">
-        <section className="panel projects-page__form-card" id="criar-projeto" aria-label="Criar projeto">
+        <section className="panel projects-page__form-card" id="criar-projeto" aria-label={t('create_project')}>
           <div className="projects-page__card-header">
-            <p className="projects-page__eyebrow">Novo projeto</p>
-            <h2>Criar projeto</h2>
-            <p>Use projetos para agrupar histórias por jornada, squad ou objetivo.</p>
+            <p className="projects-page__eyebrow">{t('new_project')}</p>
+            <h2>{t('create_project')}</h2>
+            <p>{t('use_projects_to_group_stories_by_journey')}</p>
           </div>
           <form className="projects-page__form" onSubmit={handleCreateProject}>
             <label className="projects-page__field">
-              <span>Nome do projeto</span>
+              <span>{t('project_name')}</span>
               <input
                 ref={nameInputRef}
                 type="text"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Ex.: Onboarding de clientes"
+                placeholder={t('e_g_customer_onboarding')}
                 disabled={isCreating}
                 required
               />
@@ -586,13 +593,13 @@ function ProjectsPage() {
 
             <label className="projects-page__field">
               <span>
-                Descrição
-                <small>Opcional</small>
+                {t('description')}{' '}
+                <small>{t('optional')}</small>
               </span>
               <textarea
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
-                placeholder="Explique a jornada, squad ou objetivo do projeto."
+                placeholder={t('describe_the_project_s_journey_squad_or')}
                 rows={4}
                 disabled={isCreating}
               />
@@ -603,34 +610,33 @@ function ProjectsPage() {
               className="btn btn-primary projects-page__submit"
               disabled={isCreating || !name.trim()}
             >
-              {isCreating ? 'Criando projeto...' : 'Criar projeto'}
+              {isCreating ? t('creating_project') : t('create_project')}
             </button>
           </form>
-          {message ? <p className="projects-page__message" role="status">{message}</p> : null}
+          {message ? <p className="projects-page__message" role="status">{formatNotice(t, message)}</p> : null}
         </section>
 
-        <section className="panel projects-page__list-card" aria-label="Lista de projetos">
+        <section className="panel projects-page__list-card" aria-label={t('project_list')}>
           <div className="projects-page__section-header">
             <div>
-              <p className="projects-page__eyebrow">Portfólio</p>
-              <h2>Seus projetos</h2>
+              <p className="projects-page__eyebrow">{t('portfolio')}</p>
+              <h2>{t('your_projects')}</h2>
             </div>
             <span className="projects-page__section-count">{filteredProjectCountLabel}</span>
           </div>
 
           {projects.length > 0 ? (
-            <div className="projects-page__portfolio-strip" aria-label="Resumo do portfólio">
+            <div className="projects-page__portfolio-strip" role="group" aria-label={t('portfolio_summary')}>
               {portfolioSummaryItems.map((item) => {
                 const isActive = portfolioFilter === item.filter
 
                 return (
                   <button
-                    key={item.label}
+                    key={item.filter}
                     type="button"
                     className={`projects-page__portfolio-card ${
                       isActive ? 'projects-page__portfolio-card--active' : ''
                     }`}
-                    aria-label={`Filtrar por ${item.label}`}
                     aria-pressed={isActive}
                     onClick={() => setPortfolioFilter(item.filter)}
                   >
@@ -643,35 +649,35 @@ function ProjectsPage() {
             </div>
           ) : null}
 
-          <div className="projects-page__filters" aria-label="Filtros dos projetos">
+          <div className="projects-page__filters" aria-label={t('project_filters')}>
             <div className="projects-page__filter-row">
               <label className="projects-page__field projects-page__field--search">
-                <span>Buscar projeto</span>
+                <span>{t('search_projects')}</span>
                 <input
                   type="search"
                   value={searchInput}
                   onChange={(event) => setSearchInput(event.target.value)}
-                  placeholder="Nome, squad, jornada ou iniciativa"
+                  placeholder={t('name_squad_journey_or_initiative')}
                 />
               </label>
 
               <label className="projects-page__field projects-page__field--sort">
-                <span>Ordenar</span>
+                <span>{t('sort')}</span>
                 <select
                   value={projectSort}
                   onChange={(event) => setProjectSort(event.target.value)}
-                  aria-label="Ordenar projetos"
+                  aria-label={t('sort_projects')}
                 >
                   {PROJECT_SORT_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
-                      {option.label}
+                      {t(option.label)}
                     </option>
                   ))}
                 </select>
               </label>
             </div>
 
-            <div className="projects-page__quick-filters" aria-label="Filtros rápidos de projetos">
+            <div className="projects-page__quick-filters" aria-label={t('quick_project_filters')}>
               {PROJECT_PORTFOLIO_FILTERS.map((option) => {
                 const isActive = portfolioFilter === option.value
 
@@ -685,8 +691,8 @@ function ProjectsPage() {
                     aria-pressed={isActive}
                     onClick={() => setPortfolioFilter(option.value)}
                   >
-                    <span>{option.label}</span>
-                    <small>{option.description}</small>
+                    <span>{t(option.label)}</span>
+                    <small>{t(option.description)}</small>
                   </button>
                 )
               })}
@@ -695,10 +701,10 @@ function ProjectsPage() {
             {hasActivePortfolioRecorte ? (
               <div className="projects-page__active-filter" role="status">
                 <div>
-                  <span>Recorte atual</span>
+                  <span>{t('current_filter')}</span>
                   <p>
-                    {activePortfolioFilter.label}
-                    {trimmedSearchInput ? ` · Busca: "${trimmedSearchInput}"` : ''}
+                    {t(activePortfolioFilter.label)}
+                    {trimmedSearchInput ? t('search', { p1: trimmedSearchInput }) : ''}
                   </p>
                 </div>
                 <button
@@ -709,32 +715,31 @@ function ProjectsPage() {
                     setPortfolioFilter('all')
                   }}
                 >
-                  Limpar recorte
+                  {t('clear_selection')}
                 </button>
               </div>
             ) : null}
           </div>
 
-          {isLoading ? <p className="projects-page__state">Carregando projetos...</p> : null}
-          {isLoadingStats ? <p className="projects-page__state">Atualizando resumo dos projetos...</p> : null}
+          {isLoading ? <p className="projects-page__state">{t('loading_projects')}</p> : null}
+          {isLoadingStats ? <p className="projects-page__state">{t('updating_project_summary')}</p> : null}
           {!isLoading && projects.length === 0 ? (
             <div className="projects-page__empty">
-              <p className="projects-page__eyebrow">Comece quando fizer sentido</p>
-              <h3>Nenhum projeto criado ainda</h3>
+              <p className="projects-page__eyebrow">{t('start_when_it_makes_sense')}</p>
+              <h3>{t('no_projects_yet')}</h3>
               <p>
-                Você pode continuar usando a Bancada sem projeto ou criar seu primeiro projeto para organizar
-                histórias por iniciativa.
+                {t('keep_using_the_workbench_without_a_project')}
               </p>
               <button type="button" className="btn btn-secondary btn-small" onClick={focusCreateProject}>
-                Criar primeiro projeto
+                {t('create_first_project')}
               </button>
             </div>
           ) : null}
           {hasNoProjectsForFilter ? (
             <div className="projects-page__empty">
-              <p className="projects-page__eyebrow">Nenhum resultado</p>
-              <h3>Nenhum projeto neste recorte</h3>
-              <p>Ajuste a busca ou escolha outro filtro para voltar ao portfólio completo.</p>
+              <p className="projects-page__eyebrow">{t('no_results')}</p>
+              <h3>{t('no_projects_match_this_view')}</h3>
+              <p>{t('adjust_your_search_or_select_another_filter')}</p>
               <button
                 type="button"
                 className="btn btn-secondary btn-small"
@@ -743,7 +748,7 @@ function ProjectsPage() {
                   setPortfolioFilter('all')
                 }}
               >
-                Limpar filtros
+                {t('clear_filters')}
               </button>
             </div>
           ) : null}
@@ -751,7 +756,10 @@ function ProjectsPage() {
           <div className="projects-page__list">
             {filteredProjects.map((project) => {
               const stats = projectStatsById[project.id] ?? EMPTY_PROJECT_STATS
-              const nextAction = getProjectNextAction(project, stats)
+              const diagnosticFreshness = stats.latestDiagnostic
+                  ? getProjectInsightFreshness(stats.latestDiagnostic, stats.storyCount, tInsights)
+                  : null
+                const nextAction = getProjectNextAction(project, stats, diagnosticFreshness, t)
 
               return (
                 <article key={project.id} className="projects-page__item">
@@ -763,22 +771,22 @@ function ProjectsPage() {
                       </h3>
                     </div>
                     <p className="projects-page__item-description">
-                      {project.description || 'Sem descrição por enquanto.'}
+                      {project.description || t('no_description_yet')}
                     </p>
-                    <p className="projects-page__item-date">Criado em {formatProjectDate(project.created_at)}</p>
-                    <div className="projects-page__item-metrics" aria-label={`Resumo de ${project.name}`}>
+                    <p className="projects-page__item-date">{t('created_on')}{" "}{formatProjectDate(project.created_at, language)}</p>
+                    <div className="projects-page__item-metrics" aria-label={t('summary_for', { p1: project.name })}>
                       <span className="projects-page__metric">
-                        {formatProjectMetric(stats.storyCount, 'história', 'histórias')}
+                        {formatProjectMetric(stats.storyCount, t('story'), t('stories_2'))}
                       </span>
                       <span className="projects-page__metric projects-page__metric--ready">
                         {formatProjectMetric(
                           stats.readyStoryCount,
-                          'pronta para estimar',
-                          'prontas para estimar',
+                          t('ready_to_estimate'),
+                          t('ready_to_estimate_2'),
                         )}
                       </span>
                       <span className="projects-page__metric">
-                        {formatProjectMetric(stats.teamCount, 'time', 'times')}
+                        {`${stats.teamCount} ${t('team', { count: stats.teamCount })}`}
                       </span>
                       <span
                         className={`projects-page__metric ${
@@ -786,17 +794,17 @@ function ProjectsPage() {
                         }`}
                       >
                         {stats.hasDiagnostic
-                          ? `IA: ${stats.diagnosticHealthLabel || 'diagnóstico'}`
-                          : 'Sem diagnóstico'}
+                          ? t('ai', { p1: stats.diagnosticHealthLabel || t('diagnosis') })
+                          : t('no_diagnosis')}
                       </span>
                       {stats.isDiagnosticOutdated ? (
                         <span className="projects-page__metric projects-page__metric--warning">
-                          {stats.diagnosticFreshnessLabel || 'IA desatualizada'}
+                          {diagnosticFreshness?.label || t('outdated_diagnosis')}
                         </span>
                       ) : null}
                       {stats.latestDiagnosticAt ? (
                         <span className="projects-page__metric">
-                          IA em {formatProjectDate(stats.latestDiagnosticAt)}
+                          {t('ai_analyzed_on')}{" "}{formatProjectDate(stats.latestDiagnosticAt, language)}
                         </span>
                       ) : null}
                     </div>
@@ -805,29 +813,29 @@ function ProjectsPage() {
                     <div
                       className={`projects-page__next-action projects-page__next-action--${nextAction.tone}`}
                     >
-                      <span>Próxima ação</span>
+                      <span>{t('next_action')}</span>
                       <p>{nextAction.description}</p>
                       <Link className="btn btn-primary btn-small" to={nextAction.href}>
                         {nextAction.label}
                       </Link>
                     </div>
                     <details className="projects-page__item-more">
-                      <summary>Mais ações</summary>
+                      <summary>{t('more_actions')}</summary>
                       <div>
                         <Link className="btn btn-secondary btn-small" to={`/projetos/${project.id}`}>
-                          Ver projeto
+                          {t('view_project')}
                         </Link>
                         <Link className="btn btn-secondary btn-small" to={`/historico?projectId=${project.id}`}>
-                          Ver histórias
+                          {t('view_stories')}
                         </Link>
                         <Link className="btn btn-secondary btn-small" to={`/roda?projectId=${project.id}`}>
-                          Abrir Roda
+                          {t('open_planning_poker')}
                         </Link>
                         <Link className="btn btn-secondary btn-small" to={`/times?projectId=${project.id}`}>
-                          Times
+                          {t('teams')}
                         </Link>
                         <Link className="btn btn-secondary btn-small" to={`/tool?projectId=${project.id}`}>
-                          Forjar
+                          {t('forge')}
                         </Link>
                       </div>
                     </details>

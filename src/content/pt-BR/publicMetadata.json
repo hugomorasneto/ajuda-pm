@@ -1,0 +1,34 @@
+{
+  "home": {
+    "title": "ProdForge — Workspace IA para Product Managers",
+    "description": "Transforme briefings confusos em user stories claras, completas e prontas para times de produto, desenvolvimento e QA.",
+    "name": "ProdForge",
+    "ogDescription": "Transforme briefings confusos em user stories claras, completas e prontas para produto, desenvolvimento e QA."
+  },
+  "faq": {
+    "title": "Perguntas Frequentes | ProdForge",
+    "description": "Respostas rápidas sobre o ProdForge, uso de IA, histórias de usuário, conta, privacidade, planos, limites e suporte.",
+    "name": "Perguntas Frequentes"
+  },
+  "contact": {
+    "title": "Contato | ProdForge",
+    "description": "Entre em contato com o ProdForge para dúvidas, suporte, privacidade, sugestões de melhoria, parcerias ou assuntos comerciais.",
+    "name": "Contato"
+  },
+  "privacyPolicy": {
+    "title": "Política de Privacidade | ProdForge",
+    "description": "Entenda como o ProdForge coleta, usa, armazena e protege dados em formulários, autenticação, analytics, recursos de IA e fluxos da Bancada.",
+    "name": "Política de Privacidade"
+  },
+  "preferences": {
+    "title": "Preferências de Privacidade | ProdForge",
+    "description": "Revise, altere ou redefina sua escolha de consentimento de privacidade salva neste navegador para o ProdForge.",
+    "name": "Preferências de Privacidade"
+  },
+  "terms": {
+    "title": "Termos de Uso | ProdForge",
+    "description": "Conheça os termos que regulam o uso do ProdForge, incluindo cadastro, uso da Bancada, geração com IA, limites gratuitos e recursos pagos.",
+    "name": "Termos de Uso"
+  },
+  "brandAlt": "Marca do ProdForge"
+}

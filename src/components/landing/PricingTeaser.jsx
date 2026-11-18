@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { useCopy } from '../../i18n/context'
+import Link from '../../i18n/LocalizedLink'
 
 function PricingCard({ plan, cta, variant }) {
   const isFeatured = variant === 'pro'
@@ -19,11 +20,13 @@ function PricingCard({ plan, cta, variant }) {
         </span>
       </div>
 
-      <ul className="landing-pricing__list">
-        {plan.items.map((item) => (
-          <li key={item}>{item}</li>
-        ))}
-      </ul>
+      {plan.items.length > 0 && (
+        <ul className="landing-pricing__list">
+          {plan.items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      )}
 
       {cta}
     </article>
@@ -31,6 +34,7 @@ function PricingCard({ plan, cta, variant }) {
 }
 
 function PricingTeaser({ content, isAuthenticated }) {
+  const t = useCopy('pricingTeaser')
   return (
     <section className="landing-section landing-pricing" id="planos">
       <div className="landing-section__intro">
@@ -46,11 +50,11 @@ function PricingTeaser({ content, isAuthenticated }) {
           cta={
             isAuthenticated ? (
               <Link className="landing-button forge-button forge-button--metal forge-button--block" to="/tool">
-                Abrir bancada
+                {t('pricingTeaser_abrir_bancada')}
               </Link>
             ) : (
               <Link className="landing-button forge-button forge-button--ember forge-button--block" to="/signup">
-                Criar conta grátis
+                {t('pricingTeaser_criar_conta_gratis')}
               </Link>
             )
           }
@@ -61,7 +65,7 @@ function PricingTeaser({ content, isAuthenticated }) {
           variant="pro"
           cta={
             <Link className="landing-button forge-button forge-button--tech forge-button--block" to="/#lead-capture-title">
-              Receber novidades do Pro
+              {t('pricingTeaser_receber_novidades_do_pro')}
             </Link>
           }
         />

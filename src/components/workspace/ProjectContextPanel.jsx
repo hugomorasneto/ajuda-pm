@@ -1,3 +1,4 @@
+import { useCopy } from '../../i18n/context'
 import { useState } from 'react'
 
 function IconChevronDown() {
@@ -35,6 +36,7 @@ function ProjectContextPanel({
   canAssignToSelectedProject = false,
   actionMessage = '',
 }) {
+  const t = useCopy('forge')
   const [isCreatingProject, setIsCreatingProject] = useState(false)
   const [isManuallyOpen, setIsManuallyOpen] = useState(false)
   const [name, setName] = useState('')
@@ -49,23 +51,23 @@ function ProjectContextPanel({
   )
   const summaryTitle = hasGeneratedStory
     ? isStandalone
-      ? 'Peça avulsa'
-      : 'Projeto vinculado'
+      ? t('standalone_artifact')
+      : t('linked_project')
     : isStandalone
-      ? 'Vincular a um projeto (opcional)'
-      : 'Projeto selecionado'
+      ? t('link_to_a_project_optional')
+      : t('selected_project')
   const summaryDescription = hasGeneratedStory
     ? isStandalone
-      ? 'Vincule a peça a um projeto para usar Kanban, Roda e colaboração. Ela continua salva se ficar avulsa.'
-      : 'Esta peça já tem contexto de projeto para Kanban, IA e Roda.'
+      ? t('link_the_artifact_to_a_project')
+      : t('this_artifact_already_has_a_project')
     : isStandalone
-      ? 'Use um projeto para organizar histórias por jornada ou iniciativa. Você também pode forjar sem projeto.'
-      : 'Use esta área para trocar o projeto, organizar a história atual ou criar um novo contexto.'
+      ? t('use_a_project_to_group_stories')
+      : t('change_the_project_organize_the_current')
   const hintText = canOfferGeneratedStoryOrganization
-    ? 'Selecione um projeto existente ou crie um novo para liberar Kanban, IA do projeto e Roda da Fogueira.'
+    ? t('select_or_create_a_project_to')
     : isGeneratedAndLinked
-      ? 'Esta peça já está organizada em um projeto. Troque o vínculo apenas se precisar mover a história para outro contexto.'
-      : 'Histórias sem projeto continuam salvas na sua conta e aparecem no histórico como peças avulsas.'
+      ? t('this_artifact_already_belongs_to_a')
+      : t('stories_without_a_project_are_saved')
   const panelClassName = [
     'project-context-panel panel',
     isOpen ? 'project-context-panel--open' : '',
@@ -88,7 +90,7 @@ function ProjectContextPanel({
   }
 
   return (
-    <section className={panelClassName} aria-label="Contexto opcional de projeto">
+    <section className={panelClassName} aria-label={t('optional_project_context')}>
       <button
         type="button"
         className="project-context-panel__summary"
@@ -96,16 +98,16 @@ function ProjectContextPanel({
         aria-expanded={isOpen}
       >
         <span className="project-context-panel__summary-copy">
-          <span className="project-context-panel__eyebrow">Organização opcional</span>
+          <span className="project-context-panel__eyebrow">{t('optional_organization')}</span>
           <strong title={summaryTitle}>{summaryTitle}</strong>
           <span>{summaryDescription}</span>
         </span>
         <span className="project-context-panel__summary-meta">
           <span
             className={`project-context-panel__status ${isStandalone ? '' : 'project-context-panel__status--active'}`}
-            title={isStandalone ? 'Sem projeto' : selectedProjectName}
+            title={isStandalone ? t('no_project') : selectedProjectName}
           >
-            {isStandalone ? 'Sem projeto' : selectedProjectName}
+            {isStandalone ? t('no_project') : selectedProjectName}
           </span>
           <span className={`project-context-panel__chevron ${isOpen ? 'project-context-panel__chevron--open' : ''}`}>
             <IconChevronDown />
@@ -116,13 +118,13 @@ function ProjectContextPanel({
       <div className="project-context-panel__body" hidden={!isOpen}>
         <div className="project-context-panel__controls">
           <label className="project-context-panel__field">
-            <span>Projeto</span>
+            <span>{t('project')}</span>
             <select
               value={selectedProjectId}
               onChange={(event) => onSelectProject?.(event.target.value)}
               disabled={isLoading || isSubmitting}
             >
-              <option value="">Sem projeto</option>
+              <option value="">{t('no_project')}</option>
               {projects.map((project) => (
                 <option key={project.id} value={project.id}>
                   {project.name}
@@ -138,9 +140,7 @@ function ProjectContextPanel({
                 className="btn btn-secondary btn-small"
                 onClick={onForgeStandalone}
                 disabled={isSubmitting}
-              >
-                Gerar sem projeto
-              </button>
+              >{t('generate_without_a_project')}</button>
             ) : null}
             {canAssignToSelectedProject ? (
               <button
@@ -149,7 +149,7 @@ function ProjectContextPanel({
                 onClick={onAssignToSelectedProject}
                 disabled={isAssigning || isSubmitting}
               >
-                {isAssigning ? 'Organizando...' : 'Organizar neste projeto'}
+                {isAssigning ? t('organizing') : t('organize_in_this_project')}
               </button>
             ) : null}
             <button
@@ -158,7 +158,7 @@ function ProjectContextPanel({
               onClick={() => setIsCreatingProject((current) => !current)}
               disabled={isSubmitting}
             >
-              {canOfferGeneratedStoryOrganization ? 'Criar novo projeto' : 'Criar projeto'}
+              {canOfferGeneratedStoryOrganization ? t('create_a_new_project') : t('create_project')}
             </button>
           </div>
         </div>
@@ -168,37 +168,35 @@ function ProjectContextPanel({
         {isCreatingProject ? (
           <form className="project-context-panel__form" onSubmit={handleCreateProject}>
             <label className="project-context-panel__field">
-              <span>Nome do projeto</span>
+              <span>{t('project_name')}</span>
               <input
                 type="text"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Ex.: Checkout B2B"
+                placeholder={t('for_example_b2b_checkout')}
                 disabled={isCreating}
               />
             </label>
             <label className="project-context-panel__field">
-              <span>Descrição opcional</span>
+              <span>{t('optional_description')}</span>
               <textarea
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
-                placeholder="Explique o objetivo do projeto em poucas linhas."
+                placeholder={t('explain_the_purpose_of_the_project')}
                 rows={3}
                 disabled={isCreating}
               />
             </label>
             <div className="project-context-panel__form-actions">
               <button type="submit" className="btn btn-primary btn-small" disabled={isCreating}>
-                {canAssignGeneratedStory ? 'Criar e organizar história' : 'Criar projeto'}
+                {canAssignGeneratedStory ? t('create_and_organize_story') : t('create_project')}
               </button>
               <button
                 type="button"
                 className="btn btn-ghost btn-small"
                 onClick={() => setIsCreatingProject(false)}
                 disabled={isCreating}
-              >
-                Cancelar
-              </button>
+              >{t('cancel')}</button>
             </div>
           </form>
         ) : null}

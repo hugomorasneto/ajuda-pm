@@ -5,12 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build --mode i18n-production",
     "lint": "eslint .",
     "preview": "vite preview",
     "copy:spell": "node scripts/extract-visible-copy.mjs | cspell --config cspell.config.json --locale pt-BR --language-id plaintext --no-progress stdin://visible-copy.txt",
     "copy:ptbr": "node scripts/check-ptbr-copy.mjs",
-    "copy:check": "npm run copy:spell && npm run copy:ptbr",
+    "copy:check": "npm run copy:spell && npm run copy:ptbr && npm run copy:en && node scripts/check-i18n-catalogs.mjs",
     "test:unit": "vitest run src/utils src/services",
     "quality": "npm run lint && npm run copy:check && npm run test:unit && npm run build",
     "supabase:doctor": "powershell -ExecutionPolicy Bypass -File scripts/supabase-doctor.ps1",
@@ -18,17 +18,29 @@
     "supabase:sql:apply": "powershell -ExecutionPolicy Bypass -File scripts/supabase-sql-apply.ps1",
     "supabase:functions:serve": "powershell -ExecutionPolicy Bypass -File scripts/supabase-serve.ps1",
     "supabase:functions:deploy": "powershell -ExecutionPolicy Bypass -File scripts/supabase-deploy.ps1",
-    "supabase:secrets:set": "powershell -ExecutionPolicy Bypass -File scripts/supabase-secrets-set.ps1"
+    "supabase:secrets:set": "powershell -ExecutionPolicy Bypass -File scripts/supabase-secrets-set.ps1",
+    "copy:en": "node scripts/extract-visible-copy.mjs en | cspell --config cspell.en.config.json --locale en-US --language-id plaintext --no-progress stdin://visible-copy.txt",
+    "dev:i18n": "vite --mode i18n-preview --host 127.0.0.1 --strictPort",
+    "build:i18n": "vite build --mode i18n-preview",
+    "preview:i18n": "vite preview --mode i18n-preview --host 127.0.0.1 --strictPort",
+    "test:e2e:i18n": "node e2e/build-preview.mjs && playwright test",
+    "test:auth:local": "node scripts/test-auth-flow-local.mjs",
+    "test:auth:release": "node scripts/test-auth-flow-local.mjs --production",
+    "preview:release": "vite preview --mode i18n-production --host 127.0.0.1 --strictPort",
+    "test:e2e:release": "node e2e/build-release.mjs && playwright test --config e2e/release.config.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.0",
+    "i18next": "27.1.3",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "react-router-dom": "^7.14.1"
+    "react-i18next": "18.0.2",
+    "react-router-dom": "7.18.5"
   },
   "devDependencies": {
     "@cspell/dict-pt-br": "^2.4.2",
     "@eslint/js": "^9.39.4",
+    "@playwright/test": "1.65.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",

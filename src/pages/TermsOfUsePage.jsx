@@ -1,152 +1,153 @@
-import { Link } from 'react-router-dom'
-import { APP_NAME } from '../constants/app'
-import { usePageMetadata } from '../hooks/usePageMetadata'
+import { useCopy, useLanguage } from '../i18n/context'
+import Link from '../i18n/LocalizedLink'
+import { formatPublicDate, usePublicPageMetadata } from '../hooks/usePublicPageMetadata'
 
-const TERMS_LAST_UPDATED = '06/05/2026'
+const TERMS_LAST_UPDATED = '2026-05-06'
 // TODO: revisar este e-mail quando o canal oficial de termos e suporte estiver definido.
 const CONTACT_EMAIL = 'contato@techtupa.com.br'
 
-const termsSummary = [
-  'Plataforma de apoio para histórias de usuário com IA',
-  'Uso responsável de briefings, requisitos e artefatos de produto',
-  'Respostas da IA como sugestões que exigem revisão humana',
-  'Planos, limites, privacidade e canais oficiais de contato',
+const getTermsSummary = (t) => [
+  t('termsOfUsePage_plataforma_de_apoio_para_historias'),
+  t('termsOfUsePage_uso_responsavel_de_briefings_requisitos'),
+  t('termsOfUsePage_respostas_da_ia_como_sugestoes'),
+  t('termsOfUsePage_planos_limites_privacidade_e_canais'),
 ]
 
-const termsSections = [
+const getTermsSections = (t) => [
   {
     id: 'aceitacao-e-escopo',
-    title: 'Aceitação e escopo',
+    title: t('termsOfUsePage_aceitacao_e_escopo'),
     paragraphs: [
-      'Estes Termos de Uso regulam o acesso e o uso do ProdForge, incluindo site, páginas públicas, cadastro, autenticação, Bancada, recursos com IA, histórico, projetos, materiais de aprendizado e funcionalidades relacionadas.',
-      'Ao acessar ou usar o ProdForge, você declara que leu, entendeu e concorda com estes termos. Se não concordar com alguma condição, não use a plataforma.',
-      'A versão publicada nesta página é a referência atual para o uso do produto. Recursos específicos podem ter regras complementares quando forem disponibilizados.',
+      t('termsOfUsePage_estes_termos_de_uso_regulam'),
+      t('termsOfUsePage_ao_acessar_ou_usar_o'),
+      t('termsOfUsePage_a_versao_publicada_nesta_pagina'),
     ],
   },
   {
     id: 'o-que-e-o-prodforge',
-    title: 'O que é o ProdForge',
+    title: t('termsOfUsePage_o_que_e_o_prodforge'),
     paragraphs: [
-      'O ProdForge é uma plataforma de apoio para criação, refinamento e organização de histórias de usuário com IA.',
-      'O produto foi pensado para PMs, POs e times de produto, desenvolvimento e QA que precisam transformar contexto solto em artefatos mais claros, padronizados e fáceis de revisar.',
-      'A plataforma ajuda a estruturar trabalho de produto, mas não substitui discovery, priorização, alinhamento com stakeholders, revisão técnica, validação de negócio ou decisão profissional do time.',
+      t('termsOfUsePage_o_prodforge_e_uma_plataforma'),
+      t('termsOfUsePage_o_produto_foi_pensado_para'),
+      t('termsOfUsePage_a_plataforma_ajuda_a_estruturar'),
     ],
   },
   {
     id: 'uso-permitido-da-plataforma',
-    title: 'Uso permitido da plataforma',
+    title: t('termsOfUsePage_uso_permitido_da_plataforma'),
     paragraphs: [
-      'Você pode usar o ProdForge para estruturar briefings, histórias de usuário, critérios de aceite, insights, perguntas de refinamento, riscos técnicos e outros artefatos relacionados a produto.',
-      'O uso deve respeitar leis aplicáveis, direitos de terceiros, boas práticas de segurança e as limitações técnicas da plataforma.',
-      'Você não deve usar o ProdForge para inserir, processar, armazenar ou gerar conteúdo ilegal, ofensivo, discriminatório, fraudulento, enganoso, sensível sem autorização ou que viole direitos de terceiros.',
+      t('termsOfUsePage_voce_pode_usar_o_prodforge'),
+      t('termsOfUsePage_o_uso_deve_respeitar_leis'),
+      t('termsOfUsePage_voce_nao_deve_usar_o'),
     ],
   },
   {
     id: 'conta-e-acesso',
-    title: 'Conta e acesso',
+    title: t('termsOfUsePage_conta_e_acesso'),
     paragraphs: [
-      'Para usar algumas funcionalidades, você pode precisar criar uma conta e informar dados como nome, e-mail e senha. Você é responsável por manter essas informações corretas, atualizadas e sob seu controle.',
-      'Proteja suas credenciais e não compartilhe acesso com pessoas não autorizadas. Todas as atividades realizadas pela sua conta podem ser atribuídas a você.',
-      'O acesso ao ProdForge pode ser limitado, suspenso, alterado ou encerrado em caso de abuso, fraude, tentativa de burlar limites, uso indevido, risco à segurança, violação destes termos ou obrigação legal.',
-      'Caso identifique acesso indevido, suspeita de vazamento ou uso não autorizado da sua conta, entre em contato pelo canal indicado nestes termos.',
+      t('termsOfUsePage_para_usar_algumas_funcionalidades_voce'),
+      t('termsOfUsePage_proteja_suas_credenciais_e_nao'),
+      t('termsOfUsePage_o_acesso_ao_prodforge_pode'),
+      t('termsOfUsePage_caso_identifique_acesso_indevido_suspeita'),
     ],
   },
   {
     id: 'uso-de-inteligencia-artificial',
-    title: 'Uso de inteligência artificial',
+    title: t('termsOfUsePage_uso_de_inteligencia_artificial'),
     paragraphs: [
-      'O ProdForge pode usar serviços de IA para transformar briefings, regras, dores de negócio e contexto técnico em sugestões de histórias de usuário, critérios de aceite, perguntas de refinamento, insights técnicos e melhorias.',
-      'As respostas geradas por IA são sugestões de apoio. Elas devem ser revisadas criticamente antes de uso profissional, publicação, envio para Jira, refinamento com stakeholders, entrega para desenvolvimento, QA ou tomada de decisão.',
-      'A IA pode gerar respostas incompletas, imprecisas, desatualizadas, inconsistentes ou inadequadas em alguns casos, especialmente quando o contexto enviado estiver ambíguo, insuficiente ou sensível.',
-      'O ProdForge não substitui julgamento profissional, discovery, alinhamento com stakeholders, validação com usuários, revisão técnica, análise jurídica, revisão de QA ou governança interna do seu time.',
+      t('termsOfUsePage_o_prodforge_pode_usar_servicos'),
+      t('termsOfUsePage_as_respostas_geradas_por_ia'),
+      t('termsOfUsePage_a_ia_pode_gerar_respostas'),
+      t('termsOfUsePage_o_prodforge_nao_substitui_julgamento'),
     ],
-    note: 'A decisão final sobre uso, adaptação, descarte e validação de qualquer conteúdo gerado é sempre do usuário.',
+    note: t('termsOfUsePage_a_decisao_final_sobre_uso'),
   },
   {
     id: 'conteudos-inseridos-pelo-usuario',
-    title: 'Conteúdos inseridos pelo usuário',
+    title: t('termsOfUsePage_conteudos_inseridos_pelo_usuario'),
     paragraphs: [
-      'Você é responsável pelos conteúdos que insere na plataforma, incluindo briefings, problemas de negócio, regras, restrições, nomes, exemplos, critérios, arquivos copiados para campos de texto e qualquer informação enviada para geração ou melhoria.',
-      'Não insira dados confidenciais, segredos comerciais, credenciais, informações estratégicas restritas, dados pessoais sensíveis ou informações de terceiros sem autorização adequada.',
-      'Ao inserir conteúdo no ProdForge, você declara que tem direito ou autorização para usá-lo e que esse conteúdo não viola direitos de terceiros, confidencialidade, contratos, políticas internas ou leis aplicáveis.',
-      'Esses conteúdos podem ser armazenados para histórico, continuidade do uso, recuperação de contexto, diagnóstico de falhas, prevenção de abuso e melhoria operacional da experiência, conforme descrito na Política de Privacidade.',
+      t('termsOfUsePage_voce_e_responsavel_pelos_conteudos'),
+      t('termsOfUsePage_nao_insira_dados_confidenciais_segredos'),
+      t('termsOfUsePage_ao_inserir_conteudo_no_prodforge'),
+      t('termsOfUsePage_esses_conteudos_podem_ser_armazenados'),
     ],
   },
   {
     id: 'planos-limites-e-recursos',
-    title: 'Planos, limites e recursos',
+    title: t('termsOfUsePage_planos_limites_e_recursos'),
     paragraphs: [
-      'O ProdForge pode oferecer plano gratuito, planos pagos, limites de uso e recursos premium. Esses limites podem envolver geração com IA, histórico, projetos, membros, exportações, integrações, funcionalidades avançadas ou recursos experimentais.',
-      'Recursos pagos podem depender de assinatura, convite, disponibilidade técnica, regras comerciais, configuração de conta ou integração com provedores de pagamento. Estes termos não prometem preço fixo, cobrança definitiva ou disponibilidade permanente de um recurso específico.',
-      'Planos, limites, benefícios, preços, regras de uso e funcionalidades podem mudar conforme a evolução do produto, necessidades operacionais, custos de fornecedores, segurança e direção estratégica do ProdForge.',
+      t('termsOfUsePage_o_prodforge_pode_oferecer_plano'),
+      t('termsOfUsePage_recursos_pagos_podem_depender_de'),
+      t('termsOfUsePage_planos_limites_beneficios_precos_regras'),
     ],
   },
   {
     id: 'disponibilidade-e-mudancas',
-    title: 'Disponibilidade e mudanças',
+    title: t('termsOfUsePage_disponibilidade_e_mudancas'),
     paragraphs: [
-      'Trabalhamos para manter o ProdForge disponível e funcional, mas não prometemos disponibilidade ininterrupta, ausência total de erros ou funcionamento perfeito em todos os dispositivos, navegadores, redes e cenários de uso.',
-      'A plataforma pode passar por melhorias, ajustes, manutenção, indisponibilidades temporárias, mudanças técnicas, limitações de fornecedores, falhas externas ou alterações de funcionalidades.',
-      'O ProdForge pode alterar estes termos futuramente para refletir mudanças no produto, em recursos, planos, fornecedores, integrações, práticas de segurança, uso de IA, monetização ou requisitos legais.',
-      'Quando houver mudanças relevantes, poderemos destacar a atualização no site, na Bancada ou por outro canal apropriado. A data de última atualização indica a versão publicada nesta página.',
+      t('termsOfUsePage_trabalhamos_para_manter_o_prodforge'),
+      t('termsOfUsePage_a_plataforma_pode_passar_por'),
+      t('termsOfUsePage_o_prodforge_pode_alterar_estes'),
+      t('termsOfUsePage_quando_houver_mudancas_relevantes_poderemos'),
     ],
   },
   {
     id: 'responsabilidades-e-limitacoes',
-    title: 'Responsabilidades e limitações',
+    title: t('termsOfUsePage_responsabilidades_e_limitacoes'),
     paragraphs: [
-      'O ProdForge busca entregar uma experiência útil, segura e consistente, mas não garante que todo conteúdo gerado será perfeito, completo, correto, suficiente ou adequado para todos os contextos.',
-      'O uso profissional de histórias de usuário, critérios de aceite, insights técnicos, perguntas de refinamento, documentos e demais artefatos gerados é responsabilidade do usuário.',
-      'Na medida permitida pela legislação aplicável, o ProdForge não se responsabiliza por decisões de negócio, falhas de implementação, uso profissional sem revisão, perda de contexto, resultados indiretos, indisponibilidade temporária ou uso indevido da plataforma.',
+      t('termsOfUsePage_o_prodforge_busca_entregar_uma'),
+      t('termsOfUsePage_o_uso_profissional_de_historias'),
+      t('termsOfUsePage_na_medida_permitida_pela_legislacao'),
     ],
   },
   {
     id: 'privacidade-e-preferencias',
-    title: 'Privacidade, cookies e preferências',
+    title: t('termsOfUsePage_privacidade_cookies_e_preferencias'),
     paragraphs: [
-      'O tratamento de dados pessoais, dados de conta, conteúdos inseridos, histórico, cookies, analytics e preferências é descrito na Política de Privacidade do ProdForge.',
-      'Você também pode revisar e alterar preferências de privacidade e cookies opcionais na página de Preferências de Privacidade, quando esses controles estiverem disponíveis para o seu navegador e contexto de uso.',
-      'As escolhas de privacidade não autorizam uso indevido da plataforma nem eliminam a responsabilidade de revisar os dados que você decide inserir no ProdForge.',
+      t('termsOfUsePage_o_tratamento_de_dados_pessoais'),
+      t('termsOfUsePage_voce_tambem_pode_revisar_e'),
+      t('termsOfUsePage_as_escolhas_de_privacidade_nao'),
     ],
     links: [
-      { label: 'Ler a Política de Privacidade', to: '/politica-de-privacidade' },
-      { label: 'Abrir Preferências de Privacidade', to: '/preferencias-de-privacidade' },
+      { label: t('termsOfUsePage_ler_a_politica_de_privacidade'), to: '/politica-de-privacidade' },
+      { label: t('termsOfUsePage_abrir_preferencias_de_privacidade'), to: '/preferencias-de-privacidade' },
     ],
   },
   {
     id: 'propriedade-intelectual',
-    title: 'Propriedade intelectual',
+    title: t('termsOfUsePage_propriedade_intelectual'),
     paragraphs: [
-      'A marca ProdForge, identidade visual, interface, textos, fluxos, componentes, estrutura da plataforma, materiais públicos e elementos do produto pertencem aos seus respectivos titulares e são protegidos por direitos aplicáveis.',
-      'Você mantém seus direitos sobre conteúdos que inserir na plataforma, respeitando as permissões necessárias para usá-los. Ao usar o ProdForge, você autoriza o processamento desses conteúdos para operação dos recursos solicitados e melhoria do produto, conforme aplicável.',
-      'Você não pode copiar, revender, sublicenciar, desmontar, explorar comercialmente ou criar serviço concorrente a partir da plataforma sem autorização expressa.',
+      t('termsOfUsePage_a_marca_prodforge_identidade_visual'),
+      t('termsOfUsePage_voce_mantem_seus_direitos_sobre'),
+      t('termsOfUsePage_voce_nao_pode_copiar_revender'),
     ],
   },
   {
     id: 'condutas-proibidas',
-    title: 'Condutas proibidas',
+    title: t('termsOfUsePage_condutas_proibidas'),
     paragraphs: [
-      'Para proteger a experiência de todos, algumas condutas não são permitidas no ProdForge.',
+      t('termsOfUsePage_para_proteger_a_experiencia_de'),
     ],
     bullets: [
-      'Tentar acessar contas, dados, projetos, histórico ou áreas administrativas sem autorização.',
-      'Usar automações abusivas, engenharia reversa, scraping, sobrecarga, exploração de falhas ou tentativa de burlar limites de uso.',
-      'Inserir conteúdo ilegal, discriminatório, ofensivo, violento, fraudulento, enganoso, sigiloso sem autorização ou que viole direitos de terceiros.',
-      'Usar a plataforma para gerar spam, golpes, malware, instruções prejudiciais, assédio, violação de privacidade ou qualquer atividade ilícita.',
-      'Remover avisos, mascarar identidade, simular relação com o ProdForge ou usar a marca sem permissão.',
+      t('termsOfUsePage_tentar_acessar_contas_dados_projetos'),
+      t('termsOfUsePage_usar_automacoes_abusivas_engenharia_reversa'),
+      t('termsOfUsePage_inserir_conteudo_ilegal_discriminatorio_ofensivo'),
+      t('termsOfUsePage_usar_a_plataforma_para_gerar'),
+      t('termsOfUsePage_remover_avisos_mascarar_identidade_simular'),
     ],
   },
   {
     id: 'contato',
-    title: 'Contato',
+    title: t('termsOfUsePage_contato'),
     paragraphs: [
-      'Para dúvidas, solicitações ou comentários sobre estes Termos de Uso, entre em contato pelo e-mail abaixo.',
+      t('termsOfUsePage_para_duvidas_solicitacoes_ou_comentarios'),
     ],
     contact: CONTACT_EMAIL,
   },
 ]
 
 function TermsSection({ section, index }) {
+  const t = useCopy('termsOfUsePage')
   return (
     <article className="privacy-policy-section forge-panel forge-panel--metal" id={section.id}>
       <div className="privacy-policy-section__header">
@@ -172,7 +173,7 @@ function TermsSection({ section, index }) {
         {section.note ? <p className="privacy-policy-section__note">{section.note}</p> : null}
 
         {section.links?.length ? (
-          <div className="privacy-policy-hero__actions" aria-label={`Links de ${section.title}`}>
+          <div className="privacy-policy-hero__actions" aria-label={t('termsOfUsePage_links_de', { p1: section.title })}>
             {section.links.map((link) => (
               <Link className="forge-button forge-button--tech forge-button--sm" key={link.to} to={link.to}>
                 {link.label}
@@ -192,57 +193,37 @@ function TermsSection({ section, index }) {
 }
 
 function TermsOfUsePage() {
-  const pageDescription =
-    'Conheça os termos que regulam o uso do ProdForge, incluindo cadastro, uso da Bancada, geração com IA, limites gratuitos e recursos pagos.'
-
-  usePageMetadata({
-    title: 'Termos de Uso | ProdForge',
-    description: pageDescription,
-    path: '/termos-de-uso',
-    ogTitle: 'Termos de Uso | ProdForge',
-    ogDescription: pageDescription,
-    twitterTitle: 'Termos de Uso | ProdForge',
-    twitterDescription: pageDescription,
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'WebPage',
-      name: 'Termos de Uso',
-      description: pageDescription,
-      inLanguage: 'pt-BR',
-      isPartOf: {
-        '@type': 'WebSite',
-        name: APP_NAME,
-        url: 'https://prodforge.techtupa.com.br/',
-      },
-      dateModified: '2026-05-06',
-    },
-  })
+  const t = useCopy('termsOfUsePage')
+  const { language, preview } = useLanguage()
+  const termsSections = getTermsSections(t)
+  const termsSummary = getTermsSummary(t)
+  usePublicPageMetadata('terms')
 
   return (
     <div className="page privacy-policy-page terms-of-use-page">
       <section className="privacy-policy-hero forge-panel forge-panel--metal forge-texture-layer">
         <div className="privacy-policy-hero__copy">
-          <p className="privacy-policy-page__eyebrow forge-badge forge-badge--ember">Termos da Bancada</p>
-          <h1>Termos de Uso</h1>
+          <p className="privacy-policy-page__eyebrow forge-badge forge-badge--ember">{t('termsOfUsePage_termos_da_bancada')}</p>
+          <h1>{t('termsOfUsePage_termos_de_uso')}</h1>
           <p>
-            Estes termos regulam o uso do ProdForge e ajudam a deixar claro como a plataforma, a
-            Bancada, os recursos com IA, os limites gratuitos e os recursos pagos devem ser usados
-            com responsabilidade.
+            {t('termsOfUsePage_estes_termos_regulam_o_uso')}
           </p>
 
           <div className="privacy-policy-hero__actions">
             <Link className="forge-button forge-button--metal forge-button--md" to="/">
-              Voltar para a página inicial
+              {t('termsOfUsePage_voltar_para_a_pagina_inicial')}
             </Link>
             <a className="forge-button forge-button--ghost forge-button--md" href={`mailto:${CONTACT_EMAIL}`}>
-              Falar sobre os termos
+              {t('termsOfUsePage_falar_sobre_os_termos')}
             </a>
           </div>
         </div>
 
-        <aside className="privacy-policy-hero__summary" aria-label="Resumo dos termos">
-          <p className="privacy-policy-hero__summary-label">Última atualização</p>
-          <p className="privacy-policy-hero__summary-date">{TERMS_LAST_UPDATED}</p>
+        <aside className="privacy-policy-hero__summary" aria-label={t('termsOfUsePage_resumo_dos_termos')}>
+          <p className="privacy-policy-hero__summary-label">{t('termsOfUsePage_ultima_atualizacao')}</p>
+          <p className="privacy-policy-hero__summary-date">
+            {preview ? t('termsOfUsePage_vigencia_em_revisao') : formatPublicDate(TERMS_LAST_UPDATED, language)}
+          </p>
           <ul>
             {termsSummary.map((item) => (
               <li key={item}>{item}</li>
@@ -252,8 +233,8 @@ function TermsOfUsePage() {
       </section>
 
       <div className="privacy-policy-content">
-        <aside className="privacy-policy-toc" aria-label="Seções dos Termos de Uso">
-          <p className="privacy-policy-toc__title">Nestes termos</p>
+        <aside className="privacy-policy-toc" aria-label={t('termsOfUsePage_secoes_dos_termos_de_uso')}>
+          <p className="privacy-policy-toc__title">{t('termsOfUsePage_nestes_termos')}</p>
           <nav>
             {termsSections.map((section, index) => (
               <a key={section.id} href={`#${section.id}`}>
@@ -266,9 +247,7 @@ function TermsOfUsePage() {
 
         <div className="privacy-policy-sections">
           <p className="privacy-policy-intro">
-            Estes termos foram escritos em linguagem direta para orientar o uso do produto. Eles não
-            substituem avaliação jurídica específica para contratos, exigências regulatórias ou regras
-            internas da sua organização.
+            {t('termsOfUsePage_estes_termos_foram_escritos_em')}
           </p>
 
           {termsSections.map((section, index) => (

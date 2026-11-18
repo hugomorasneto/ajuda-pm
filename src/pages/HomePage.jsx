@@ -1,5 +1,6 @@
+import { useCopy, useLanguage } from '../i18n/context'
 import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import Link from '../i18n/LocalizedLink'
 import BeforeAfterStory from '../components/landing/BeforeAfterStory'
 import BenefitsStrip from '../components/landing/BenefitsStrip'
 import ContextStrip from '../components/landing/ContextStrip'
@@ -10,28 +11,21 @@ import LearningTeaser from '../components/landing/LearningTeaser'
 import PricingTeaser from '../components/landing/PricingTeaser'
 import WorkflowSteps from '../components/landing/WorkflowSteps'
 import { HUGO_MORAES_LINKEDIN_URL } from '../constants/app'
-import { getLearningGuidesBySlugs, learningHub } from '../content/learningContent'
-import { landingCopy } from '../content/landingCopy'
+import { getLearningGuidesBySlugs, starterGuideSlugs } from '../content/learningContent'
+import { getLandingCopy } from '../content/landingCopy'
+import { useLearningCatalog } from '../hooks/useLearningCatalog'
 import { useAuth } from '../hooks/useAuth'
-import { usePageMetadata } from '../hooks/usePageMetadata'
+import { usePublicPageMetadata } from '../hooks/usePublicPageMetadata'
 import { PRIVACY_CONSENT_CHANGE_EVENT } from '../utils/privacyConsent'
 
 function HomePage() {
+  const t = useCopy('homePage')
+  const { preview } = useLanguage()
+  const landingCopy = getLandingCopy(useCopy('landingCopy'), preview)
   const { user } = useAuth()
-  const featuredGuides = getLearningGuidesBySlugs(learningHub.starterGuideSlugs)
+  const featuredGuides = getLearningGuidesBySlugs(starterGuideSlugs, useLearningCatalog())
 
-  usePageMetadata({
-    title: 'ProdForge — Workspace IA para Product Managers',
-    description:
-      'Transforme briefings confusos em user stories claras, completas e prontas para times de produto, desenvolvimento e QA.',
-    ogTitle: 'ProdForge — Workspace IA para Product Managers',
-    ogDescription:
-      'Transforme briefings confusos em user stories claras, completas e prontas para produto, desenvolvimento e QA.',
-    twitterTitle: 'ProdForge — Workspace IA para Product Managers',
-    twitterDescription:
-      'Transforme briefings confusos em user stories claras, completas e prontas para produto, desenvolvimento e QA.',
-    path: '/',
-  })
+  usePublicPageMetadata('home')
 
   useEffect(() => {
     let active = true
@@ -75,14 +69,12 @@ function HomePage() {
       <section className="landing-section landing-creator" aria-labelledby="landing-creator-title">
         <div className="landing-creator__card">
           <div className="landing-creator__copy">
-            <h2 id="landing-creator-title">Por trás do ProdForge</h2>
+            <h2 id="landing-creator-title">{t('homePage_por_tras_do_prodforge')}</h2>
             <p>
-              O ProdForge foi criado por Hugo Moraes Neto, Product Manager & Builder, para transformar briefings
-              confusos em histórias mais claras, acionáveis e úteis para times de produto, design, engenharia e
-              QA.
+              {t('homePage_o_prodforge_foi_criado_por')}
             </p>
             <p className="landing-creator__support">
-              Uma iniciativa da Tech Tupã, marca focada em automação, agentes de IA e produtos digitais.
+              {t('homePage_uma_iniciativa_da_tech_tupa')}
             </p>
           </div>
 
@@ -92,7 +84,7 @@ function HomePage() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Conectar no LinkedIn
+            {t('homePage_conectar_no_linkedin')}
             <span aria-hidden="true">↗</span>
           </a>
         </div>
@@ -109,15 +101,15 @@ function HomePage() {
           <div className="landing-final-cta__actions">
             {user ? (
               <Link className="landing-button forge-button forge-button--ember forge-button--lg" to="/tool">
-                Abrir bancada
+                {t('homePage_abrir_bancada')}
               </Link>
             ) : (
               <>
                 <Link className="landing-button forge-button forge-button--ember forge-button--lg" to="/signup">
-                  Criar conta grátis
+                  {t('homePage_criar_conta_gratis')}
                 </Link>
                 <Link className="landing-button forge-button forge-button--metal forge-button--lg" to="/login">
-                  Entrar
+                  {t('homePage_entrar')}
                 </Link>
               </>
             )}

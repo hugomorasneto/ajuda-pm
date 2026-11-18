@@ -1,6 +1,7 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+  RewriteRule ^revisao-de-textos(?:/|$) - [R=404,L]
 
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} -f [OR]

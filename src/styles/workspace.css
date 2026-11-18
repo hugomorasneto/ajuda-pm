@@ -6046,7 +6046,8 @@
 
 .workspace-shell--forge .history-page h1,
 .workspace-shell--forge .history-page h2,
-.workspace-shell--forge .history-page h3 {
+.workspace-shell--forge .history-page h3,
+.workspace-shell--forge .history-preview__project-assignment summary strong {
   color: var(--forge-text-primary);
 }
 
@@ -6070,6 +6071,7 @@
 .workspace-shell--forge .history-preview__command-card span,
 .workspace-shell--forge .history-preview__badges span,
 .workspace-shell--forge .history-preview__facts span,
+.workspace-shell--forge .history-preview__project-assignment summary em,
 .workspace-shell--forge .history-preview__next-action span,
 .workspace-shell--forge .history-delivery__preview header em,
 .workspace-shell--forge .history-delivery__metrics span,
@@ -12679,7 +12681,10 @@
   gap: var(--space-2);
 }
 
-.planning-poker-room__invite-actions .btn {
+.workspace-shell--forge .planning-poker-room__invite-actions .btn {
+  border-color: var(--forge-border);
+  background: var(--forge-surface-2);
+  color: var(--forge-text-primary);
   white-space: normal;
   line-height: 1.25;
 }
@@ -14307,6 +14312,22 @@
     grid-template-columns: 1fr;
   }
 
+  .projects-page--list,
+  .project-detail-page,
+  .projects-page--list .projects-page__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .projects-page--list .projects-page__active-filter p {
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .project-detail-page__stories > .projects-page__section-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .teams-page__overview {
     grid-template-columns: 1fr;
   }
@@ -15341,4 +15362,13 @@
   .workspace-canvas--with-story {
     grid-template-columns: minmax(300px, 332px) minmax(0, 1fr) minmax(260px, 296px);
   }
+}
+
+
+.workspace-language-note {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--forge-border);
+  border-radius: var(--radius-sm);
+  color: var(--forge-text-secondary);
 }

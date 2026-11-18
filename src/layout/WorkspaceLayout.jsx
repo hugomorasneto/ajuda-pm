@@ -1,3 +1,5 @@
+import { useCopy } from '../i18n/context'
+import { getPilotPage } from '../i18n/routes'
 import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import WorkspaceSidebar from '../components/workspace/WorkspaceSidebar'
@@ -5,18 +7,13 @@ import WorkspaceTopbar from '../components/workspace/WorkspaceTopbar'
 import '../styles/workspace.css'
 
 function WorkspaceLayout() {
+  const t = useCopy('navigation')
   const location = useLocation()
   const [sidebarOpenPath, setSidebarOpenPath] = useState(null)
   const [topbarStatus, setTopbarStatus] = useState(null)
 
   const isSidebarOpen = sidebarOpenPath === location.pathname
-  const isForgeWorkspace =
-    location.pathname === '/tool' ||
-    location.pathname === '/tool/admin' ||
-    location.pathname === '/historico' ||
-    location.pathname === '/times' ||
-    location.pathname === '/roda' ||
-    location.pathname.startsWith('/projetos')
+  const isForgeWorkspace = Boolean(getPilotPage(location.pathname)?.workspace)
 
   function openSidebar() {
     setSidebarOpenPath(location.pathname)
@@ -38,7 +35,7 @@ function WorkspaceLayout() {
           type="button"
           className="workspace-shell__backdrop"
           onClick={closeSidebar}
-          aria-label="Fechar navegação"
+          aria-label={t('closeNav')}
         />
       ) : null}
 

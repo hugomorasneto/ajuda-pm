@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient'
+import { defaultProjectInsightCopy } from '../utils/projectInsightsUtils'
 
 const PROJECT_ANALYSIS_TIMEOUT_MS = 25000
 const projectAnalysisColumns = [
@@ -154,46 +155,46 @@ export function buildProjectAnalysisMarkdown({
   freshness,
   storyCount = 0,
   memberCount = 0,
-}) {
+}, t = defaultProjectInsightCopy) {
   if (!analysis) return ''
 
-  const projectName = asString(project?.name, 'Projeto')
-  const projectDescription = asString(project?.description, 'Sem descrição cadastrada.')
+  const projectName = asString(project?.name, t('project'))
+  const projectDescription = asString(project?.description, t('no_description'))
   const analyzedStories = Number(analysis?.meta?.analyzed_stories ?? storyCount ?? 0)
   const freshnessLabel = freshness?.label
     ? `${freshness.label} - ${freshness.description}`
-    : 'Sem referência de atualização.'
+    : t('no_freshness')
 
   return [
-    `# Diagnóstico do projeto: ${projectName}`,
-    `**Saúde do projeto:** ${asString(analysis.health_label, 'Em organização')}`,
-    `**Status do diagnóstico:** ${freshnessLabel}`,
-    `**Histórias vinculadas:** ${storyCount}`,
-    `**Histórias analisadas:** ${analyzedStories}`,
-    `**Membros:** ${memberCount}`,
+    `# ${t('diagnosis_title', { project: projectName })}`,
+    `**${t('health')}:** ${asString(analysis.health_label, t('in_progress'))}`,
+    `**${t('diagnosis_status')}:** ${freshnessLabel}`,
+    `**${t('linked_stories')}:** ${storyCount}`,
+    `**${t('analyzed_stories')}:** ${analyzedStories}`,
+    `**${t('members')}:** ${memberCount}`,
     '',
-    '## Contexto',
+    `## ${t('context')}`,
     projectDescription,
     '',
-    '## Resumo executivo',
-    asString(analysis.summary, 'Nenhum resumo gerado.'),
+    `## ${t('summary')}`,
+    asString(analysis.summary, t('no_summary')),
     '',
-    '## Riscos',
-    formatMarkdownList(analysis.risks, 'Nenhum risco relevante foi destacado.'),
+    `## ${t('risks')}`,
+    formatMarkdownList(analysis.risks, t('no_risks')),
     '',
-    '## Perguntas de refinamento',
+    `## ${t('questions')}`,
     formatMarkdownList(
       analysis.refinement_questions,
-      'Nenhuma pergunta adicional foi sugerida.',
+      t('no_questions'),
     ),
     '',
-    '## Próximos passos',
-    formatMarkdownList(analysis.next_actions, 'Nenhum próximo passo foi sugerido.'),
+    `## ${t('next_steps')}`,
+    formatMarkdownList(analysis.next_actions, t('no_next_step')),
     '',
-    '## Candidatas à estimativa',
+    `## ${t('diagnosis_candidates')}`,
     formatMarkdownList(
       analysis.estimation_candidates,
-      'Nenhuma candidata específica foi destacada.',
+      t('no_candidates'),
     ),
   ].join('\n')
 }

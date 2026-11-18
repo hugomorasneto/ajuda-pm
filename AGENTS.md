@@ -2,7 +2,7 @@
 
 ## Regra obrigatória de pt-BR
 
-Todo texto visível ao usuário deve estar em português brasileiro correto, com acentuação completa, concordância, pontuação e vocabulário consistente.
+O português brasileiro é o idioma padrão. Textos em pt-BR devem ter acentuação completa, concordância, pontuação e vocabulário consistente. As páginas localizadas e seus componentes compartilhados admitem inglês no modo de prévia local e no modo explícito de produção bilíngue. Mantenha os textos dos dois idiomas em seus catálogos e preserve os identificadores e URLs existentes. O modo de produção não publica as minutas em `revisao-de-textos/`.
 
 Antes de finalizar qualquer mudança em UI, SEO, JSON-LD, aria-labels, placeholders, alt text, mensagens de status, mensagens de erro ou exemplos exibidos ao usuário, rode:
 

@@ -1,0 +1,15 @@
+{
+  "leadCaptureForm_informe_seu_nome": "Informe seu nome.",
+  "leadCaptureForm_informe_seu_e_mail": "Informe seu e-mail.",
+  "leadCaptureForm_informe_um_e_mail_valido": "Informe um e-mail válido.",
+  "leadCaptureForm_interesse_registrado_vamos_avisar_quando": "Interesse registrado. Vamos avisar quando houver novidades.",
+  "leadCaptureForm_este_e_mail_ja_esta": "Este e-mail já está na lista. Avisaremos por lá quando houver novidades.",
+  "leadCaptureForm_nao_foi_possivel_registrar_seu": "Não foi possível registrar seu interesse agora. Tente novamente em instantes.",
+  "leadCaptureForm_plano_pro": "Plano Pro",
+  "leadCaptureForm_nome": "Nome",
+  "leadCaptureForm_seu_nome": "Seu nome",
+  "leadCaptureForm_e_mail": "E-mail",
+  "leadCaptureForm_seu_email_empresa_com": "seu.email@empresa.com",
+  "leadCaptureForm_registrando": "Registrando...",
+  "leadCaptureForm_interesse_registrado": "Interesse registrado"
+}

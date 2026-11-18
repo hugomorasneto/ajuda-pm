@@ -1,26 +1,30 @@
+import { useCopy, useLanguage } from '../../i18n/context'
 import { formatDateTime } from '../../hooks/useUserStoryWorkspace'
-import { normalizeVersionList } from '../../utils/storyVersionUtils'
+import { getVersionNumberLabel, normalizeVersionList } from '../../utils/storyVersionUtils'
 
 function VersionTimeline({ versions, selectedId, isLoading, onSelect }) {
+  const t = useCopy('history')
+  const { language } = useLanguage()
+  const formatNumber = new Intl.NumberFormat(language).format
   return (
     <section className="panel version-timeline">
       <div className="panel-header panel-header-row">
         <div>
-          <p className="version-timeline__eyebrow">Versões</p>
-          <h2>Linha do tempo da peça ativa</h2>
-          <p>Selecione uma versão salva para comparar evolução, acabamento e critérios.</p>
+          <p className="version-timeline__eyebrow">{t('versions')}</p>
+          <h2>{t('timeline_for_the_active_artifact')}</h2>
+          <p>{t('select_a_saved_version_to_compare')}</p>
         </div>
 
         <div className="version-timeline__meta-group">
           <span className="version-timeline__count">
-            {versions.length} {versions.length === 1 ? 'versão' : 'versões'}
+            {t('version_count', { count: versions.length, value: formatNumber(versions.length) })}
           </span>
-          {isLoading ? <p className="result-inline-status">Buscando versões...</p> : null}
+          {isLoading ? <p className="result-inline-status">{t('loading_versions')}</p> : null}
         </div>
       </div>
 
       {!isLoading && versions.length === 0 ? (
-        <p className="history-status">A primeira versão aparece aqui depois da primeira geração.</p>
+        <p className="history-status">{t('the_first_version_appears_here_after')}</p>
       ) : null}
 
       <div className="version-timeline__list">
@@ -36,6 +40,7 @@ function VersionTimeline({ versions, selectedId, isLoading, onSelect }) {
               key={version.id}
               className={`version-timeline__item ${isActive ? 'version-timeline__item--active' : ''}`}
               onClick={() => onSelect(version.id)}
+              aria-pressed={isActive}
             >
               <span className="version-timeline__line" aria-hidden="true" />
               <div className="version-timeline__dot" aria-hidden="true" />
@@ -43,27 +48,26 @@ function VersionTimeline({ versions, selectedId, isLoading, onSelect }) {
               <div className="version-timeline__content">
                 <div className="version-timeline__header">
                   <p className="version-timeline__title">
-                    V{version.version_number ?? '?'} · {version.title}
+                    {getVersionNumberLabel(version)} · {version.title}
                   </p>
                   <span className={`version-timeline__badge ${isActive ? 'version-timeline__badge--active' : ''}`}>
-                    {isActive ? 'Versão ativa' : `V${version.version_number ?? index + 1}`}
+                    {isActive ? t('active_version') : getVersionNumberLabel(version, index + 1)}
                   </span>
                 </div>
 
-                <p className="version-timeline__meta">{formatDateTime(version.created_at)}</p>
+                <p className="version-timeline__meta">{formatDateTime(version.created_at, language)}</p>
 
-                <div className="version-timeline__metrics" aria-label="Resumo da versão">
-                  <span>{criteriaCount} {criteriaCount === 1 ? 'critério' : 'critérios'}</span>
-                  <span>{qaCount} {qaCount === 1 ? 'item de QA' : 'itens de QA'}</span>
-                  <span>{gapCount} {gapCount === 1 ? 'trinca' : 'trincas'}</span>
+                <div className="version-timeline__metrics" aria-label={t('version_summary')}>
+                  <span>{t('criteria_count', { count: criteriaCount, value: formatNumber(criteriaCount) })}</span>
+                  <span>{formatNumber(qaCount)} {qaCount === 1 ? t('qa_item') : t('qa_items')}</span>
+                  <span>{formatNumber(gapCount)} {t('gap', { count: gapCount })}</span>
                 </div>
 
                 {version.regeneration_instruction ? (
-                  <p className="version-timeline__instruction">
-                    Acabamento aplicado: {version.regeneration_instruction}
+                  <p className="version-timeline__instruction">{t('refinement_instructions_2')} {version.regeneration_instruction}
                   </p>
                 ) : (
-                  <p className="version-timeline__instruction">Primeira estrutura salva para esta peça.</p>
+                  <p className="version-timeline__instruction">{t('first_saved_version_of_this_artifact')}</p>
                 )}
               </div>
             </button>

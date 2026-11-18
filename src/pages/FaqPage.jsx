@@ -1,166 +1,27 @@
+import { getFaqCategories } from '../content/faqData'
+import { useCopy, useLanguage } from '../i18n/context'
 import { useId, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { APP_NAME } from '../constants/app'
+import Link from '../i18n/LocalizedLink'
 import { useAuth } from '../hooks/useAuth'
-import { usePageMetadata } from '../hooks/usePageMetadata'
+import { formatPublicDate, usePublicPageMetadata } from '../hooks/usePublicPageMetadata'
 
-const FAQ_LAST_UPDATED = '05/05/2026'
-const FAQ_SCHEMA_QUESTION_TYPE = String.fromCharCode(81, 117, 101, 115, 116, 105, 111, 110)
-const FAQ_SCHEMA_ANSWER_TYPE = String.fromCharCode(65, 110, 115, 119, 101, 114)
+const FAQ_LAST_UPDATED = '2026-05-05'
 
-const faqSummary = [
-  'O que o ProdForge faz e para quem foi criado',
-  'Como a IA apoia sem substituir análise humana',
-  'Privacidade, histórico, planos e próximos passos',
+const getFaqSummary = (t) => [
+  t('faqPage_o_que_o_prodforge_faz'),
+  t('faqPage_como_a_ia_apoia_sem'),
+  t('faqPage_privacidade_historico_planos_e_proximos'),
 ]
 
-const faqCategories = [
-  {
-    id: 'sobre-o-prodforge',
-    title: 'Sobre o ProdForge',
-    description: 'Entenda a proposta do produto e quando ele faz sentido no dia a dia de produto.',
-    items: [
-      {
-        id: 'o-que-e-o-prodforge',
-        question: 'O que é o ProdForge?',
-        answer:
-          'O ProdForge é uma plataforma web com IA para ajudar times de produto a transformar ideias, problemas e contextos soltos em histórias de usuário mais claras, critérios de aceite objetivos, insights técnicos e sugestões de melhoria.',
-      },
-      {
-        id: 'para-quem-foi-criado',
-        question: 'Para quem o ProdForge foi criado?',
-        answer:
-          'Ele foi criado para PMs, POs, pessoas fundadoras, times pequenos e profissionais que precisam escrever histórias melhores, reduzir ruído com Dev e QA e organizar melhor o raciocínio de produto.',
-      },
-      {
-        id: 'iniciantes-em-produto',
-        question: 'Posso usar o ProdForge mesmo sendo iniciante em produto?',
-        answer:
-          'Sim. O ProdForge ajuda a estruturar pensamento, perguntas, critérios e próximos passos. Ele não exige domínio avançado, mas funciona melhor quando você revisa as sugestões e aprende com a estrutura gerada.',
-      },
-    ],
-  },
-  {
-    id: 'uso-da-ia',
-    title: 'Uso da IA',
-    description: 'Veja como a inteligência artificial entra no processo sem assumir a decisão final.',
-    items: [
-      {
-        id: 'substitui-pm-ou-po',
-        question: 'O ProdForge substitui um Product Manager ou Product Owner?',
-        answer:
-          'Não. A IA funciona como copilota de produto. Ela ajuda a organizar informações e sugerir caminhos, mas não substitui discovery, contato com usuários, priorização, negociação de escopo ou decisão humana.',
-      },
-      {
-        id: 'como-a-ia-ajuda',
-        question: 'Como a IA ajuda na criação de histórias de usuário?',
-        answer:
-          'A IA pode transformar contexto em uma estrutura inicial de história, sugerir critérios de aceite, levantar riscos, apontar lacunas e propor melhorias de clareza para facilitar a revisão com produto, Dev e QA.',
-      },
-    ],
-  },
-  {
-    id: 'historias-de-usuario',
-    title: 'Histórias de usuário',
-    description: 'Dúvidas sobre qualidade, revisão e informações necessárias para gerar bons artefatos.',
-    items: [
-      {
-        id: 'prontas-para-desenvolvimento',
-        question: 'As histórias geradas pela IA já estão prontas para desenvolvimento?',
-        answer:
-          'Elas são uma base de apoio, não uma entrega final automática. Antes de usar com Dev ou QA, revise contexto, regras, critérios de aceite, dependências, viabilidade técnica e alinhamento com prioridade do produto.',
-      },
-      {
-        id: 'informacoes-para-boa-historia',
-        question: 'Que tipo de informação eu devo inserir para gerar uma boa história?',
-        answer:
-          'Informe problema, objetivo, usuário impactado, contexto de negócio, comportamento esperado, regras conhecidas, restrições, exemplos e dúvidas em aberto. Quanto melhor o contexto, melhor tende a ser a sugestão.',
-      },
-    ],
-  },
-  {
-    id: 'conta-e-acesso',
-    title: 'Conta e acesso',
-    description: 'Informações sobre cadastro, uso autenticado e histórico dentro da plataforma.',
-    items: [
-      {
-        id: 'salva-historico',
-        question: 'O ProdForge salva meu histórico?',
-        answer:
-          'Em áreas autenticadas, o ProdForge pode salvar histórico de gerações e versões para você retomar o trabalho. Algumas preferências públicas, como consentimento de privacidade, ficam salvas apenas no navegador.',
-      },
-    ],
-  },
-  {
-    id: 'privacidade-e-dados',
-    title: 'Privacidade e dados',
-    description: 'Orientações rápidas sobre o que inserir, evitar e como revisar preferências.',
-    items: [
-      {
-        id: 'dados-confidenciais',
-        question: 'Posso inserir dados confidenciais, estratégicos ou dados pessoais?',
-        answer:
-          'Evite inserir dados sensíveis, confidenciais, estratégicos, credenciais, segredos comerciais ou dados pessoais de terceiros sem autorização. Use contexto suficiente para a IA ajudar sem expor informações indevidas.',
-      },
-      {
-        id: 'alterar-preferencias',
-        question: 'Como altero minhas preferências de privacidade?',
-        answer:
-          'Acesse a página de Preferências de Privacidade para aceitar todos os recursos, usar apenas essenciais ou redefinir sua escolha salva neste navegador.',
-        action: { label: 'Abrir preferências', to: '/preferencias-de-privacidade' },
-      },
-    ],
-  },
-  {
-    id: 'planos-e-limites',
-    title: 'Planos e limites',
-    description: 'O que já pode existir como limite e o que pode evoluir em recursos pagos.',
-    items: [
-      {
-        id: 'versao-gratuita',
-        question: 'Existe versão gratuita?',
-        answer:
-          'Sim, o produto pode oferecer uso gratuito com limites para validação. Esses limites podem envolver quantidade de gerações, acesso a histórico, projetos ou recursos avançados, conforme a evolução da plataforma.',
-      },
-      {
-        id: 'recursos-premium',
-        question: 'Quais recursos podem ser premium no futuro?',
-        answer:
-          'Recursos como histórico avançado, projetos, exportações, colaboração, integrações, limites maiores, modelos de análise e automações podem depender de plano pago ou assinatura no futuro.',
-      },
-      {
-        id: 'integracoes',
-        question: 'O ProdForge se integra com Jira, Miro ou outras ferramentas?',
-        answer:
-          'Integrações diretas podem entrar no roadmap, mas não devem ser consideradas disponíveis até serem anunciadas no produto. Hoje, o foco é gerar conteúdo claro para revisão e uso manual nos fluxos do time.',
-      },
-    ],
-  },
-  {
-    id: 'suporte',
-    title: 'Suporte',
-    description: 'Canais para tirar dúvidas, enviar sugestões ou falar com o projeto.',
-    items: [
-      {
-        id: 'entrar-em-contato',
-        question: 'Como entro em contato em caso de dúvida?',
-        answer:
-          'Use a página de Contato para falar sobre suporte, privacidade, sugestões, parcerias ou assuntos comerciais. O canal oficial indicado na página é o e-mail de contato do ProdForge.',
-        action: { label: 'Ir para contato', to: '/contato' },
-      },
-    ],
-  },
+const getUsefulLinks = (t) => [
+  { label: t('faqPage_sobre_o_prodforge'), to: '/sobre' },
+  { label: t('faqPage_contato'), to: '/contato' },
+  { label: t('faqPage_politica_de_privacidade'), to: '/politica-de-privacidade' },
+  { label: t('faqPage_termos_de_uso'), to: '/termos-de-uso' },
+  { label: t('faqPage_preferencias_de_privacidade'), to: '/preferencias-de-privacidade' },
 ]
 
-const usefulLinks = [
-  { label: 'Sobre o ProdForge', to: '/sobre' },
-  { label: 'Contato', to: '/contato' },
-  { label: 'Política de Privacidade', to: '/politica-de-privacidade' },
-  { label: 'Termos de Uso', to: '/termos-de-uso' },
-  { label: 'Preferências de Privacidade', to: '/preferencias-de-privacidade' },
-]
-
-function getFirstQuestionId() {
+function getFirstQuestionId(faqCategories) {
   const firstCategory = faqCategories[0]
   const firstItem = firstCategory?.items?.[0]
   return firstCategory && firstItem ? `${firstCategory.id}-${firstItem.id}` : null
@@ -206,10 +67,11 @@ function FaqItem({ item, categoryId, isOpen, onToggle, baseId }) {
 }
 
 function FaqCategory({ category, openItemId, onToggle, baseId }) {
+  const t = useCopy('faqPage')
   return (
     <section className="faq-page__category" id={category.id} aria-labelledby={`${category.id}-title`}>
       <div className="faq-page__category-header">
-        <p className="privacy-policy-page__eyebrow forge-badge forge-badge--tech">Perguntas frequentes</p>
+        <p className="privacy-policy-page__eyebrow forge-badge forge-badge--tech">{t('faqPage_perguntas_frequentes')}</p>
         <h2 id={`${category.id}-title`}>{category.title}</h2>
         <p>{category.description}</p>
       </div>
@@ -235,45 +97,16 @@ function FaqCategory({ category, openItemId, onToggle, baseId }) {
 }
 
 function FaqPage() {
+  const t = useCopy('faqPage')
+  const { language } = useLanguage()
+  const faqCategories = getFaqCategories(t)
+  const usefulLinks = getUsefulLinks(t)
+  const faqSummary = getFaqSummary(t)
   const baseId = useId()
   const { user } = useAuth()
-  const [openItemId, setOpenItemId] = useState(() => getFirstQuestionId())
+  const [openItemId, setOpenItemId] = useState(() => getFirstQuestionId(faqCategories))
 
-  const pageDescription =
-    'Respostas rápidas sobre o ProdForge, uso de IA, histórias de usuário, conta, privacidade, planos, limites e suporte.'
-
-  usePageMetadata({
-    title: 'Perguntas Frequentes | ProdForge',
-    description: pageDescription,
-    path: '/faq',
-    ogTitle: 'Perguntas Frequentes | ProdForge',
-    ogDescription: pageDescription,
-    twitterTitle: 'Perguntas Frequentes | ProdForge',
-    twitterDescription: pageDescription,
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      name: 'Perguntas Frequentes',
-      description: pageDescription,
-      inLanguage: 'pt-BR',
-      isPartOf: {
-        '@type': 'WebSite',
-        name: APP_NAME,
-        url: 'https://prodforge.techtupa.com.br/',
-      },
-      dateModified: '2026-05-05',
-      mainEntity: faqCategories.flatMap((category) =>
-        category.items.map((item) => ({
-          '@type': FAQ_SCHEMA_QUESTION_TYPE,
-          name: item.question,
-          acceptedAnswer: {
-            '@type': FAQ_SCHEMA_ANSWER_TYPE,
-            text: item.answer,
-          },
-        })),
-      ),
-    },
-  })
+  usePublicPageMetadata('faq', faqCategories)
 
   function handleToggle(itemId) {
     setOpenItemId((currentItemId) => (currentItemId === itemId ? null : itemId))
@@ -283,38 +116,37 @@ function FaqPage() {
     <div className="page privacy-policy-page faq-page">
       <section className="privacy-policy-hero faq-page__hero forge-panel forge-panel--metal forge-texture-layer">
         <div className="privacy-policy-hero__copy">
-          <p className="privacy-policy-page__eyebrow forge-badge forge-badge--ember">Dúvidas rápidas</p>
-          <h1>Perguntas Frequentes</h1>
+          <p className="privacy-policy-page__eyebrow forge-badge forge-badge--ember">{t('faqPage_duvidas_rapidas')}</p>
+          <h1>{t('faqPage_perguntas_frequentes_59')}</h1>
           <p>
-            Respostas diretas sobre o ProdForge, uso de IA, histórias de usuário, conta, privacidade,
-            planos e suporte para você entender o produto sem ruído.
+            {t('faqPage_respostas_diretas_sobre_o_prodforge')}
           </p>
 
           <div className="privacy-policy-hero__actions">
             <Link className="forge-button forge-button--ember forge-button--md" to={user ? '/tool' : '/signup'}>
-              {user ? 'Abrir bancada' : 'Começar agora'}
+              {user ? t('faqPage_abrir_bancada') : t('faqPage_comecar_agora')}
             </Link>
             <Link className="forge-button forge-button--ghost forge-button--md" to="/sobre">
-              Conhecer o ProdForge
+              {t('faqPage_conhecer_o_prodforge')}
             </Link>
           </div>
         </div>
 
-        <aside className="privacy-policy-hero__summary faq-page__summary" aria-label="Resumo do FAQ">
-          <p className="privacy-policy-hero__summary-label">Nesta página</p>
-          <p className="faq-page__summary-title">Objeções comuns, respostas claras</p>
+        <aside className="privacy-policy-hero__summary faq-page__summary" aria-label={t('faqPage_resumo_do_faq')}>
+          <p className="privacy-policy-hero__summary-label">{t('faqPage_nesta_pagina')}</p>
+          <p className="faq-page__summary-title">{t('faqPage_objecoes_comuns_respostas_claras')}</p>
           <ul>
             {faqSummary.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>
-          <p className="privacy-policy-hero__summary-date">Atualizado em {FAQ_LAST_UPDATED}</p>
+          <p className="privacy-policy-hero__summary-date">{t('faqPage_atualizado_em')} {formatPublicDate(FAQ_LAST_UPDATED, language)}</p>
         </aside>
       </section>
 
       <div className="privacy-policy-content faq-page__content">
-        <aside className="privacy-policy-toc faq-page__toc" aria-label="Categorias do FAQ">
-          <p className="privacy-policy-toc__title">Categorias</p>
+        <aside className="privacy-policy-toc faq-page__toc" aria-label={t('faqPage_categorias_do_faq')}>
+          <p className="privacy-policy-toc__title">{t('faqPage_categorias')}</p>
           <nav>
             {faqCategories.map((category, index) => (
               <a key={category.id} href={`#${category.id}`}>
@@ -340,24 +172,23 @@ function FaqPage() {
 
       <section className="faq-page__cta forge-panel forge-panel--metal forge-texture-layer" aria-labelledby="faq-cta-title">
         <div>
-          <p className="privacy-policy-page__eyebrow forge-badge forge-badge--ember">Ainda ficou dúvida?</p>
-          <h2 id="faq-cta-title">Leve uma demanda real para a bancada</h2>
+          <p className="privacy-policy-page__eyebrow forge-badge forge-badge--ember">{t('faqPage_ainda_ficou_duvida')}</p>
+          <h2 id="faq-cta-title">{t('faqPage_leve_uma_demanda_real_para')}</h2>
           <p>
-            A forma mais rápida de entender o ProdForge é testar com um contexto real e revisar a
-            história gerada antes de levar para Dev ou QA.
+            {t('faqPage_a_forma_mais_rapida_de')}
           </p>
         </div>
 
         <div className="faq-page__cta-actions">
           <Link className="forge-button forge-button--ember forge-button--md" to={user ? '/tool' : '/signup'}>
-            {user ? 'Abrir bancada' : 'Começar agora'}
+            {user ? t('faqPage_abrir_bancada') : t('faqPage_comecar_agora')}
           </Link>
           <Link className="forge-button forge-button--metal forge-button--md" to="/contato">
-            Falar com contato
+            {t('faqPage_falar_com_contato')}
           </Link>
         </div>
 
-        <nav className="faq-page__links" aria-label="Links úteis do FAQ">
+        <nav className="faq-page__links" aria-label={t('faqPage_links_uteis_do_faq')}>
           {usefulLinks.map((link) => (
             <Link key={link.to} to={link.to}>
               {link.label}

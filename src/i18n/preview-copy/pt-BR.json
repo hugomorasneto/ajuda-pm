@@ -1,0 +1,80 @@
+{
+  "auth": {
+    "signupTerms": "Ao criar uma conta, você aceita os <terms>Termos de Uso</terms>. Consulte a <privacy>Política de Privacidade</privacy> para saber como tratamos seus dados pessoais. O ProdForge é destinado ao uso profissional por pessoas com 18 anos ou mais."
+  },
+  "contactPage": {
+    "privacyNote": "Usamos os dados deste formulário para registrar, encaminhar e responder à sua solicitação. Consulte a <policy>Política de Privacidade</policy> para saber como tratamos esses dados."
+  },
+  "termsOfUsePage": {
+    "termsOfUsePage_estes_termos_de_uso_regulam": "Hugo Cruz da Silva Moraes Neto é o responsável pelo serviço hospedado ProdForge. Estes Termos de Uso regulam o acesso e o uso do site, cadastro, autenticação, Bancada, recursos com IA, histórico, projetos e materiais de aprendizado. O contato para dúvidas e solicitações é contato@techtupa.com.br.",
+    "termsOfUsePage_ao_acessar_ou_usar_o": "Ao criar uma conta ou aceitar uma nova versão destes Termos, você concorda com as condições apresentadas. Você pode consultar os Termos e a Política de Privacidade pelos links disponíveis antes de aceitar.",
+    "termsOfUsePage_quando_houver_mudancas_relevantes_poderemos": "Mudanças relevantes nos Termos serão informadas na plataforma. Quando exigirem um novo aceite, a nova versão será apresentada no próximo acesso à área logada.",
+    "termsOfUsePage_o_produto_foi_pensado_para": "O ProdForge é destinado ao uso profissional por pessoas com 18 anos ou mais, incluindo PMs, POs e times de produto, desenvolvimento e QA.",
+    "termsOfUsePage_ultima_atualizacao": "Versão local",
+    "termsOfUsePage_vigencia_em_revisao": "2026-11-17-preview.1",
+    "termsOfUsePage_estes_termos_foram_escritos_em": "Versão concluída para validação local. A vigência no serviço publicado começará na data da publicação autorizada desta versão.",
+    "termsOfUsePage_a_versao_publicada_nesta_pagina": "Em caso de divergência entre idiomas, a versão em português brasileiro é a referência, respeitados os direitos previstos na legislação aplicável. Recursos específicos podem ter regras complementares quando forem disponibilizados.",
+    "termsOfUsePage_a_marca_prodforge_identidade_visual": "O código disponibilizado sob a licença MIT pode ser usado conforme as condições dessa licença. A marca ProdForge, a identidade visual, os materiais editoriais e os demais itens reservados no escopo da licença seguem as permissões aplicáveis a cada material.",
+    "termsOfUsePage_esses_conteudos_podem_ser_armazenados": "Podemos armazenar esses conteúdos para manter seu histórico, recuperar contexto, diagnosticar falhas e prevenir abuso, conforme descrito na Política de Privacidade.",
+    "termsOfUsePage_voce_mantem_seus_direitos_sobre": "Você mantém os direitos que já tem sobre o conteúdo que envia. Usamos seu conteúdo para fornecer os recursos solicitados e operar o serviço com segurança, conforme a Política de Privacidade.",
+    "termsOfUsePage_voce_nao_pode_copiar_revender": "A revenda ou a sublicença de acesso ao serviço hospedado exige autorização expressa.",
+    "termsOfUsePage_para_proteger_a_experiencia_de": "Estas regras se aplicam ao uso do serviço hospedado do ProdForge.",
+    "termsOfUsePage_o_prodforge_pode_oferecer_plano": "O plano Free inclui uma cota padrão de 10 gerações bem-sucedidas e salvas por conta, sem renovação mensal. Cada geração ou regeneração salva consome uma unidade. Edições manuais, falhas e diagnósticos de projeto ficam fora da cota. Excluir uma história salva não repõe o saldo. Consulte na Bancada o limite e o saldo da sua conta.",
+    "termsOfUsePage_recursos_pagos_podem_depender_de": "Quando uma oferta paga estiver disponível, apresentaremos preço, recursos, limites e condições antes da contratação."
+  },
+  "privacyPolicyPage": {
+    "privacyPolicyPage_ultima_atualizacao": "Versão local",
+    "privacyPolicyPage_vigencia_em_revisao": "2026-11-17-preview.1",
+    "privacyPolicyPage_o_prodforge_e_uma_plataforma": "Hugo Cruz da Silva Moraes Neto é o responsável pelo ProdForge e pelo tratamento dos dados pessoais necessários à operação do serviço. Para dúvidas e pedidos de privacidade, entre em contato por contato@techtupa.com.br.",
+    "privacyPolicyPage_a_politica_foi_escrita_em": "Versão concluída para validação local. A vigência no serviço publicado começará na data da publicação autorizada desta versão.",
+    "privacyPolicyPage_quando_houver_mudancas_relevantes_poderemos": "Mudanças relevantes nesta Política serão informadas na plataforma. A identificação da versão permite consultar o conteúdo apresentado na ocasião do aceite dos Termos. As escolhas de analytics são gerenciadas separadamente nas Preferências de Privacidade.",
+    "privacyPolicyPage_provedores_de_infraestrutura_hospedagem_banco": "Serviços de infraestrutura e hospedagem, Supabase para autenticação e banco de dados e serviço de e-mail configurado para encaminhar mensagens e convites.",
+    "privacyPolicyPage_servicos_de_ia_usados_para": "API Gemini, do Google, para produzir as gerações e análises solicitadas. O contexto enviado pode incluir o briefing, os requisitos e as informações do projeto necessárias à resposta.",
+    "privacyPolicyPage_mantemos_dados_pelo_tempo_necessario": "Mantemos os dados necessários à conta e aos recursos solicitados enquanto houver finalidade para esse tratamento, observados os pedidos de exclusão e as hipóteses legais de conservação. Se algum dado precisar ser conservado após um pedido de exclusão, informaremos a finalidade e o prazo ou critério aplicável. Dados encaminhados aos fornecedores também estão sujeitos às condições de tratamento e retenção desses serviços.",
+    "privacyPolicyPage_historico_de_uso_versoes_geradas": "Histórico de uso, versões geradas, contagem de gerações e limites da conta, preferências, projetos, membros convidados e ações realizadas na Bancada.",
+    "privacyPolicyPage_enviar_comunicacoes_relacionadas_a_conta": "Enviar comunicações necessárias sobre sua conta e responder às suas solicitações. Enviar novidades do Pro quando você pedir para recebê-las.",
+    "privacyPolicyPage_conteudos_salvos_na_bancada_versoes": "Você pode solicitar a exclusão dos seus dados pelo canal de contato indicado nesta Política. Na resposta, informaremos quais dados foram excluídos e quais precisam ser conservados, com o motivo e o prazo aplicável.",
+    "privacyPolicyPage_entender_uso_desempenho_erros_e": "Usar métricas agregadas de uso, desempenho e erros, calculadas a partir de eventos de analytics autorizados, para melhorar o produto.",
+    "privacyPolicyPage_dados_inseridos_pelo_usuario_podem": "Quando você solicita geração ou análise por IA, enviamos ao fornecedor de IA o contexto necessário para produzir a resposta, como o briefing ou as informações do projeto incluídas na solicitação.",
+    "privacyPolicyPage_nao_usamos_dados_pessoais_como": "Não usamos dados pessoais como produto para venda de bases a terceiros. Compartilhamos dados conforme as finalidades desta Política e na medida necessária para cada uma.",
+    "privacyPolicyPage_cookies_essenciais_analiticos_e_categoria": "Tecnologias essenciais e analytics opcional, com marketing desativado",
+    "privacyPolicyPage_cookies_essenciais_sao_necessarios_para": "Usamos tecnologias essenciais para manter a sessão, proteger o acesso e fazer o serviço funcionar. Analytics é opcional. Cookies de marketing estão desativados. Se ativarmos essa categoria, pediremos uma nova escolha antes de usá-la.",
+    "privacyPolicyPage_nos_termos_da_lgpd_voce": "Nos termos da LGPD, você pode pedir confirmação do tratamento, acesso e correção dos seus dados. Nos casos previstos em lei, você também pode pedir anonimização, bloqueio ou eliminação, portabilidade e informação sobre com quem seus dados foram compartilhados.",
+    "privacyPolicyPage_para_exercer_esses_direitos_envie": "Você pode saber se é possível recusar o consentimento e quais são as consequências da recusa, revogar o consentimento e solicitar a exclusão de dados tratados com base nele, observadas as exceções legais. Quando aplicável, você pode se opor ao tratamento em desacordo com a LGPD e pedir revisão de decisões exclusivamente automatizadas que afetem seus interesses. Você também pode peticionar à Agência Nacional de Proteção de Dados (ANPD). Para exercer seus direitos, envie uma solicitação pelo canal de contato indicado nesta política. Podemos pedir informações necessárias para verificar sua identidade."
+  },
+  "privacy": {
+    "description": "Usamos tecnologias essenciais para manter a sessão, proteger o acesso e fazer o ProdForge funcionar. Com sua autorização, usamos analytics para entender como o site é usado e melhorar o produto. Você pode alterar sua escolha em Preferências de Privacidade.",
+    "accept": "Autorizar analytics"
+  },
+  "privacyPreferencesPage": {
+    "privacyPreferencesPage_todos_aceitos": "Analytics autorizado",
+    "privacyPreferencesPage_voce_autorizou_tecnologias_essenciais_analiticas": "Você autorizou analytics neste navegador. As tecnologias essenciais estão sempre ativas.",
+    "privacyPreferencesPage_ajudam_a_entender_uso_identificar": "Registram páginas acessadas, eventos de uso e, quando disponíveis, a origem da visita e parâmetros de campanha. Quando você entra na conta, esses registros podem ser vinculados a ela.",
+    "privacyPreferencesPage_ajudam_a_entender_uso_desempenho": "Ao recusar essa categoria, o ProdForge interrompe novos registros opcionais de analytics neste navegador. Os registros anteriores seguem as regras de retenção da Política de Privacidade.",
+    "privacyPreferencesPage_usados_futuramente_para_campanhas_e": "Cookies de marketing estão desativados.",
+    "privacyPreferencesPage_sao_usados_futuramente_para_campanhas": "Se ativarmos cookies de marketing, pediremos uma nova escolha antes de usá-los.",
+    "privacyPreferencesPage_preferencia_atualizada_cookies_analiticos_e": "O uso de analytics foi autorizado neste navegador.",
+    "privacyPreferencesPage_preferencia_atualizada_cookies_analiticos_e_35": "O uso de analytics foi recusado neste navegador.",
+    "privacyPreferencesPage_aceitar_todos": "Autorizar analytics"
+  },
+  "landingCopy": {
+    "landingCopy_100_gratis": "Grátis para começar",
+    "landingCopy_para_comecar_sem_cartao_e": "com limite de uso e sem cartão",
+    "landingCopy_comece_gratis_escale_quando_precisar": "Comece com o Free e acompanhe o Pro",
+    "landingCopy_comece_sem_cartao_evolua_quando": "Comece sem cartão. A lista de interesse do Pro está aberta.",
+    "landingCopy_geracoes_de_user_story_por": "Na Bancada, o Free inclui {{p1}} gerações bem-sucedidas e salvas por conta, sem renovação mensal. Regenerações salvas também contam. Edições manuais, falhas e diagnósticos de projeto ficam fora da cota.",
+    "landingCopy_mais_popular": "Lista de interesse",
+    "landingCopy_para_times_que_precisam_de": "O plano Pro está em avaliação.",
+    "landingCopy_quer_testar_o_plano": "Tem interesse no plano {{p1}}?",
+    "landingCopy_cadastre_seu_e_mail_para": "Cadastre seu nome e e-mail para receber novidades do plano {{p1}}.",
+    "landingCopy_avise_quando_abrir": "Quero receber novidades do Pro",
+    "landingCopy_sem_spam_apenas_novidades_relevantes": "A lista de interesse é gratuita e sem compromisso de compra."
+  },
+  "pricingTeaser": {
+    "pricingTeaser_receber_novidades_do_pro": "Quero receber novidades do Pro"
+  },
+  "leadCaptureForm": {
+    "leadCaptureForm_interesse_registrado_vamos_avisar_quando": "Seu interesse no Pro foi registrado.",
+    "leadCaptureForm_este_e_mail_ja_esta": "Este e-mail já está na lista de interesse do Pro."
+  }
+}

@@ -1,14 +1,14 @@
+import { Trans } from 'react-i18next'
+import { useCopy, useLanguage } from '../i18n/context'
 import { useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { APP_NAME } from '../constants/app'
-import { usePageMetadata } from '../hooks/usePageMetadata'
+import Link from '../i18n/LocalizedLink'
+import { formatPublicDate, usePublicPageMetadata } from '../hooks/usePublicPageMetadata'
 import { sendContactMessage } from '../services/contactService'
 
-const CONTACT_LAST_UPDATED = '06/05/2026'
+const CONTACT_LAST_UPDATED = '2026-05-06'
 const CONTACT_EMAIL = 'contato@techtupa.com.br'
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const CONTACT_ERROR_MESSAGE =
-  'Não foi possível enviar agora. Tente novamente em instantes ou envie e-mail para contato@techtupa.com.br.'
+const CONTACT_ERROR_MESSAGE = 'contactPage_nao_foi_possivel_enviar_agora'
 
 const INITIAL_FORM_VALUES = {
   name: '',
@@ -26,137 +26,141 @@ const CONTACT_FIELD_LIMITS = {
   message: 4000,
 }
 
-const contactCategoryOptions = [
-  { value: 'suporte', label: 'Suporte e dúvidas gerais' },
-  { value: 'privacidade', label: 'Privacidade e dados' },
-  { value: 'feedback', label: 'Feedback sobre o produto' },
-  { value: 'parceria', label: 'Parcerias ou conversas profissionais' },
-  { value: 'outro', label: 'Outro' },
+const getContactCategoryOptions = (t) => [
+  { value: 'suporte', label: t('contactPage_suporte_e_duvidas_gerais') },
+  { value: 'privacidade', label: t('contactPage_privacidade_e_dados') },
+  { value: 'feedback', label: t('contactPage_feedback_sobre_o_produto') },
+  { value: 'parceria', label: t('contactPage_parcerias_ou_conversas_profissionais') },
+  { value: 'outro', label: t('contactPage_outro') },
 ]
 
-const contactChannels = [
+const getContactChannels = (t) => [
   {
-    eyebrow: 'Acesso e uso',
-    title: 'Suporte e dúvidas gerais',
+    eyebrow: t('contactPage_acesso_e_uso'),
+    title: t('contactPage_suporte_e_duvidas_gerais'),
     description:
-      'Para dúvidas sobre cadastro, login, acesso à Bancada, histórico, limites de uso ou funcionamento esperado da plataforma.',
+      t('contactPage_para_duvidas_sobre_cadastro_login'),
     category: 'suporte',
-    suggestedSubject: 'Suporte e dúvidas gerais sobre o ProdForge',
-    actionLabel: 'Selecionar suporte',
+    suggestedSubject: t('contactPage_suporte_e_duvidas_gerais_sobre'),
+    actionLabel: t('contactPage_selecionar_suporte'),
   },
   {
     eyebrow: 'LGPD',
-    title: 'Privacidade e dados',
+    title: t('contactPage_privacidade_e_dados'),
     description:
-      'Para solicitações sobre dados pessoais, preferências de privacidade, informações de conta ou uso de dados no ProdForge.',
+      t('contactPage_para_solicitacoes_sobre_dados_pessoais'),
     category: 'privacidade',
-    suggestedSubject: 'Privacidade e dados no ProdForge',
-    actionLabel: 'Selecionar privacidade',
+    suggestedSubject: t('contactPage_privacidade_e_dados_no_prodforge'),
+    actionLabel: t('contactPage_selecionar_privacidade'),
   },
   {
-    eyebrow: 'Evolução',
-    title: 'Feedback sobre o produto',
+    eyebrow: t('contactPage_evolucao'),
+    title: t('contactPage_feedback_sobre_o_produto'),
     description:
-      'Para compartilhar sugestões, problemas de uso, ideias para user stories, critérios de aceite, IA ou materiais de aprendizado.',
+      t('contactPage_para_compartilhar_sugestoes_problemas_de'),
     category: 'feedback',
-    suggestedSubject: 'Feedback sobre o produto ProdForge',
-    actionLabel: 'Selecionar feedback',
+    suggestedSubject: t('contactPage_feedback_sobre_o_produto_prodforge'),
+    actionLabel: t('contactPage_selecionar_feedback'),
   },
   {
-    eyebrow: 'Profissional',
-    title: 'Parcerias ou conversas profissionais',
+    eyebrow: t('contactPage_profissional'),
+    title: t('contactPage_parcerias_ou_conversas_profissionais'),
     description:
-      'Para falar sobre parcerias, adoção em times de produto, treinamentos, interesse em testar o produto ou conversas sobre o projeto.',
+      t('contactPage_para_falar_sobre_parcerias_adocao'),
     category: 'parceria',
-    suggestedSubject: 'Parcerias ou conversa profissional sobre o ProdForge',
-    actionLabel: 'Selecionar parceria',
+    suggestedSubject: t('contactPage_parcerias_ou_conversa_profissional_sobre'),
+    actionLabel: t('contactPage_selecionar_parceria'),
   },
 ]
 
-const contactReasons = [
-  'Dúvidas sobre o produto',
-  'Suporte de acesso',
-  'Solicitações sobre dados e privacidade',
-  'Feedback de usuários',
-  'Interesse em testar o produto',
-  'Contato profissional com o projeto',
+const getContactReasons = (t) => [
+  t('contactPage_duvidas_sobre_o_produto'),
+  t('contactPage_suporte_de_acesso'),
+  t('contactPage_solicitacoes_sobre_dados_e_privacidade'),
+  t('contactPage_feedback_de_usuarios'),
+  t('contactPage_interesse_em_testar_o_produto'),
+  t('contactPage_contato_profissional_com_o_projeto'),
 ]
 
-const quickLinks = [
-  { label: 'Política de Privacidade', to: '/politica-de-privacidade' },
-  { label: 'Termos de Uso', to: '/termos-de-uso' },
-  { label: 'Preferências de Privacidade', to: '/preferencias-de-privacidade' },
+const getQuickLinks = (t) => [
+  { label: t('contactPage_politica_de_privacidade'), to: '/politica-de-privacidade' },
+  { label: t('contactPage_termos_de_uso'), to: '/termos-de-uso' },
+  { label: t('contactPage_preferencias_de_privacidade'), to: '/preferencias-de-privacidade' },
 ]
 
-function validateContactForm(values) {
+function validateContactForm(values, contactCategoryOptions) {
   const errors = {}
   const normalizedEmail = values.email.trim()
 
   if (!values.name.trim()) {
-    errors.name = 'Informe seu nome.'
+    errors.name = 'contactPage_informe_seu_nome'
   } else if (values.name.trim().length > CONTACT_FIELD_LIMITS.name) {
-    errors.name = 'Use até 120 caracteres.'
+    errors.name = 'contactPage_use_ate_120_caracteres'
   }
 
   if (!normalizedEmail) {
-    errors.email = 'Informe seu e-mail.'
+    errors.email = 'contactPage_informe_seu_e_mail'
   } else if (!EMAIL_REGEX.test(normalizedEmail)) {
-    errors.email = 'Informe um e-mail válido.'
+    errors.email = 'contactPage_informe_um_e_mail_valido'
   } else if (normalizedEmail.length > CONTACT_FIELD_LIMITS.email) {
-    errors.email = 'Use até 180 caracteres.'
+    errors.email = 'contactPage_use_ate_180_caracteres'
   }
 
   if (!contactCategoryOptions.some((option) => option.value === values.category)) {
-    errors.category = 'Escolha uma categoria.'
+    errors.category = 'contactPage_escolha_uma_categoria'
   }
 
   if (!values.subject.trim()) {
-    errors.subject = 'Informe o assunto.'
+    errors.subject = 'contactPage_informe_o_assunto'
   } else if (values.subject.trim().length > CONTACT_FIELD_LIMITS.subject) {
-    errors.subject = 'Use até 160 caracteres.'
+    errors.subject = 'contactPage_use_ate_160_caracteres'
   }
 
   if (!values.message.trim()) {
-    errors.message = 'Escreva sua mensagem.'
+    errors.message = 'contactPage_escreva_sua_mensagem'
   } else if (values.message.trim().length > CONTACT_FIELD_LIMITS.message) {
-    errors.message = 'Use até 4000 caracteres.'
+    errors.message = 'contactPage_use_ate_4000_caracteres'
   }
 
   return errors
 }
 
+const serverFieldMessages = new Map([
+  ["Informe seu nome.", 'contactPage_informe_seu_nome'],
+  ["Use até 120 caracteres.", 'contactPage_use_ate_120_caracteres'],
+  ["Informe seu e-mail.", 'contactPage_informe_seu_e_mail'],
+  ["Informe um e-mail válido.", 'contactPage_informe_um_e_mail_valido'],
+  ["Use até 180 caracteres.", 'contactPage_use_ate_180_caracteres'],
+  ["Escolha uma categoria.", 'contactPage_escolha_uma_categoria'],
+  ["Informe o assunto.", 'contactPage_informe_o_assunto'],
+  ["Use até 160 caracteres.", 'contactPage_use_ate_160_caracteres'],
+  ["Escreva sua mensagem.", 'contactPage_escreva_sua_mensagem'],
+  ["Use até 4000 caracteres.", 'contactPage_use_ate_4000_caracteres'],
+  ["Escolha uma categoria válida.", 'contactPage_escolha_uma_categoria'],
+])
+const contactFields = Object.keys(CONTACT_FIELD_LIMITS).concat('category')
+
+function localizeServerErrors(errors) {
+  return Object.fromEntries(contactFields.flatMap((field) => {
+    const message = errors[field]
+    return message ? [[field, serverFieldMessages.get(message) ?? 'invalidField']] : []
+  }))
+}
+
 function ContactPage() {
+  const t = useCopy('contactPage')
+  const { language } = useLanguage()
+  const quickLinks = getQuickLinks(t)
+  const contactReasons = getContactReasons(t)
+  const contactChannels = getContactChannels(t)
+  const contactCategoryOptions = getContactCategoryOptions(t)
   const formRef = useRef(null)
   const subjectRef = useRef(null)
   const [formValues, setFormValues] = useState(INITIAL_FORM_VALUES)
   const [errors, setErrors] = useState({})
   const [feedback, setFeedback] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const pageDescription =
-    'Entre em contato com o ProdForge para dúvidas, suporte, privacidade, sugestões de melhoria, parcerias ou assuntos comerciais.'
-
-  usePageMetadata({
-    title: 'Contato | ProdForge',
-    description: pageDescription,
-    path: '/contato',
-    ogTitle: 'Contato | ProdForge',
-    ogDescription: pageDescription,
-    twitterTitle: 'Contato | ProdForge',
-    twitterDescription: pageDescription,
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'ContactPage',
-      name: 'Contato',
-      description: pageDescription,
-      inLanguage: 'pt-BR',
-      isPartOf: {
-        '@type': 'WebSite',
-        name: APP_NAME,
-        url: 'https://prodforge.techtupa.com.br/',
-      },
-      dateModified: '2026-05-05',
-    },
-  })
+  usePublicPageMetadata('contact')
 
   function updateField(field, value) {
     setFormValues((currentValues) => ({
@@ -203,10 +207,12 @@ function ContactPage() {
   async function handleSubmit(event) {
     event.preventDefault()
 
-    const nextErrors = validateContactForm(formValues)
+    if (isSubmitting) return
+
+    const nextErrors = validateContactForm(formValues, contactCategoryOptions)
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
-      setFeedback({ tone: 'error', message: 'Revise os campos destacados antes de enviar.' })
+      setFeedback({ tone: 'error', message: 'contactPage_revise_os_campos_destacados_antes' })
       return
     }
 
@@ -219,15 +225,15 @@ function ContactPage() {
       setFormValues(INITIAL_FORM_VALUES)
       setFeedback({
         tone: 'success',
-        message: 'Mensagem enviada. Vamos analisar e responder pelo e-mail informado.',
+        message: 'contactPage_mensagem_enviada_vamos_analisar_e',
       })
     } catch (error) {
       setFeedback({
         tone: 'error',
-        message: error?.message || CONTACT_ERROR_MESSAGE,
+        message: error?.code === 'INVALID_INPUT' ? 'contactPage_revise_os_campos_destacados_antes' : CONTACT_ERROR_MESSAGE,
       })
       if (error?.details?.fieldErrors) {
-        setErrors(error.details.fieldErrors)
+        setErrors(localizeServerErrors(error.details.fieldErrors))
       }
     } finally {
       setIsSubmitting(false)
@@ -238,53 +244,53 @@ function ContactPage() {
     <div className="page privacy-policy-page contact-page">
       <section className="privacy-policy-hero forge-panel forge-panel--metal forge-texture-layer">
         <div className="privacy-policy-hero__copy">
-          <p className="privacy-policy-page__eyebrow forge-badge forge-badge--ember">Canal oficial</p>
-          <h1>Fale com o ProdForge</h1>
-          <p>Tire dúvidas, envie feedback ou fale sobre acesso, privacidade e evolução do produto.</p>
+          <p className="privacy-policy-page__eyebrow forge-badge forge-badge--ember">{t('contactPage_canal_oficial')}</p>
+          <h1>{t('contactPage_fale_com_o_prodforge')}</h1>
+          <p>{t('contactPage_tire_duvidas_envie_feedback_ou')}</p>
 
           <div className="privacy-policy-hero__actions">
             <a
               className="forge-button forge-button--metal forge-button--md"
               href="#formulario-contato"
-              aria-label="Ir para o formulário de contato"
+              aria-label={t('contactPage_ir_para_o_formulario_de')}
               onClick={focusContactForm}
             >
-              Enviar mensagem
+              {t('contactPage_enviar_mensagem')}
             </a>
             <Link className="forge-button forge-button--ghost forge-button--md" to="/politica-de-privacidade">
-              Ver Política de Privacidade
+              {t('contactPage_ver_politica_de_privacidade')}
             </Link>
           </div>
         </div>
 
-        <aside className="privacy-policy-hero__summary contact-page__summary" aria-label="Resumo do canal de contato">
-          <p className="privacy-policy-hero__summary-label">Canal alternativo</p>
+        <aside className="privacy-policy-hero__summary contact-page__summary" aria-label={t('contactPage_resumo_do_canal_de_contato')}>
+          <p className="privacy-policy-hero__summary-label">{t('contactPage_canal_alternativo')}</p>
           <p className="contact-page__email">
-            <a href={`mailto:${CONTACT_EMAIL}`} aria-label={`Enviar e-mail para ${CONTACT_EMAIL}`}>
+            <a href={`mailto:${CONTACT_EMAIL}`} aria-label={t('contactPage_enviar_e_mail_para', { p1: CONTACT_EMAIL })}>
               {CONTACT_EMAIL}
             </a>
           </p>
-          <p>Use o formulário para enviar sua mensagem ou mantenha o e-mail como alternativa.</p>
-          <ul className="contact-page__reason-list" aria-label="Assuntos aceitos pelo canal de contato">
+          <p>{t('contactPage_use_o_formulario_para_enviar')}</p>
+          <ul className="contact-page__reason-list" aria-label={t('contactPage_assuntos_aceitos_pelo_canal_de')}>
             {contactReasons.map((reason) => (
               <li key={reason}>{reason}</li>
             ))}
           </ul>
-          <p className="privacy-policy-hero__summary-date">Atualizado em {CONTACT_LAST_UPDATED}</p>
+          <p className="privacy-policy-hero__summary-date">{t('contactPage_atualizado_em')} {formatPublicDate(CONTACT_LAST_UPDATED, language)}</p>
         </aside>
       </section>
 
       <div className="contact-page__grid">
         <section className="contact-page__channels" aria-labelledby="contact-channels-title">
           <div className="contact-page__section-header">
-            <p className="privacy-policy-page__eyebrow forge-badge forge-badge--tech">Bancada de atendimento</p>
-            <h2 id="contact-channels-title">Como podemos ajudar</h2>
-            <p>Escolha o assunto mais próximo para preencher o formulário com o contexto inicial.</p>
+            <p className="privacy-policy-page__eyebrow forge-badge forge-badge--tech">{t('contactPage_bancada_de_atendimento')}</p>
+            <h2 id="contact-channels-title">{t('contactPage_como_podemos_ajudar')}</h2>
+            <p>{t('contactPage_escolha_o_assunto_mais_proximo')}</p>
           </div>
 
           <div className="contact-page__cards">
             {contactChannels.map((channel) => (
-              <article className="contact-card forge-panel forge-panel--metal" key={channel.title}>
+              <article className="contact-card forge-panel forge-panel--metal" key={channel.category}>
                 <div className="contact-card__copy">
                   <p className="contact-card__eyebrow">{channel.eyebrow}</p>
                   <h3>{channel.title}</h3>
@@ -308,19 +314,19 @@ function ContactPage() {
           aria-labelledby="contact-form-title"
         >
           <div className="contact-page__section-header">
-            <p className="privacy-policy-page__eyebrow forge-badge forge-badge--ember">Formulário seguro</p>
-            <h2 id="contact-form-title">Envie sua mensagem</h2>
-            <p>O contato será registrado com segurança para análise da equipe ProdForge.</p>
+            <p className="privacy-policy-page__eyebrow forge-badge forge-badge--ember">{t('contactPage_formulario_seguro')}</p>
+            <h2 id="contact-form-title">{t('contactPage_envie_sua_mensagem')}</h2>
+            <p>{t('contactPage_o_contato_sera_registrado_com')}</p>
           </div>
 
           <form className="contact-page__form" ref={formRef} onSubmit={handleSubmit} noValidate>
             <div className="contact-page__form-grid">
               <div className="contact-page__field">
-                <label htmlFor="contact-name">Nome</label>
+                <label htmlFor="contact-name">{t('contactPage_nome')}</label>
                 <input
                   id="contact-name"
                   type="text"
-                  placeholder="Seu nome"
+                  placeholder={t('contactPage_seu_nome')}
                   autoComplete="name"
                   value={formValues.name}
                   maxLength={CONTACT_FIELD_LIMITS.name}
@@ -331,17 +337,17 @@ function ContactPage() {
                 />
                 {errors.name ? (
                   <p id="contact-name-error" className="contact-page__field-error" role="alert">
-                    {errors.name}
+                    {t(errors.name)}
                   </p>
                 ) : null}
               </div>
 
               <div className="contact-page__field">
-                <label htmlFor="contact-email">E-mail</label>
+                <label htmlFor="contact-email">{t('contactPage_e_mail')}</label>
                 <input
                   id="contact-email"
                   type="email"
-                  placeholder="seu.email@empresa.com"
+                  placeholder={t('contactPage_seu_email_empresa_com')}
                   autoComplete="email"
                   value={formValues.email}
                   maxLength={CONTACT_FIELD_LIMITS.email}
@@ -352,14 +358,14 @@ function ContactPage() {
                 />
                 {errors.email ? (
                   <p id="contact-email-error" className="contact-page__field-error" role="alert">
-                    {errors.email}
+                    {t(errors.email)}
                   </p>
                 ) : null}
               </div>
             </div>
 
             <div className="contact-page__field">
-              <label htmlFor="contact-category">Categoria</label>
+              <label htmlFor="contact-category">{t('contactPage_categoria')}</label>
               <select
                 id="contact-category"
                 value={formValues.category}
@@ -376,18 +382,18 @@ function ContactPage() {
               </select>
               {errors.category ? (
                 <p id="contact-category-error" className="contact-page__field-error" role="alert">
-                  {errors.category}
+                  {t(errors.category)}
                 </p>
               ) : null}
             </div>
 
             <div className="contact-page__field">
-              <label htmlFor="contact-subject">Assunto</label>
+              <label htmlFor="contact-subject">{t('contactPage_assunto')}</label>
               <input
                 id="contact-subject"
                 ref={subjectRef}
                 type="text"
-                placeholder="Resumo da solicitação"
+                placeholder={t('contactPage_resumo_da_solicitacao')}
                 value={formValues.subject}
                 maxLength={CONTACT_FIELD_LIMITS.subject}
                 onChange={(event) => updateField('subject', event.target.value)}
@@ -397,16 +403,16 @@ function ContactPage() {
               />
               {errors.subject ? (
                 <p id="contact-subject-error" className="contact-page__field-error" role="alert">
-                  {errors.subject}
+                  {t(errors.subject)}
                 </p>
               ) : null}
             </div>
 
             <div className="contact-page__field">
-              <label htmlFor="contact-message">Mensagem</label>
+              <label htmlFor="contact-message">{t('contactPage_mensagem')}</label>
               <textarea
                 id="contact-message"
-                placeholder="Conte o contexto e como podemos ajudar."
+                placeholder={t('contactPage_conte_o_contexto_e_como')}
                 rows={7}
                 value={formValues.message}
                 maxLength={CONTACT_FIELD_LIMITS.message}
@@ -418,7 +424,7 @@ function ContactPage() {
               <div className="contact-page__field-footer">
                 {errors.message ? (
                   <p id="contact-message-error" className="contact-page__field-error" role="alert">
-                    {errors.message}
+                    {t(errors.message)}
                   </p>
                 ) : (
                   <span />
@@ -430,7 +436,7 @@ function ContactPage() {
             </div>
 
             <div className="contact-page__honeypot" aria-hidden="true">
-              <label htmlFor="contact-company-site">Site da empresa</label>
+              <label htmlFor="contact-company-site">{t('contactPage_site_da_empresa')}</label>
               <input
                 id="contact-company-site"
                 type="text"
@@ -447,7 +453,7 @@ function ContactPage() {
                 role={feedback.tone === 'error' ? 'alert' : 'status'}
                 aria-live="polite"
               >
-                {feedback.message}
+                {t(feedback.message)}
               </p>
             ) : null}
 
@@ -456,30 +462,30 @@ function ContactPage() {
               className="forge-button forge-button--ember forge-button--md contact-page__submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Enviando...' : 'Enviar mensagem'}
+              {isSubmitting ? t('contactPage_enviando') : t('contactPage_enviar_mensagem')}
             </button>
           </form>
 
-          <div className="contact-page__mail-actions" aria-label="Canal alternativo por e-mail">
+          <div className="contact-page__mail-actions" aria-label={t('contactPage_canal_alternativo_por_e_mail')}>
             <a className="contact-page__plain-mail" href={`mailto:${CONTACT_EMAIL}`}>
               {CONTACT_EMAIL}
             </a>
           </div>
 
           <p className="contact-page__privacy-note">
-            Ao enviar, seus dados serão usados apenas para responder à solicitação,
-            conforme a <Link to="/politica-de-privacidade">Política de Privacidade</Link>.
+            <Trans t={t} ns="contactPage" i18nKey="privacyNote" components={{
+              policy: <Link to="/politica-de-privacidade" />,
+            }} />
           </p>
         </section>
 
         <aside className="contact-page__quick-links forge-panel forge-panel--metal" aria-labelledby="contact-links-title">
-          <p className="privacy-policy-page__eyebrow forge-badge forge-badge--neutral">Links rápidos</p>
-          <h2 id="contact-links-title">Documentos úteis</h2>
+          <p className="privacy-policy-page__eyebrow forge-badge forge-badge--neutral">{t('contactPage_links_rapidos')}</p>
+          <h2 id="contact-links-title">{t('contactPage_documentos_uteis')}</h2>
           <p>
-            Consulte os documentos públicos antes de enviar sua mensagem, especialmente em assuntos ligados
-            a privacidade, dados e uso da plataforma.
+            {t('contactPage_consulte_os_documentos_publicos_antes')}
           </p>
-          <nav aria-label="Links úteis de contato">
+          <nav aria-label={t('contactPage_links_uteis_de_contato')}>
             {quickLinks.map((link) => (
               <Link key={link.to} to={link.to}>
                 {link.label}

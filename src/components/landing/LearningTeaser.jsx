@@ -1,8 +1,10 @@
-import { Link } from 'react-router-dom'
+import { useCopy } from '../../i18n/context'
+import Link from '../../i18n/LocalizedLink'
 import LearningGuideCard from '../learning/LearningGuideCard'
 import { withAcademyGuideMedia } from '../../content/academyGuideMedia'
 
 function LearningTeaser({ content, guides }) {
+  const t = useCopy('learningTeaser')
   const guidesWithMedia = withAcademyGuideMedia(guides)
 
   return (
@@ -22,7 +24,7 @@ function LearningTeaser({ content, guides }) {
       <div className="landing-learning-teaser__footer">
         <p>{content.footer}</p>
         <Link className="landing-button forge-button forge-button--metal" to="/aprender">
-          Ver trilha completa →
+          {t('learningTeaser_ver_trilha_completa')}
         </Link>
       </div>
     </section>

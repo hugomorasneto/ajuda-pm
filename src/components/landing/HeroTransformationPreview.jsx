@@ -1,12 +1,14 @@
+import { useCopy } from '../../i18n/context'
 import heroForgeVertical from '../../assets/landing/hero-forge-vertical.png'
 
 function HeroTransformationPreview({ preview }) {
+  const t = useCopy('heroTransformationPreview')
   const alt =
     preview?.imageAlt ||
-    'Forja tecnológica transformando briefing em user story clara na ProdForge'
+    t('heroTransformationPreview_forja_tecnologica_transformando_briefing_em')
 
   return (
-    <div className="hero-transformation-preview" aria-label="Preview visual do workspace ProdForge">
+    <div className="hero-transformation-preview" aria-label={t('heroTransformationPreview_preview_visual_do_workspace_prodforge')}>
       <div className="hero-transformation-preview__frame">
         <div className="hero-transformation-preview__media hero-art-frame">
           <img

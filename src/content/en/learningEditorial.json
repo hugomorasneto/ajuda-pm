@@ -1,0 +1,574 @@
+{
+  "meta": {
+    "title": "ProdForge Training Ground | Practical product management",
+    "description": "Learn product management with practical guides on user stories, acceptance criteria, refinement, and team alignment.",
+    "name": "ProdForge Training Ground",
+    "imageAlt": "ProdForge brand mark"
+  },
+  "guides": {
+    "fundamentos-produto-agil": {
+      "category": "Foundations",
+      "title": "Agile product foundations for new PMs and POs",
+      "excerpt": "Start with what matters: the problem, the decision, team alignment, and continuous learning. Frameworks can wait.",
+      "level": "Beginner",
+      "problem": "New product professionals often hear about Scrum, discovery, and roadmaps before they know what problems they need to solve day to day.",
+      "outcome": "Learn to explain the problem to your team and show why it matters now.",
+      "quickSummary": [
+        "Agile product work reduces risk before you invest more in building.",
+        "Your main job is to improve decisions. Moving cards between columns is only part of the work.",
+        "A good backlog starts with clear context. A polished ticket is secondary."
+      ],
+      "exampleScenario": {
+        "title": "Practical example",
+        "summary": "The team receives a request to \"improve onboarding.\" Before opening several tasks, the PM needs to find the actual problem.",
+        "bullets": [
+          "Which onboarding step is hurting conversion?",
+          "Who is getting stuck: end users, operations, or sales?",
+          "What will actually change if we solve this now?"
+        ],
+        "result": "Without those answers, the backlog grows quickly and the team may still address the wrong cause."
+      },
+      "sections": [
+        {
+          "title": "Start with the problem",
+          "paragraphs": [
+            "A framework helps structure the conversation. You still need a clear explanation of the problem.",
+            "If you cannot explain which behavior needs to change, the story will be weak regardless of the template."
+          ],
+          "bullets": [
+            "Describe the problem in business terms.",
+            "Say who feels the impact.",
+            "Explain what changes if the team solves it."
+          ]
+        },
+        {
+          "title": "Use the backlog to make decisions",
+          "paragraphs": [
+            "The backlog should show what deserves a discussion now and what is outside the current focus.",
+            "When everything becomes a priority, the team can lose sight of why it is doing the work and focus on closing tickets."
+          ],
+          "bullets": [
+            "Separate ideas, hypotheses, and items ready for refinement.",
+            "Avoid detailing work too early when it may be dropped.",
+            "Review stale and unowned items regularly."
+          ]
+        },
+        {
+          "title": "Better conversations make teams more agile",
+          "paragraphs": [
+            "Teams work more effectively when product, engineering, and QA can understand the purpose of a change without excessive meetings.",
+            "Clear briefs and acceptance criteria let the team resolve more questions before meeting."
+          ],
+          "bullets": [
+            "Explain what needs to be validated.",
+            "Anticipate exceptions and dependencies.",
+            "Bring open questions to refinement before asking for an estimate."
+          ]
+        }
+      ],
+      "commonMistakes": [
+        "Confusing speed with productivity and overlooking the outcome.",
+        "Opening too many items before understanding the problem.",
+        "Expecting a framework to resolve misalignment on its own."
+      ],
+      "checklist": [
+        "I can explain the problem in one simple sentence.",
+        "I know who is affected and why it matters now.",
+        "We have enough context to start refinement without inventing rules along the way.",
+        "The team knows how we will tell whether the change helped."
+      ],
+      "seo": {
+        "title": "Agile product foundations for new PMs and POs | ProdForge",
+        "description": "A practical guide for new PMs and POs on framing problems, managing backlogs, aligning teams, and making agile product decisions."
+      },
+      "thumbnailAlt": "Forge illustration for the agile product foundations guide"
+    },
+    "user-stories-na-pratica": {
+      "category": "User Stories",
+      "title": "User stories in practice",
+      "excerpt": "Turn a rough brief into a user story with a goal, expected behavior, acceptance criteria, and questions for refinement.",
+      "level": "Beginner",
+      "problem": "Requests arrive by message, call, or spreadsheet, and the PM ends up manually turning fragments of context into tickets.",
+      "outcome": "Learn a consistent way to structure stories so the team can decide, build, and test with less rework.",
+      "quickSummary": [
+        "A good user story explains intent and behavior beyond the screen or field in question.",
+        "Weak acceptance criteria lead to poor estimates and weak tests.",
+        "Making gaps explicit early prevents costly discoveries during development."
+      ],
+      "exampleScenario": {
+        "title": "Practical example",
+        "summary": "Sales asks for company domain validation during B2B onboarding because too many registrations are inconsistent.",
+        "bullets": [
+          "Goal: reduce operational rework.",
+          "Story: validate the domain before completing registration.",
+          "Criteria: block invalid submissions, keep entered data, and log the failure."
+        ],
+        "result": "The story becomes a concrete starting point for engineering and QA instead of a vague request to improve registration."
+      },
+      "sections": [
+        {
+          "title": "Capture context before writing the story",
+          "paragraphs": [
+            "Start with the problem, its impact, the current flow, and the relevant rule before writing the story.",
+            "Without that material, a well-formatted story is still guesswork."
+          ],
+          "bullets": [
+            "What user or business problem is behind the request?",
+            "In which flow does it happen today?",
+            "Which rule or constraint must we remember?"
+          ]
+        },
+        {
+          "title": "Describe the intended behavior",
+          "paragraphs": [
+            "The familiar \"As a…, I want…, so that…\" structure helps when it points to the expected behavior.",
+            "If the story describes only a visual component, the team still has to work out what should happen."
+          ],
+          "bullets": [
+            "Say who performs the action.",
+            "Say what should happen in the flow.",
+            "Say why it matters for this problem."
+          ]
+        },
+        {
+          "title": "Use acceptance criteria to align implementation and testing",
+          "paragraphs": [
+            "Acceptance criteria are especially useful to engineering and QA. They should cover the main path, a relevant failure, and the important exception.",
+            "Prioritize criteria that clear up ambiguity about how the feature should work."
+          ],
+          "bullets": [
+            "What lets the user proceed?",
+            "What blocks the user?",
+            "What needs to be logged or preserved?"
+          ]
+        }
+      ],
+      "commonMistakes": [
+        "Replacing context with a polished title.",
+        "Combining several different problems in one story.",
+        "Writing generic criteria such as \"works correctly.\""
+      ],
+      "checklist": [
+        "The story explains the goal of the change.",
+        "The criteria cover the main flow, a failure, and the most relevant exception.",
+        "The gaps are stated explicitly and easy to find.",
+        "Engineering and QA can use the document to start refinement."
+      ],
+      "seo": {
+        "title": "User stories in practice for PMs and POs | ProdForge",
+        "description": "Turn a rough brief into a user story with a clear goal, acceptance criteria, open questions, and a refinement checklist."
+      },
+      "thumbnailAlt": "Forge illustration for the practical user stories guide"
+    },
+    "backlog-e-refinamento": {
+      "category": "Backlog",
+      "title": "Backlog and refinement without chaos",
+      "excerpt": "Use the backlog to show what matters now, what needs refinement, and what is ready to build.",
+      "level": "Beginner",
+      "problem": "The backlog grows and changes every week, mixing raw ideas with work that is ready for development.",
+      "outcome": "Use the backlog to focus and refine work so it stays useful over time.",
+      "quickSummary": [
+        "A good backlog shows what is ready, what is still a hypothesis, and what should be dropped.",
+        "Refinement reduces ambiguity before implementation.",
+        "Refine items likely to start soon."
+      ],
+      "exampleScenario": {
+        "title": "Practical example",
+        "summary": "A PM has 40 items on the board, but only five are realistic for the next cycle. The team spends time discussing details of items that have yet to be prioritized.",
+        "bullets": [
+          "Separating ideas from items in preparation reduces distractions.",
+          "Bringing basic context to refinement saves meeting time.",
+          "Flagging gaps keeps the conversation from turning into improvised discovery."
+        ],
+        "result": "Refinement takes less time and decisions are better documented."
+      },
+      "sections": [
+        {
+          "title": "Organize the backlog by readiness",
+          "paragraphs": [
+            "Different items need different levels of detail.",
+            "Grouping items by readiness prevents premature refinement and documentation rework."
+          ],
+          "bullets": [
+            "Idea: still needs context.",
+            "Under review: clearer problem, with open questions.",
+            "Ready for refinement: enough material for an engineering and QA discussion."
+          ]
+        },
+        {
+          "title": "Bring enough material to the discussion",
+          "paragraphs": [
+            "The PM should arrive with a goal, known rules, constraints, and open questions.",
+            "When everything comes up for the first time in the meeting, the discussion takes longer and covers less."
+          ],
+          "bullets": [
+            "Basic information about the problem.",
+            "Expected impact.",
+            "Known risks, exceptions, and dependencies."
+          ]
+        },
+        {
+          "title": "Leave with clear follow-ups",
+          "paragraphs": [
+            "Refinement can leave questions open as long as the team knows what they are and who will answer them.",
+            "Hiding a gap for the sake of speed only moves the risk into the sprint."
+          ],
+          "bullets": [
+            "List open questions explicitly.",
+            "Assign an owner to each follow-up.",
+            "Keep an item out of the ready column while a critical technical question still depends on assumptions."
+          ]
+        }
+      ],
+      "commonMistakes": [
+        "Detailing an item before it has been prioritized.",
+        "Using refinement to discover the problem for the first time.",
+        "Leaving important questions in the PM's head."
+      ],
+      "checklist": [
+        "The backlog clearly distinguishes ideas, work under review, and ready items.",
+        "The team's next items already have enough context for a discussion.",
+        "Open questions are recorded and have owners.",
+        "Refinement helps the team make decisions."
+      ],
+      "seo": {
+        "title": "Backlog and refinement for PMs and POs | ProdForge",
+        "description": "A practical guide to organizing your backlog, preparing for refinement, and reducing ambiguity before development."
+      },
+      "thumbnailAlt": "Forge illustration for the backlog and refinement guide"
+    },
+    "scrum-para-pm-po": {
+      "category": "Scrum",
+      "title": "Practical Scrum for PMs and POs",
+      "excerpt": "Understand what each Scrum event should accomplish so the routine helps the team work with greater clarity.",
+      "level": "Beginner",
+      "problem": "Teams hold Scrum events and still run into unclear priorities, misunderstandings, and rework.",
+      "outcome": "Use each event to make decisions and align the team with a clear purpose.",
+      "quickSummary": [
+        "A useful event clears up questions about the work or its priority.",
+        "PMs and POs can help by making the purpose of each event clear.",
+        "A meeting that has no bearing on a decision may be doing more than it needs to."
+      ],
+      "exampleScenario": {
+        "title": "Practical example",
+        "summary": "In planning, the team gets stories without context and ends up arguing over implementation. In the review, everyone watches the demo and comes away without learning from the result.",
+        "bullets": [
+          "Planning should explain what comes into the sprint and why.",
+          "The daily should surface significant blockers.",
+          "The review should connect what shipped to the problem and what the team learned."
+        ],
+        "result": "A clear purpose helps the team spend more time on decisions and less on process."
+      },
+      "sections": [
+        {
+          "title": "Planning: align expectations before discussing capacity",
+          "paragraphs": [
+            "Unproductive planning starts with hours and points before the team understands which work it is taking on.",
+            "The PM contributes most by explaining the context, priority, and risks of the main items."
+          ],
+          "bullets": [
+            "Which items matter most this cycle?",
+            "What is still uncertain or needs validation?",
+            "What should stay out for now?"
+          ]
+        },
+        {
+          "title": "Daily: address blockers early",
+          "paragraphs": [
+            "The daily makes blockers visible early enough for the team to act on them.",
+            "The meeting loses value quickly if everyone only repeats their task list."
+          ],
+          "bullets": [
+            "Which blocker could stop progress today?",
+            "Is there a question about a rule, a priority, or an external dependency?",
+            "Can the PM resolve something with another stakeholder?"
+          ]
+        },
+        {
+          "title": "Review and retrospective: connect delivery and learning",
+          "paragraphs": [
+            "A review needs context to be more than a demo. A retrospective needs a concrete action.",
+            "The PM helps by connecting the work to the problem and bringing real difficulties in the product workflow to the retrospective."
+          ],
+          "bullets": [
+            "Did we solve the right problem?",
+            "What did we learn about scope, clarity, or dependencies?",
+            "What specific adjustment will the team try next cycle?"
+          ]
+        }
+      ],
+      "commonMistakes": [
+        "Treating Scrum events as proof of maturity.",
+        "Bringing work without context to planning.",
+        "Leaving the retrospective without a concrete workflow adjustment."
+      ],
+      "checklist": [
+        "Each event has a clear decision it should support.",
+        "Stories arrive at planning with enough context.",
+        "Significant blockers surface early in the cycle.",
+        "The review and retrospective lead to specific actions."
+      ],
+      "seo": {
+        "title": "Practical Scrum for PMs and POs | ProdForge",
+        "description": "Use Scrum planning, daily meetings, reviews, and retrospectives to improve clarity, priorities, and learning in product work."
+      }
+    },
+    "discovery-leve": {
+      "category": "Discovery",
+      "title": "Getting started with lightweight discovery",
+      "excerpt": "Test hypotheses about problems and user needs as part of your regular backlog work.",
+      "level": "Beginner",
+      "problem": "Teams often make discovery too big to fit into their work, or skip it entirely as delivery pressure rises.",
+      "outcome": "Learn a discovery approach that fits everyday work and still tests the assumptions behind backlog items.",
+      "quickSummary": [
+        "Lightweight discovery lowers the risk of solving the wrong problem.",
+        "Extensive research can be useful, but most decisions start with an explicit hypothesis.",
+        "The goal is a better backlog that incorporates what you learned."
+      ],
+      "exampleScenario": {
+        "title": "Practical example",
+        "summary": "A manager asks for a new registration field because it \"will help operations.\" Before building it, the PM investigates when the operations team needs the information.",
+        "bullets": [
+          "Who is affected by the missing data today?",
+          "How often does the problem occur?",
+          "Is there a smaller way to validate the need?"
+        ],
+        "result": "Discovery can show that the problem is in an internal process. Finding that early can save a whole sprint."
+      },
+      "sections": [
+        {
+          "title": "Start with a small, testable hypothesis",
+          "paragraphs": [
+            "Lightweight discovery starts with a direct hypothesis about the problem, the people affected, and the impact.",
+            "A concrete hypothesis helps you ask better questions of users and operations teams and know what data to look at."
+          ],
+          "bullets": [
+            "Problem: what is blocking progress today?",
+            "Audience: who experiences it most often?",
+            "Impact: what should improve if the hypothesis is right?"
+          ]
+        },
+        {
+          "title": "Match the evidence to the risk",
+          "paragraphs": [
+            "Some decisions call for an interview. Others call for looking at the funnel, reading tickets, or observing an operations workflow.",
+            "Gather enough evidence to make an informed choice."
+          ],
+          "bullets": [
+            "Talk to users or stakeholders who are close to the problem.",
+            "Look at basic frequency or conversion data.",
+            "Review support tickets, complaints, and operational rework."
+          ]
+        },
+        {
+          "title": "Bring discovery findings back into the story",
+          "paragraphs": [
+            "Use the evidence from discovery to improve the backlog.",
+            "The findings should be visible in the goal, acceptance criteria, risks, and decisions about priority."
+          ],
+          "bullets": [
+            "Update the problem statement with what you confirmed.",
+            "Record the hypothesis that remains untested.",
+            "Turn what you learned into a criterion or refinement question."
+          ]
+        }
+      ],
+      "commonMistakes": [
+        "Treating discovery as a separate phase from other work.",
+        "Doing too much research for a small problem.",
+        "Finishing discovery without revisiting the backlog or priorities."
+      ],
+      "checklist": [
+        "The item has an explicit hypothesis.",
+        "We have enough evidence for an informed decision.",
+        "What we learned is reflected in the story or its priority.",
+        "We know what still needs validation before scaling the solution."
+      ],
+      "seo": {
+        "title": "Lightweight discovery for new PMs and POs | ProdForge",
+        "description": "Validate problems, hypotheses, and user needs with a practical discovery approach that feeds directly into your backlog."
+      }
+    },
+    "refinamento-e-criterios": {
+      "category": "Refinement",
+      "title": "Make refinement meetings count",
+      "excerpt": "Arrive prepared, write acceptance criteria that guide engineering and QA, and leave with clear decisions.",
+      "level": "Beginner",
+      "problem": "Refinement has become a long meeting where the team learns about the problem on the spot and lacks the context to decide.",
+      "outcome": "Learn how to prepare materials, focus the discussion on decisions, and leave with specific follow-ups and owners.",
+      "quickSummary": [
+        "Refinement is where you confirm and improve the team's understanding of a problem you have already explored.",
+        "Weak acceptance criteria create ambiguity during implementation and leave little for QA to test against.",
+        "A useful refinement meeting gives the team decisions it can act on."
+      ],
+      "exampleScenario": {
+        "title": "Practical example",
+        "summary": "The PM brings an item titled \"Improve checkout performance.\" Nobody knows what improvement means, and the meeting turns into 40 minutes of discovery.",
+        "bullets": [
+          "Which performance metric is falling short today?",
+          "For which users is it critical?",
+          "How would you measure or observe an improvement?"
+        ],
+        "result": "Without those answers in advance, the team leaves without a decision and the item goes back to the backlog as it was."
+      },
+      "sections": [
+        {
+          "title": "Prepare the material before meeting with the team",
+          "paragraphs": [
+            "Use refinement to confirm what the team understands about the item.",
+            "Bring a goal, known rules, dependencies, and open questions to ground the conversation in specifics."
+          ],
+          "bullets": [
+            "What should the user be able to do in the affected flow?",
+            "Which business rules affect implementation?",
+            "What external dependencies does the team need to know about before estimating?"
+          ]
+        },
+        {
+          "title": "Draft acceptance criteria before the meeting",
+          "paragraphs": [
+            "Draft criteria give the team something concrete to validate, adjust, or challenge during refinement.",
+            "\"Works correctly\" gives the team no guidance. Useful criteria describe what should happen in a specific situation."
+          ],
+          "bullets": [
+            "Cover the main path, the expected failure, and the most relevant exception.",
+            "Describe behavior: \"When X happens, the system should do Y.\"",
+            "Three precise criteria are better than ten vague ones."
+          ]
+        },
+        {
+          "title": "Leave with decisions and owners",
+          "paragraphs": [
+            "Use refinement to reduce ambiguity around what the team will build.",
+            "Give each open question an owner and a deadline before marking the item ready for the sprint."
+          ],
+          "bullets": [
+            "List the decisions made in the meeting.",
+            "Assign an owner to each open question.",
+            "Keep the item out of the ready column while a critical technical answer depends on assumptions."
+          ]
+        }
+      ],
+      "commonMistakes": [
+        "Bringing items without context and using refinement to discover the problem.",
+        "Writing acceptance criteria after implementation has started.",
+        "Leaving refinement with approved items that still have undocumented gaps."
+      ],
+      "checklist": [
+        "The goal of the change is clear in one sentence before the meeting.",
+        "The criteria cover the main path, the expected failure, and the most relevant exception.",
+        "Every open question has an owner and a deadline.",
+        "The team can start building without holding another alignment meeting."
+      ],
+      "seo": {
+        "title": "Make refinement meetings count | ProdForge",
+        "description": "A practical guide for PMs and POs on preparing for refinement, writing clear acceptance criteria, and leaving with actionable decisions."
+      },
+      "thumbnailAlt": "Forge illustration for the refinement and acceptance criteria guide"
+    },
+    "alinhamento-com-stakeholders": {
+      "category": "Alignment",
+      "title": "Stakeholder alignment without the game of telephone",
+      "excerpt": "Go to the source of the problem, confirm understanding before writing the specification, and stay aligned throughout the cycle so the review brings fewer surprises.",
+      "level": "Beginner",
+      "problem": "A request changes as it passes through several people. The PM ends up translating secondhand requests without a clear view of the original problem.",
+      "outcome": "Speak directly with the people affected, confirm the expected outcome, and check expectations along the way to reduce surprises in the review.",
+      "quickSummary": [
+        "Alignment means a shared understanding of the problem and what will be delivered.",
+        "Speaking early with people who experience the problem reduces misunderstandings in the specification.",
+        "A user story helps people align and records what they agreed to build."
+      ],
+      "exampleScenario": {
+        "title": "Practical example",
+        "summary": "Sales asks for a new report and the PM specifies it. At the review, finance says it cannot use the report because a field is missing. Nobody had consulted finance.",
+        "bullets": [
+          "Who actually uses the report day to day?",
+          "What decision does the report need to support?",
+          "What is missing from the current report?"
+        ],
+        "result": "A 15-minute conversation with the person who uses the report could have prevented the rework."
+      },
+      "sections": [
+        {
+          "title": "Talk to the people who experience the problem",
+          "paragraphs": [
+            "Each person who relays a request adds their interpretation. By the time it reaches the PM through someone who does not experience the problem, the context has already been filtered.",
+            "Talking to the people directly affected before writing the specification is the fastest way to bring useful context into refinement."
+          ],
+          "bullets": [
+            "Identify who is directly affected, even if someone else made the request.",
+            "Ask what happens when the problem goes unresolved.",
+            "Check whether the requested solution addresses the cause or only a visible symptom."
+          ]
+        },
+        {
+          "title": "Confirm understanding before writing the specification",
+          "paragraphs": [
+            "Ask the requester to confirm what the team will deliver.",
+            "A paragraph about the problem and expected behavior that the requester has actually reviewed is worth more than hours of unread documentation."
+          ],
+          "bullets": [
+            "Send a summary of the problem and what the team will build before detailing acceptance criteria.",
+            "Ask explicitly: \"Does this solve what you need?\"",
+            "Adjust scope before the item enters development."
+          ]
+        },
+        {
+          "title": "Maintain alignment throughout the cycle",
+          "paragraphs": [
+            "The context and scope may change during development, and stakeholders may come to expect something different from what was specified.",
+            "Quick check-ins during development let stakeholders see actual results before the review."
+          ],
+          "bullets": [
+            "Show a prototype, draft, or intermediate version before final delivery.",
+            "Say when scope changes or a dependency blocks progress.",
+            "Check stakeholder expectations before the review."
+          ]
+        }
+      ],
+      "commonMistakes": [
+        "Writing the specification before speaking with people who use the product or experience the problem.",
+        "Assuming document approval guarantees everyone understands what will be delivered.",
+        "Raising scope issues only at the review, when changes are expensive."
+      ],
+      "checklist": [
+        "I spoke to the people who experience the problem as well as the requester.",
+        "The requester confirmed that the planned delivery solves the original problem.",
+        "At least one check-in is scheduled before final delivery.",
+        "We communicated scope changes before the sprint ended."
+      ],
+      "seo": {
+        "title": "Stakeholder alignment for PMs and POs | ProdForge",
+        "description": "A practical guide to reaching the people affected, confirming what they need, and maintaining alignment throughout development."
+      },
+      "thumbnailAlt": "Forge illustration for the stakeholder alignment guide"
+    }
+  },
+  "notes": {
+    "ia-para-melhorar-user-stories": {
+      "title": "Use AI to improve user stories while keeping your judgment",
+      "tag": "Practical note",
+      "summary": "Use AI to organize context, surface gaps, and draft faster. Keep priority decisions in your hands."
+    },
+    "como-conversar-melhor-com-dev": {
+      "title": "Have better conversations with engineers",
+      "tag": "Practical note",
+      "summary": "Give engineers a clear problem, rules, exceptions, and constraints. Let the team work through the implementation together."
+    },
+    "sinais-de-backlog-mal-definido": {
+      "title": "Spot a poorly defined backlog before it causes rework",
+      "tag": "Practical note",
+      "summary": "When several stories need an extra meeting to explain the basics, the backlog is missing context."
+    },
+    "criterio-de-aceite-vs-caso-de-teste": {
+      "title": "Acceptance criteria and test cases serve different purposes",
+      "tag": "Practical note",
+      "summary": "Acceptance criteria define expected product behavior. A test case describes how to verify it. Keeping both clear helps engineering and QA use the specification."
+    },
+    "como-evitar-surpresa-na-review": {
+      "title": "Avoid surprises in the review without another meeting",
+      "tag": "Practical note",
+      "summary": "A surprise in the review often signals late alignment. A quick check-in mid-cycle can save a long adjustment meeting after delivery."
+    }
+  }
+}

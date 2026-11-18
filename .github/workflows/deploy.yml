@@ -13,6 +13,10 @@ on:
         description: SHA-256 do manifesto da cópia verificada do destino
         required: true
         type: string
+      recovery_public_key_base64:
+        description: Chave pública RSA usada para proteger o build de recuperação
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -53,7 +57,25 @@ jobs:
             echo "::error::Configure a URL e a chave pública do Supabase antes de publicar."
             exit 1
           fi
+          npm audit --omit=dev --audit-level=high
           npm run quality
+
+      - name: Preservar o build exato para recuperação
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+        env:
+          BACKUP_PUBLIC_KEY_BASE64: ${{ inputs.recovery_public_key_base64 }}
+        run: |
+          node --test scripts/protect-release-backup.test.mjs
+          tar -C dist -czf "$RUNNER_TEMP/candidate-dist.tar.gz" .
+          node scripts/protect-release-backup.mjs encrypt "$RUNNER_TEMP/candidate-dist.tar.gz" "$RUNNER_TEMP/candidate-dist.pfgbackup"
+
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+        with:
+          name: prodforge-build-protegido
+          path: ${{ runner.temp }}/candidate-dist.pfgbackup
+          retention-days: 7
+          if-no-files-found: error
 
       - name: Publicar em duas etapas via FTPS
         if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'

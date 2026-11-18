@@ -1,0 +1,34 @@
+{
+  "home": {
+    "title": "ProdForge — AI workspace for product managers",
+    "description": "Turn rough briefs into user stories and acceptance criteria your product, engineering, and QA teams can review.",
+    "name": "ProdForge",
+    "ogDescription": "Turn rough briefs into user stories and acceptance criteria your product, engineering, and QA teams can review."
+  },
+  "faq": {
+    "title": "FAQ | ProdForge",
+    "description": "Quick answers about ProdForge, AI, user stories, accounts, privacy, plans, limits, and support.",
+    "name": "Frequently asked questions"
+  },
+  "contact": {
+    "title": "Contact | ProdForge",
+    "description": "Contact ProdForge for questions, support, privacy requests, feedback, partnerships, or business inquiries.",
+    "name": "Contact"
+  },
+  "privacyPolicy": {
+    "title": "Privacy Policy | ProdForge",
+    "description": "Learn how ProdForge collects, uses, stores, and protects data across forms, authentication, analytics, AI features, and workspace workflows.",
+    "name": "Privacy Policy"
+  },
+  "preferences": {
+    "title": "Privacy Preferences | ProdForge",
+    "description": "Review, change, or reset the privacy preferences saved in this browser for ProdForge.",
+    "name": "Privacy Preferences"
+  },
+  "terms": {
+    "title": "Terms of Use | ProdForge",
+    "description": "Read the terms governing ProdForge registration, workspace use, AI generation, free limits, and paid features.",
+    "name": "Terms of Use"
+  },
+  "brandAlt": "ProdForge brand mark"
+}

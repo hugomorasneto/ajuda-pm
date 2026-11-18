@@ -1,8 +1,10 @@
+import { useCopy } from '../../i18n/context'
 function LearningExampleBlock({ example }) {
+  const t = useCopy('learning')
   return (
     <section className="learning-guide-block learning-guide-example" id="exemplo">
       <div className="learning-guide-block__header">
-        <span className="badge-pill">Exemplo real</span>
+        <span className="badge-pill">{t('exampleBadge')}</span>
         <h2>{example.title}</h2>
       </div>
 

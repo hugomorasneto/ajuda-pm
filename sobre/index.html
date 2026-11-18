@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="{{language}}">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -9,45 +9,46 @@
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Sobre o ProdForge | ProdForge</title>
+    <title>{{title}}</title>
     <meta
       name="description"
-      content="Conheça o ProdForge, plataforma com IA que ajuda times de produto a transformar ideias brutas em histórias de usuário mais claras, completas e acionáveis."
+      content="{{description}}"
     />
     <meta name="theme-color" content="#0B0D10" />
-    <meta name="robots" content="index,follow" />
-    <link rel="canonical" href="https://prodforge.techtupa.com.br/sobre" />
+    <meta name="robots" content="{{robots}}" />
+    <link rel="canonical" href="{{url}}" />
 
     <meta property="og:site_name" content="ProdForge" />
-    <meta property="og:locale" content="pt_BR" />
-    <meta property="og:title" content="Sobre o ProdForge | ProdForge" />
+    <meta property="og:locale" content="{{ogLocale}}" />
+    <meta property="og:title" content="{{title}}" />
     <meta
       property="og:description"
-      content="Conheça o ProdForge, plataforma com IA que ajuda times de produto a transformar ideias brutas em histórias de usuário mais claras, completas e acionáveis."
+      content="{{ogDescription}}"
     />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://prodforge.techtupa.com.br/sobre" />
-    <meta property="og:image" content="https://prodforge.techtupa.com.br/og-prodforge-workspace.png" />
-    <meta property="og:image:secure_url" content="https://prodforge.techtupa.com.br/og-prodforge-workspace.png" />
+    <meta property="og:type" content="{{type}}" />
+    <meta property="og:url" content="{{url}}" />
+    <meta property="og:image" content="{{image}}" />
+    <meta property="og:image:secure_url" content="{{image}}" />
     <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    <meta property="og:image:width" content="{{imageWidth}}" />
+    <meta property="og:image:height" content="{{imageHeight}}" />
     <meta
       property="og:image:alt"
-      content="Imagem do ProdForge com captura real da Bancada e chamada para transformar briefing em user story clara."
+      content="{{imageAlt}}"
     />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Sobre o ProdForge | ProdForge" />
+    <meta name="twitter:title" content="{{title}}" />
     <meta
       name="twitter:description"
-      content="Conheça o ProdForge, plataforma com IA que ajuda times de produto a transformar ideias brutas em histórias de usuário mais claras, completas e acionáveis."
+      content="{{twitterDescription}}"
     />
-    <meta name="twitter:image" content="https://prodforge.techtupa.com.br/og-prodforge-workspace.png" />
+    <meta name="twitter:image" content="{{image}}" />
     <meta
       name="twitter:image:alt"
-      content="Imagem do ProdForge com captura real da Bancada e chamada para transformar briefing em user story clara."
+      content="{{imageAlt}}"
     />
+    <script type="application/ld+json" data-page-metadata="structured-data">{{structuredData}}</script>
   </head>
   <body>
     <div id="root"></div>

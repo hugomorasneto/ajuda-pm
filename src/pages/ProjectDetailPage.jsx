@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, Navigate, useOutletContext, useParams } from 'react-router-dom'
+import { Navigate, useOutletContext, useParams } from 'react-router-dom'
+import { useCopy, useLanguage } from '../i18n/context'
+import { formatNotice } from '../i18n/formatNotice'
+import Link from '../i18n/LocalizedLink'
+import { localizeHref } from '../i18n/routes'
 import { useAuth } from '../hooks/useAuth'
 import {
   addProjectMemberByEmail,
@@ -15,7 +19,6 @@ import {
   updateUserStoryEstimationStatus,
 } from '../services/userStoriesService'
 import {
-  KANBAN_STATUS_OPTIONS,
   createProjectKanbanColumn,
   listProjectKanbanBoard,
   moveProjectKanbanStory,
@@ -35,7 +38,7 @@ import {
 } from '../services/projectAiService'
 import {
   LIVE_PLANNING_SESSION_STATUSES,
-  getPlanningSessionStatusLabel,
+  PLANNING_SESSION_STATUS_LABELS,
   getPlanningStorySessionIndex,
 } from '../utils/planningPokerUtils'
 import {
@@ -46,86 +49,107 @@ import {
 import { normalizeStorySearchQuery, storyMatchesSearch } from '../utils/storySearchUtils'
 import { copyTextToClipboard } from '../utils/storyExport'
 
+const projectAnalysisErrorKeys = {
+  INVALID_INPUT: 'invalid_analysis_input',
+  AUTH_REQUIRED: 'session_expired',
+  RATE_LIMIT: 'analysis_rate_limit',
+  PROVIDER_UNAVAILABLE: 'analysis_unavailable',
+  TIMEOUT: 'analysis_timeout',
+  NETWORK: 'analysis_network_error',
+}
+
+const projectErrorKeys = new Map([
+  ['Informe um nome para o projeto.', 'project_name_required'],
+  ['Informe um nome para a coluna.', 'column_name_required'],
+  ['Informe o e-mail do membro.', 'member_email_required'],
+  ['Usuário não encontrado para esse e-mail.', 'member_email_not_found'],
+  ['História não encontrada.', 'story_missing'],
+  ['História não encontrada neste projeto.', 'story_missing'],
+  ['Membro não encontrado neste projeto.', 'member_missing'],
+  ['Coluna não encontrada.', 'column_missing'],
+  ['Coluna não encontrada neste projeto.', 'column_missing'],
+])
+
 const PROJECT_MEMBER_ROLES = [
-  { value: 'member', label: 'Membro' },
-  { value: 'admin', label: 'Administrador' },
-  { value: 'viewer', label: 'Visualizador' },
+  { value: 'member', label: 'member' },
+  { value: 'admin', label: 'administrator' },
+  { value: 'viewer', label: 'viewer' },
 ]
 
 const ROLE_LABELS = {
-  owner: 'Responsável',
-  admin: 'Administrador',
-  member: 'Membro',
-  viewer: 'Visualizador',
+  owner: 'owner',
+  admin: 'administrator',
+  member: 'member',
+  viewer: 'viewer',
 }
 
 const PROJECT_ACCESS_DETAILS = {
   owner: {
-    title: 'Responsável pelo projeto',
-    description: 'Controle completo sobre projeto, membros, colunas, Kanban e Rodas da Fogueira.',
-    nextAction: 'Use este acesso para manter contexto, permissões e estimativas organizados.',
+    title: 'project_owner',
+    description: 'full_control_over_the_project_members_columns',
+    nextAction: 'use_this_access_to_keep_project_context',
   },
   admin: {
-    title: 'Administrador do projeto',
-    description: 'Pode editar o projeto, gerenciar membros, ajustar colunas e criar Rodas da Fogueira.',
-    nextAction: 'Gerencie a operação do projeto sem depender do responsável principal.',
+    title: 'project_administrator',
+    description: 'you_can_edit_the_project_manage_members',
+    nextAction: 'manage_day_to_day_work_independently_of',
   },
   member: {
-    title: 'Membro do projeto',
-    description: 'Pode mover histórias no Kanban, preparar itens para estimativa e acompanhar Rodas.',
-    nextAction: 'Organize histórias e leve itens prontos para discussão com o time.',
+    title: 'project_member',
+    description: 'you_can_move_stories_on_the_board',
+    nextAction: 'organize_stories_and_bring_ready_items_to',
   },
   viewer: {
-    title: 'Visualizador do projeto',
-    description: 'Pode consultar contexto, histórias, Kanban, membros e histórico sem alterar a operação.',
-    nextAction: 'Solicite papel de membro ou administrador se precisar mover histórias ou criar Rodas.',
+    title: 'project_viewer',
+    description: 'you_can_view_project_context_stories_the',
+    nextAction: 'request_member_or_administrator_access_if_you',
   },
   none: {
-    title: 'Acesso em validação',
-    description: 'O ProdForge está carregando seu papel neste projeto.',
-    nextAction: 'As ações aparecem assim que as permissões forem confirmadas.',
+    title: 'checking_access',
+    description: 'prodforge_is_loading_your_role_in_this',
+    nextAction: 'actions_will_appear_once_your_permissions_are',
   },
 }
 
 const ESTIMATION_STATUS_LABELS = {
-  created: 'Criada',
-  refining: 'Em refinamento',
-  ready_for_estimation: 'Pronta para estimar',
-  estimated: 'Estimada',
+  created: 'created',
+  refining: 'refining',
+  ready_for_estimation: 'ready_to_estimate',
+  estimated: 'estimated',
 }
 
 const ESTIMATION_STATUS_OPTIONS = [
-  { value: 'created', label: 'Criada' },
-  { value: 'refining', label: 'Em refinamento' },
-  { value: 'ready_for_estimation', label: 'Pronta para estimar' },
-  { value: 'estimated', label: 'Estimada' },
+  { value: 'created', label: 'created' },
+  { value: 'refining', label: 'refining' },
+  { value: 'ready_for_estimation', label: 'ready_to_estimate' },
+  { value: 'estimated', label: 'estimated' },
 ]
 
 const STORY_ESTIMATION_FILTER_OPTIONS = [
-  { value: 'all', label: 'Todas' },
+  { value: 'all', label: 'all' },
   ...ESTIMATION_STATUS_OPTIONS,
 ]
 
 const STORY_STATUS_QUICK_FILTERS = [
-  { value: 'all', label: 'Todas', hint: 'Visão completa' },
-  { value: 'created', label: 'Criadas', hint: 'Ainda sem preparo' },
-  { value: 'refining', label: 'Em refinamento', hint: 'Ajustes em andamento' },
-  { value: 'ready_for_estimation', label: 'Prontas', hint: 'Disponíveis para Roda' },
-  { value: 'estimated', label: 'Estimadas', hint: 'Já pontuadas' },
+  { value: 'all', label: 'all', hint: 'full_view' },
+  { value: 'created', label: 'created_2', hint: 'awaiting_preparation' },
+  { value: 'refining', label: 'refining', hint: 'refinement_in_progress' },
+  { value: 'ready_for_estimation', label: 'ready', hint: 'available_for_planning_poker' },
+  { value: 'estimated', label: 'estimated_2', hint: 'already_scored' },
 ]
 
 const PROJECT_GUIDED_STATUS_LABELS = {
-  complete: 'Concluído',
-  current: 'Agora',
-  next: 'Próximo',
+  complete: 'completed',
+  current: 'now',
+  next: 'next',
 }
 
-function formatProjectDateTime(value) {
+function formatProjectDateTime(value, language) {
   if (!value) return '-'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return '-'
 
-  return new Intl.DateTimeFormat('pt-BR', {
+  return new Intl.DateTimeFormat(language, {
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
@@ -133,40 +157,50 @@ function formatProjectDateTime(value) {
   }).format(date)
 }
 
-function getEstimationStatusLabel(status) {
-  return ESTIMATION_STATUS_LABELS[status] ?? 'Criada'
+function getEstimationStatusLabel(status, t) {
+  return t(ESTIMATION_STATUS_LABELS[status] ?? ESTIMATION_STATUS_LABELS.created)
 }
 
-function getStoryVersionLabel(versionNumber) {
+function getPlanningStatusLabel(status, t) {
+  const code = Object.hasOwn(PLANNING_SESSION_STATUS_LABELS, status) ? status : 'draft'
+  return t('planning_status_' + code)
+}
+
+function getKanbanColumnLabel(column, t) {
+  const key = 'default_column_' + column.status_base
+  return column.is_default && t(key, { lng: 'pt-BR' }) === column.name ? t(key) : column.name
+}
+
+function getStoryVersionLabel(versionNumber, t) {
   const count = Number(versionNumber ?? 1)
   const safeCount = Number.isFinite(count) && count > 0 ? count : 1
-  return `${safeCount} ${safeCount === 1 ? 'versão' : 'versões'}`
+  return `${safeCount} ${safeCount === 1 ? t('version') : t('versions')}`
 }
 
-function getStoryPreview(story) {
-  return story?.input_context?.trim() || story?.user_story?.trim() || 'Sem descrição.'
+function getStoryPreview(story, t) {
+  return story?.input_context?.trim() || story?.user_story?.trim() || t('no_description')
 }
 
-function getKanbanColumnIntent(statusBase) {
+function getKanbanColumnIntent(statusBase, t) {
   const intents = {
-    created: 'Entrada inicial, ainda sem preparo para refinamento.',
-    refining: 'Histórias que precisam de ajuste antes da estimativa.',
-    ready_for_estimation: 'Histórias liberadas para abrir a Roda da Fogueira.',
-    estimated: 'Histórias com pontuação final ou decisão registrada.',
+    created: t('new_stories_that_haven_t_been_prepared'),
+    refining: t('stories_that_need_work_before_estimation'),
+    ready_for_estimation: t('stories_ready_to_take_into_a_planning'),
+    estimated: t('stories_with_a_final_score_or_recorded'),
   }
 
-  return intents[statusBase] ?? 'Coluna personalizada do fluxo do projeto.'
+  return intents[statusBase] ?? t('custom_column_in_the_project_s_workflow')
 }
 
-function getKanbanColumnEmptyText(statusBase) {
+function getKanbanColumnEmptyText(statusBase, t) {
   const texts = {
-    created: 'As novas histórias vinculadas ao projeto aparecem aqui.',
-    refining: 'Mova para cá o que ainda precisa de ajuste antes da Roda.',
-    ready_for_estimation: 'Mova para cá as histórias prontas para estimar com o time.',
-    estimated: 'Histórias seladas na Roda aparecem como estimadas.',
+    created: t('new_stories_linked_to_the_project_appear'),
+    refining: t('move_stories_that_need_more_work_before'),
+    ready_for_estimation: t('move_stories_here_when_they_re_ready'),
+    estimated: t('stories_finalized_in_planning_poker_appear_here'),
   }
 
-  return texts[statusBase] ?? 'Arraste uma história para esta coluna quando ela entrar neste estágio.'
+  return texts[statusBase] ?? t('drag_a_story_to_this_column_when')
 }
 
 function isStoryInLivePlanningSession(story, planningStorySessionById = {}) {
@@ -185,15 +219,16 @@ function countAvailableReadyStories(stories = [], planningStorySessionById = {})
 }
 
 function ProjectInsightList({ title, items, emptyText, defaultOpen = false }) {
+  const t = useCopy('projectDetail')
   const safeItems = Array.isArray(items) ? items : []
-  const countLabel = safeItems.length === 1 ? '1 item' : `${safeItems.length} itens`
+  const countLabel = safeItems.length === 1 ? t('1_item') : t('items', { p1: safeItems.length })
 
   return (
     <details className="project-detail-page__ai-detail-card" open={defaultOpen}>
       <summary>
         <span>
           <strong>{title}</strong>
-          <small>{safeItems.length > 0 ? countLabel : 'Sem itens'}</small>
+          <small>{safeItems.length > 0 ? countLabel : t('no_items')}</small>
         </span>
       </summary>
       {safeItems.length > 0 ? (
@@ -210,6 +245,9 @@ function ProjectInsightList({ title, items, emptyText, defaultOpen = false }) {
 }
 
 function ProjectDetailPage() {
+  const t = useCopy('projectDetail')
+  const tInsights = useCopy('projectInsights')
+  const { language, preview } = useLanguage()
   const { projectId } = useParams()
   const { user } = useAuth()
   const userId = user?.id ?? null
@@ -277,12 +315,12 @@ function ProjectDetailPage() {
   const [notFound, setNotFound] = useState(false)
 
   const storiesLabel = useMemo(
-    () => `${projectStoryCount} ${projectStoryCount === 1 ? 'história' : 'histórias'}`,
-    [projectStoryCount],
+    () => `${projectStoryCount} ${projectStoryCount === 1 ? t('story') : t('stories_2')}`,
+    [t, projectStoryCount],
   )
   const membersLabel = useMemo(
-    () => `${projectMembers.length} ${projectMembers.length === 1 ? 'membro' : 'membros'}`,
-    [projectMembers.length],
+    () => `${projectMembers.length} ${t('member', { count: projectMembers.length })}`,
+    [t, projectMembers.length],
   )
   const currentProjectRole = useMemo(() => {
     const memberRoleValue = projectMembers.find((member) => member.user_id === userId)?.role
@@ -292,44 +330,43 @@ function ProjectDetailPage() {
   const canEditKanbanColumns = canManageProjectMembers
   const canMoveKanbanCards = ['owner', 'admin', 'member'].includes(currentProjectRole)
   const currentAccessDetails = PROJECT_ACCESS_DETAILS[currentProjectRole] ?? PROJECT_ACCESS_DETAILS.none
-  const currentProjectRoleLabel = ROLE_LABELS[currentProjectRole] ?? 'Carregando'
+  const currentProjectRoleLabel = ROLE_LABELS[currentProjectRole] ? t(ROLE_LABELS[currentProjectRole]) : t('loading')
   const projectAccessCapabilities = useMemo(
     () => [
       {
-        label: 'Editar projeto e membros',
+        label: t('edit_project_and_members'),
         enabled: canManageProjectMembers,
-        detail: canManageProjectMembers ? 'Liberado' : 'Restrito a responsáveis e administradores',
+        detail: canManageProjectMembers ? t('allowed') : t('owners_and_administrators_only'),
       },
       {
-        label: 'Criar e editar colunas',
+        label: t('create_and_edit_columns'),
         enabled: canEditKanbanColumns,
-        detail: canEditKanbanColumns ? 'Liberado' : 'Somente consulta',
+        detail: canEditKanbanColumns ? t('allowed') : t('view_only'),
       },
       {
-        label: 'Mover histórias no Kanban',
+        label: t('move_stories_on_the_kanban_board'),
         enabled: canMoveKanbanCards,
-        detail: canMoveKanbanCards ? 'Liberado' : 'Somente consulta',
+        detail: canMoveKanbanCards ? t('allowed') : t('view_only'),
       },
       {
-        label: 'Criar Rodas da Fogueira',
+        label: t('create_planning_poker_sessions'),
         enabled: canManageProjectMembers,
-        detail: canManageProjectMembers ? 'Liberado' : 'Restrito a responsáveis e administradores',
+        detail: canManageProjectMembers ? t('allowed') : t('owners_and_administrators_only'),
       },
     ],
-    [canEditKanbanColumns, canManageProjectMembers, canMoveKanbanCards],
+    [t, canEditKanbanColumns, canManageProjectMembers, canMoveKanbanCards],
   )
   const filteredStoriesLabel = useMemo(
     () =>
       `${projectStoryFilteredCount} ${
-        projectStoryFilteredCount === 1 ? 'história encontrada' : 'histórias encontradas'
+        projectStoryFilteredCount === 1 ? t('story_found') : t('stories_found')
       }`,
-    [projectStoryFilteredCount],
+    [t, projectStoryFilteredCount],
   )
   const currentStoryFilterLabel = useMemo(
     () =>
-      STORY_ESTIMATION_FILTER_OPTIONS.find((option) => option.value === storyEstimationFilter)
-        ?.label ?? 'Todas',
-    [storyEstimationFilter],
+      t(STORY_ESTIMATION_FILTER_OPTIONS.find((option) => option.value === storyEstimationFilter)?.label ?? 'all'),
+    [t, storyEstimationFilter],
   )
   const storySearchQuery = normalizeStorySearchQuery(storySearchInput)
   const isStorySearchActive = storySearchQuery.length > 0
@@ -403,40 +440,41 @@ function ProjectDetailPage() {
   )
   const insightCandidateFilterLabel =
     projectInsightCandidateStoryIds.length === 1
-      ? '1 candidata da IA'
-      : `${projectInsightCandidateStoryIds.length} candidatas da IA`
+      ? t('1_ai_candidate')
+      : t('ai_candidates', { p1: projectInsightCandidateStoryIds.length })
   const shouldFocusInsightCandidates =
     isInsightCandidateFilterActive && projectInsightCandidateStoryIds.length > 0
   const projectActionPlanItems = useMemo(() => {
     const nextActions = (projectInsights?.next_actions ?? []).map((item) => String(item).trim()).filter(Boolean)
     return nextActions.length > 0
       ? nextActions.slice(0, 3)
-      : ['Definir a próxima ação com PM, PO e time antes de abrir estimativas.']
-  }, [projectInsights])
+      : [t('choose_the_next_action_with_the_pm')]
+  }, [t, projectInsights])
   const projectActionPlanStats = useMemo(
     () => [
       {
-        label: 'Riscos',
+        label: t('risks'),
         value: projectInsights?.risks?.length ?? 0,
-        detail: 'para revisar',
+        detail: t('to_review'),
       },
       {
-        label: 'Perguntas',
+        label: t('questions'),
         value: projectInsights?.refinement_questions?.length ?? 0,
-        detail: 'para alinhar',
+        detail: t('to_discuss'),
       },
       {
-        label: 'Candidatas',
+        label: t('candidates'),
         value: projectInsightCandidateStoryIds.length,
-        detail: 'para estimar',
+        detail: t('to_estimate'),
       },
       {
-        label: 'Prontas',
+        label: t('ready'),
         value: readyInsightCandidateStoryIds.length,
-        detail: 'para Roda',
+        detail: t('for_planning_poker'),
       },
     ],
     [
+      t,
       projectInsightCandidateStoryIds.length,
       projectInsights?.refinement_questions?.length,
       projectInsights?.risks?.length,
@@ -519,20 +557,16 @@ function ProjectDetailPage() {
   )
   const selectedReadyStoriesLabel =
     selectedReadyStoryIds.length === 1
-      ? '1 história selecionada'
-      : `${selectedReadyStoryIds.length} histórias selecionadas`
+      ? t('1_selected_story')
+      : t('selected_stories', { p1: selectedReadyStoryIds.length })
   const selectedReadyStoriesHint =
     selectedReadyStoriesInLiveSessions.length > 0
-      ? `${selectedReadyStoriesInLiveSessions.length} já ${
-          selectedReadyStoriesInLiveSessions.length === 1 ? 'está' : 'estão'
-        } em Roda ativa. Remova do lote antes de abrir uma nova Roda.`
+      ? t('already_in_an_active_session_remove_them', { p1: selectedReadyStoriesInLiveSessions.length, p2: selectedReadyStoriesInLiveSessions.length === 1 ? t('is') : t('are') })
       : visibleAvailableReadyCount > 0
-        ? `${visibleAvailableReadyCount} ${
-            visibleAvailableReadyCount === 1 ? 'história livre' : 'histórias livres'
-          } para abrir uma nova Roda.`
+        ? t('to_open_a_new_session', { p1: visibleAvailableReadyCount, p2: visibleAvailableReadyCount === 1 ? t('available_story') : t('available_stories') })
         : visibleReadyBlockedCount > 0
-          ? 'As histórias prontas visíveis já estão em Rodas ativas.'
-          : 'Selecione histórias prontas no quadro ou na lista para abrir a Roda com o lote já carregado.'
+          ? t('the_visible_stories_that_are_ready_are')
+          : t('select_ready_stories_from_the_board_or')
   const canOpenSelectedReadyStories =
     selectedReadyStoryIds.length > 0 && selectedReadyStoriesInLiveSessions.length === 0
   const selectedReadyStoriesRodaUrl =
@@ -544,7 +578,7 @@ function ProjectDetailPage() {
   const storySearchDisplay = storySearchInput.trim()
   const storySearchResultCount = storyViewMode === 'board' ? visibleKanbanStoryCount : visibleProjectStoryCount
   const storySearchResultLabel = `${storySearchResultCount} ${
-    storySearchResultCount === 1 ? 'resultado encontrado' : 'resultados encontrados'
+    storySearchResultCount === 1 ? t('result_found') : t('results_found')
   }`
   const hasNoStoriesForInsightCandidateFilter =
     !isLoadingStories &&
@@ -568,34 +602,34 @@ function ProjectDetailPage() {
   const kanbanBoardSummaryItems = useMemo(
     () => [
       {
-        label: 'Visíveis',
+        label: t('visible'),
         value: visibleKanbanStoryCount,
-        detail: visibleKanbanStoryCount === 1 ? 'cartão no quadro' : 'cartões no quadro',
+        detail: visibleKanbanStoryCount === 1 ? t('card_on_the_board') : t('cards_on_the_board'),
       },
       {
-        label: 'Livres',
+        label: t('available'),
         value: visibleAvailableReadyCount,
-        detail: 'prontas para nova Roda',
+        detail: t('ready_for_a_new_session'),
       },
       {
-        label: 'Selecionadas',
+        label: t('selected'),
         value: selectedReadyStoryIds.length,
-        detail: 'no lote atual',
+        detail: t('in_the_current_selection'),
       },
       {
-        label: 'Em Roda',
+        label: t('in_planning_poker'),
         value: visibleKanbanLiveCount,
-        detail: 'sessões ativas',
+        detail: t('active_sessions'),
       },
     ],
-    [selectedReadyStoryIds.length, visibleAvailableReadyCount, visibleKanbanLiveCount, visibleKanbanStoryCount],
+    [t, selectedReadyStoryIds.length, visibleAvailableReadyCount, visibleKanbanLiveCount, visibleKanbanStoryCount],
   )
   const kanbanBoardOperationTitle = canMoveKanbanCards
-    ? 'Arraste cartões ou use Mover cartão'
-    : 'Quadro em modo consulta'
+    ? t('drag_cards_or_use_move_card')
+    : t('view_only_board')
   const kanbanBoardOperationText = canMoveKanbanCards
-    ? 'Mover uma história entre colunas atualiza o status de estimativa. Histórias em Roda ativa ficam bloqueadas para evitar duplicidade.'
-    : 'Seu papel permite acompanhar o fluxo, mas a movimentação fica restrita a membros, administradores e responsáveis.'
+    ? t('moving_a_story_between_columns_updates_its')
+    : t('your_role_lets_you_view_the_workflow')
   const shouldShowKanbanLimitNotice = storyViewMode === 'board' && projectStoryCount > kanbanStories.length
   const activeProjectInsightRecord = useMemo(
     () => projectInsightHistory.find((item) => item.id === activeProjectInsightId) ?? null,
@@ -610,54 +644,53 @@ function ProjectDetailPage() {
         analysis: projectInsights,
       },
       projectStoryCount,
+      tInsights,
     )
-  }, [activeProjectInsightRecord, projectInsights, projectStoryCount])
+  }, [activeProjectInsightRecord, projectInsights, projectStoryCount, tInsights])
   const isProjectInsightOutdated = Boolean(currentProjectInsightFreshness?.isOutdated)
   const projectInsightExecutiveLabel = projectInsights
     ? isProjectInsightOutdated
       ? currentProjectInsightFreshness.label
       : projectInsights.health_label
-    : 'Sem diagnóstico'
+    : t('no_diagnosis')
   const projectInsightExecutiveText = projectInsights
     ? isProjectInsightOutdated
-      ? `${currentProjectInsightFreshness.description} Atualize a leitura antes de orientar o próximo passo.`
+      ? t('run_a_fresh_analysis_before_choosing_the', { p1: currentProjectInsightFreshness.description })
       : projectInsights.summary
-    : 'Gere uma leitura com IA para resumir riscos, dúvidas e próximos passos.'
+    : t('run_an_ai_analysis_to_summarize_risks')
   const projectInsightExecutiveActionLabel = projectInsights
     ? isProjectInsightOutdated
-      ? 'Atualizar diagnóstico'
-      : 'Ver diagnóstico'
-    : 'Gerar diagnóstico'
+      ? t('update_diagnosis')
+      : t('view_diagnosis')
+    : t('generate_diagnosis')
   const projectInsightOverviewStatus = projectInsights
     ? isProjectInsightOutdated
       ? currentProjectInsightFreshness.label
       : projectInsights.health_label
-    : 'Diagnóstico sob demanda'
+    : t('diagnosis_on_demand')
   const projectInsightOverviewMeta = projectInsights
     ? `${Number(projectInsights?.meta?.analyzed_stories ?? projectStoryCount)} ${
         Number(projectInsights?.meta?.analyzed_stories ?? projectStoryCount) === 1
-          ? 'história analisada'
-          : 'histórias analisadas'
+          ? t('story_analyzed')
+          : t('stories_analyzed')
       }`
     : projectStoryCount > 0
-      ? `${storiesLabel} na base atual`
-      : 'Aguardando histórias vinculadas'
+      ? t('in_the_current_set', { p1: storiesLabel })
+      : t('waiting_for_linked_stories')
   const latestProjectNextAction =
     (isProjectInsightOutdated
-      ? 'Atualize o diagnóstico para alinhar a leitura de IA com as histórias atuais.'
+      ? t('update_the_diagnosis_to_analyze_the_latest')
       : projectInsights?.next_actions?.[0]) ??
     (projectStoryCount === 0
-      ? 'Forje ou vincule a primeira história para liberar a leitura do projeto.'
-      : 'Gere um diagnóstico para priorizar riscos e próximos passos.')
-  const projectReadinessLabel = readyStoryCount > 0 ? 'Pronto para estimar' : 'Em organização'
+      ? t('forge_or_link_your_first_story_to')
+      : t('generate_a_diagnosis_to_prioritize_risks_and'))
+  const projectReadinessLabel = readyStoryCount > 0 ? t('ready_to_estimate_2') : t('in_progress')
   const projectReadinessText =
     projectStoryCount === 0
-      ? 'Nenhuma história vinculada ainda.'
+      ? t('no_stories_linked_yet')
       : readyStoryCount > 0
-      ? `${readyStoryCount} ${readyStoryCount === 1 ? 'história pronta' : 'histórias prontas'} para a Roda.`
-      : `${refiningStoryCount} em refinamento · ${estimatedStoryCount} ${
-          estimatedStoryCount === 1 ? 'estimada' : 'estimadas'
-        }.`
+      ? t('for_planning_poker_2', { p1: readyStoryCount, p2: readyStoryCount === 1 ? t('story_ready') : t('stories_ready') })
+      : t('in_refinement', { p1: refiningStoryCount, p2: estimatedStoryCount, p3: estimatedStoryCount === 1 ? t('estimated').toLocaleLowerCase(language) : t('estimated_2').toLocaleLowerCase(language) })
   const estimatedProgressPercent =
     projectStoryCount > 0 ? Math.round((estimatedStoryCount / projectStoryCount) * 100) : 0
   const readyProgressPercent =
@@ -667,72 +700,73 @@ function ProjectDetailPage() {
       .map((story) => new Date(story?.created_at ?? '').getTime())
       .filter((timestamp) => Number.isFinite(timestamp))
 
-    if (dates.length === 0) return 'Sem atividade'
+    if (dates.length === 0) return t('no_activity')
 
-    return formatProjectDateTime(Math.max(...dates))
-  }, [kanbanStories, projectStories])
+    return formatProjectDateTime(Math.max(...dates), language)
+  }, [language, t, kanbanStories, projectStories])
   const projectMetricsCards = useMemo(
     () => [
       {
-        label: 'Histórias',
+        label: t('stories'),
         value: storiesLabel,
         detail:
           projectStoryCount > 0
-            ? `${refiningStoryCount} em refinamento · ${readyStoryCount} prontas`
-            : 'Forje ou vincule a primeira peça.',
+            ? t('in_refinement_ready', { p1: refiningStoryCount, p2: readyStoryCount })
+            : t('forge_or_link_your_first_story'),
         progress: projectStoryCount > 0 ? Math.min(100, Math.max(0, readyProgressPercent)) : 0,
         tone: readyStoryCount > 0 ? 'ready' : projectStoryCount > 0 ? 'attention' : 'idle',
         action:
           projectStoryCount > 0
-            ? { label: 'Ver quadro', href: '#historias-projeto' }
-            : { label: 'Forjar história', to: `/tool?projectId=${projectId}` },
+            ? { label: t('view_board'), href: '#historias-projeto' }
+            : { label: t('forge_story'), to: `/tool?projectId=${projectId}` },
       },
       {
-        label: 'Estimativas',
-        value: `${estimatedProgressPercent}% estimado`,
+        label: t('estimates'),
+        value: t('estimated_percent', { percent: estimatedProgressPercent }),
         detail:
           projectStoryCount > 0
-            ? `${estimatedStoryCount}/${projectStoryCount} histórias com pontuação final`
-            : 'Nenhuma estimativa registrada ainda.',
+            ? t('stories_with_a_final_score', { p1: estimatedStoryCount, p2: projectStoryCount })
+            : t('no_estimates_recorded_yet'),
         progress: estimatedProgressPercent,
         tone: estimatedStoryCount > 0 ? 'ready' : readyStoryCount > 0 ? 'attention' : 'idle',
         action:
           estimatedStoryCount > 0
-            ? { label: 'Ver Rodas', to: `/roda?projectId=${projectId}` }
-            : { label: 'Preparar lote', href: '#historias-projeto' },
+            ? { label: t('view_sessions'), to: `/roda?projectId=${projectId}` }
+            : { label: t('prepare_a_selection'), href: '#historias-projeto' },
       },
       {
-        label: 'Rodas',
+        label: t('planning_poker_sessions'),
         value:
           livePlanningSessionCount > 0
-            ? `${livePlanningSessionCount} ${livePlanningSessionCount === 1 ? 'ativa' : 'ativas'}`
-            : `${completedPlanningSessionCount} ${completedPlanningSessionCount === 1 ? 'finalizada' : 'finalizadas'}`,
+            ? t('active_session', { count: livePlanningSessionCount })
+            : t('completed_session', { count: completedPlanningSessionCount }),
         detail:
           livePlanningStoryCount > 0
             ? `${livePlanningStoryCount} ${
-                livePlanningStoryCount === 1 ? 'história em sessão ativa' : 'histórias em sessões ativas'
+                livePlanningStoryCount === 1 ? t('story_in_an_active_session') : t('stories_in_active_sessions')
               }`
-            : 'Sem sessão ativa no momento.',
+            : t('no_active_sessions_right_now'),
         progress: livePlanningSessionCount > 0 ? 100 : completedPlanningSessionCount > 0 ? 70 : 0,
         tone: livePlanningSessionCount > 0 ? 'live' : completedPlanningSessionCount > 0 ? 'ready' : 'idle',
         action: {
-          label: livePlanningSessionCount > 0 ? 'Continuar Rodas' : 'Abrir Rodas',
+          label: livePlanningSessionCount > 0 ? t('continue_sessions') : t('open_sessions'),
           to: `/roda?projectId=${projectId}`,
         },
       },
       {
-        label: 'Última peça',
+        label: t('latest_story'),
         value: latestStoryActivityLabel,
         detail:
-          latestStoryActivityLabel === 'Sem atividade'
-            ? 'Nenhuma história vinculada ao projeto.'
-            : 'História mais recente vinculada ao projeto.',
-        progress: latestStoryActivityLabel === 'Sem atividade' ? 0 : 100,
-        tone: latestStoryActivityLabel === 'Sem atividade' ? 'idle' : 'tech',
-        action: { label: 'Consultar peças', to: `/historico?projectId=${projectId}` },
+          latestStoryActivityLabel === t('no_activity')
+            ? t('no_stories_linked_to_this_project')
+            : t('most_recent_story_linked_to_this_project'),
+        progress: latestStoryActivityLabel === t('no_activity') ? 0 : 100,
+        tone: latestStoryActivityLabel === t('no_activity') ? 'idle' : 'tech',
+        action: { label: t('browse_stories'), to: `/historico?projectId=${projectId}` },
       },
     ],
     [
+      t,
       completedPlanningSessionCount,
       estimatedProgressPercent,
       estimatedStoryCount,
@@ -753,64 +787,65 @@ function ProjectDetailPage() {
     const hasPlanningSession = livePlanningSessionCount > 0 || completedPlanningSessionCount > 0
     const hasFinalEstimate = estimatedStoryCount > 0 || completedPlanningSessionCount > 0
     const readyLabel =
-      readyStoryCount === 1 ? '1 história pronta' : `${readyStoryCount} histórias prontas`
+      readyStoryCount === 1 ? t('1_ready_story') : t('ready_stories', { p1: readyStoryCount })
     const estimatedLabel =
-      estimatedStoryCount === 1 ? '1 história estimada' : `${estimatedStoryCount} histórias estimadas`
+      estimatedStoryCount === 1 ? t('1_estimated_story') : t('estimated_stories', { p1: estimatedStoryCount })
 
     return [
       {
         id: 'forge',
-        title: 'Forjar história',
+        title: t('forge_story'),
         description: hasStories
-          ? `${projectStoryCount} ${projectStoryCount === 1 ? 'história vinculada' : 'histórias vinculadas'} ao projeto.`
-          : 'Crie a primeira peça com a Bancada já apontada para este projeto.',
+          ? t('to_the_project', { p1: projectStoryCount, p2: projectStoryCount === 1 ? t('story_linked') : t('stories_linked') })
+          : t('create_your_first_story_with_this_project'),
         status: hasStories ? 'complete' : 'current',
-        action: { label: hasStories ? 'Nova história' : 'Abrir Bancada', to: `/tool?projectId=${projectId}` },
+        action: { label: hasStories ? t('new_story') : t('open_workbench'), to: `/tool?projectId=${projectId}` },
       },
       {
         id: 'kanban',
-        title: 'Organizar no Kanban',
+        title: t('organize_on_the_kanban_board'),
         description: hasStories
-          ? 'Use o quadro para separar o que está criado, em refinamento, pronto ou estimado.'
-          : 'O quadro aparece como base visual assim que houver uma história vinculada.',
+          ? t('use_the_board_to_group_stories_by')
+          : t('the_board_will_appear_once_you_ve'),
         status: hasStories ? 'complete' : 'next',
-        action: { label: 'Ver quadro', href: '#historias-projeto' },
+        action: { label: t('view_board'), href: '#historias-projeto' },
       },
       {
         id: 'prepare',
-        title: 'Preparar para estimativa',
+        title: t('prepare_for_estimation'),
         description: hasReadyOrEstimated
           ? readyStoryCount > 0
-            ? `${readyLabel} para levar à Roda da Fogueira.`
-            : 'O projeto já possui histórias encaminhadas ou estimadas.'
-          : 'Mova histórias refinadas para “Prontas para estimar” quando critérios e dúvidas estiverem claros.',
+            ? t('to_take_into_planning_poker', { p1: readyLabel })
+            : t('this_project_already_has_stories_ready_or')
+          : t('move_refined_stories_to_ready_to_estimate'),
         status: hasReadyOrEstimated ? 'complete' : hasStories ? 'current' : 'next',
-        action: { label: 'Preparar histórias', href: '#historias-projeto' },
+        action: { label: t('prepare_stories'), href: '#historias-projeto' },
       },
       {
         id: 'planning',
-        title: 'Abrir Roda',
+        title: t('open_planning_poker'),
         description: hasPlanningSession
           ? livePlanningSessionCount > 0
-            ? `${livePlanningSessionCount} ${livePlanningSessionCount === 1 ? 'Roda ativa' : 'Rodas ativas'} neste projeto.`
-            : 'O histórico de Rodas já está disponível para consulta.'
-          : 'Crie uma sessão quando houver histórias prontas para discussão com a guilda.',
+            ? t('in_this_project', { p1: livePlanningSessionCount, p2: livePlanningSessionCount === 1 ? t('active_session') : t('active_sessions_2') })
+            : t('planning_poker_history_is_available_to_browse')
+          : t('create_a_session_when_there_are_stories'),
         status: hasPlanningSession ? 'complete' : readyStoryCount > 0 ? 'current' : 'next',
-        action: { label: hasPlanningSession ? 'Ver Rodas' : 'Criar Roda', to: `/roda?projectId=${projectId}` },
+        action: { label: hasPlanningSession ? t('view_sessions') : t('create_session'), to: `/roda?projectId=${projectId}` },
       },
       {
         id: 'review',
-        title: 'Revisar resultado',
+        title: t('review_result'),
         description: hasFinalEstimate
-          ? `${estimatedLabel} com decisão registrada para priorização.`
+          ? t('with_a_recorded_decision_for_prioritization', { p1: estimatedLabel })
           : livePlanningSessionCount > 0
-            ? 'Acompanhe a sessão aberta e sele a estimativa final quando houver consenso.'
-            : 'Depois da Roda, revise decisões, pontuação final e próximos ajustes do backlog.',
+            ? t('follow_the_open_session_and_select_the')
+            : t('after_planning_poker_review_decisions_final_scores'),
         status: hasFinalEstimate ? 'complete' : livePlanningSessionCount > 0 ? 'current' : 'next',
-        action: { label: 'Consultar histórico', to: `/roda?projectId=${projectId}` },
+        action: { label: t('browse_history'), to: `/roda?projectId=${projectId}` },
       },
     ]
   }, [
+      t,
     completedPlanningSessionCount,
     estimatedStoryCount,
     livePlanningSessionCount,
@@ -826,9 +861,9 @@ function ProjectDetailPage() {
   const storyOperationalGuidance = (() => {
     if (projectStoryCount === 0) {
       return {
-        title: 'Forje a primeira história',
-        description: 'A Bancada abre com este projeto selecionado para criar a primeira peça do quadro.',
-        cta: 'Abrir Bancada',
+        title: t('forge_your_first_story_2'),
+        description: t('the_workbench_opens_with_this_project_selected'),
+        cta: t('open_workbench'),
         to: `/tool?projectId=${projectId}`,
         tone: 'forge',
       }
@@ -836,11 +871,9 @@ function ProjectDetailPage() {
 
     if (readyStoryCount > 0) {
       return {
-        title: 'Levar lote pronto para a Roda',
-        description: `${readyStoryCount} ${
-          readyStoryCount === 1 ? 'história já está pronta' : 'histórias já estão prontas'
-        } para estimativa colaborativa.`,
-        cta: 'Abrir Roda',
+        title: t('take_ready_stories_into_planning_poker'),
+        description: t('for_collaborative_estimation', { p1: readyStoryCount, p2: readyStoryCount === 1 ? t('story_is_already_ready') : t('stories_are_already_ready') }),
+        cta: t('open_planning_poker'),
         to: `/roda?projectId=${projectId}`,
         tone: 'ready',
       }
@@ -848,9 +881,9 @@ function ProjectDetailPage() {
 
     if (isProjectInsightOutdated) {
       return {
-        title: 'Atualizar diagnóstico antes de priorizar',
+        title: t('update_the_diagnosis_before_prioritizing'),
         description: currentProjectInsightFreshness.description,
-        cta: 'Atualizar IA',
+        cta: t('update_ai_analysis'),
         href: '#diagnostico-projeto',
         tone: 'warning',
       }
@@ -858,9 +891,9 @@ function ProjectDetailPage() {
 
     if (refiningStoryCount > 0) {
       return {
-        title: 'Concluir refinamento',
-        description: 'Revise histórias em refinamento, ajuste critérios e mova o que estiver pronto para estimar.',
-        cta: 'Ver refinamento',
+        title: t('finish_refinement'),
+        description: t('review_stories_in_refinement_adjust_the_criteria'),
+        cta: t('view_refinement'),
         href: '#historias-projeto',
         tone: 'attention',
       }
@@ -868,96 +901,96 @@ function ProjectDetailPage() {
 
     if (!projectInsights) {
       return {
-        title: 'Gerar leitura de IA',
-        description: 'Use o diagnóstico do projeto para encontrar riscos e próximas histórias para preparar.',
-        cta: 'Gerar diagnóstico',
+        title: t('run_ai_analysis'),
+        description: t('use_the_project_diagnosis_to_identify_risks'),
+        cta: t('generate_diagnosis'),
         href: '#diagnostico-projeto',
         tone: 'ai',
       }
     }
 
     return {
-      title: 'Organizar próximas histórias',
-      description: 'Use o quadro para preparar novas candidatas para estimativa ou revisar peças já estimadas.',
-      cta: 'Revisar quadro',
+      title: t('organize_upcoming_stories'),
+      description: t('use_the_board_to_prepare_new_candidates'),
+      cta: t('review_board'),
       href: '#historias-projeto',
       tone: 'neutral',
     }
   })()
   const operationalEstimateLabel =
     livePlanningStoryCount > 0
-      ? 'Roda em andamento'
+      ? t('session_in_progress')
       : readyStoryCount > 0
-        ? 'Pronto para Roda'
+        ? t('ready_for_planning_poker')
         : estimatedStoryCount > 0
-          ? 'Já possui estimativas'
-          : 'Sem lote pronto'
+          ? t('estimates_available')
+          : t('no_selection_ready')
   const operationalEstimateText =
     livePlanningStoryCount > 0
-      ? `${livePlanningStoryCount} ${livePlanningStoryCount === 1 ? 'história está' : 'histórias estão'} em Rodas ativas.`
+      ? t('in_active_sessions', { p1: livePlanningStoryCount, p2: livePlanningStoryCount === 1 ? t('story_is') : t('stories_are') })
       : readyStoryCount > 0
-        ? 'Abra a Roda da Fogueira com as histórias prontas ou selecione um lote no quadro.'
+        ? t('open_planning_poker_with_the_ready_stories')
         : estimatedStoryCount > 0
-          ? 'Consulte o histórico das Rodas para revisar decisões já seladas.'
-          : 'Mova histórias para prontas quando o refinamento estiver suficiente.'
+          ? t('browse_planning_poker_history_to_review_final')
+          : t('move_stories_to_ready_once_refinement_is')
   const operationalNextActionLabel =
     projectStoryCount === 0
-      ? 'Forjar primeira história'
+      ? t('forge_your_first_story')
       : readyStoryCount > 0
-        ? 'Abrir Roda'
+        ? t('open_planning_poker')
         : refiningStoryCount > 0
-          ? 'Concluir refinamento'
-          : 'Gerar diagnóstico'
+          ? t('finish_refinement')
+          : t('generate_diagnosis')
   const operationalNextActionText =
     projectStoryCount === 0
-      ? 'Use a Bancada com este projeto selecionado para criar a primeira peça.'
+      ? t('use_the_workbench_with_this_project_preselected')
       : readyStoryCount > 0
-        ? 'Leve o lote pronto para estimativa colaborativa.'
+        ? t('bring_the_ready_stories_into_a_collaborative')
         : refiningStoryCount > 0
-          ? 'Revise critérios, dúvidas e contexto antes de marcar histórias como prontas.'
-          : 'Use a IA para encontrar riscos e próximos passos do projeto.'
+          ? t('review_criteria_questions_and_context_before_marking')
+          : t('use_ai_to_identify_project_risks_and')
   const projectOperationalSnapshotCards = useMemo(
     () => [
       {
-        label: 'Cobertura',
+        label: t('coverage'),
         value: storiesLabel,
         description:
           projectStoryCount > 0
-            ? `${membersLabel} no projeto. ${projectStoryFilteredCount} no recorte atual.`
-            : 'Ainda não há histórias vinculadas a este projeto.',
+            ? t('in_the_project_in_this_view', { p1: membersLabel, p2: projectStoryFilteredCount })
+            : t('no_stories_are_linked_to_this_project'),
         tone: projectStoryCount > 0 ? 'ready' : 'idle',
         action:
           projectStoryCount > 0
-            ? { label: 'Ver histórias', href: '#historias-projeto' }
-            : { label: 'Forjar história', to: `/tool?projectId=${projectId}` },
+            ? { label: t('view_stories'), href: '#historias-projeto' }
+            : { label: t('forge_story'), to: `/tool?projectId=${projectId}` },
       },
       {
-        label: 'Preparação',
+        label: t('preparation'),
         value: projectReadinessLabel,
         description: projectReadinessText,
         tone: readyStoryCount > 0 ? 'ready' : projectStoryCount > 0 ? 'attention' : 'idle',
         action:
           readyStoryCount > 0
-            ? { label: 'Abrir Roda', to: `/roda?projectId=${projectId}` }
+            ? { label: t('open_planning_poker'), to: `/roda?projectId=${projectId}` }
             : projectStoryCount > 0
-              ? { label: 'Preparar histórias', href: '#historias-projeto' }
-              : { label: 'Criar primeira peça', to: `/tool?projectId=${projectId}` },
+              ? { label: t('prepare_stories'), href: '#historias-projeto' }
+              : { label: t('create_first_story'), to: `/tool?projectId=${projectId}` },
       },
       {
-        label: 'Estimativa',
+        label: t('estimation'),
         value: operationalEstimateLabel,
         description: operationalEstimateText,
         tone: livePlanningStoryCount > 0 ? 'live' : readyStoryCount > 0 ? 'ready' : 'idle',
         action:
           livePlanningStoryCount > 0 || readyStoryCount > 0
-            ? { label: 'Ir para Rodas', to: `/roda?projectId=${projectId}` }
+            ? { label: t('go_to_planning_poker'), to: `/roda?projectId=${projectId}` }
             : estimatedStoryCount > 0
-              ? { label: 'Ver histórico', to: `/roda?projectId=${projectId}` }
-              : { label: 'Organizar quadro', href: '#historias-projeto' },
+              ? { label: t('view_history'), to: `/roda?projectId=${projectId}` }
+              : { label: t('organize_board'), href: '#historias-projeto' },
       },
       {
-        label: 'Próxima ação',
-        value: isProjectInsightOutdated ? 'Atualizar diagnóstico' : operationalNextActionLabel,
+        label: t('next_action'),
+        value: isProjectInsightOutdated ? t('update_diagnosis') : operationalNextActionLabel,
         description: isProjectInsightOutdated
           ? currentProjectInsightFreshness.description
           : operationalNextActionText,
@@ -970,17 +1003,18 @@ function ProjectDetailPage() {
               : 'tech',
         action:
           isProjectInsightOutdated
-            ? { label: 'Atualizar IA', href: '#diagnostico-projeto' }
+            ? { label: t('update_ai_analysis'), href: '#diagnostico-projeto' }
             : projectStoryCount === 0
-            ? { label: 'Abrir Bancada', to: `/tool?projectId=${projectId}` }
+            ? { label: t('open_workbench'), to: `/tool?projectId=${projectId}` }
             : readyStoryCount > 0
-              ? { label: 'Criar Roda', to: `/roda?projectId=${projectId}` }
+              ? { label: t('create_session'), to: `/roda?projectId=${projectId}` }
               : refiningStoryCount > 0
-                ? { label: 'Ver quadro', href: '#historias-projeto' }
-                : { label: 'Gerar diagnóstico', href: '#diagnostico-projeto' },
+                ? { label: t('view_board'), href: '#historias-projeto' }
+                : { label: t('generate_diagnosis'), href: '#diagnostico-projeto' },
       },
     ],
     [
+      t,
       estimatedStoryCount,
       currentProjectInsightFreshness?.description,
       isProjectInsightOutdated,
@@ -1002,86 +1036,82 @@ function ProjectDetailPage() {
   )
   const projectCockpitCards = [
     {
-      label: 'Bancada',
-      title: projectStoryCount === 0 ? 'Forjar primeira história' : 'Forjar nova história',
+      label: t('workbench'),
+      title: projectStoryCount === 0 ? t('forge_your_first_story') : t('forge_a_new_story'),
       description:
         projectStoryCount === 0
-          ? 'Crie a primeira peça já vinculada a este projeto.'
-          : 'Adicione uma nova peça ao quadro mantendo o contexto do projeto.',
+          ? t('create_the_first_story_linked_to_this')
+          : t('add_a_new_story_to_the_board'),
       to: `/tool?projectId=${projectId}`,
-      cta: projectStoryCount === 0 ? 'Começar na Bancada' : 'Nova peça',
+      cta: projectStoryCount === 0 ? t('start_in_workbench') : t('new_story_2'),
       tone: 'forge',
     },
     {
-      label: 'Quadro',
-      title: 'Organizar fluxo',
+      label: t('board'),
+      title: t('organize_workflow'),
       description:
         readyStoryCount > 0
-          ? `${readyStoryCount} ${readyStoryCount === 1 ? 'história pronta' : 'histórias prontas'} para estimar.`
-          : 'Mova histórias entre colunas e prepare o lote para estimativa.',
+          ? t('to_estimate_2', { p1: readyStoryCount, p2: readyStoryCount === 1 ? t('story_ready') : t('stories_ready') })
+          : t('move_stories_between_columns_and_prepare_them'),
       href: '#historias-projeto',
-      cta: 'Abrir quadro',
+      cta: t('open_board'),
       tone: readyStoryCount > 0 ? 'ready' : 'neutral',
     },
     {
-      label: 'IA do projeto',
+      label: t('project_ai'),
       title: projectInsights
         ? isProjectInsightOutdated
-          ? 'Atualizar diagnóstico'
-          : 'Revisar diagnóstico'
-        : 'Gerar diagnóstico',
+          ? t('update_diagnosis')
+          : t('review_diagnosis')
+        : t('generate_diagnosis'),
       description: projectInsights
         ? isProjectInsightOutdated
           ? currentProjectInsightFreshness.description
-          : 'Use a leitura salva para orientar refinamento e decisões.'
+          : t('use_the_saved_analysis_to_guide_refinement')
         : projectStoryCount === 0
-          ? 'A IA libera a leitura depois que houver histórias vinculadas.'
-          : 'Mapeie riscos, dúvidas e próximas ações com IA.',
+          ? t('ai_analysis_becomes_available_once_stories_are')
+          : t('use_ai_to_identify_risks_questions_and'),
       href: '#diagnostico-projeto',
       cta: projectInsights
         ? isProjectInsightOutdated
-          ? 'Atualizar IA'
-          : 'Ver leitura'
-        : 'Gerar leitura',
+          ? t('update_ai_analysis')
+          : t('view_analysis')
+        : t('run_analysis'),
       tone: isProjectInsightOutdated ? 'warning' : projectInsights ? 'ai' : 'neutral',
     },
     {
-      label: 'Roda da Fogueira',
-      title: livePlanningStoryCount > 0 ? 'Continuar estimativas' : 'Abrir estimativa',
+      label: t('planning_poker'),
+      title: livePlanningStoryCount > 0 ? t('continue_estimating') : t('start_estimation'),
       description:
         livePlanningStoryCount > 0
-          ? `${livePlanningStoryCount} ${
-              livePlanningStoryCount === 1 ? 'história está' : 'histórias estão'
-            } em Rodas ativas.`
+          ? t('in_active_sessions', { p1: livePlanningStoryCount, p2: livePlanningStoryCount === 1 ? t('story_is') : t('stories_are') })
           : readyStoryCount > 0
-            ? 'Leve as histórias prontas para consenso com o time.'
-            : 'Prepare histórias no quadro antes de abrir a Roda.',
+            ? t('take_ready_stories_to_the_team_to')
+            : t('prepare_stories_on_the_board_before_starting'),
       to: `/roda?projectId=${projectId}`,
-      cta: livePlanningStoryCount > 0 ? 'Ver Rodas' : 'Abrir Roda',
+      cta: livePlanningStoryCount > 0 ? t('view_sessions') : t('open_planning_poker'),
       tone: readyStoryCount > 0 || livePlanningStoryCount > 0 ? 'ready' : 'neutral',
     },
     {
-      label: 'Histórico',
-      title: 'Consultar peças',
+      label: t('history'),
+      title: t('browse_stories'),
       description:
         projectStoryCount > 0
-          ? `${projectStoryCount} ${
-              projectStoryCount === 1 ? 'peça vinculada' : 'peças vinculadas'
-            } para revisar, copiar ou reabrir.`
-          : 'O histórico do projeto aparece depois que houver peças vinculadas.',
+          ? t('to_review_copy_or_reopen', { p1: projectStoryCount, p2: projectStoryCount === 1 ? t('linked_story') : t('linked_stories') })
+          : t('project_history_appears_once_you_ve_linked'),
       to: `/historico?projectId=${projectId}`,
-      cta: 'Ver histórico',
+      cta: t('view_history'),
       tone: projectStoryCount > 0 ? 'ready' : 'neutral',
     },
     {
-      label: 'Colaboração',
-      title: 'Times e membros',
+      label: t('collaboration'),
+      title: t('teams_and_members'),
       description:
         projectMembers.length > 0
-          ? `${membersLabel} com acesso ao projeto.`
-          : 'Adicione pessoas quando o projeto pedir colaboração.',
+          ? t('with_access_to_this_project', { p1: membersLabel })
+          : t('add_people_when_you_re_ready_to'),
       to: `/times?projectId=${projectId}`,
-      cta: 'Gerenciar times',
+      cta: t('manage_teams'),
       tone: projectMembers.length > 0 ? 'team' : 'neutral',
     },
   ]
@@ -1089,71 +1119,71 @@ function ProjectDetailPage() {
   const actionableInsightCandidateCount = actionableInsightCandidateStories.length
   const readyInsightCandidateCount = readyInsightCandidateStoryIds.length
   const connectedInsightCandidateLabel =
-    connectedInsightCandidateCount === 1 ? '1 conectada' : `${connectedInsightCandidateCount} conectadas`
-  const readyStoriesCommandLabel = readyStoryCount === 1 ? '1 pronta' : `${readyStoryCount} prontas`
+    connectedInsightCandidateCount === 1 ? t('1_linked') : t('linked', { p1: connectedInsightCandidateCount })
+  const readyStoriesCommandLabel = readyStoryCount === 1 ? t('1_ready') : t('ready_2', { p1: readyStoryCount })
   const estimatedStoriesCommandLabel =
-    estimatedStoryCount === 1 ? '1 estimada' : `${estimatedStoryCount} estimadas`
+    estimatedStoryCount === 1 ? t('1_estimated') : t('estimated_3', { p1: estimatedStoryCount })
   const actionableInsightCandidateLabel =
     actionableInsightCandidateCount === 1
-      ? '1 ainda pode ser preparada'
-      : `${actionableInsightCandidateCount} ainda podem ser preparadas`
+      ? t('1_can_still_be_prepared')
+      : t('can_still_be_prepared', { p1: actionableInsightCandidateCount })
   const readyInsightCandidateLabel =
-    readyInsightCandidateCount === 1 ? '1 já está pronta' : `${readyInsightCandidateCount} já estão prontas`
+    readyInsightCandidateCount === 1 ? t('1_is_already_ready') : t('are_already_ready', { p1: readyInsightCandidateCount })
   const projectAiCommandCards = [
     {
-      label: 'Base atual',
+      label: t('current_stories'),
       title: storiesLabel,
       description:
         projectStoryCount > 0
-          ? `${readyStoriesCommandLabel}, ${refiningStoryCount} em refinamento e ${estimatedStoriesCommandLabel}.`
-          : 'Forje ou vincule histórias para liberar diagnóstico e ações guiadas.',
+          ? t('in_refinement_and', { p1: readyStoriesCommandLabel, p2: refiningStoryCount, p3: estimatedStoriesCommandLabel })
+          : t('forge_or_link_stories_to_enable_project'),
       tone: projectStoryCount > 0 ? 'tech' : 'neutral',
       action: projectStoryCount > 0
-        ? { label: 'Ver quadro', href: '#historias-projeto' }
-        : { label: 'Abrir Bancada', to: `/tool?projectId=${projectId}` },
+        ? { label: t('view_board'), href: '#historias-projeto' }
+        : { label: t('open_workbench'), to: `/tool?projectId=${projectId}` },
     },
     {
-      label: 'Diagnóstico',
+      label: t('diagnosis'),
       title: projectInsights
         ? isProjectInsightOutdated
-          ? 'Precisa atualizar'
-          : currentProjectInsightFreshness?.label ?? 'Atualizado'
-        : 'Ainda não gerado',
+          ? t('update_needed')
+          : currentProjectInsightFreshness?.label ?? t('up_to_date')
+        : t('not_generated_yet'),
       description: projectInsights
         ? isProjectInsightOutdated
           ? currentProjectInsightFreshness.description
-          : 'Leitura disponível para orientar preparação, alinhamento e estimativa.'
-        : 'Gere uma leitura executiva com riscos, perguntas e próximos passos.',
+          : t('the_analysis_is_available_to_guide_preparation')
+        : t('run_an_executive_analysis_with_risks_questions'),
       tone: isProjectInsightOutdated ? 'warning' : projectInsights ? 'ai' : 'neutral',
       action: {
         label: isGeneratingProjectInsights
-          ? 'Analisando...'
+          ? t('analyzing')
           : projectInsights
-            ? 'Atualizar IA'
-            : 'Gerar diagnóstico',
+            ? t('update_ai_analysis')
+            : t('generate_diagnosis'),
         onClick: handleGenerateProjectInsights,
         disabled: !canGenerateProjectInsights,
       },
     },
     {
-      label: 'Candidatas',
-      title: connectedInsightCandidateCount > 0 ? connectedInsightCandidateLabel : 'Sem foco ativo',
+      label: t('candidates'),
+      title: connectedInsightCandidateCount > 0 ? connectedInsightCandidateLabel : t('no_focus_applied'),
       description:
         connectedInsightCandidateCount > 0
-          ? `${actionableInsightCandidateLabel} e ${readyInsightCandidateLabel}.`
+          ? t('and', { p1: actionableInsightCandidateLabel, p2: readyInsightCandidateLabel })
           : projectInsights
-            ? 'A IA não conectou candidatas automaticamente a histórias do projeto.'
-            : 'As candidatas aparecem depois do diagnóstico com IA.',
+            ? t('ai_couldn_t_match_candidates_to_project')
+            : t('candidates_appear_after_you_run_an_ai'),
       tone: connectedInsightCandidateCount > 0 ? 'ready' : 'neutral',
       action: connectedInsightCandidateCount > 0
         ? {
-            label: shouldFocusInsightCandidates ? 'Limpar foco' : 'Focar quadro',
+            label: shouldFocusInsightCandidates ? t('clear_focus') : t('focus_board'),
             onClick: handleToggleInsightCandidateFilter,
           }
-        : { label: 'Ver histórias', href: '#historias-projeto' },
+        : { label: t('view_stories'), href: '#historias-projeto' },
     },
     {
-      label: 'Encaminhamento',
+      label: t('next_action_2'),
       title: storyOperationalGuidance.title,
       description: storyOperationalGuidance.description,
       tone: storyOperationalGuidance.tone,
@@ -1229,10 +1259,9 @@ function ProjectDetailPage() {
 
     setKanbanColumns([])
     setIsKanbanUnavailable(true)
-    setKanbanMessage(
-      response.error?.message ??
-        'O quadro Kanban ficará disponível após aplicar o SQL desta etapa.',
-    )
+    setKanbanMessage(response.error?.code === 'PGRST202'
+      ? 'the_kanban_board_will_be_available_after'
+      : 'kanban_load_failed')
   }, [projectId, userId])
 
   const loadProjectPlanningSummaries = useCallback(async () => {
@@ -1244,7 +1273,7 @@ function ProjectDetailPage() {
     if (!sessionsResponse.success) {
       setPlanningSessions([])
       setPlanningSessionStoriesBySession({})
-      setPlanningSummaryMessage('Não foi possível carregar o resumo das Rodas deste projeto.')
+      setPlanningSummaryMessage('could_not_load_the_project_s_planning')
       return
     }
 
@@ -1263,7 +1292,7 @@ function ProjectDetailPage() {
 
     if (!storiesResponse.success) {
       setPlanningSessionStoriesBySession({})
-      setPlanningSummaryMessage('Resumo das Rodas indisponível no momento.')
+      setPlanningSummaryMessage('the_planning_poker_summary_is_unavailable_right')
       return
     }
 
@@ -1407,24 +1436,24 @@ function ProjectDetailPage() {
     if (typeof setTopbarStatus !== 'function') return
 
     setTopbarStatus({
-      label: 'Projeto',
-      title: project?.name ?? 'Projeto',
+      label: t('project'),
+      title: project?.name ?? t('project'),
       pills: [
         { text: storiesLabel },
         { text: membersLabel },
-        { text: livePlanningStoryCount > 0 ? `${livePlanningStoryCount} em Roda ativa` : 'Times e Roda no menu' },
+        { text: livePlanningStoryCount > 0 ? t('in_an_active_session', { p1: livePlanningStoryCount }) : t('teams_and_planning_poker_in_the_menu') },
       ],
     })
 
     return () => setTopbarStatus(null)
-  }, [livePlanningStoryCount, membersLabel, project?.name, setTopbarStatus, storiesLabel])
+  }, [t, livePlanningStoryCount, membersLabel, project?.name, setTopbarStatus, storiesLabel])
 
   async function handleUpdateProject(event) {
     event.preventDefault()
     setProjectMessage('')
 
     if (!canManageProjectMembers) {
-      setProjectMessage('Apenas responsáveis e administradores podem editar o projeto.')
+      setProjectMessage('only_owners_and_administrators_can_edit_the')
       return
     }
 
@@ -1438,13 +1467,13 @@ function ProjectDetailPage() {
     setIsSavingProject(false)
 
     if (!response.success) {
-      setProjectMessage(response.error?.message ?? 'Não foi possível salvar o projeto agora.')
+      setProjectMessage(projectErrorKeys.get(response.error?.message) ?? 'could_not_save_the_project_right_now')
       return
     }
 
     setProject(response.data)
     setIsEditingProject(false)
-    setProjectMessage('Projeto atualizado.')
+    setProjectMessage('project_updated')
   }
 
   function handleCancelProjectEdit() {
@@ -1460,7 +1489,7 @@ function ProjectDetailPage() {
     setStoryStatusMessage('')
 
     if (isStoryInLivePlanningSession(story, planningStorySessionById)) {
-      setStoryStatusMessage('Esta história está em uma Roda ativa. Finalize ou continue a sessão antes de alterar o status.')
+      setStoryStatusMessage('this_story_is_in_an_active_session')
       return
     }
 
@@ -1486,7 +1515,7 @@ function ProjectDetailPage() {
     setUpdatingStoryStatusId(null)
 
     if (!response.success) {
-      setStoryStatusMessage(response.error?.message ?? 'Não foi possível atualizar o status da história.')
+      setStoryStatusMessage(projectErrorKeys.get(response.error?.message) ?? 'could_not_update_the_story_status')
       return
     }
 
@@ -1498,7 +1527,7 @@ function ProjectDetailPage() {
     if (nextStatus !== 'ready_for_estimation') {
       setSelectedProjectStoryIds((current) => current.filter((storyId) => storyId !== story.id))
     }
-    setStoryStatusMessage('Status de estimativa atualizado.')
+    setStoryStatusMessage('estimation_status_updated')
     await Promise.all([
       loadProjectStories(),
       loadProjectStoryStatusCounts(),
@@ -1552,8 +1581,8 @@ function ProjectDetailPage() {
 
     setProjectInsightsMessage(
       failureCount > 0
-        ? `${preparedStoryIds.length} candidatas preparadas. ${failureCount} não puderam ser atualizadas agora.`
-        : `${preparedStoryIds.length} candidatas preparadas para estimativa e selecionadas para a Roda.`,
+        ? { key: 'candidates_prepared_could_not_update_right_now', values: { p1: preparedStoryIds.length, p2: failureCount } }
+        : { key: 'candidates_prepared_for_estimation_and_selected_for', values: { p1: preparedStoryIds.length } },
     )
 
     await Promise.all([
@@ -1588,7 +1617,7 @@ function ProjectDetailPage() {
     event.preventDefault()
 
     if (!canEditKanbanColumns) {
-      setKanbanMessage('Apenas responsáveis e administradores podem criar colunas.')
+      setKanbanMessage('only_owners_and_administrators_can_create_columns')
       return
     }
 
@@ -1603,13 +1632,13 @@ function ProjectDetailPage() {
     setIsCreatingKanbanColumn(false)
 
     if (!response.success) {
-      setKanbanMessage(response.error?.message ?? 'Não foi possível criar a coluna agora.')
+      setKanbanMessage(projectErrorKeys.get(response.error?.message) ?? 'could_not_create_the_column_right_now')
       return
     }
 
     setNewKanbanColumnName('')
     setNewKanbanColumnStatusBase('created')
-    setKanbanMessage('Coluna criada.')
+    setKanbanMessage('column_created')
     await loadProjectKanban()
   }
 
@@ -1617,7 +1646,7 @@ function ProjectDetailPage() {
     event.preventDefault()
 
     if (!canEditKanbanColumns) {
-      setKanbanMessage('Apenas responsáveis e administradores podem editar colunas.')
+      setKanbanMessage('only_owners_and_administrators_can_edit_columns')
       return
     }
 
@@ -1632,12 +1661,12 @@ function ProjectDetailPage() {
     setSavingKanbanColumnId(null)
 
     if (!response.success) {
-      setKanbanMessage(response.error?.message ?? 'Não foi possível salvar a coluna agora.')
+      setKanbanMessage(projectErrorKeys.get(response.error?.message) ?? 'could_not_save_the_column_right_now')
       return
     }
 
     handleCancelEditKanbanColumn()
-    setKanbanMessage('Coluna atualizada.')
+    setKanbanMessage('column_updated')
     await Promise.all([
       loadProjectKanban(),
       loadProjectStories(),
@@ -1648,7 +1677,7 @@ function ProjectDetailPage() {
 
   async function handleReorderKanbanColumn(column, direction) {
     if (!canEditKanbanColumns) {
-      setKanbanMessage('Apenas responsáveis e administradores podem reordenar colunas.')
+      setKanbanMessage('only_owners_and_administrators_can_reorder_columns')
       return
     }
 
@@ -1662,11 +1691,11 @@ function ProjectDetailPage() {
     setReorderingKanbanColumnId(null)
 
     if (!response.success) {
-      setKanbanMessage(response.error?.message ?? 'Não foi possível reordenar a coluna agora.')
+      setKanbanMessage(projectErrorKeys.get(response.error?.message) ?? 'could_not_reorder_the_column_right_now')
       return
     }
 
-    setKanbanMessage('Coluna reordenada.')
+    setKanbanMessage('column_reordered')
     await loadProjectKanban()
   }
 
@@ -1674,12 +1703,12 @@ function ProjectDetailPage() {
     if (!story || !columnId || story.kanban_column_id === columnId) return
 
     if (!canMoveKanbanCards) {
-      setKanbanMessage('Visualizadores podem consultar o quadro, mas não mover histórias.')
+      setKanbanMessage('viewers_can_browse_the_board_moving_stories')
       return
     }
 
     if (isStoryInLivePlanningSession(story, planningStorySessionById)) {
-      setKanbanMessage('Esta história está em uma Roda ativa. Finalize ou continue a sessão antes de mover o card.')
+      setKanbanMessage('this_story_is_in_an_active_session_2')
       return
     }
 
@@ -1697,14 +1726,14 @@ function ProjectDetailPage() {
     setDragOverKanbanColumnId(null)
 
     if (!response.success) {
-      setKanbanMessage(response.error?.message ?? 'Não foi possível mover a história agora.')
+      setKanbanMessage(projectErrorKeys.get(response.error?.message) ?? 'could_not_move_the_story_right_now')
       return
     }
 
     if (response.data?.estimation_status !== 'ready_for_estimation') {
       setSelectedProjectStoryIds((current) => current.filter((storyId) => storyId !== story.id))
     }
-    setKanbanMessage('História movida e status atualizado.')
+    setKanbanMessage('story_moved_and_status_updated')
     await Promise.all([
       loadProjectKanban(),
       loadProjectStories(),
@@ -1747,7 +1776,7 @@ function ProjectDetailPage() {
       !selectedProjectStoryIds.includes(storyId) &&
       planningStorySessionById[storyId]?.isLive
     ) {
-      setStoryStatusMessage('Esta história já está em uma Roda ativa. Continue a sessão existente ou escolha uma história livre.')
+      setStoryStatusMessage('this_story_is_already_in_an_active')
       return
     }
 
@@ -1764,8 +1793,8 @@ function ProjectDetailPage() {
     setSelectedProjectStoryIds(availableStoryIds)
     setStoryStatusMessage(
       availableStoryIds.length === 0
-        ? 'Nenhuma história livre visível para selecionar.'
-        : 'Histórias livres visíveis selecionadas para a Roda.',
+        ? 'no_available_visible_stories_to_select'
+        : 'available_visible_stories_selected_for_planning_poker',
     )
   }
 
@@ -1793,7 +1822,7 @@ function ProjectDetailPage() {
 
     setStoryStatusMessage('')
     if (readyStoryIds.length === 0) {
-      setStoryStatusMessage('Esta coluna não possui histórias prontas livres para selecionar.')
+      setStoryStatusMessage('this_column_has_no_ready_stories_available')
       return
     }
     setSelectedProjectStoryIds((current) => Array.from(new Set([...current, ...readyStoryIds])))
@@ -1815,14 +1844,14 @@ function ProjectDetailPage() {
 
     if (!storiesResponse.success) {
       setIsGeneratingProjectInsights(false)
-      setProjectInsightsMessage('Não foi possível carregar as histórias do projeto para análise.')
+      setProjectInsightsMessage('could_not_load_the_project_s_stories')
       return
     }
 
     const storiesForAnalysis = storiesResponse.data ?? []
     if (storiesForAnalysis.length === 0) {
       setIsGeneratingProjectInsights(false)
-      setProjectInsightsMessage('Forje ou vincule ao menos uma história antes de gerar o diagnóstico.')
+      setProjectInsightsMessage('forge_or_link_at_least_one_story')
       return
     }
 
@@ -1851,18 +1880,18 @@ function ProjectDetailPage() {
         ].slice(0, 3))
         setActiveProjectInsightId(saveResponse.data.id)
         setIsProjectInsightHistoryUnavailable(false)
-        setProjectInsightsMessage('Diagnóstico gerado e salvo no histórico do projeto.')
+        setProjectInsightsMessage('diagnosis_generated_and_saved_to_project_history')
       } else if (saveResponse.unavailable) {
         setActiveProjectInsightId(null)
         setIsProjectInsightHistoryUnavailable(true)
-        setProjectInsightsMessage('Diagnóstico gerado. O histórico será ativado após aplicar o SQL desta etapa.')
+        setProjectInsightsMessage('diagnosis_generated_history_will_be_enabled_after')
       } else {
         setActiveProjectInsightId(null)
-        setProjectInsightsMessage('Diagnóstico gerado. Não foi possível salvar no histórico agora.')
+        setProjectInsightsMessage('diagnosis_generated_it_couldn_t_be_saved')
       }
     } catch (error) {
       setProjectInsightsMessage(
-        error?.message ?? 'Não foi possível gerar o diagnóstico do projeto agora.',
+        projectAnalysisErrorKeys[error?.code] ?? 'could_not_generate_the_project_diagnosis_right',
       )
     } finally {
       setIsGeneratingProjectInsights(false)
@@ -1875,14 +1904,14 @@ function ProjectDetailPage() {
     setProjectInsights(item.analysis)
     setActiveProjectInsightId(item.id)
     setProjectInsightsCopyFeedback('')
-    setProjectInsightsMessage('Diagnóstico reaberto do histórico do projeto.')
+    setProjectInsightsMessage('diagnosis_reopened_from_project_history')
   }
 
   async function handleDeleteProjectInsightHistoryItem(item) {
     if (!item?.id) return
 
     const confirmed = window.confirm(
-      `Excluir o diagnóstico de ${formatProjectDateTime(item.created_at)}?`,
+      t('delete_the_diagnosis_from', { p1: formatProjectDateTime(item.created_at, language) }),
     )
     if (!confirmed) return
 
@@ -1896,7 +1925,7 @@ function ProjectDetailPage() {
     setDeletingProjectInsightId(null)
 
     if (!response.success) {
-      setProjectInsightsMessage(response.error?.message ?? 'Não foi possível excluir o diagnóstico agora.')
+      setProjectInsightsMessage('could_not_delete_the_diagnosis_right_now')
       return
     }
 
@@ -1907,7 +1936,7 @@ function ProjectDetailPage() {
       setProjectInsights(nextCurrent?.analysis ?? null)
       setActiveProjectInsightId(nextCurrent?.id ?? null)
     }
-    setProjectInsightsMessage('Diagnóstico excluído do histórico.')
+    setProjectInsightsMessage('diagnosis_deleted_from_history')
   }
 
   async function handleCopyProjectInsights() {
@@ -1923,12 +1952,12 @@ function ProjectDetailPage() {
           freshness: currentProjectInsightFreshness,
           storyCount: projectStoryCount,
           memberCount: projectMembers.length,
-        }),
+        }, tInsights),
       )
-      setProjectInsightsCopyFeedback('Diagnóstico copiado em Markdown.')
+      setProjectInsightsCopyFeedback('diagnosis_copied_as_markdown')
       window.setTimeout(() => setProjectInsightsCopyFeedback(''), 2600)
     } catch {
-      setProjectInsightsCopyFeedback('Não foi possível copiar o diagnóstico agora.')
+      setProjectInsightsCopyFeedback('could_not_copy_the_diagnosis_right_now')
     }
   }
 
@@ -1945,12 +1974,12 @@ function ProjectDetailPage() {
           candidateStories: projectInsightCandidateCards,
           freshness: currentProjectInsightFreshness,
           storyCount: projectStoryCount,
-        }),
+        }, tInsights),
       )
-      setProjectInsightsCopyFeedback('Plano de ação copiado em Markdown.')
+      setProjectInsightsCopyFeedback('action_plan_copied_as_markdown')
       window.setTimeout(() => setProjectInsightsCopyFeedback(''), 2600)
     } catch {
-      setProjectInsightsCopyFeedback('Não foi possível copiar o plano de ação agora.')
+      setProjectInsightsCopyFeedback('could_not_copy_the_action_plan_right')
     }
   }
 
@@ -1959,7 +1988,7 @@ function ProjectDetailPage() {
     setMemberMessage('')
 
     if (!canManageProjectMembers) {
-      setMemberMessage('Apenas responsáveis e administradores podem adicionar membros ao projeto.')
+      setMemberMessage('only_owners_and_administrators_can_add_project')
       return
     }
 
@@ -1973,13 +2002,13 @@ function ProjectDetailPage() {
     setIsAddingProjectMember(false)
 
     if (!response.success) {
-      setMemberMessage(response.error?.message ?? 'Não foi possível adicionar este membro.')
+      setMemberMessage(projectErrorKeys.get(response.error?.message) ?? 'could_not_add_this_member')
       return
     }
 
     setMemberEmail('')
     setMemberRole('member')
-    setMemberMessage('Membro adicionado ao projeto.')
+    setMemberMessage('member_added_to_the_project')
     await loadProject()
   }
 
@@ -1988,17 +2017,17 @@ function ProjectDetailPage() {
     setMemberMessage('')
 
     if (!canManageProjectMembers) {
-      setMemberMessage('Apenas responsáveis e administradores podem alterar papéis do projeto.')
+      setMemberMessage('only_owners_and_administrators_can_change_project')
       return
     }
 
     if (member.role === 'owner') {
-      setMemberMessage('O owner do projeto não pode ter o papel alterado por aqui.')
+      setMemberMessage('the_project_owner_s_role_can_t')
       return
     }
 
     if (member.user_id === userId) {
-      setMemberMessage('Você não pode alterar seu próprio papel por aqui.')
+      setMemberMessage('you_can_t_change_your_own_role')
       return
     }
 
@@ -2012,14 +2041,14 @@ function ProjectDetailPage() {
     setUpdatingProjectMemberId(null)
 
     if (!response.success) {
-      setMemberMessage(response.error?.message ?? 'Não foi possível alterar este membro.')
+      setMemberMessage(projectErrorKeys.get(response.error?.message) ?? 'could_not_update_this_member')
       return
     }
 
     setProjectMembers((current) =>
       current.map((item) => (item.user_id === member.user_id ? { ...item, role: nextRole } : item)),
     )
-    setMemberMessage('Papel do membro atualizado.')
+    setMemberMessage('member_role_updated')
   }
 
   async function handleRemoveProjectMember(member) {
@@ -2027,21 +2056,21 @@ function ProjectDetailPage() {
     setMemberMessage('')
 
     if (!canManageProjectMembers) {
-      setMemberMessage('Apenas responsáveis e administradores podem remover membros do projeto.')
+      setMemberMessage('only_owners_and_administrators_can_remove_project')
       return
     }
 
     if (member.role === 'owner') {
-      setMemberMessage('O owner do projeto não pode ser removido por aqui.')
+      setMemberMessage('the_project_owner_can_t_be_removed')
       return
     }
 
     if (member.user_id === userId) {
-      setMemberMessage('Você não pode remover seu próprio acesso por aqui.')
+      setMemberMessage('you_can_t_remove_your_own_access')
       return
     }
 
-    const confirmed = window.confirm(`Remover ${member.email} deste projeto?`)
+    const confirmed = window.confirm(t('remove_from_this_project', { p1: member.email }))
     if (!confirmed) return
 
     setRemovingProjectMemberId(member.user_id)
@@ -2053,35 +2082,34 @@ function ProjectDetailPage() {
     setRemovingProjectMemberId(null)
 
     if (!response.success) {
-      setMemberMessage(response.error?.message ?? 'Não foi possível remover este membro.')
+      setMemberMessage(projectErrorKeys.get(response.error?.message) ?? 'could_not_remove_this_member')
       return
     }
 
     setProjectMembers((current) => current.filter((item) => item.user_id !== member.user_id))
-    setMemberMessage('Membro removido do projeto.')
+    setMemberMessage('member_removed_from_the_project')
   }
 
   if (notFound) {
-    return <Navigate to="/projetos" replace />
+    return <Navigate to={preview ? localizeHref('/projetos', language) : '/projetos'} replace />
   }
 
   return (
     <div className="projects-page project-detail-page">
       <section className="panel projects-page__hero">
         <div>
-          <p className="projects-page__eyebrow">Projeto</p>
-          <h1>{project?.name ?? 'Carregando projeto...'}</h1>
+          <p className="projects-page__eyebrow">{t('project')}</p>
+          <h1>{project?.name ?? t('loading_project')}</h1>
           <p>
-            Contexto de organização para histórias, membros e futuras funções de IA. Times e Roda da Fogueira ficam em
-            áreas próprias para manter esta página mais limpa.
+            {t('organize_your_stories_members_and_project_ai')}
           </p>
         </div>
         <div className="project-detail-page__actions">
           <Link className="btn btn-secondary btn-small" to="/projetos">
-            Voltar
+            {t('back')}
           </Link>
           <Link className="btn btn-secondary btn-small" to={`/historico?projectId=${projectId}`}>
-            Histórico
+            {t('history')}
           </Link>
           {canManageProjectMembers ? (
             <button
@@ -2090,27 +2118,27 @@ function ProjectDetailPage() {
               onClick={() => setIsEditingProject((current) => !current)}
               disabled={isSavingProject}
             >
-              {isEditingProject ? 'Fechar edição' : 'Editar'}
+              {isEditingProject ? t('close_editor') : t('edit_project')}
             </button>
           ) : null}
           <Link className="btn btn-primary btn-small" to={`/tool?projectId=${projectId}`}>
-            Bancada
+            {t('workbench')}
           </Link>
         </div>
       </section>
 
-      <section className="project-detail-page__access" aria-label="Seu acesso no projeto">
+      <section className="project-detail-page__access" aria-label={t('your_access_to_the_project')}>
         <div className="project-detail-page__access-main">
-          <span>Seu acesso</span>
-          <strong>{currentAccessDetails.title}</strong>
-          <p>{currentAccessDetails.description}</p>
-          <small>{currentAccessDetails.nextAction}</small>
+          <span>{t('your_access')}</span>
+          <strong>{t(currentAccessDetails.title)}</strong>
+          <p>{t(currentAccessDetails.description)}</p>
+          <small>{t(currentAccessDetails.nextAction)}</small>
         </div>
-        <div className="project-detail-page__access-role" aria-label={`Papel atual: ${currentProjectRoleLabel}`}>
-          <span>Papel atual</span>
+        <div className="project-detail-page__access-role" aria-label={t('current_role', { p1: currentProjectRoleLabel })}>
+          <span>{t('current_role_2')}</span>
           <strong>{currentProjectRoleLabel}</strong>
         </div>
-        <ul className="project-detail-page__access-list" aria-label="Permissões disponíveis">
+        <ul className="project-detail-page__access-list" aria-label={t('available_permissions')}>
           {projectAccessCapabilities.map((capability) => (
             <li key={capability.label} className={capability.enabled ? 'is-enabled' : 'is-disabled'}>
               <strong>{capability.label}</strong>
@@ -2121,27 +2149,27 @@ function ProjectDetailPage() {
         <div className="project-detail-page__access-actions">
           {canMoveKanbanCards ? (
             <a className="btn btn-secondary btn-small" href="#historias-projeto">
-              Organizar Kanban
+              {t('organize_kanban_board')}
             </a>
           ) : null}
           {canManageProjectMembers ? (
             <a className="btn btn-secondary btn-small" href="#membros-projeto">
-              Gerenciar membros
+              {t('manage_members')}
             </a>
           ) : (
             <Link className="btn btn-secondary btn-small" to={`/historico?projectId=${projectId}`}>
-              Consultar histórico
+              {t('browse_history')}
             </Link>
           )}
         </div>
       </section>
 
-      <section className="project-detail-page__metrics" aria-label="Métricas operacionais do projeto">
+      <section className="project-detail-page__metrics" aria-label={t('project_operational_metrics')}>
         <div className="project-detail-page__metrics-header">
           <div>
-            <p className="projects-page__eyebrow">Métricas do projeto</p>
-            <h2>Pulso operacional</h2>
-            <p>Indicadores rápidos para decidir se o próximo passo é organizar, refinar ou estimar.</p>
+            <p className="projects-page__eyebrow">{t('project_metrics')}</p>
+            <h2>{t('project_at_a_glance')}</h2>
+            <p>{t('quick_indicators_to_help_you_decide_whether')}</p>
           </div>
         </div>
         <div className="project-detail-page__metrics-grid">
@@ -2157,7 +2185,9 @@ function ProjectDetailPage() {
               </div>
               <div
                 className="project-detail-page__metric-progress"
-                aria-label={`${metric.label}: ${metric.progress}%`}
+                role="progressbar"
+                aria-label={metric.label}
+                aria-valuenow={metric.progress}
               >
                 <span style={{ width: `${metric.progress}%` }} />
               </div>
@@ -2175,20 +2205,20 @@ function ProjectDetailPage() {
         </div>
       </section>
 
-      <section className="panel project-detail-page__guided-flow" aria-label="Trilha guiada do projeto">
+      <section className="panel project-detail-page__guided-flow" aria-label={t('guided_project_workflow')}>
         <div className="project-detail-page__guided-flow-header">
           <div className="project-detail-page__guided-flow-copy">
-            <p className="projects-page__eyebrow">Trilha guiada</p>
-            <h2>Do briefing à estimativa</h2>
+            <p className="projects-page__eyebrow">{t('guided_workflow')}</p>
+            <h2>{t('from_brief_to_estimate')}</h2>
             <p>
-              Siga uma sequência simples para sair da primeira história até uma decisão de estimativa rastreável.
+              {t('follow_the_steps_from_your_first_story')}
             </p>
           </div>
           {projectGuidedNextStep ? (
             <article
               className={`project-detail-page__guided-next project-detail-page__guided-next--${projectGuidedNextStep.status}`}
             >
-              <span>Próximo passo</span>
+              <span>{t('next_step')}</span>
               <strong>{projectGuidedNextStep.title}</strong>
               <p>{projectGuidedNextStep.description}</p>
               {projectGuidedNextStep.action?.to ? (
@@ -2212,15 +2242,15 @@ function ProjectDetailPage() {
                 <strong>{step.title}</strong>
                 <p>{step.description}</p>
               </div>
-              <small>{PROJECT_GUIDED_STATUS_LABELS[step.status]}</small>
+              <small>{t(PROJECT_GUIDED_STATUS_LABELS[step.status])}</small>
             </li>
           ))}
         </ol>
       </section>
 
-      <section className="project-detail-page__executive-strip" aria-label="Visão executiva do projeto">
+      <section className="project-detail-page__executive-strip" aria-label={t('project_executive_overview')}>
         <article className={isProjectInsightOutdated ? 'project-detail-page__executive-card--attention' : ''}>
-          <span>Diagnóstico</span>
+          <span>{t('diagnosis')}</span>
           <strong>{projectInsightExecutiveLabel}</strong>
           <p>{projectInsightExecutiveText}</p>
           {currentProjectInsightFreshness ? (
@@ -2236,40 +2266,40 @@ function ProjectDetailPage() {
         </article>
 
         <article>
-          <span>Prontidão</span>
+          <span>{t('readiness')}</span>
           <strong>{projectReadinessLabel}</strong>
           <p>{projectReadinessText}</p>
           {readyStoryCount > 0 ? (
             <Link className="btn btn-primary btn-small" to={`/roda?projectId=${projectId}`}>
-              Abrir Roda
+              {t('open_planning_poker')}
             </Link>
           ) : projectStoryCount === 0 ? (
             <Link className="btn btn-primary btn-small" to={`/tool?projectId=${projectId}`}>
-              Forjar história
+              {t('forge_story')}
             </Link>
           ) : (
             <a className="btn btn-secondary btn-small" href="#historias-projeto">
-              Preparar histórias
+              {t('prepare_stories')}
             </a>
           )}
         </article>
 
         <article>
-          <span>Próxima ação</span>
-          <strong>Encaminhamento</strong>
+          <span>{t('next_action')}</span>
+          <strong>{t('next_action_2')}</strong>
           <p>{latestProjectNextAction}</p>
           <Link className="btn btn-secondary btn-small" to={`/historico?projectId=${projectId}`}>
-            Ver peças
+            {t('view_stories_2')}
           </Link>
         </article>
       </section>
 
-      <section className="panel project-detail-page__cockpit" aria-label="Cockpit operacional do projeto">
+      <section className="panel project-detail-page__cockpit" aria-label={t('project_actions')}>
         <div className="projects-page__section-header">
           <div>
-            <p className="projects-page__eyebrow">Cockpit operacional</p>
-            <h2>Próximos movimentos</h2>
-            <p>Use estes atalhos para criar, organizar, diagnosticar e estimar sem perder o contexto do projeto.</p>
+            <p className="projects-page__eyebrow">{t('project_actions_2')}</p>
+            <h2>{t('what_to_do_next')}</h2>
+            <p>{t('create_organize_analyze_and_estimate_stories_without')}</p>
           </div>
         </div>
 
@@ -2298,34 +2328,34 @@ function ProjectDetailPage() {
         </div>
       </section>
 
-      <section className="panel project-detail-page__settings" aria-label="Dados do projeto">
+      <section className="panel project-detail-page__settings" aria-label={t('project_details')}>
         <div className="projects-page__section-header">
           <div>
-            <p className="projects-page__eyebrow">Dados do projeto</p>
-            <h2>Contexto de organização</h2>
-            <p>{project?.description || 'Sem descrição cadastrada.'}</p>
+            <p className="projects-page__eyebrow">{t('project_details')}</p>
+            <h2>{t('organization_context')}</h2>
+            <p>{project?.description || t('no_description_provided')}</p>
           </div>
         </div>
 
         {isEditingProject ? (
           <form className="project-detail-page__edit-form" onSubmit={handleUpdateProject}>
             <label className="projects-page__field">
-              <span>Nome do projeto</span>
+              <span>{t('project_name')}</span>
               <input
                 type="text"
                 value={projectNameDraft}
                 onChange={(event) => setProjectNameDraft(event.target.value)}
-                placeholder="Ex.: Onboarding de clientes"
+                placeholder={t('e_g_customer_onboarding')}
                 disabled={isSavingProject}
               />
             </label>
 
             <label className="projects-page__field">
-              <span>Descrição opcional</span>
+              <span>{t('optional_description')}</span>
               <textarea
                 value={projectDescriptionDraft}
                 onChange={(event) => setProjectDescriptionDraft(event.target.value)}
-                placeholder="Explique a jornada, squad ou objetivo do projeto."
+                placeholder={t('describe_the_project_s_journey_squad_or')}
                 rows={4}
                 disabled={isSavingProject}
               />
@@ -2333,7 +2363,7 @@ function ProjectDetailPage() {
 
             <div className="project-detail-page__edit-actions">
               <button type="submit" className="btn btn-primary btn-small" disabled={isSavingProject}>
-                {isSavingProject ? 'Salvando...' : 'Salvar projeto'}
+                {isSavingProject ? t('saving') : t('save_project')}
               </button>
               <button
                 type="button"
@@ -2341,27 +2371,26 @@ function ProjectDetailPage() {
                 onClick={handleCancelProjectEdit}
                 disabled={isSavingProject}
               >
-                Cancelar
+                {t('cancel')}
               </button>
             </div>
           </form>
         ) : null}
 
-        {projectMessage ? <p className="projects-page__message">{projectMessage}</p> : null}
+        {projectMessage ? <p className="projects-page__message" role="status">{formatNotice(t, projectMessage)}</p> : null}
       </section>
 
       <section
         id="diagnostico-projeto"
         className="panel project-detail-page__ai"
-        aria-label="Diagnóstico com IA do projeto"
+        aria-label={t('project_ai_diagnosis')}
       >
         <div className="projects-page__section-header">
           <div>
-            <p className="projects-page__eyebrow">IA do projeto</p>
-            <h2>Diagnóstico do projeto</h2>
+            <p className="projects-page__eyebrow">{t('project_ai')}</p>
+            <h2>{t('project_diagnosis')}</h2>
             <p>
-              Gere uma leitura executiva das histórias vinculadas para encontrar riscos, perguntas de refinamento
-              e próximos passos antes da estimativa.
+              {t('run_an_executive_analysis_of_linked_stories')}
             </p>
           </div>
           <div className="project-detail-page__ai-actions">
@@ -2371,9 +2400,9 @@ function ProjectDetailPage() {
                 className="btn btn-secondary btn-small"
                 onClick={handleCopyProjectInsights}
               >
-                {projectInsightsCopyFeedback === 'Diagnóstico copiado em Markdown.'
-                  ? 'Diagnóstico copiado'
-                  : 'Copiar diagnóstico'}
+                {projectInsightsCopyFeedback === 'diagnosis_copied_as_markdown'
+                  ? t('diagnosis_copied')
+                  : t('copy_diagnosis')}
               </button>
             ) : null}
             {projectInsights ? (
@@ -2382,14 +2411,14 @@ function ProjectDetailPage() {
                 className="btn btn-secondary btn-small"
                 onClick={handleCopyProjectActionPlan}
               >
-                {projectInsightsCopyFeedback === 'Plano de ação copiado em Markdown.'
-                  ? 'Plano copiado'
-                  : 'Copiar plano de ação'}
+                {projectInsightsCopyFeedback === 'action_plan_copied_as_markdown'
+                  ? t('action_plan_copied')
+                  : t('copy_action_plan')}
               </button>
             ) : null}
             {projectInsights ? (
               <Link className="btn btn-secondary btn-small" to={`/roda?projectId=${projectId}`}>
-                Levar para Roda
+                {t('take_to_planning_poker')}
               </Link>
             ) : null}
             <button
@@ -2399,33 +2428,32 @@ function ProjectDetailPage() {
               disabled={!canGenerateProjectInsights}
             >
               {isGeneratingProjectInsights
-                ? 'Analisando...'
+                ? t('analyzing')
                 : projectInsights
-                  ? 'Atualizar diagnóstico'
-                  : 'Gerar diagnóstico'}
+                  ? t('update_diagnosis')
+                  : t('generate_diagnosis')}
             </button>
           </div>
         </div>
 
         {projectInsightsMessage ? (
           <p className="projects-page__message" role="status">
-            {projectInsightsMessage}
+            {formatNotice(t, projectInsightsMessage)}
           </p>
         ) : null}
         {projectInsightsCopyFeedback ? (
           <p className="projects-page__message" role="status">
-            {projectInsightsCopyFeedback}
+            {formatNotice(t, projectInsightsCopyFeedback)}
           </p>
         ) : null}
 
-        <div className="project-detail-page__ai-overview" aria-label="Painel executivo da IA do projeto">
+        <div className="project-detail-page__ai-overview" aria-label={t('project_ai_overview')}>
           <div className="project-detail-page__ai-overview-main">
             <div className="project-detail-page__ai-overview-copy">
-              <p className="projects-page__eyebrow">Painel executivo de IA</p>
-              <h3>{projectInsights ? 'Leitura pronta para decisão' : 'Diagnóstico preparado sob demanda'}</h3>
+              <p className="projects-page__eyebrow">{t('ai_overview')}</p>
+              <h3>{projectInsights ? t('analysis_ready_for_review') : t('diagnosis_available_on_demand')}</h3>
               <p>
-                Use este bloco para decidir se vale atualizar a análise, preparar histórias candidatas ou levar o
-                projeto para uma Roda da Fogueira.
+                {t('decide_whether_to_refresh_the_analysis_prepare')}
               </p>
             </div>
 
@@ -2480,7 +2508,7 @@ function ProjectDetailPage() {
             })}
           </div>
 
-          <div className="project-detail-page__ai-fact-grid" aria-label="Indicadores de apoio da IA">
+          <div className="project-detail-page__ai-fact-grid" aria-label={t('ai_supporting_metrics')}>
             {(projectInsights ? projectActionPlanStats : projectOperationalSnapshotCards).map((item) => (
               <span key={item.label} className="project-detail-page__ai-fact">
                 <strong>{item.value}</strong>
@@ -2493,13 +2521,12 @@ function ProjectDetailPage() {
 
         {!projectInsights ? (
           <div className="project-detail-page__ai-empty">
-            <strong>Leitura sob demanda</strong>
+            <strong>{t('analysis_on_demand')}</strong>
             <p>
-              O diagnóstico usa as histórias atuais do projeto, fica no histórico recente quando disponível e deve
-              ser revisado pelo PM/PO antes de orientar o time.
+              {t('the_diagnosis_uses_the_latest_project_stories')}
             </p>
             {projectStoryCount === 0 ? (
-              <p>Este projeto ainda precisa de histórias vinculadas para liberar a análise.</p>
+              <p>{t('link_stories_to_this_project_to_enable')}</p>
             ) : null}
           </div>
         ) : (
@@ -2507,10 +2534,9 @@ function ProjectDetailPage() {
             {isProjectInsightOutdated ? (
               <div className="project-detail-page__ai-refresh-callout" role="status">
                 <div>
-                  <strong>Diagnóstico desatualizado</strong>
+                  <strong>{t('outdated_diagnosis')}</strong>
                   <p>
-                    {currentProjectInsightFreshness.description} Atualize a leitura antes de usar este diagnóstico
-                    para priorizar refinamento, Roda ou próximas ações.
+                    {currentProjectInsightFreshness.description}{" "}{t('refresh_this_diagnosis_before_using_it_to')}
                   </p>
                 </div>
                 <button
@@ -2519,57 +2545,57 @@ function ProjectDetailPage() {
                   onClick={handleGenerateProjectInsights}
                   disabled={!canGenerateProjectInsights}
                 >
-                  {isGeneratingProjectInsights ? 'Atualizando...' : 'Atualizar agora'}
+                  {isGeneratingProjectInsights ? t('updating') : t('update_now')}
                 </button>
               </div>
             ) : null}
 
             <div className="project-detail-page__ai-detail-header">
               <div>
-                <p className="projects-page__eyebrow">Detalhes do diagnóstico</p>
-                <h3>Riscos, perguntas e candidatas</h3>
-                <p>Abra apenas o bloco que precisar revisar para manter a leitura principal mais limpa.</p>
+                <p className="projects-page__eyebrow">{t('diagnosis_details')}</p>
+                <h3>{t('risks_questions_and_candidates')}</h3>
+                <p>{t('open_the_section_you_need_to_review')}</p>
               </div>
             </div>
 
             <div className="project-detail-page__ai-grid">
               <ProjectInsightList
-                title="Riscos"
+                title={t('risks')}
                 items={projectInsights.risks}
-                emptyText="Nenhum risco relevante foi destacado pela IA."
+                emptyText={t('the_ai_identified_no_significant_risks')}
               />
               <ProjectInsightList
-                title="Perguntas de refinamento"
+                title={t('refinement_questions')}
                 items={projectInsights.refinement_questions}
-                emptyText="Nenhuma pergunta adicional foi sugerida."
+                emptyText={t('no_additional_questions_were_suggested')}
               />
               <ProjectInsightList
-                title="Próximos passos"
+                title={t('next_steps')}
                 items={projectInsights.next_actions}
-                emptyText="Nenhum próximo passo foi sugerido."
+                emptyText={t('no_next_steps_were_suggested')}
               />
               <ProjectInsightList
-                title="Candidatas à estimativa"
+                title={t('estimation_candidates')}
                 items={projectInsights.estimation_candidates}
-                emptyText="Nenhuma candidata específica foi destacada."
+                emptyText={t('no_specific_candidates_were_identified')}
               />
             </div>
 
-            <div className="project-detail-page__ai-action-plan" aria-label="Plano de ação do diagnóstico">
+            <div className="project-detail-page__ai-action-plan" aria-label={t('diagnosis_action_plan')}>
               <div className="project-detail-page__ai-action-plan-header">
                 <div>
-                  <p className="projects-page__eyebrow">Plano de ação</p>
-                  <h3>Próximos movimentos</h3>
-                  <p>Roteiro curto para transformar o diagnóstico em preparação, alinhamento e estimativa.</p>
+                  <p className="projects-page__eyebrow">{t('action_plan')}</p>
+                  <h3>{t('what_to_do_next')}</h3>
+                  <p>{t('a_short_guide_to_turn_the_diagnosis')}</p>
                 </div>
                 <button
                   type="button"
                   className="btn btn-secondary btn-small"
                   onClick={handleCopyProjectActionPlan}
                 >
-                  {projectInsightsCopyFeedback === 'Plano de ação copiado em Markdown.'
-                    ? 'Plano copiado'
-                    : 'Copiar plano'}
+                  {projectInsightsCopyFeedback === 'action_plan_copied_as_markdown'
+                    ? t('action_plan_copied')
+                    : t('copy_plan')}
                 </button>
               </div>
 
@@ -2597,9 +2623,9 @@ function ProjectDetailPage() {
               <div className="project-detail-page__ai-candidates">
                 <div className="project-detail-page__ai-candidates-header">
                   <div>
-                    <strong>Candidatas acionáveis</strong>
+                    <strong>{t('candidates_linked_to_stories')}</strong>
                     <p>
-                      Sugestões da IA conectadas às histórias do projeto para acelerar preparação e estimativa.
+                      {t('these_ai_suggestions_link_to_project_stories')}
                     </p>
                   </div>
                   <div className="project-detail-page__ai-candidates-actions">
@@ -2608,7 +2634,7 @@ function ProjectDetailPage() {
                       className="btn btn-secondary btn-small"
                       onClick={handleToggleInsightCandidateFilter}
                     >
-                      {shouldFocusInsightCandidates ? 'Limpar foco no quadro' : 'Focar no quadro'}
+                      {shouldFocusInsightCandidates ? t('clear_board_focus') : t('focus_on_board')}
                     </button>
                     {readyInsightCandidateStoryIds.length > 0 ? (
                       <button
@@ -2616,7 +2642,7 @@ function ProjectDetailPage() {
                         className="btn btn-secondary btn-small"
                         onClick={handleSelectReadyInsightCandidates}
                       >
-                        Selecionar prontas da IA
+                        {t('select_ready_ai_candidates')}
                       </button>
                     ) : null}
                     {actionableInsightCandidateStories.length > 0 ? (
@@ -2626,7 +2652,7 @@ function ProjectDetailPage() {
                         onClick={handlePrepareInsightCandidates}
                         disabled={isPreparingInsightCandidates}
                       >
-                        {isPreparingInsightCandidates ? 'Preparando...' : 'Preparar candidatas'}
+                        {isPreparingInsightCandidates ? t('preparing') : t('prepare_candidates')}
                       </button>
                     ) : null}
                   </div>
@@ -2656,32 +2682,32 @@ function ProjectDetailPage() {
                         className="project-detail-page__ai-candidate"
                       >
                         <div>
-                          <span>Sugestão da IA</span>
+                          <span>{t('ai_suggestion')}</span>
                           <strong>{item.candidate}</strong>
                           {story ? (
                             <p>
-                              Vinculada a <b>{story.title ?? 'história sem título'}</b>
+                              {t('linked_to')}{" "}<b>{story.title ?? t('untitled_story')}</b>
                             </p>
                           ) : (
-                            <p>Não foi possível vincular automaticamente a uma história do projeto.</p>
+                            <p>{t('could_not_match_this_suggestion_to_a')}</p>
                           )}
                         </div>
 
                         <div className="project-detail-page__ai-candidate-meta">
-                          {story ? <span>{getEstimationStatusLabel(story.estimation_status)}</span> : null}
+                          {story ? <span>{getEstimationStatusLabel(story.estimation_status, t)}</span> : null}
                           {isInLivePlanningSession ? (
-                            <span>Em Roda ativa</span>
+                            <span>{t('in_an_active_session_2')}</span>
                           ) : finalEstimate ? (
-                            <span>Final: {finalEstimate}</span>
+                            <span>{t('final')}{" "}{finalEstimate}</span>
                           ) : planningSession ? (
-                            <span>{getPlanningSessionStatusLabel(planningSession.status)}</span>
+                            <span>{getPlanningStatusLabel(planningSession.status, t)}</span>
                           ) : null}
                         </div>
 
                         {story ? (
                           <div className="project-detail-page__ai-candidate-actions">
                             <Link className="btn btn-secondary btn-small" to={`/tool?storyId=${story.id}`}>
-                              Abrir
+                              {t('open')}
                             </Link>
                             {canPrepareCandidate ? (
                               <button
@@ -2690,7 +2716,7 @@ function ProjectDetailPage() {
                                 onClick={() => handlePrepareStoryForPlanning(story)}
                                 disabled={updatingStoryStatusId === story.id}
                               >
-                                {updatingStoryStatusId === story.id ? 'Preparando...' : 'Preparar'}
+                                {updatingStoryStatusId === story.id ? t('preparing') : t('prepare')}
                               </button>
                             ) : null}
                             {isReadyForPlanning || isInLivePlanningSession || isEstimated ? (
@@ -2701,10 +2727,10 @@ function ProjectDetailPage() {
                                 to={planningRoomUrl}
                               >
                                 {isInLivePlanningSession
-                                  ? 'Continuar Roda'
+                                  ? t('continue_session')
                                   : isEstimated
-                                    ? 'Ver estimativa'
-                                    : 'Abrir Roda'}
+                                    ? t('view_estimate')
+                                    : t('open_planning_poker')}
                               </Link>
                             ) : null}
                           </div>
@@ -2718,14 +2744,13 @@ function ProjectDetailPage() {
 
             <div className="project-detail-page__ai-next-step">
               <div>
-                <strong>Próxima ação</strong>
+                <strong>{t('next_action')}</strong>
                 <p>
-                  Use o diagnóstico para preparar as histórias, alinhar dúvidas com o time e abrir a Roda da Fogueira
-                  quando houver candidatas prontas para estimar.
+                  {t('use_the_diagnosis_to_prepare_stories_discuss')}
                 </p>
               </div>
               <Link className="btn btn-primary btn-small" to={`/roda?projectId=${projectId}`}>
-                Abrir Roda da Fogueira
+                {t('open_planning_poker_2')}
               </Link>
             </div>
           </div>
@@ -2733,19 +2758,19 @@ function ProjectDetailPage() {
 
         <div className="project-detail-page__ai-history">
           <div>
-            <strong>Histórico recente</strong>
+            <strong>{t('recent_history')}</strong>
             <p>
-              Reabra os últimos diagnósticos gerados para comparar a evolução do projeto sem executar a IA novamente.
+              {t('reopen_recent_diagnoses_to_compare_project_progress')}
             </p>
           </div>
 
           {isLoadingProjectInsightHistory ? (
-            <p className="projects-page__state">Carregando diagnósticos...</p>
+            <p className="projects-page__state">{t('loading_diagnoses')}</p>
           ) : null}
 
           {isProjectInsightHistoryUnavailable ? (
             <p className="projects-page__state">
-              O histórico ficará disponível após aplicar o SQL <code>supabase/project-ai-diagnostics.sql</code>.
+              {t('history_will_be_available_after_applying_the')}{" "}<code>{'supabase/project-ai-diagnostics.sql'}</code>.
             </p>
           ) : null}
 
@@ -2753,21 +2778,21 @@ function ProjectDetailPage() {
           !isProjectInsightHistoryUnavailable &&
           projectInsightHistory.length === 0 ? (
             <p className="projects-page__state">
-              Nenhum diagnóstico salvo ainda. Gere o primeiro para criar uma referência do projeto.
+              {t('no_saved_diagnoses_yet_generate_the_first')}
             </p>
           ) : null}
 
           {projectInsightHistory.length > 0 ? (
             <div className="project-detail-page__ai-history-list">
               {projectInsightHistory.map((item) => {
-                const freshness = getProjectInsightFreshness(item, projectStoryCount)
+                const freshness = getProjectInsightFreshness(item, projectStoryCount, tInsights)
 
                 return (
                   <article key={item.id} className="project-detail-page__ai-history-item">
                     <div>
                       <span>
-                        {formatProjectDateTime(item.created_at)}
-                        {activeProjectInsightId === item.id ? ' · Aberto agora' : ''}
+                        {formatProjectDateTime(item.created_at, language)}
+                        {activeProjectInsightId === item.id ? t('open_now') : ''}
                       </span>
                       <strong>{item.analysis.health_label}</strong>
                       <p>{item.analysis.summary}</p>
@@ -2786,7 +2811,7 @@ function ProjectDetailPage() {
                         className="btn btn-secondary btn-small"
                         onClick={() => handleOpenProjectInsightHistoryItem(item)}
                       >
-                        Reabrir
+                        {t('reopen')}
                       </button>
                       {freshness.isOutdated ? (
                         <button
@@ -2795,7 +2820,7 @@ function ProjectDetailPage() {
                           onClick={handleGenerateProjectInsights}
                           disabled={!canGenerateProjectInsights}
                         >
-                          Atualizar
+                          {t('update')}
                         </button>
                       ) : null}
                       <button
@@ -2804,7 +2829,7 @@ function ProjectDetailPage() {
                         onClick={() => handleDeleteProjectInsightHistoryItem(item)}
                         disabled={deletingProjectInsightId === item.id}
                       >
-                        {deletingProjectInsightId === item.id ? 'Excluindo...' : 'Excluir'}
+                        {deletingProjectInsightId === item.id ? t('deleting') : t('delete')}
                       </button>
                     </div>
                   </article>
@@ -2815,21 +2840,21 @@ function ProjectDetailPage() {
         </div>
       </section>
 
-      <section className="panel project-detail-page__collaboration" aria-label="Colaboração e estimativas">
+      <section className="panel project-detail-page__collaboration" aria-label={t('collaboration_and_estimation')}>
         <div className="projects-page__section-header">
           <div>
-            <p className="projects-page__eyebrow">Colaboração</p>
-            <h2>Times e Roda da Fogueira</h2>
-            <p>Gerencie times e estimativas nas áreas dedicadas, mantendo o projeto focado em contexto e histórias.</p>
+            <p className="projects-page__eyebrow">{t('collaboration')}</p>
+            <h2>{t('teams_and_planning_poker')}</h2>
+            <p>{t('manage_teams_and_estimates_in_their_dedicated')}</p>
           </div>
         </div>
 
         <div className="project-detail-page__collaboration-actions">
           <Link className="btn btn-secondary" to={`/times?projectId=${projectId}`}>
-            Gerenciar Times
+            {t('manage_teams_2')}
           </Link>
           <Link className="btn btn-secondary" to={`/roda?projectId=${projectId}`}>
-            Abrir Rodas da Fogueira
+            {t('open_planning_poker_sessions')}
           </Link>
         </div>
       </section>
@@ -2837,64 +2862,60 @@ function ProjectDetailPage() {
       <section
         id="historias-projeto"
         className="panel project-detail-page__stories"
-        aria-label="Histórias vinculadas ao projeto"
+        aria-label={t('stories_linked_to_the_project')}
       >
         <div className="projects-page__section-header">
           <div>
-            <p className="projects-page__eyebrow">Histórias do projeto</p>
+            <p className="projects-page__eyebrow">{t('project_stories')}</p>
             <h2>{storiesLabel}</h2>
-            <p>Quadro visual para organizar histórias por fluxo, status de estimativa e preparo para a Roda.</p>
+            <p>{t('organize_stories_by_workflow_estimation_status_and')}</p>
             {hasProjectStories ? (
               <p className="project-detail-page__story-filter-summary">
                 {isStorySearchActive
-                  ? `${storySearchResultLabel} para "${storySearchDisplay}".`
+                  ? t('for', { p1: storySearchResultLabel, p2: storySearchDisplay })
                   : storyViewMode === 'board'
                   ? shouldFocusInsightCandidates
-                    ? `${visibleKanbanStoryCount} ${
-                        visibleKanbanStoryCount === 1 ? 'card em foco' : 'cards em foco'
-                      } pelo diagnóstico.`
-                    : `${visibleKanbanStoryCount} ${
-                        visibleKanbanStoryCount === 1 ? 'card visível' : 'cards visíveis'
-                      } no quadro.`
+                    ? t('by_the_diagnosis', { p1: visibleKanbanStoryCount, p2: visibleKanbanStoryCount === 1 ? t('card_in_focus') : t('cards_in_focus') })
+                    : t('on_the_board', { p1: visibleKanbanStoryCount, p2: visibleKanbanStoryCount === 1 ? t('visible_card') : t('visible_cards') })
                   : shouldFocusInsightCandidates
-                    ? `${visibleProjectStoryCount} ${
-                        visibleProjectStoryCount === 1 ? 'história em foco' : 'histórias em foco'
-                      } pelo diagnóstico.`
+                    ? t('by_the_diagnosis', { p1: visibleProjectStoryCount, p2: visibleProjectStoryCount === 1 ? t('story_in_focus') : t('stories_in_focus') })
                     : storyEstimationFilter === 'all'
                     ? filteredStoriesLabel
-                    : `${filteredStoriesLabel} em ${currentStoryFilterLabel}.`}
+                    : t('in', { p1: filteredStoriesLabel, p2: currentStoryFilterLabel })}
               </p>
             ) : null}
           </div>
           <div className="project-detail-page__story-actions">
             <label className="project-detail-page__story-search">
-              <span>Buscar no projeto</span>
+              <span>{t('search_this_project')}</span>
               <input
                 type="search"
                 value={storySearchInput}
                 onChange={(event) => setStorySearchInput(event.target.value)}
-                placeholder="Título, contexto ou user story"
+                placeholder={t('title_context_or_user_story')}
                 disabled={isLoadingStories}
               />
             </label>
-            <div className="project-detail-page__story-view-toggle" aria-label="Modo de visualização">
+            <div className="project-detail-page__story-view-toggle" role="group" aria-label={t('view_mode')}>
               <button
                 type="button"
                 className={storyViewMode === 'board' ? 'is-active' : ''}
+                aria-pressed={storyViewMode === 'board'}
                 onClick={() => setStoryViewMode('board')}
               >
-                Quadro
+                {t('board')}
               </button>
               <button
                 type="button"
                 className={storyViewMode === 'list' ? 'is-active' : ''}
+                aria-pressed={storyViewMode === 'list'}
                 onClick={() => setStoryViewMode('list')}
               >
-                Lista
+                {t('list')}
               </button>
             </div>
             <label className="project-detail-page__story-filter">
-              <span>Filtrar status</span>
+              <span>{t('filter_by_status')}</span>
               <select
                 value={storyEstimationFilter}
                 onChange={(event) => setStoryEstimationFilter(event.target.value)}
@@ -2902,20 +2923,20 @@ function ProjectDetailPage() {
               >
                 {STORY_ESTIMATION_FILTER_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.label)}
                   </option>
                 ))}
               </select>
             </label>
             <Link className="btn btn-primary btn-small" to={`/tool?projectId=${projectId}`}>
-              Forjar neste projeto
+              {t('forge_in_this_project')}
             </Link>
           </div>
         </div>
 
         <div className={`project-detail-page__story-guidance project-detail-page__story-guidance--${storyOperationalGuidance.tone}`}>
           <div>
-            <span>Encaminhamento do quadro</span>
+            <span>{t('board_guidance')}</span>
             <strong>{storyOperationalGuidance.title}</strong>
             <p>{storyOperationalGuidance.description}</p>
           </div>
@@ -2931,7 +2952,7 @@ function ProjectDetailPage() {
         </div>
 
         {hasProjectStories ? (
-          <div className="project-detail-page__story-quick-filters" aria-label="Filtros rápidos de histórias">
+          <div className="project-detail-page__story-quick-filters" aria-label={t('quick_story_filters')}>
             {STORY_STATUS_QUICK_FILTERS.map((option) => {
               const isActive = storyEstimationFilter === option.value
               const count = getStoryStatusQuickFilterCount(option.value)
@@ -2945,9 +2966,9 @@ function ProjectDetailPage() {
                   aria-pressed={isActive}
                   disabled={isLoadingStories}
                 >
-                  <span>{option.label}</span>
+                  <span>{t(option.label)}</span>
                   <strong>{count}</strong>
-                  <small>{option.hint}</small>
+                  <small>{t(option.hint)}</small>
                 </button>
               )
             })}
@@ -2963,7 +2984,7 @@ function ProjectDetailPage() {
             <div>
               <strong>{insightCandidateFilterLabel}</strong>
               <p>
-                Use o foco da IA para revisar apenas as histórias sugeridas no diagnóstico antes de preparar a Roda.
+                {t('focus_on_the_stories_suggested_by_ai')}
               </p>
             </div>
             <div className="project-detail-page__story-ai-focus-actions">
@@ -2972,7 +2993,7 @@ function ProjectDetailPage() {
                 className="btn btn-secondary btn-small"
                 onClick={handleToggleInsightCandidateFilter}
               >
-                {shouldFocusInsightCandidates ? 'Mostrar todas' : 'Focar candidatas'}
+                {shouldFocusInsightCandidates ? t('show_all') : t('focus_on_candidates')}
               </button>
               {readyInsightCandidateStoryIds.length > 0 ? (
                 <button
@@ -2980,7 +3001,7 @@ function ProjectDetailPage() {
                   className="btn btn-secondary btn-small"
                   onClick={handleSelectReadyInsightCandidates}
                 >
-                  Selecionar prontas da IA
+                  {t('select_ready_ai_candidates')}
                 </button>
               ) : null}
             </div>
@@ -2990,25 +3011,25 @@ function ProjectDetailPage() {
         {hasProjectStories && storyViewMode === 'board' && canEditKanbanColumns ? (
           <form className="project-detail-page__kanban-column-form" onSubmit={handleCreateKanbanColumn}>
             <label className="projects-page__field">
-              <span>Nova coluna</span>
+              <span>{t('new_column')}</span>
               <input
                 type="text"
                 value={newKanbanColumnName}
                 onChange={(event) => setNewKanbanColumnName(event.target.value)}
-                placeholder="Ex.: Em discovery"
+                placeholder={t('e_g_in_discovery')}
                 disabled={isCreatingKanbanColumn}
               />
             </label>
             <label className="projects-page__field">
-              <span>Status base</span>
+              <span>{t('base_status')}</span>
               <select
                 value={newKanbanColumnStatusBase}
                 onChange={(event) => setNewKanbanColumnStatusBase(event.target.value)}
                 disabled={isCreatingKanbanColumn}
               >
-                {KANBAN_STATUS_OPTIONS.map((option) => (
+                {ESTIMATION_STATUS_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.label)}
                   </option>
                 ))}
               </select>
@@ -3018,7 +3039,7 @@ function ProjectDetailPage() {
               className="btn btn-secondary btn-small"
               disabled={isCreatingKanbanColumn || !newKanbanColumnName.trim()}
             >
-              {isCreatingKanbanColumn ? 'Criando...' : 'Criar coluna'}
+              {isCreatingKanbanColumn ? t('creating') : t('create_column')}
             </button>
           </form>
         ) : null}
@@ -3036,7 +3057,7 @@ function ProjectDetailPage() {
                 onClick={handleSelectVisibleReadyStories}
                 disabled={visibleAvailableReadyStories.length === 0 || isLoadingStories}
               >
-                Selecionar livres visíveis
+                {t('select_visible_available_stories')}
               </button>
               <button
                 type="button"
@@ -3044,15 +3065,15 @@ function ProjectDetailPage() {
                 onClick={handleClearProjectStorySelection}
                 disabled={selectedReadyStoryIds.length === 0 || isLoadingStories}
               >
-                Limpar seleção
+                {t('clear_selection')}
               </button>
               {canOpenSelectedReadyStories ? (
                 <Link className="btn btn-primary btn-small" to={selectedReadyStoriesRodaUrl}>
-                  Abrir Roda com selecionadas
+                  {t('open_planning_poker_with_selected_stories')}
                 </Link>
               ) : (
                 <button type="button" className="btn btn-primary btn-small" disabled>
-                  Abrir Roda com selecionadas
+                  {t('open_planning_poker_with_selected_stories')}
                 </button>
               )}
             </div>
@@ -3060,7 +3081,7 @@ function ProjectDetailPage() {
         ) : null}
 
         {hasProjectStories && storyViewMode === 'board' ? (
-          <div className="project-detail-page__kanban-overview" aria-label="Resumo do quadro Kanban">
+          <div className="project-detail-page__kanban-overview" aria-label={t('kanban_board_summary')}>
             {kanbanBoardSummaryItems.map((item) => (
               <article key={item.label}>
                 <span>{item.label}</span>
@@ -3074,7 +3095,7 @@ function ProjectDetailPage() {
         {hasProjectStories && storyViewMode === 'board' ? (
           <div className="project-detail-page__kanban-operation">
             <div>
-              <span>Operação do quadro</span>
+              <span>{t('board_actions')}</span>
               <strong>{kanbanBoardOperationTitle}</strong>
               <p>{kanbanBoardOperationText}</p>
             </div>
@@ -3085,39 +3106,39 @@ function ProjectDetailPage() {
                 onClick={handleSelectVisibleReadyStories}
                 disabled={isLoadingStories}
               >
-                Selecionar histórias livres
+                {t('select_available_stories')}
               </button>
             ) : null}
           </div>
         ) : null}
 
-        {isLoadingStories ? <p className="projects-page__state">Carregando histórias...</p> : null}
+        {isLoadingStories ? <p className="projects-page__state">{t('loading_stories')}</p> : null}
         {hasNoProjectStories ? (
           <div className="projects-page__empty">
-            <h3>Nenhuma história vinculada ainda</h3>
-            <p>Abra a Bancada com este projeto selecionado ou organize uma peça avulsa quando fizer sentido.</p>
+            <h3>{t('no_linked_stories_yet')}</h3>
+            <p>{t('open_the_workbench_with_this_project_selected')}</p>
             <Link className="btn btn-primary btn-small" to={`/tool?projectId=${projectId}`}>
-              Forjar neste projeto
+              {t('forge_in_this_project')}
             </Link>
           </div>
         ) : null}
         {hasNoStoriesForFilter ? (
           <div className="projects-page__empty">
-            <h3>Nenhuma história neste filtro</h3>
-            <p>Troque o status selecionado para ver outras peças vinculadas a este projeto.</p>
+            <h3>{t('no_stories_match_this_filter')}</h3>
+            <p>{t('select_another_status_to_see_other_stories')}</p>
             <button
               type="button"
               className="btn btn-secondary btn-small"
               onClick={() => setStoryEstimationFilter('all')}
             >
-              Ver todas as histórias
+              {t('view_all_stories')}
             </button>
           </div>
         ) : null}
         {hasNoStoriesForInsightCandidateFilter ? (
           <div className="projects-page__empty">
-            <h3>Nenhuma candidata visível neste recorte</h3>
-            <p>Limpe o foco da IA ou troque o status para revisar as histórias sugeridas pelo diagnóstico.</p>
+            <h3>{t('no_ai_candidates_in_this_view')}</h3>
+            <p>{t('clear_the_ai_focus_or_change_the')}</p>
             <button
               type="button"
               className="btn btn-secondary btn-small"
@@ -3126,50 +3147,48 @@ function ProjectDetailPage() {
                 setStoryEstimationFilter('all')
               }}
             >
-              Limpar foco da IA
+              {t('clear_ai_focus')}
             </button>
           </div>
         ) : null}
         {hasNoStoriesForLocalSearch ? (
           <div className="projects-page__empty">
-            <h3>Nenhuma história encontrada na busca</h3>
+            <h3>{t('no_stories_match_your_search')}</h3>
             <p>
-              A busca atual não encontrou histórias visíveis neste recorte. Limpe o termo ou troque o status para
-              ampliar a lista.
+              {t('clear_your_search_or_select_another_status')}
             </p>
             <button
               type="button"
               className="btn btn-secondary btn-small"
               onClick={() => setStorySearchInput('')}
             >
-              Limpar busca
+              {t('clear_search')}
             </button>
           </div>
         ) : null}
-        {storyStatusMessage ? <p className="projects-page__message">{storyStatusMessage}</p> : null}
-        {kanbanMessage ? <p className="projects-page__message">{kanbanMessage}</p> : null}
-        {planningSummaryMessage ? <p className="projects-page__message">{planningSummaryMessage}</p> : null}
+        {storyStatusMessage ? <p className="projects-page__message" role="status">{formatNotice(t, storyStatusMessage)}</p> : null}
+        {kanbanMessage ? <p className="projects-page__message" role="status">{formatNotice(t, kanbanMessage)}</p> : null}
+        {planningSummaryMessage ? <p className="projects-page__message" role="status">{formatNotice(t, planningSummaryMessage)}</p> : null}
         {shouldShowStoryLimitNotice ? (
-          <p className="projects-page__state">Mostrando as 50 histórias mais recentes deste filtro.</p>
+          <p className="projects-page__state">{t('showing_the_50_most_recent_stories_for')}</p>
         ) : null}
         {shouldShowKanbanLimitNotice ? (
-          <p className="projects-page__state">Mostrando as 200 histórias mais recentes no quadro.</p>
+          <p className="projects-page__state">{t('showing_the_200_most_recent_stories_on')}</p>
         ) : null}
 
         {storyViewMode === 'board' ? (
           <>
-            {isLoadingKanban ? <p className="projects-page__state">Carregando quadro Kanban...</p> : null}
-            {isKanbanUnavailable ? (
+            {isLoadingKanban ? <p className="projects-page__state">{t('loading_kanban_board')}</p> : null}
+            {isKanbanUnavailable && kanbanMessage === 'the_kanban_board_will_be_available_after' ? (
               <div className="projects-page__empty">
-                <h3>Kanban aguardando SQL</h3>
+                <h3>{t('kanban_board_awaiting_sql_setup')}</h3>
                 <p>
-                  Aplique o arquivo <code>supabase/project-kanban.sql</code> para ativar colunas,
-                  movimentação e permissões do quadro.
+                  {t('apply')}{" "}<code>{'supabase/project-kanban.sql'}</code>{" "}{t('to_enable_columns_card_movement_and_board')}
                 </p>
               </div>
             ) : null}
             {!isLoadingKanban && !isKanbanUnavailable && hasProjectStories ? (
-              <div className="project-detail-page__kanban" aria-label="Kanban de histórias do projeto">
+              <div className="project-detail-page__kanban" aria-label={t('project_story_kanban_board')}>
                 {visibleKanbanColumns.map((column, columnIndex) => {
                   const isEditingColumn = editingKanbanColumnId === column.id
                   const isDropTarget = dragOverKanbanColumnId === column.id
@@ -3192,21 +3211,21 @@ function ProjectDetailPage() {
                     >
                       <header className="project-detail-page__kanban-column-header">
                         <div>
-                          <span>{getEstimationStatusLabel(column.status_base)}</span>
-                          <h3>{column.name}</h3>
+                          <span>{getEstimationStatusLabel(column.status_base, t)}</span>
+                          <h3>{getKanbanColumnLabel(column, t)}</h3>
                           <div className="project-detail-page__kanban-column-stats">
                             <small>
-                              {columnCount} {columnCount === 1 ? 'história' : 'histórias'}
+                              {columnCount} {columnCount === 1 ? t('story') : t('stories_2')}
                             </small>
                             {availableReadyColumnStoryCount > 0 ? (
                               <small>
                                 {availableReadyColumnStoryCount}{' '}
-                                {availableReadyColumnStoryCount === 1 ? 'livre para Roda' : 'livres para Roda'}
+                                {availableReadyColumnStoryCount === 1 ? t('available_for_planning_poker_2') : t('available_for_planning_poker_3')}
                               </small>
                             ) : null}
                           </div>
                           <small className="project-detail-page__kanban-column-hint">
-                            {getKanbanColumnIntent(column.status_base)}
+                            {getKanbanColumnIntent(column.status_base, t)}
                           </small>
                         </div>
                         {canEditKanbanColumns || availableReadyColumnStoryCount > 0 ? (
@@ -3218,7 +3237,7 @@ function ProjectDetailPage() {
                                 onClick={() => handleSelectReadyStoriesInColumn(column)}
                                 disabled={isLoadingStories}
                               >
-                                Selecionar livres
+                                {t('select_available_stories_2')}
                               </button>
                             ) : null}
                             {canEditKanbanColumns ? (
@@ -3228,7 +3247,7 @@ function ProjectDetailPage() {
                                   className="btn btn-ghost btn-small"
                                   onClick={() => handleReorderKanbanColumn(column, 'left')}
                                   disabled={columnIndex === 0 || reorderingKanbanColumnId === column.id}
-                                  aria-label={`Mover coluna ${column.name} para a esquerda`}
+                                  aria-label={t('move_column_left', { p1: getKanbanColumnLabel(column, t) })}
                                 >
                                   ←
                                 </button>
@@ -3240,7 +3259,7 @@ function ProjectDetailPage() {
                                     columnIndex === visibleKanbanColumns.length - 1 ||
                                     reorderingKanbanColumnId === column.id
                                   }
-                                  aria-label={`Mover coluna ${column.name} para a direita`}
+                                  aria-label={t('move_column_right', { p1: getKanbanColumnLabel(column, t) })}
                                 >
                                   →
                                 </button>
@@ -3248,8 +3267,9 @@ function ProjectDetailPage() {
                                   type="button"
                                   className="btn btn-secondary btn-small"
                                   onClick={() => handleStartEditKanbanColumn(column)}
+                                  aria-label={t('edit_column', { name: getKanbanColumnLabel(column, t) })}
                                 >
-                                  Editar
+                                  {t('edit')}
                                 </button>
                               </>
                             ) : null}
@@ -3263,7 +3283,7 @@ function ProjectDetailPage() {
                           onSubmit={(event) => handleUpdateKanbanColumn(event, column)}
                         >
                           <label className="projects-page__field">
-                            <span>Nome da coluna</span>
+                            <span>{t('column_name')}</span>
                             <input
                               type="text"
                               value={editingKanbanColumnName}
@@ -3272,15 +3292,15 @@ function ProjectDetailPage() {
                             />
                           </label>
                           <label className="projects-page__field">
-                            <span>Status base</span>
+                            <span>{t('base_status')}</span>
                             <select
                               value={editingKanbanColumnStatusBase}
                               onChange={(event) => setEditingKanbanColumnStatusBase(event.target.value)}
                               disabled={savingKanbanColumnId === column.id}
                             >
-                              {KANBAN_STATUS_OPTIONS.map((option) => (
+                              {ESTIMATION_STATUS_OPTIONS.map((option) => (
                                 <option key={option.value} value={option.value}>
-                                  {option.label}
+                                  {t(option.label)}
                                 </option>
                               ))}
                             </select>
@@ -3291,7 +3311,7 @@ function ProjectDetailPage() {
                               className="btn btn-primary btn-small"
                               disabled={savingKanbanColumnId === column.id || !editingKanbanColumnName.trim()}
                             >
-                              {savingKanbanColumnId === column.id ? 'Salvando...' : 'Salvar coluna'}
+                              {savingKanbanColumnId === column.id ? t('saving') : t('save_column')}
                             </button>
                             <button
                               type="button"
@@ -3299,7 +3319,7 @@ function ProjectDetailPage() {
                               onClick={handleCancelEditKanbanColumn}
                               disabled={savingKanbanColumnId === column.id}
                             >
-                              Cancelar
+                              {t('cancel')}
                             </button>
                           </div>
                         </form>
@@ -3308,10 +3328,10 @@ function ProjectDetailPage() {
                       <div className="project-detail-page__kanban-cards">
                         {columnCards.length === 0 ? (
                           <div className="project-detail-page__kanban-empty">
-                            <p>{getKanbanColumnEmptyText(column.status_base)}</p>
+                            <p>{getKanbanColumnEmptyText(column.status_base, t)}</p>
                             {column.status_base === 'created' ? (
                               <Link className="btn btn-ghost btn-small" to={`/tool?projectId=${projectId}`}>
-                                Forjar história
+                                {t('forge_story')}
                               </Link>
                             ) : null}
                           </div>
@@ -3361,20 +3381,20 @@ function ProjectDetailPage() {
                                     onChange={() => handleToggleProjectStorySelection(story.id)}
                                     disabled={isInLivePlanningSession}
                                   />
-                                  <span>{isInLivePlanningSession ? 'Já em Roda ativa' : 'Selecionar para Roda'}</span>
+                                  <span>{isInLivePlanningSession ? t('already_in_an_active_session') : t('select_for_planning_poker')}</span>
                                 </label>
                               ) : null}
 
                               <div className="project-detail-page__kanban-card-copy">
                                 <h4>{story.title}</h4>
-                                <p>{getStoryPreview(story)}</p>
+                                <p>{getStoryPreview(story, t)}</p>
                               </div>
 
                               <div className="project-detail-page__kanban-card-meta">
-                                <span>{formatProjectDateTime(story.created_at)}</span>
-                                <span>{getStoryVersionLabel(story.version_number)}</span>
-                                <span>{getEstimationStatusLabel(story.estimation_status)}</span>
-                                {finalEstimate ? <span>Final: {finalEstimate}</span> : null}
+                                <span>{formatProjectDateTime(story.created_at, language)}</span>
+                                <span>{getStoryVersionLabel(story.version_number, t)}</span>
+                                <span>{getEstimationStatusLabel(story.estimation_status, t)}</span>
+                                {finalEstimate ? <span>{t('final')}{" "}{finalEstimate}</span> : null}
                               </div>
 
                               {planningEntry ? (
@@ -3385,14 +3405,14 @@ function ProjectDetailPage() {
                                 >
                                   <strong>
                                     {isInLivePlanningSession
-                                      ? 'Em Roda ativa'
+                                      ? t('in_an_active_session_2')
                                       : finalEstimate
-                                        ? 'Estimativa registrada'
-                                        : 'Roda vinculada'}
+                                        ? t('estimate_recorded')
+                                        : t('linked_session')}
                                   </strong>
                                   <span>
-                                    {planningSession?.name ?? 'Roda da Fogueira'} ·{' '}
-                                    {getPlanningSessionStatusLabel(planningSession?.status)}
+                                    {planningSession?.name ?? t('planning_poker')} ·{' '}
+                                    {getPlanningStatusLabel(planningSession?.status, t)}
                                   </span>
                                 </div>
                               ) : null}
@@ -3400,9 +3420,9 @@ function ProjectDetailPage() {
                               <div className="project-detail-page__kanban-card-actions">
                                 {canDragKanbanStory ? (
                                   <details className="project-detail-page__kanban-card-tools">
-                                    <summary>Mover cartão</summary>
+                                    <summary>{t('move_card')}</summary>
                                     <label className="project-detail-page__kanban-move">
-                                      <span>Mover para</span>
+                                      <span>{t('move_to')}</span>
                                       <select
                                         value={story.kanban_column_id}
                                         onChange={(event) => handleMoveKanbanStory(story, event.target.value)}
@@ -3410,7 +3430,7 @@ function ProjectDetailPage() {
                                       >
                                         {kanbanColumns.map((targetColumn) => (
                                           <option key={targetColumn.id} value={targetColumn.id}>
-                                            {targetColumn.name}
+                                            {getKanbanColumnLabel(targetColumn, t)}
                                           </option>
                                         ))}
                                       </select>
@@ -3424,27 +3444,27 @@ function ProjectDetailPage() {
                                     onClick={() => handlePrepareStoryForPlanning(story)}
                                     disabled={isMovingStory}
                                   >
-                                    {isMovingStory ? 'Preparando...' : 'Preparar Roda'}
+                                    {isMovingStory ? t('preparing') : t('prepare_for_planning_poker')}
                                   </button>
                                 ) : null}
                                 <Link className="btn btn-secondary btn-small" to={`/tool?storyId=${story.id}`}>
-                                  Abrir na Bancada
+                                  {t('open_in_workbench')}
                                 </Link>
                                 {isInLivePlanningSession ? (
                                   <Link className="btn btn-primary btn-small" to={planningRoomUrl}>
-                                    Continuar Roda
+                                    {t('continue_session')}
                                   </Link>
                                 ) : isReadyForPlanning ? (
                                   <Link
                                     className="btn btn-primary btn-small"
                                     to={`/roda?projectId=${projectId}&storyId=${story.id}`}
                                   >
-                                    Abrir Roda
+                                    {t('open_planning_poker')}
                                   </Link>
                                 ) : null}
                                 {story.estimation_status === 'estimated' ? (
                                   <Link className="btn btn-secondary btn-small" to={planningRoomUrl}>
-                                    Ver estimativa
+                                    {t('view_estimate')}
                                   </Link>
                                 ) : null}
                               </div>
@@ -3494,30 +3514,30 @@ function ProjectDetailPage() {
                           onChange={() => handleToggleProjectStorySelection(story.id)}
                           disabled={isInLivePlanningSession}
                         />
-                      <span>{isInLivePlanningSession ? 'Já em Roda ativa' : 'Selecionar para Roda'}</span>
+                      <span>{isInLivePlanningSession ? t('already_in_an_active_session') : t('select_for_planning_poker')}</span>
                     </label>
                   ) : null}
                   <h3>{story.title}</h3>
-                  <p>{story.input_context || story.user_story || 'Sem descrição.'}</p>
+                  <p>{story.input_context || story.user_story || t('no_description')}</p>
                   {planningEntry ? (
                     <div
                       className={`project-detail-page__kanban-card-planning${
                         isInLivePlanningSession ? ' is-live' : ''
                       }`}
                     >
-                      <strong>{isInLivePlanningSession ? 'Em Roda ativa' : 'Roda vinculada'}</strong>
+                      <strong>{isInLivePlanningSession ? t('in_an_active_session_2') : t('linked_session')}</strong>
                       <span>
-                        {planningSession?.name ?? 'Roda da Fogueira'}
-                        {finalEstimate ? ` · Final: ${finalEstimate}` : ''}
+                        {planningSession?.name ?? t('planning_poker')}
+                        {finalEstimate ? t('final_2', { p1: finalEstimate }) : ''}
                       </span>
                     </div>
                   ) : null}
                 </div>
                 <div className="project-detail-page__story-meta">
-                  <span>{formatProjectDateTime(story.created_at)}</span>
+                  <span>{formatProjectDateTime(story.created_at, language)}</span>
                   {canUpdateStoryStatus ? (
                     <label className="project-detail-page__story-status">
-                      <span>Status de estimativa</span>
+                      <span>{t('estimation_status')}</span>
                       <select
                         value={story.estimation_status ?? 'created'}
                         onChange={(event) =>
@@ -3527,32 +3547,32 @@ function ProjectDetailPage() {
                       >
                         {ESTIMATION_STATUS_OPTIONS.map((option) => (
                           <option key={option.value} value={option.value}>
-                            {option.label}
+                            {t(option.label)}
                           </option>
                         ))}
                       </select>
                     </label>
                   ) : (
-                    <span>{getEstimationStatusLabel(story.estimation_status)}</span>
+                    <span>{getEstimationStatusLabel(story.estimation_status, t)}</span>
                   )}
                   <Link className="btn btn-secondary btn-small" to={`/tool?storyId=${story.id}`}>
-                    Abrir na Bancada
+                    {t('open_in_workbench')}
                   </Link>
                   {isInLivePlanningSession ? (
                     <Link className="btn btn-primary btn-small" to={planningRoomUrl}>
-                      Continuar Roda
+                      {t('continue_session')}
                     </Link>
                   ) : isReadyForPlanning ? (
                     <Link
                       className="btn btn-primary btn-small"
                       to={`/roda?projectId=${projectId}&storyId=${story.id}`}
                     >
-                      Abrir Roda
+                      {t('open_planning_poker')}
                     </Link>
                   ) : null}
                   {story.estimation_status === 'estimated' ? (
                     <Link className="btn btn-secondary btn-small" to={planningRoomUrl}>
-                      Ver estimativa
+                      {t('view_estimate')}
                     </Link>
                   ) : null}
                   {story.estimation_status !== 'ready_for_estimation' &&
@@ -3564,7 +3584,7 @@ function ProjectDetailPage() {
                       onClick={() => handlePrepareStoryForPlanning(story)}
                       disabled={isUpdatingStoryStatus}
                     >
-                      {isUpdatingStoryStatus ? 'Preparando...' : 'Preparar Roda'}
+                      {isUpdatingStoryStatus ? t('preparing') : t('prepare_for_planning_poker')}
                     </button>
                   ) : null}
                 </div>
@@ -3575,29 +3595,29 @@ function ProjectDetailPage() {
         ) : null}
       </section>
 
-      <section id="membros-projeto" className="panel project-detail-page__members" aria-label="Membros do projeto">
+      <section id="membros-projeto" className="panel project-detail-page__members" aria-label={t('project_members')}>
         <div className="projects-page__section-header">
           <div>
-            <p className="projects-page__eyebrow">Membros do projeto</p>
+            <p className="projects-page__eyebrow">{t('project_members')}</p>
             <h2>{membersLabel}</h2>
-            <p>Pessoas com acesso ao contexto e às histórias vinculadas deste projeto.</p>
+            <p>{t('people_with_access_to_this_project_and')}</p>
           </div>
         </div>
 
         {canManageProjectMembers ? (
           <form className="project-detail-page__member-form" onSubmit={handleAddProjectMember}>
             <label className="projects-page__field">
-              <span>E-mail cadastrado</span>
+              <span>{t('registered_email')}</span>
               <input
                 type="email"
                 value={memberEmail}
                 onChange={(event) => setMemberEmail(event.target.value)}
-                placeholder="pessoa@empresa.com"
+                placeholder={t('name_example_com')}
                 disabled={isAddingProjectMember || isLoading}
               />
             </label>
             <label className="projects-page__field">
-              <span>Papel</span>
+              <span>{t('role')}</span>
               <select
                 value={memberRole}
                 onChange={(event) => setMemberRole(event.target.value)}
@@ -3605,7 +3625,7 @@ function ProjectDetailPage() {
               >
                 {PROJECT_MEMBER_ROLES.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.label)}
                   </option>
                 ))}
               </select>
@@ -3615,17 +3635,17 @@ function ProjectDetailPage() {
               className="btn btn-secondary btn-small"
               disabled={isAddingProjectMember || isLoading}
             >
-              {isAddingProjectMember ? 'Adicionando...' : 'Adicionar membro'}
+              {isAddingProjectMember ? t('adding') : t('add_member')}
             </button>
           </form>
         ) : (
           <p className="projects-page__state">
-            Você pode consultar os membros. Apenas responsáveis e administradores adicionam novas pessoas.
+            {t('you_can_view_the_members_only_owners')}
           </p>
         )}
 
-        {memberMessage ? <p className="projects-page__message">{memberMessage}</p> : null}
-        {isLoading ? <p className="projects-page__state">Carregando membros...</p> : null}
+        {memberMessage ? <p className="projects-page__message" role="status">{formatNotice(t, memberMessage)}</p> : null}
+        {isLoading ? <p className="projects-page__state">{t('loading_members')}</p> : null}
 
         <div className="project-detail-page__member-list">
           {projectMembers.map((member) => {
@@ -3640,7 +3660,7 @@ function ProjectDetailPage() {
                 {canEditMember ? (
                   <div className="project-detail-page__member-controls">
                     <label className="project-detail-page__member-role">
-                      <span>Papel</span>
+                      <span>{t('role')}</span>
                       <select
                         value={member.role}
                         onChange={(event) =>
@@ -3650,7 +3670,7 @@ function ProjectDetailPage() {
                       >
                         {PROJECT_MEMBER_ROLES.map((option) => (
                           <option key={option.value} value={option.value}>
-                            {option.label}
+                            {t(option.label)}
                           </option>
                         ))}
                       </select>
@@ -3661,11 +3681,11 @@ function ProjectDetailPage() {
                       onClick={() => handleRemoveProjectMember(member)}
                       disabled={isUpdatingMember || isRemovingMember || member.user_id === userId}
                     >
-                      {isRemovingMember ? 'Removendo...' : 'Remover'}
+                      {isRemovingMember ? t('removing') : t('remove')}
                     </button>
                   </div>
                 ) : (
-                  <strong>{ROLE_LABELS[member.role] ?? member.role}</strong>
+                  <strong>{ROLE_LABELS[member.role] ? t(ROLE_LABELS[member.role]) : member.role}</strong>
                 )}
               </div>
             )

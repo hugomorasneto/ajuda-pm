@@ -1,3 +1,4 @@
+import { getOgLocale, getPilotPage, RELEASE_MODE } from '../i18n/routes'
 import { useEffect } from 'react'
 import { APP_NAME } from '../constants/app'
 
@@ -5,10 +6,6 @@ const SITE_URL = 'https://prodforge.techtupa.com.br'
 const DEFAULT_IMAGE_URL = `${SITE_URL}/og-prodforge.png`
 const DEFAULT_IMAGE_ALT =
   'Preview do ProdForge, workspace de IA para transformar briefings confusos em user stories claras.'
-
-export const ACADEMIA_IMAGE_URL = `${SITE_URL}/og-prodforge.png`
-export const ACADEMIA_IMAGE_ALT =
-  'Preview do ProdForge com proposta de valor e exemplo de user story estruturada.'
 
 function upsertMeta(selector, attributeName, attributeValue, content) {
   let element = document.head.querySelector(selector)
@@ -57,11 +54,15 @@ function upsertStructuredData(jsonLd) {
 
 export function usePageMetadata({
   title,
+  enabled = true,
+  language = 'pt-BR',
   description,
   path = '/',
   type = 'website',
   image = DEFAULT_IMAGE_URL,
   imageAlt = DEFAULT_IMAGE_ALT,
+  imageWidth = '1200',
+  imageHeight = '630',
   ogTitle = title,
   ogDescription = description,
   twitterCard = 'summary_large_image',
@@ -71,15 +72,29 @@ export function usePageMetadata({
   jsonLd = null,
 }) {
   useEffect(() => {
+    if (!enabled) return
     const url = new URL(path, SITE_URL).toString()
+    const page = import.meta.env.MODE === RELEASE_MODE ? getPilotPage(path) : undefined
+    const isIndexable = page?.en && !['terms', 'privacyPolicy', 'preferences'].includes(page.id)
+    document.head.querySelectorAll('link[data-i18n-alternate]').forEach((link) => link.remove())
+    if (page?.en) {
+      for (const lang of ['pt-BR', 'en', 'x-default']) {
+        const link = document.createElement('link')
+        link.rel = 'alternate'
+        link.hreflang = lang
+        link.href = SITE_URL + page[lang === 'x-default' ? 'pt-BR' : lang]
+        link.setAttribute('data-i18n-alternate', '')
+        document.head.appendChild(link)
+      }
+    }
 
     document.title = title
     upsertMeta('meta[name="description"]', 'name', 'description', description)
-    upsertMeta('meta[name="robots"]', 'name', 'robots', robots)
+    upsertMeta('meta[name="robots"]', 'name', 'robots', isIndexable ? 'index,follow' : robots)
     upsertLink('link[rel="canonical"]', 'canonical', url)
 
     upsertMeta('meta[property="og:site_name"]', 'property', 'og:site_name', APP_NAME)
-    upsertMeta('meta[property="og:locale"]', 'property', 'og:locale', 'pt_BR')
+    upsertMeta('meta[property="og:locale"]', 'property', 'og:locale', getOgLocale(language))
     upsertMeta('meta[property="og:title"]', 'property', 'og:title', ogTitle)
     upsertMeta('meta[property="og:description"]', 'property', 'og:description', ogDescription)
     upsertMeta('meta[property="og:type"]', 'property', 'og:type', type)
@@ -87,8 +102,8 @@ export function usePageMetadata({
     upsertMeta('meta[property="og:image"]', 'property', 'og:image', image)
     upsertMeta('meta[property="og:image:secure_url"]', 'property', 'og:image:secure_url', image)
     upsertMeta('meta[property="og:image:type"]', 'property', 'og:image:type', 'image/png')
-    upsertMeta('meta[property="og:image:width"]', 'property', 'og:image:width', '1200')
-    upsertMeta('meta[property="og:image:height"]', 'property', 'og:image:height', '630')
+    upsertMeta('meta[property="og:image:width"]', 'property', 'og:image:width', imageWidth)
+    upsertMeta('meta[property="og:image:height"]', 'property', 'og:image:height', imageHeight)
     upsertMeta('meta[property="og:image:alt"]', 'property', 'og:image:alt', imageAlt)
 
     upsertMeta('meta[name="twitter:card"]', 'name', 'twitter:card', twitterCard)
@@ -100,9 +115,13 @@ export function usePageMetadata({
     upsertStructuredData(jsonLd)
   }, [
     description,
+    enabled,
     image,
     imageAlt,
+    imageWidth,
+    imageHeight,
     jsonLd,
+    language,
     ogDescription,
     ogTitle,
     path,
@@ -113,35 +132,4 @@ export function usePageMetadata({
     twitterTitle,
     type,
   ])
-}
-
-export function buildArticleJsonLd({ title, description, path, excerpt, publishedTime }) {
-  const url = new URL(path, SITE_URL).toString()
-
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: title,
-    description,
-    articleSection: 'Campo de Treino',
-    inLanguage: 'pt-BR',
-    mainEntityOfPage: url,
-    url,
-    image: DEFAULT_IMAGE_URL,
-    author: {
-      '@type': 'Organization',
-      name: APP_NAME,
-    },
-    publisher: {
-      '@type': 'Organization',
-      name: APP_NAME,
-      logo: {
-        '@type': 'ImageObject',
-        url: `${SITE_URL}/favicon.svg`,
-      },
-    },
-    datePublished: publishedTime,
-    dateModified: publishedTime,
-    abstract: excerpt,
-  }
 }

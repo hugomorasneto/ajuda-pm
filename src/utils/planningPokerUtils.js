@@ -1,72 +1,90 @@
-export const PLANNING_SESSION_STATUS_LABELS = {
-  draft: 'Rascunho',
-  active: 'Ativa',
-  voting: 'Em votação',
-  revealed: 'Votos revelados',
-  completed: 'Finalizada',
-  canceled: 'Cancelada',
+import portuguese from '../i18n/locales/pt-BR/planning.json'
+
+function defaultPlanningCopy(key, values = {}) {
+  return portuguese[key].replace(/\{\{(\w+)\}\}/g, (_, name) => String(values[name]))
 }
 
-export const PLANNING_STORY_STATUS_LABELS = {
-  pending: 'Pendente',
-  voting: 'Em votação',
-  estimated: 'Estimada',
-  skipped: 'Pulada',
+function portugueseLabels(keys) {
+  return Object.fromEntries(Object.entries(keys).map(([code, key]) => [code, defaultPlanningCopy(key)]))
+}
+const PLANNING_SESSION_STATUS_KEYS = {
+  draft: 'draft',
+  active: 'active',
+  voting: 'voting',
+  revealed: 'votes_revealed',
+  completed: 'completed',
+  canceled: 'canceled',
 }
 
-export const PLANNING_ROUND_STATUS_LABELS = {
-  voting: 'Votação aberta',
-  revealed: 'Runas reveladas',
-  closed: 'Rodada encerrada',
-  canceled: 'Rodada cancelada',
+const PLANNING_STORY_STATUS_KEYS = {
+  pending: 'pending_3',
+  voting: 'voting',
+  estimated: 'estimated_3',
+  skipped: 'skipped_3',
 }
 
-export const PLANNING_SCORING_SCALE_LABELS = {
-  fibonacci: 'Fibonacci',
-  tshirt: 'Tamanho de camiseta',
-  custom: 'Customizada',
+const PLANNING_ROUND_STATUS_KEYS = {
+  voting: 'voting_open',
+  revealed: 'cards_revealed_2',
+  closed: 'round_closed',
+  canceled: 'round_canceled',
 }
+
+const PLANNING_SCORING_SCALE_KEYS = {
+  fibonacci: 'fibonacci',
+  tshirt: 't_shirt_sizes',
+  custom: 'custom',
+}
+
+export const PLANNING_SESSION_STATUS_LABELS = portugueseLabels(PLANNING_SESSION_STATUS_KEYS)
+export const PLANNING_STORY_STATUS_LABELS = portugueseLabels(PLANNING_STORY_STATUS_KEYS)
+export const PLANNING_ROUND_STATUS_LABELS = portugueseLabels(PLANNING_ROUND_STATUS_KEYS)
+export const PLANNING_SCORING_SCALE_LABELS = portugueseLabels(PLANNING_SCORING_SCALE_KEYS)
 
 export const LIVE_PLANNING_SESSION_STATUSES = ['active', 'voting', 'revealed']
 
-export function getPlanningSessionStatusLabel(status) {
-  return PLANNING_SESSION_STATUS_LABELS[status] ?? 'Rascunho'
+export function getPlanningSessionStatusLabel(status, t = defaultPlanningCopy) {
+  const key = PLANNING_SESSION_STATUS_KEYS[status]
+  return t(typeof key === 'string' ? key : 'draft')
 }
 
-export function getPlanningStoryStatusLabel(status) {
-  return PLANNING_STORY_STATUS_LABELS[status] ?? 'Pendente'
+export function getPlanningStoryStatusLabel(status, t = defaultPlanningCopy) {
+  const key = PLANNING_STORY_STATUS_KEYS[status]
+  return t(typeof key === 'string' ? key : 'pending_3')
 }
 
-export function getPlanningRoundStatusLabel(status) {
-  return PLANNING_ROUND_STATUS_LABELS[status] ?? 'Sem rodada ativa'
+export function getPlanningRoundStatusLabel(status, t = defaultPlanningCopy) {
+  const key = PLANNING_ROUND_STATUS_KEYS[status]
+  return t(typeof key === 'string' ? key : 'no_active_round')
 }
 
-export function getPlanningScoringScaleLabel(scoringScale) {
-  return PLANNING_SCORING_SCALE_LABELS[scoringScale] ?? 'Fibonacci'
+export function getPlanningScoringScaleLabel(scoringScale, t = defaultPlanningCopy) {
+  const key = PLANNING_SCORING_SCALE_KEYS[scoringScale]
+  return t(typeof key === 'string' ? key : 'fibonacci')
 }
 
 export function formatPlanningCount(count, singular, plural) {
   return `${count} ${count === 1 ? singular : plural}`
 }
 
-export function formatPlanningTimerDuration(seconds) {
+export function formatPlanningTimerDuration(seconds, t = defaultPlanningCopy) {
   const numericSeconds = Number(seconds)
-  if (!Number.isFinite(numericSeconds) || numericSeconds <= 0) return 'Sem timer'
+  if (!Number.isFinite(numericSeconds) || numericSeconds <= 0) return t('no_timer')
 
   if (numericSeconds < 60) {
-    return formatPlanningCount(numericSeconds, 'segundo', 'segundos')
+    return formatPlanningCount(numericSeconds, t('second'), t('seconds'))
   }
 
   const minutes = Math.round(numericSeconds / 60)
-  return formatPlanningCount(minutes, 'minuto', 'minutos')
+  return formatPlanningCount(minutes, t('minute'), t('minutes'))
 }
 
-export function formatRemainingTime(endsAt, currentTime) {
-  if (!endsAt) return 'Sem timer'
-  if (!currentTime) return 'Atualizando timer'
+export function formatRemainingTime(endsAt, currentTime, t = defaultPlanningCopy) {
+  if (!endsAt) return t('no_timer')
+  if (!currentTime) return t('updating_timer')
 
   const remainingMs = new Date(endsAt).getTime() - currentTime
-  if (!Number.isFinite(remainingMs) || remainingMs <= 0) return 'Tempo encerrado'
+  if (!Number.isFinite(remainingMs) || remainingMs <= 0) return t('time_is_up')
 
   const totalSeconds = Math.ceil(remainingMs / 1000)
   const minutes = Math.floor(totalSeconds / 60)
@@ -92,7 +110,7 @@ export function getPlanningSessionSortWeight(status) {
   return 6
 }
 
-export function getPlanningSessionProgress(stories = []) {
+export function getPlanningSessionProgress(stories = [], t = defaultPlanningCopy) {
   const total = stories.length
   const estimated = stories.filter((story) => story.status === 'estimated').length
   const skipped = stories.filter((story) => story.status === 'skipped').length
@@ -104,8 +122,8 @@ export function getPlanningSessionProgress(stories = []) {
     estimated,
     label:
       total > 0
-        ? `${formatPlanningCount(resolved, 'história resolvida', 'histórias resolvidas')} de ${total}`
-        : 'Sem histórias vinculadas',
+        ? t('of_2', { p1: formatPlanningCount(resolved, t('resolved_story'), t('resolved_stories')), p2: total })
+        : t('no_linked_stories'),
     pending,
     progressPercent: total > 0 ? Math.round((resolved / total) * 100) : 0,
     resolved,
@@ -115,9 +133,9 @@ export function getPlanningSessionProgress(stories = []) {
   }
 }
 
-export function getPlanningSessionProgressById(sessions = [], storiesBySession = {}) {
+export function getPlanningSessionProgressById(sessions = [], storiesBySession = {}, t = defaultPlanningCopy) {
   return sessions.reduce((progressById, session) => {
-    progressById[session.id] = getPlanningSessionProgress(storiesBySession[session.id] ?? [])
+    progressById[session.id] = getPlanningSessionProgress(storiesBySession[session.id] ?? [], t)
     return progressById
   }, {})
 }
@@ -181,57 +199,57 @@ export function buildPlanningSessionSummaryMarkdown({
   projectName = '',
   session,
   stories = [],
-}) {
-  const safeProgress = progress ?? getPlanningSessionProgress(stories)
+}, t = defaultPlanningCopy) {
+  const safeProgress = progress ?? getPlanningSessionProgress(stories, t)
   const lines = [
-    '# Roda da Fogueira',
+    t('planning_poker_2'),
     '',
-    `**Sessão:** ${session?.name ?? '-'}`,
+    t('session', { p1: session?.name ?? '-' }),
   ]
 
-  if (projectName) lines.push(`**Projeto:** ${projectName}`)
+  if (projectName) lines.push(t('project_2', { p1: projectName }))
 
   lines.push(
-    `**Status:** ${getPlanningSessionStatusLabel(session?.status)}`,
-    `**Código:** ${session?.invite_code ?? '-'}`,
-    `**Escala:** ${getPlanningScoringScaleLabel(session?.scoring_scale)}`,
-    `**Timer:** ${formatPlanningTimerDuration(session?.vote_time_limit_seconds)}`,
+    t('status_3', { p1: getPlanningSessionStatusLabel(session?.status, t) }),
+    t('code_3', { p1: session?.invite_code ?? '-' }),
+    t('scale_3', { p1: getPlanningScoringScaleLabel(session?.scoring_scale, t) }),
+    t('timer_2', { p1: formatPlanningTimerDuration(session?.vote_time_limit_seconds, t) }),
   )
 
-  if (participantsCount !== null) lines.push(`**Participantes votantes:** ${participantsCount}`)
+  if (participantsCount !== null) lines.push(t('voting_participants_2', { p1: participantsCount }))
 
-  lines.push(`**Progresso:** ${safeProgress.label}`, '', '## Histórias')
+  lines.push(t('progress_2', { p1: safeProgress.label }), '', t('stories_2'))
 
   if (stories.length === 0) {
-    lines.push('- Nenhuma história vinculada.')
+    lines.push(t('no_linked_stories_3'))
     return lines.join('\n')
   }
 
   stories.forEach((story, index) => {
-    const title = story.user_story?.title ?? `História ${index + 1}`
-    const estimate = story.final_estimate ? ` · Final: ${story.final_estimate}` : ''
-    lines.push(`- ${title} · ${getPlanningStoryStatusLabel(story.status)}${estimate}`)
+    const title = story.user_story?.title ?? t('story', { p1: index + 1 })
+    const estimate = story.final_estimate ? t('final_3', { p1: story.final_estimate }) : ''
+    lines.push(`- ${title} · ${getPlanningStoryStatusLabel(story.status, t)}${estimate}`)
   })
 
   return lines.join('\n')
 }
 
-export function buildPlanningAccessRequestMessage({ email = '', inviteCode = '', inviteUrl = '' } = {}) {
+export function buildPlanningAccessRequestMessage({ email = '', inviteCode = '', inviteUrl = '' } = {}, t = defaultPlanningCopy) {
   const safeEmail = String(email ?? '').trim()
-  const safeInviteCode = String(inviteCode ?? '').trim().toUpperCase() || 'não informado'
+  const safeInviteCode = String(inviteCode ?? '').trim().toUpperCase() || t('unspecified')
   const safeInviteUrl = String(inviteUrl ?? '').trim()
   const emailLine = safeEmail
-    ? `Meu e-mail de acesso é ${safeEmail}.`
-    : 'Meu e-mail de acesso é o mesmo usado no ProdForge.'
+    ? t('my_sign_in_email_is', { p1: safeEmail })
+    : t('i_use_the_email_registered_with_prodforge')
   const accessLine = safeInviteUrl
-    ? `Link da sala: ${safeInviteUrl}.`
-    : `Código da Roda: ${safeInviteCode}.`
+    ? t('room_link', { p1: safeInviteUrl })
+    : t('session_code', { p1: safeInviteCode })
 
   return [
-    'Olá! Estou tentando participar de uma Roda da Fogueira no ProdForge, mas meu acesso ainda não foi liberado.',
+    t('hi_i_m_trying_to_join_a'),
     emailLine,
     accessLine,
-    'Você pode adicionar meu e-mail ao projeto da Roda e reenviar o convite?',
+    t('could_you_add_my_email_to_the'),
   ].join('\n')
 }
 

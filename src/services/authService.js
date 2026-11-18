@@ -4,16 +4,12 @@ import { DEFAULT_AUTH_REDIRECT_PATH, normalizeAuthRedirect } from '../utils/auth
 const ALLOWED_EMAIL_REDIRECT_HOSTS = new Set([
   'localhost',
   '127.0.0.1',
-  '::1',
+  '[::1]',
   'prodforge.techtupa.br',
   'www.prodforge.techtupa.br',
   'prodforge.techtupa.com.br',
   'www.prodforge.techtupa.com.br',
 ])
-
-function getRawAuthMessage(error) {
-  return typeof error?.message === 'string' ? error.message.trim() : ''
-}
 
 function buildEmailRedirectOptions(redirectTo = DEFAULT_AUTH_REDIRECT_PATH) {
   if (typeof window === 'undefined') return undefined
@@ -30,49 +26,6 @@ function buildEmailRedirectOptions(redirectTo = DEFAULT_AUTH_REDIRECT_PATH) {
   }
 }
 
-export function isEmailConfirmationError(error) {
-  const message = getRawAuthMessage(error).toLowerCase()
-  return message.includes('email not confirmed') || message.includes('not confirmed')
-}
-
-export function getAuthErrorMessage(error) {
-  const rawMessage = getRawAuthMessage(error)
-  const message = rawMessage.toLowerCase()
-
-  if (message.includes('invalid login credentials')) {
-    return 'E-mail ou senha incorretos.'
-  }
-
-  if (
-    message.includes('invalid email') ||
-    (message.includes('email') && message.includes('invalid'))
-  ) {
-    return 'Digite um e-mail válido.'
-  }
-
-  if (message.includes('user already registered')) {
-    return 'Este e-mail já está cadastrado. Entre para continuar.'
-  }
-
-  if (message.includes('password should be at least')) {
-    return 'Use uma senha com pelo menos 6 caracteres.'
-  }
-
-  if (isEmailConfirmationError(error)) {
-    return 'Confirme seu e-mail antes de entrar.'
-  }
-
-  if (
-    message.includes('rate limit') ||
-    message.includes('over_email_send_rate_limit') ||
-    message.includes('security purposes')
-  ) {
-    return 'Limite temporário de tentativas ou envios atingido. Aguarde alguns minutos e tente novamente.'
-  }
-
-  return 'Não foi possível concluir agora. Tente novamente.'
-}
-
 export function maskEmail(email) {
   const normalized = typeof email === 'string' ? email.trim() : ''
   if (!normalized || !normalized.includes('@')) return ''
@@ -87,13 +40,18 @@ export function maskEmail(email) {
   return `${localPart.slice(0, 2)}***@${domain}`
 }
 
-export async function signUpWithEmail({ email, password, redirectTo }) {
+export async function signUpWithEmail({ email, password, redirectTo, legalAcceptance }) {
   const options = buildEmailRedirectOptions(redirectTo)
 
   return supabase.auth.signUp({
     email,
     password,
-    ...(options ? { options } : {}),
+    ...(options || legalAcceptance ? {
+      options: {
+        ...options,
+        ...(legalAcceptance ? { data: { prodforge_legal_acceptance: legalAcceptance } } : {}),
+      },
+    } : {}),
   })
 }
 

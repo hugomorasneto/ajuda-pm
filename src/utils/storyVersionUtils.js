@@ -1,3 +1,5 @@
+import { defaultStoryFormat } from './storyFormat'
+
 function normalizeText(value) {
   return typeof value === 'string' ? value.trim() : ''
 }
@@ -35,7 +37,7 @@ export function getVersionNumberLabel(version, fallback = '?') {
   return `V${versionNumber}`
 }
 
-export function buildVersionDiff(previousVersion, currentVersion) {
+export function buildVersionDiff(previousVersion, currentVersion, t = defaultStoryFormat) {
   if (!previousVersion || !currentVersion) return null
 
   const acceptanceCriteria = buildListDiff(
@@ -48,22 +50,22 @@ export function buildVersionDiff(previousVersion, currentVersion) {
   const fieldChanges = [
     {
       key: 'title',
-      label: 'Título',
+      label: t('title'),
       changed: hasTextChanged(previousVersion.title, currentVersion.title),
     },
     {
       key: 'objective',
-      label: 'Objetivo',
+      label: t('goal'),
       changed: hasTextChanged(previousVersion.objective, currentVersion.objective),
     },
     {
       key: 'user_story',
-      label: 'User story',
+      label: t('user_story'),
       changed: hasTextChanged(previousVersion.user_story, currentVersion.user_story),
     },
     {
       key: 'notes',
-      label: 'Acabamento',
+      label: t('refinement'),
       changed: hasTextChanged(
         previousVersion.regeneration_instruction,
         currentVersion.regeneration_instruction,
@@ -90,64 +92,49 @@ export function buildVersionDiff(previousVersion, currentVersion) {
   }
 }
 
-export function getVersionDiffLead(diff) {
-  if (!diff) {
-    return 'Gere uma nova versão para comparar evolução, acabamento e critérios.'
-  }
+export function getVersionDiffLead(diff, t = defaultStoryFormat) {
+  if (!diff) return t('first_comparison')
+  if (diff.totalChanges === 0) return t('no_changes')
 
-  if (diff.totalChanges === 0) {
-    return 'Esta versão manteve a estrutura textual da versão anterior.'
-  }
-
-  const parts = []
-  if (diff.textChangesCount > 0) {
-    parts.push(`${diff.textChangesCount} ${diff.textChangesCount === 1 ? 'campo alterado' : 'campos alterados'}`)
-  }
-  if (diff.totalAdded > 0) {
-    parts.push(`${diff.totalAdded} ${diff.totalAdded === 1 ? 'item adicionado' : 'itens adicionados'}`)
-  }
-  if (diff.totalRemoved > 0) {
-    parts.push(`${diff.totalRemoved} ${diff.totalRemoved === 1 ? 'item removido' : 'itens removidos'}`)
-  }
-
-  return `Comparação entre versões com ${parts.join(', ')}.`
+  const entries = [
+    ['fields_changed', diff.textChangesCount],
+    ['items_added', diff.totalAdded],
+    ['items_removed', diff.totalRemoved],
+  ]
+  const changes = entries.filter(([, count]) => count > 0)
+    .map(([key, count]) => t(key, { count }))
+  return t('comparison_lead', { changes: changes.join(', ') })
 }
 
-function formatList(items, fallback = '- Nenhum item') {
-  return items.length > 0 ? items.map((item) => `- ${item}`).join('\n') : fallback
+function formatList(items, fallback) {
+  return items.length > 0 ? items.map((item) => `- ${item}`).join('\n') : `- ${fallback}`
 }
 
-export function buildVersionComparisonMarkdown({ previousVersion, currentVersion }) {
-  const diff = buildVersionDiff(previousVersion, currentVersion)
+export function buildVersionComparisonMarkdown(
+  { previousVersion, currentVersion }, t = defaultStoryFormat,
+) {
+  const diff = buildVersionDiff(previousVersion, currentVersion, t)
   if (!diff) return ''
 
   const changedFields = diff.fieldChanges.filter((item) => item.changed)
-
+  const sections = [
+    ['fields', changedFields.map((item) => item.label), t('no_fields')],
+    ['criteria_added', diff.acceptanceCriteria.added],
+    ['criteria_removed', diff.acceptanceCriteria.removed],
+    ['rules_added', diff.businessRules.added],
+    ['gaps_added', diff.gaps.added],
+    ['qa_added', diff.qaChecklist.added],
+  ]
   return [
-    `# Comparação de versões`,
+    `# ${t('comparison')}`,
     '',
-    `Peça: ${normalizeText(currentVersion.title) || 'User story'}`,
-    `Comparando: ${diff.previousLabel} -> ${diff.currentLabel}`,
+    `${t('artifact')}: ${normalizeText(currentVersion.title) || t('user_story')}`,
+    `${t('comparing')}: ${diff.previousLabel} -> ${diff.currentLabel}`,
     '',
-    `## Resumo`,
-    getVersionDiffLead(diff),
-    '',
-    `## Campos alterados`,
-    formatList(changedFields.map((item) => item.label), '- Nenhum campo textual alterado'),
-    '',
-    `## Critérios adicionados`,
-    formatList(diff.acceptanceCriteria.added),
-    '',
-    `## Critérios removidos`,
-    formatList(diff.acceptanceCriteria.removed),
-    '',
-    `## Regras adicionadas`,
-    formatList(diff.businessRules.added),
-    '',
-    `## Pontos de atenção adicionados`,
-    formatList(diff.gaps.added),
-    '',
-    `## Itens de QA adicionados`,
-    formatList(diff.qaChecklist.added),
+    `## ${t('summary')}`,
+    getVersionDiffLead(diff, t),
+    ...sections.flatMap(([heading, items, empty = t('no_items')]) => [
+      '', `## ${t(heading)}`, formatList(items, empty),
+    ]),
   ].join('\n')
 }

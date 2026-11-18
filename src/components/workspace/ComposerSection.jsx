@@ -1,4 +1,4 @@
-function ComposerSection({ icon, label, error, children, footer }) {
+function ComposerSection({ icon, label, error, errorId, children, footer }) {
   return (
     <section className={`composer-section ${error ? 'composer-section--error' : ''}`}>
       {(icon || label) && (
@@ -11,7 +11,7 @@ function ComposerSection({ icon, label, error, children, footer }) {
       <div className="composer-section__body">{children}</div>
 
       {footer ? <div className="composer-section__footer">{footer}</div> : null}
-      {error ? <p className="field-error composer-section__error">{error}</p> : null}
+      {error ? <p id={errorId} role="alert" className="field-error composer-section__error">{error}</p> : null}
     </section>
   )
 }

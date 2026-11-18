@@ -1,25 +1,19 @@
-import { Link } from 'react-router-dom'
+import { Trans } from 'react-i18next'
+import Link from '../i18n/LocalizedLink'
+import { useCopy, useLanguage } from '../i18n/context'
+import { getLearningMetadata } from '../i18n/learningMetadata'
+import { useLearningCatalog } from '../hooks/useLearningCatalog'
 import LearningGuideCard from '../components/learning/LearningGuideCard'
 import {
   getLearningGuideBySlug,
   getLearningGuidesBySlugs,
-  learningHub,
-  learningNotes,
+  getLearningNotes,
+  starterGuideSlugs,
 } from '../content/learningContent'
 import { withAcademyGuideMedia } from '../content/academyGuideMedia'
 import { useAuth } from '../hooks/useAuth'
 import { useLearningProgress } from '../hooks/useLearningProgress'
-import { ACADEMIA_IMAGE_ALT, ACADEMIA_IMAGE_URL, usePageMetadata } from '../hooks/usePageMetadata'
-
-const TRAIL_STEPS = [
-  { num: '01', title: 'Fundamentos', slug: 'fundamentos-produto-agil' },
-  { num: '02', title: 'User Stories', slug: 'user-stories-na-pratica' },
-  { num: '03', title: 'Backlog', slug: 'backlog-e-refinamento' },
-  { num: '04', title: 'Refinamento', slug: 'refinamento-e-criterios' },
-  { num: '05', title: 'Alinhamento', slug: 'alinhamento-com-stakeholders' },
-]
-
-const AVAILABLE_STEPS = TRAIL_STEPS.filter((s) => s.slug)
+import { usePageMetadata } from '../hooks/usePageMetadata'
 
 function CheckIcon() {
   return (
@@ -29,15 +23,10 @@ function CheckIcon() {
   )
 }
 
-function TrailStep({ step, index, isCompleted }) {
-  const isActive = Boolean(step.slug)
-  const isDone = isActive && isCompleted(step.slug)
-
+function TrailStep({ guide, index, isDone }) {
   const stepClass = [
     'learning-path-step',
-    !isActive ? 'learning-path-step--locked' :
-    isDone    ? 'learning-path-step--completed' :
-                'learning-path-step--active',
+    isDone ? 'learning-path-step--completed' : 'learning-path-step--active',
   ].join(' ')
 
   const connectorClass = [
@@ -52,49 +41,35 @@ function TrailStep({ step, index, isCompleted }) {
       <div className="learning-path-step__dot" aria-hidden="true">
         {isDone ? (
           <CheckIcon />
-        ) : isActive ? (
+        ) : (
           <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor">
             <circle cx="4" cy="4" r="4" />
-          </svg>
-        ) : (
-          <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-            <circle cx="4" cy="4" r="3" stroke="currentColor" strokeWidth="1.5" />
           </svg>
         )}
       </div>
 
-      <span className="learning-path-step__num">{step.num}</span>
+      <span className="learning-path-step__num">{String(index + 1).padStart(2, '0')}</span>
 
-      {step.slug ? (
-        <Link to={`/aprender/${step.slug}`} className="learning-path-step__title">
-          {step.title}
-        </Link>
-      ) : (
-        <span className="learning-path-step__title learning-path-step__title--locked">
-          {step.title}
-        </span>
-      )}
+      <Link to={`/aprender/${guide.slug}`} className="learning-path-step__title">
+        {guide.category}
+      </Link>
     </div>
   )
 }
 
-function LearningHubPage() {
+function LearningHubPage({ route }) {
+  const t = useCopy('learning')
+  const { language } = useLanguage()
+  const catalog = useLearningCatalog()
   const { user } = useAuth()
   const { isCompleted, isLoading } = useLearningProgress()
-  const academyModules = withAcademyGuideMedia(getLearningGuidesBySlugs(learningHub.starterGuideSlugs))
+  const academyModules = withAcademyGuideMedia(getLearningGuidesBySlugs(starterGuideSlugs, catalog))
+  const learningNotes = getLearningNotes(catalog)
+  const completedCount = starterGuideSlugs.filter(isCompleted).length
+  const totalCount = starterGuideSlugs.length
+  const progressPercent = (completedCount / totalCount) * 100
 
-  const completedCount = AVAILABLE_STEPS.filter((s) => isCompleted(s.slug)).length
-  const totalCount = AVAILABLE_STEPS.length
-  const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0
-
-  usePageMetadata({
-    title: 'Campo de Treino ProdForge | Aprenda product management na prática',
-    description:
-      'Guias práticos para aprender conceitos de produto e aplicar direto na Bancada, com user stories prontas para revisão.',
-    path: '/aprender',
-    image: ACADEMIA_IMAGE_URL,
-    imageAlt: ACADEMIA_IMAGE_ALT,
-  })
+  usePageMetadata(getLearningMetadata(route, language, catalog))
 
   return (
     <div className="page learning-page learning-hub">
@@ -102,33 +77,23 @@ function LearningHubPage() {
       {/* ── Hero ── */}
       <section className="learning-hub-hero">
         <div className="learning-hub-hero__copy">
-          <span className="badge-pill badge-pill--academy">Campo de Treino ProdForge</span>
-          <h1>Campo de Treino ProdForge</h1>
-          <p>
-            Guias práticos para aprender conceitos de produto e aplicar direto na Bancada,
-            com user stories prontas para revisão.
-          </p>
+          <span className="badge-pill badge-pill--academy">{t('title')}</span>
+          <h1>{t('title')}</h1>
+          <p>{t('intro')}</p>
           <div className="learning-hub-hero__actions">
-            <Link className="landing-button landing-button--primary" to="/aprender/fundamentos-produto-agil">
-              Começar trilha →
-            </Link>
-            <a className="landing-button landing-button--secondary" href="#modulos">
-              Ver módulos
-            </a>
+            <Link className="landing-button landing-button--primary" to="/aprender/fundamentos-produto-agil">{t('start')}</Link>
+            <a className="landing-button landing-button--secondary" href="#modulos">{t('modulesLink')}</a>
           </div>
-          <p className="learning-hub-hero__microcopy">5 módulos · Nível iniciante · Grátis para começar</p>
+          <p className="learning-hub-hero__microcopy">{t('details', { total: totalCount })}</p>
         </div>
       </section>
 
       {/* ── Trilha visual ── */}
       <section className="learning-path-section">
         <div className="learning-section__intro">
-          <span className="badge-pill badge-pill--academy">Trilha PM na Prática</span>
-          <h2>Aprenda na sequência certa.</h2>
-          <p>
-            Comece pelo módulo 01 se você está montando base agora.
-            Pule por tema se já estiver vivendo a dor no backlog.
-          </p>
+          <span className="badge-pill badge-pill--academy">{t('pathBadge')}</span>
+          <h2>{t('pathTitle')}</h2>
+          <p>{t('pathIntro')}</p>
         </div>
 
         {/* Barra de progresso — só para usuários logados */}
@@ -137,16 +102,16 @@ function LearningHubPage() {
             <div className="learning-trail-progress__header">
               <span className="learning-trail-progress__label">
                 {completedCount === 0
-                  ? 'Nenhum módulo concluído ainda'
+                  ? t('emptyProgress')
                   : completedCount === totalCount
-                  ? '🎉 Trilha concluída!'
-                  : `${completedCount} de ${totalCount} módulos concluídos`}
+                  ? t('fullProgress')
+                  : t('progress', { completed: completedCount, total: totalCount })}
               </span>
               <span className="learning-trail-progress__fraction">
                 {completedCount}/{totalCount}
               </span>
             </div>
-            <div className="learning-trail-progress__bar" role="progressbar" aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={totalCount}>
+            <div className="learning-trail-progress__bar" role="progressbar" aria-label={t('progressLabel')} aria-valuenow={completedCount} aria-valuemin={0} aria-valuemax={totalCount}>
               <div
                 className="learning-trail-progress__fill"
                 style={{ width: `${progressPercent}%` }}
@@ -155,13 +120,13 @@ function LearningHubPage() {
           </div>
         )}
 
-        <div className="learning-path-trail" role="list" aria-label="Módulos da trilha">
-          {TRAIL_STEPS.map((step, i) => (
+        <div className="learning-path-trail" role="list" aria-label={t('pathLabel')}>
+          {academyModules.map((guide, i) => (
             <TrailStep
-              key={step.num}
-              step={step}
+              key={guide.slug}
+              guide={guide}
               index={i}
-              isCompleted={isCompleted}
+              isDone={isCompleted(guide.slug)}
             />
           ))}
         </div>
@@ -170,12 +135,9 @@ function LearningHubPage() {
       {/* ── Aprenda enquanto faz ── */}
       <section className="learning-section" id="modulos">
         <div className="learning-section__intro">
-          <span className="badge-pill">Aprenda enquanto faz</span>
-          <h2>Módulos do Campo de Treino ProdForge para praticar no backlog real</h2>
-          <p>
-            Leia na ordem se você está montando base agora. Pule por tema se já estiver vivendo a dor
-            de estruturar stories, refinar backlog ou alinhar stakeholders.
-          </p>
+          <span className="badge-pill">{t('moduleBadge')}</span>
+          <h2>{t('moduleTitle')}</h2>
+          <p>{t('moduleIntro')}</p>
         </div>
 
         <div className="learning-guide-grid learning-guide-grid--featured">
@@ -193,45 +155,33 @@ function LearningHubPage() {
       {/* ── Aprenda e Aplique ── */}
       <section className="learn-apply-block" aria-labelledby="learn-apply-title">
         <div className="learn-apply-block__copy">
-          <span className="badge-pill badge-pill--academy">Aprenda e aplique</span>
-          <h2 id="learn-apply-title">Cada guia termina onde o trabalho começa.</h2>
-          <p>
-            A teoria fica útil quando vira prática. Cada módulo leva você para aplicar o conceito
-            na Bancada com contexto real, não exercício fictício.
-          </p>
+          <span className="badge-pill badge-pill--academy">{t('applyBadge')}</span>
+          <h2 id="learn-apply-title">{t('applyTitle')}</h2>
+          <p>{t('applyIntro')}</p>
           <Link
             className="landing-button landing-button--primary"
             to={user ? '/tool' : '/signup'}
           >
-            {user ? 'Aplicar na Bancada →' : 'Criar conta grátis →'}
+            {user ? t('applyArrow') : t('signUp')}
           </Link>
         </div>
 
         <div className="learn-apply-block__preview">
           <div className="learn-apply-block__panel learn-apply-block__panel--concept">
-            <p className="learn-apply-block__panel-label">O conceito</p>
-            <p className="learn-apply-block__panel-text">
-              User story tem 3 partes: <strong>persona</strong>, <strong>ação</strong> e{' '}
-              <strong>resultado</strong>.
-            </p>
-            <p className="learn-apply-block__panel-example">
-              "Como [quem], quero [fazer o quê] para [qual resultado]."
-            </p>
+            <p className="learn-apply-block__panel-label">{t('concept')}</p>
+            <p className="learn-apply-block__panel-text"><Trans t={t} i18nKey="conceptBody" /></p>
+            <p className="learn-apply-block__panel-example">{t('conceptExample')}</p>
           </div>
 
           <div className="learn-apply-block__panel learn-apply-block__panel--output">
-            <p className="learn-apply-block__panel-label">Na prática</p>
-            <p className="learn-apply-block__panel-story">
-              Como <strong>responsável pelo cadastro</strong>, quero{' '}
-              <strong>validar o domínio corporativo</strong> para{' '}
-              <strong>concluir o registro com menos retrabalho</strong>.
-            </p>
+            <p className="learn-apply-block__panel-label">{t('practiceExample')}</p>
+            <p className="learn-apply-block__panel-story"><Trans t={t} i18nKey="exampleStory" /></p>
             <div className="learn-apply-block__criteria">
-              <p>Critérios de aceite</p>
+              <p>{t('exampleCriteria')}</p>
               <ol>
-                <li>Bloquear avanço com domínio inválido</li>
-                <li>Exibir mensagem orientando a correção</li>
-                <li>Registrar falha para análise do funil</li>
+                <li>{t('exampleCriteriaBlock')}</li>
+                <li>{t('exampleCriteriaMessage')}</li>
+                <li>{t('exampleCriteriaLog')}</li>
               </ol>
             </div>
           </div>
@@ -241,41 +191,39 @@ function LearningHubPage() {
       {/* ── Notas rápidas ── */}
       <section className="learning-section">
         <div className="learning-section__intro">
-          <span className="badge-pill">Notas rápidas</span>
-          <h2>Conceitos em 2 minutos</h2>
-          <p>
-            Notas curtas e diretas para resolver dúvidas do dia a dia sem precisar ler
-            um guia inteiro.
-          </p>
+          <span className="badge-pill">{t('quickNotes')}</span>
+          <h2>{t('quickTitle')}</h2>
+          <p>{t('quickIntro')}</p>
         </div>
 
-        <div className="quick-notes-strip" role="list">
+        <ul className="quick-notes-strip" role="list">
           {learningNotes.map((note) => {
-            const targetGuide = getLearningGuideBySlug(note.targetGuideSlug)
+            const targetGuide = getLearningGuideBySlug(note.targetGuideSlug, catalog)
             return (
-              <article key={note.slug} className="quick-note-item" role="listitem">
+              <li key={note.slug} className="quick-note-item">
                 <span className="quick-note-item__tag">{note.tag}</span>
                 <span className="quick-note-item__title">{note.title}</span>
                 {targetGuide ? (
-                  <Link to={`/aprender/${targetGuide.slug}`} className="quick-note-item__link">
-                    Ler →
+                  <Link
+                    to={`/aprender/${targetGuide.slug}`}
+                    className="quick-note-item__link"
+                    aria-label={t('quickReadTitle', { title: targetGuide.title })}
+                  >
+                    {t('quickRead')}
                   </Link>
                 ) : null}
-              </article>
+              </li>
             )
           })}
-        </div>
+        </ul>
       </section>
 
       {/* ── CTA final ── */}
       <section className="learning-final-cta">
         <div className="learning-final-cta__copy">
-          <span className="badge-pill badge-pill--academy">Pronto para aplicar</span>
-          <h2>Aprenda e execute no mesmo lugar.</h2>
-          <p>
-            Os guias estruturam o repertório. A Bancada transforma briefing, problema e regras
-            em user story pronta para revisão.
-          </p>
+          <span className="badge-pill badge-pill--academy">{t('readyBadge')}</span>
+          <h2>{t('readyTitle')}</h2>
+          <p>{t('readyIntro')}</p>
         </div>
 
         <div className="learning-final-cta__actions">
@@ -283,11 +231,9 @@ function LearningHubPage() {
             className="landing-button landing-button--primary"
             to={user ? '/tool' : '/signup'}
           >
-            {user ? 'Aplicar na Bancada' : 'Criar conta grátis →'}
+            {user ? t('apply') : t('signUp')}
           </Link>
-          <Link className="landing-button landing-button--secondary" to="/">
-            Voltar para a página inicial
-          </Link>
+          <Link className="landing-button landing-button--secondary" to="/">{t('backHome')}</Link>
         </div>
       </section>
     </div>

@@ -1,8 +1,14 @@
+import { getExplicitLanguage, getPilotPage, languageDestination } from '../i18n/routes'
+
 export const DEFAULT_AUTH_REDIRECT_PATH = '/tool'
 const AUTH_REDIRECT_STORAGE_KEY = 'prodforge.auth.redirect'
 
-function canUseSessionStorage() {
-  return typeof window !== 'undefined' && typeof window.sessionStorage !== 'undefined'
+function withSessionStorage(callback) {
+  try {
+    if (typeof window !== 'undefined') return callback(window.sessionStorage)
+  } catch {
+    // URL and router state still carry the destination when storage is blocked.
+  }
 }
 
 export function normalizeAuthRedirect(value, fallback = DEFAULT_AUTH_REDIRECT_PATH) {
@@ -10,131 +16,90 @@ export function normalizeAuthRedirect(value, fallback = DEFAULT_AUTH_REDIRECT_PA
   if (!rawValue) return fallback
 
   let candidate = rawValue
-  try {
-    candidate = decodeURIComponent(rawValue)
-  } catch {
-    candidate = rawValue
+  // URLSearchParams already decoded the outer "from". Keep any encoded values inside it.
+  if (/^%2f/i.test(rawValue)) {
+    try {
+      candidate = decodeURIComponent(rawValue)
+    } catch {
+      return fallback
+    }
   }
 
-  if (!candidate.startsWith('/') || candidate.startsWith('//')) {
+  const path = candidate.split(/[?#]/, 1)[0]
+  if (!path.startsWith('/') || path.startsWith('//') || /\\|%5c|%2f|[\r\n\t]/i.test(path)) {
     return fallback
   }
-
   return candidate
 }
 
 export function getAuthRedirectContext(value) {
-  const redirect = normalizeAuthRedirect(value)
-  const [path] = redirect.split(/[?#]/)
-  const isPlanningPath = path === '/roda' || path.startsWith('/roda/') || path.includes('/roda/')
+  const [path] = normalizeAuthRedirect(value).split(/[?#]/, 1)
+  if (path === '/roda' || path.startsWith('/roda/') || path.includes('/roda/')) return 'planning'
+  if (path === '/historico' || path.startsWith('/historico/')) return 'history'
+  if (path === '/projetos' || path.startsWith('/projetos/')) return 'project'
+  if (path === '/times' || path.startsWith('/times/')) return 'teams'
+  if (['/admin', '/tool/admin'].some((route) => path === route || path.startsWith(route + '/'))) return 'admin'
+  return 'workspace'
+}
 
-  if (isPlanningPath) {
-    return {
-      key: 'planning',
-      label: 'Roda da Fogueira',
-      targetText: 'a Roda da Fogueira',
-      description: 'Depois do acesso, você volta ao convite ou à sala de estimativa.',
-    }
-  }
-
-  if (path.startsWith('/historico')) {
-    return {
-      key: 'history',
-      label: 'Peças forjadas',
-      targetText: 'as Peças forjadas',
-      description: 'Depois do acesso, você volta ao histórico para revisar suas histórias.',
-    }
-  }
-
-  if (path.startsWith('/projetos')) {
-    return {
-      key: 'project',
-      label: 'Projeto',
-      targetText: 'o projeto',
-      description: 'Depois do acesso, você volta ao projeto para organizar histórias, Kanban e colaboração.',
-    }
-  }
-
-  if (path.startsWith('/times')) {
-    return {
-      key: 'teams',
-      label: 'Times',
-      targetText: 'a área de Times',
-      description: 'Depois do acesso, você volta ao gerenciamento de equipes do ProdForge.',
-    }
-  }
-
-  if (path.startsWith('/admin')) {
-    return {
-      key: 'admin',
-      label: 'Administração',
-      targetText: 'a Administração',
-      description: 'Depois do acesso, você volta à área administrativa do produto.',
-    }
-  }
-
+function splitDestination(destination) {
+  const hashIndex = destination.indexOf('#')
+  const beforeHash = hashIndex === -1 ? destination : destination.slice(0, hashIndex)
+  const hash = hashIndex === -1 ? '' : destination.slice(hashIndex)
+  const queryIndex = beforeHash.indexOf('?')
   return {
-    key: 'workspace',
-    label: 'Bancada',
-    targetText: 'a Bancada',
-    description: 'Depois do acesso, você volta à Bancada para continuar criando ou refinando histórias.',
+    pathname: queryIndex === -1 ? beforeHash : beforeHash.slice(0, queryIndex),
+    search: queryIndex === -1 ? '' : beforeHash.slice(queryIndex),
+    hash,
   }
 }
 
-export function buildAuthPath(path, redirectTo) {
-  const safeRedirect = normalizeAuthRedirect(redirectTo)
-  const params = new URLSearchParams({ from: safeRedirect })
+export function getAuthDestinationLanguage(value) {
+  return getExplicitLanguage(splitDestination(normalizeAuthRedirect(value)).search)
+}
 
-  return `${path}?${params.toString()}`
+export function getAuthContinuation(value, language) {
+  const safeRedirect = normalizeAuthRedirect(value)
+  if (!language) return safeRedirect
+
+  const location = splitDestination(safeRedirect)
+  const page = getPilotPage(location.pathname)
+  // Apply an explicit auth choice only to destinations already available in both languages.
+  if (!page || page.en || page.auth || getExplicitLanguage(location.search) === language) {
+    return safeRedirect
+  }
+
+  const { pathname, search, hash } = languageDestination(location, language)
+  return pathname + search + hash
+}
+
+export function buildAuthPath(path, redirectTo, language) {
+  const params = new URLSearchParams()
+  if (redirectTo) params.set('from', normalizeAuthRedirect(redirectTo))
+  if (language) params.set('lang', language)
+  return params.size ? path + '?' + params.toString() : path
 }
 
 export function persistAuthRedirect(value) {
-  if (!canUseSessionStorage()) return
-
-  const safeRedirect = normalizeAuthRedirect(value)
-  if (safeRedirect === DEFAULT_AUTH_REDIRECT_PATH) {
-    window.sessionStorage.removeItem(AUTH_REDIRECT_STORAGE_KEY)
+  const redirect = normalizeAuthRedirect(value)
+  if (redirect === DEFAULT_AUTH_REDIRECT_PATH) {
+    clearAuthRedirect()
     return
   }
-
-  window.sessionStorage.setItem(AUTH_REDIRECT_STORAGE_KEY, safeRedirect)
+  withSessionStorage((storage) => storage.setItem(AUTH_REDIRECT_STORAGE_KEY, redirect))
 }
 
 export function clearAuthRedirect() {
-  if (!canUseSessionStorage()) return
-  window.sessionStorage.removeItem(AUTH_REDIRECT_STORAGE_KEY)
-}
-
-function getStoredAuthRedirect(fallback = DEFAULT_AUTH_REDIRECT_PATH) {
-  if (!canUseSessionStorage()) return fallback
-
-  const storedRedirect = window.sessionStorage.getItem(AUTH_REDIRECT_STORAGE_KEY)
-  return normalizeAuthRedirect(storedRedirect, fallback)
+  withSessionStorage((storage) => storage.removeItem(AUTH_REDIRECT_STORAGE_KEY))
 }
 
 export function getAuthRedirectFromLocation(location, fallback = DEFAULT_AUTH_REDIRECT_PATH) {
-  const stateRedirect = location?.state?.from
-  if (stateRedirect) {
-    const redirect = normalizeAuthRedirect(stateRedirect, fallback)
-    persistAuthRedirect(redirect)
-    return redirect
+  const params = new URLSearchParams(location?.search)
+  const requested = location?.state?.from || params.get('from') || params.get('redirectTo')
+  if (requested) return normalizeAuthRedirect(requested, fallback)
+  if (location?.pathname?.replace(/\/+$/, '') === '/check-email') {
+    const stored = withSessionStorage((storage) => storage.getItem(AUTH_REDIRECT_STORAGE_KEY))
+    return normalizeAuthRedirect(stored, fallback)
   }
-
-  const searchParams = new URLSearchParams(location?.search ?? '')
-  const queryRedirect = searchParams.get('from') ?? searchParams.get('redirectTo')
-  if (queryRedirect) {
-    const redirect = normalizeAuthRedirect(queryRedirect, fallback)
-    persistAuthRedirect(redirect)
-    return redirect
-  }
-
-  if (location?.pathname === '/check-email') {
-    return getStoredAuthRedirect(fallback)
-  }
-
-  if (location?.pathname === '/login' || location?.pathname === '/signup') {
-    clearAuthRedirect()
-  }
-
   return fallback
 }
