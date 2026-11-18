@@ -47,6 +47,9 @@ jobs:
       - name: Instalar dependências do lockfile
         run: npm ci
 
+      - name: Conferir os nomes da cópia portátil
+        run: python3 -B scripts/test-ftps-names.py
+
       - name: Validar e gerar o frontend
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
