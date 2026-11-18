@@ -34,16 +34,17 @@ try {
 
   $headers = @{
     Authorization = "Bearer $($context.TokenValue)"
-    'Content-Type' = 'application/json'
+    'Content-Type' = 'application/json; charset=utf-8'
   }
 
   $body = @{ query = $query } | ConvertTo-Json -Depth 4
+  [byte[]]$utf8Body = [System.Text.Encoding]::UTF8.GetBytes($body)
   $endpoint = "https://api.supabase.com/v1/projects/$($context.ProjectRef)/database/query"
 
   Write-Host "Applying SQL to project $($context.ProjectRef)"
   Write-Host "  File: $sqlFilePath"
 
-  $response = Invoke-RestMethod -Method Post -Uri $endpoint -Headers $headers -Body $body -ErrorAction Stop
+  $response = Invoke-RestMethod -Method Post -Uri $endpoint -Headers $headers -Body $utf8Body -ErrorAction Stop
   if ($null -ne $response) {
     $response | ConvertTo-Json -Depth 10
   }
