@@ -18,7 +18,11 @@ async function request(path, role, options = {}, sub) {
 }
 let ready = false
 for (let attempt = 0; attempt < 30; attempt++) {
-  try { await fetch(base); ready = true; break } catch { await setTimeout(500) }
+  try {
+    const response = await fetch(base)
+    if (response.ok) { ready = true; break }
+  } catch { /* The container may not have bound its port yet. */ }
+  await setTimeout(500)
 }
 assert.ok(ready, 'PostgREST ready')
 const path = 'techtupa_heartbeat'
