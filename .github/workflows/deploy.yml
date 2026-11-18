@@ -50,6 +50,10 @@ jobs:
       - name: Conferir os nomes da cópia portátil
         run: python3 -B scripts/test-ftps-names.py
 
+      - name: Validar o isolamento do monitoramento
+        shell: pwsh
+        run: ./scripts/test-heartbeat-rls-local.ps1
+
       - name: Validar e gerar o frontend
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
