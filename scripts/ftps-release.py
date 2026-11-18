@@ -4,6 +4,7 @@ import argparse
 import ftplib
 import hashlib
 import json
+import ntpath
 import os
 from pathlib import Path, PurePosixPath, PureWindowsPath
 import re
@@ -26,9 +27,10 @@ TRANSFER_ERRORS = (OSError, ftplib.Error, EOFError, TransferError)
 
 
 def safe_name(name):
+    reserved = getattr(ntpath, 'isreserved', None)
     if (not name or name in (".", "..") or name != name.strip() or name.endswith(".")
             or re.search(r'[\\/<>:"|?*\x00-\x1f\x7f]', name)
-            or PureWindowsPath(name).is_reserved()):
+            or (reserved(name) if reserved else PureWindowsPath(name).is_reserved())):
         raise TransferError("O inventário contém um nome incompatível com uma cópia segura.")
     return name
 
