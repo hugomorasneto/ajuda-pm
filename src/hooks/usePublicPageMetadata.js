@@ -1,8 +1,9 @@
 import { useLanguage } from '../i18n/context'
 import { getPublicMetadata } from '../i18n/publicMetadata'
 import { usePageMetadata } from './usePageMetadata'
+import { isLanguageBuild } from '../i18n/routes'
 
-const englishCatalogs = import.meta.env.MODE === 'i18n-preview'
+const englishCatalogs = isLanguageBuild(import.meta.env.MODE)
   ? import.meta.glob('../content/en/*Metadata.json', { eager: true, import: 'default' })
   : {}
 

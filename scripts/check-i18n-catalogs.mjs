@@ -41,9 +41,13 @@ const preview = new URL('../src/i18n/preview-copy/', import.meta.url)
 const ptPreview = readJson(new URL('pt-BR.json', preview))
 const enPreview = readJson(new URL('en.json', preview))
 compare(ptPreview, enPreview, 'preview copy')
+const production = new URL('../src/i18n/production-copy/', import.meta.url)
+const ptProduction = readJson(new URL('pt-BR.json', production))
+const enProduction = readJson(new URL('en.json', production))
+compare(ptProduction, enProduction, 'production copy')
 
 const richTextTags = (value) => (value.match(/<\/?[a-z][a-z0-9]*>/gi) ?? []).sort()
-for (const [language, overrides] of [['pt-BR', ptPreview], ['en', enPreview]]) {
+for (const [language, overrides] of [['pt-BR', ptPreview], ['en', enPreview], ['pt-BR', ptProduction], ['en', enProduction]]) {
   for (const [namespace, entries] of Object.entries(overrides)) {
     const name = namespace + '.json'
     const base = catalogs(language).includes(name)

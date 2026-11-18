@@ -1,4 +1,4 @@
-import { getOgLocale } from '../i18n/routes'
+import { getOgLocale, getPilotPage, RELEASE_MODE } from '../i18n/routes'
 import { useEffect } from 'react'
 import { APP_NAME } from '../constants/app'
 
@@ -74,10 +74,23 @@ export function usePageMetadata({
   useEffect(() => {
     if (!enabled) return
     const url = new URL(path, SITE_URL).toString()
+    const page = import.meta.env.MODE === RELEASE_MODE ? getPilotPage(path) : undefined
+    const isIndexable = page?.en && !['terms', 'privacyPolicy', 'preferences'].includes(page.id)
+    document.head.querySelectorAll('link[data-i18n-alternate]').forEach((link) => link.remove())
+    if (page?.en) {
+      for (const lang of ['pt-BR', 'en', 'x-default']) {
+        const link = document.createElement('link')
+        link.rel = 'alternate'
+        link.hreflang = lang
+        link.href = SITE_URL + page[lang === 'x-default' ? 'pt-BR' : lang]
+        link.setAttribute('data-i18n-alternate', '')
+        document.head.appendChild(link)
+      }
+    }
 
     document.title = title
     upsertMeta('meta[name="description"]', 'name', 'description', description)
-    upsertMeta('meta[name="robots"]', 'name', 'robots', robots)
+    upsertMeta('meta[name="robots"]', 'name', 'robots', isIndexable ? 'index,follow' : robots)
     upsertLink('link[rel="canonical"]', 'canonical', url)
 
     upsertMeta('meta[property="og:site_name"]', 'property', 'og:site_name', APP_NAME)

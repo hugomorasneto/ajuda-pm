@@ -1,4 +1,4 @@
-import { isLocalPreview, PILOT_MODE } from '../i18n/routes.js'
+import { isLocalPreview, PILOT_MODE, RELEASE_MODE } from '../i18n/routes.js'
 
 const defaultConsentStorageKey = 'prodforge_privacy_consent'
 const previewConsent = import.meta.env?.MODE === PILOT_MODE &&
@@ -7,7 +7,7 @@ const previewConsent = import.meta.env?.MODE === PILOT_MODE &&
 export const PRIVACY_CONSENT_STORAGE_KEY = previewConsent
   ? defaultConsentStorageKey + '_preview'
   : defaultConsentStorageKey
-export const PRIVACY_CONSENT_VERSION = previewConsent ? '2.2' : '2.1'
+export const PRIVACY_CONSENT_VERSION = previewConsent || import.meta.env?.MODE === RELEASE_MODE ? '2.2' : '2.1'
 export const PRIVACY_CONSENT_CHANGE_EVENT = 'prodforge_privacy_consent_change'
 
 export const PRIVACY_CONSENT_STATUS = {
@@ -25,7 +25,7 @@ export const PRIVACY_CONSENT_CATEGORIES = {
 export const PRIVACY_CONSENT_CATEGORY_AVAILABILITY = {
   [PRIVACY_CONSENT_CATEGORIES.essential]: true,
   [PRIVACY_CONSENT_CATEGORIES.analytics]: true,
-  [PRIVACY_CONSENT_CATEGORIES.marketing]: !previewConsent,
+  [PRIVACY_CONSENT_CATEGORIES.marketing]: !previewConsent && import.meta.env?.MODE !== RELEASE_MODE,
 }
 
 const VALID_PRIVACY_CONSENT_STATUSES = new Set(Object.values(PRIVACY_CONSENT_STATUS))

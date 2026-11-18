@@ -1,5 +1,10 @@
 import { supabase } from '../lib/supabaseClient'
-import release from '../content/legalRelease.json'
+import previewRelease from '../content/legalRelease.json'
+import productionRelease from '../content/legalRelease.production.json'
+import { RELEASE_MODE } from '../i18n/routes'
+
+export const legalRelease = import.meta.env.MODE === RELEASE_MODE ? productionRelease : previewRelease
+const release = legalRelease
 
 export function matchesLocalLegalRelease(status) {
   return status?.version === release.version && status?.sha256 === release.sha256

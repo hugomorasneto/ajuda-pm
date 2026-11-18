@@ -3,6 +3,15 @@ import { learningRoutes } from './learningRoutes.js'
 export const DEFAULT_LANGUAGE = 'pt-BR'
 export const ENGLISH = 'en'
 export const PILOT_MODE = 'i18n-preview'
+export const RELEASE_MODE = 'i18n-production'
+
+export function isLanguageBuild(mode) {
+  return mode === PILOT_MODE || mode === RELEASE_MODE
+}
+
+export function isLanguageEnabled(mode, hostname) {
+  return mode === RELEASE_MODE || isLocalPreview(mode, hostname)
+}
 
 export const publicLocalePages = [
   { id: 'home', 'pt-BR': '/', en: '/en/' },

@@ -2,10 +2,17 @@ import { describe, expect, it } from 'vitest'
 import { learningGuides } from '../content/learningContent'
 import englishLearning from '../content/en/learningEditorial.json'
 import { learningRoutes } from '../i18n/learningRoutes'
-import { isLocalPreview, languageDestination, localizeHref, preferenceKey, resolveLanguage } from '../i18n/routes'
+import { isLocalPreview, isLanguageEnabled, languageDestination, localizeHref, preferenceKey, resolveLanguage } from '../i18n/routes'
 
 describe('pilot language resolution', () => {
   const teams = { pathname: '/times', search: '', enabled: true }
+
+  it('activates the release on the public host while keeping the preview local', () => {
+    expect(isLanguageEnabled('i18n-production', 'prodforge.techtupa.com.br')).toBe(true)
+    expect(isLanguageEnabled('i18n-production', '127.0.0.1')).toBe(true)
+    expect(isLanguageEnabled('i18n-preview', 'prodforge.techtupa.com.br')).toBe(false)
+    expect(isLanguageEnabled('development', 'prodforge.techtupa.com.br')).toBe(false)
+  })
 
   it('uses the public route even when preferences and browser disagree', () => {
     expect(resolveLanguage({ ...teams, pathname: '/en/about/', saved: 'pt-BR' })).toBe('en')

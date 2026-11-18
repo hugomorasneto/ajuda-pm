@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { getAuthDestinationLanguage, getAuthRedirectFromLocation } from '../utils/authRedirect'
 import { useAuth } from '../hooks/useAuth'
 import { LanguageContext } from './context'
-import { getExplicitLanguage, getPilotPage, isLocalPreview, languageDestination, preferenceKey, resolveLanguage } from './routes'
+import { getExplicitLanguage, getPilotPage, isLanguageEnabled, languageDestination, preferenceKey, resolveLanguage } from './routes'
 
 const preferenceEvent = 'prodforge:language'
 const temporaryPreferences = new Map()
@@ -40,7 +40,7 @@ export function LanguageProvider({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, isAuthLoading } = useAuth()
-  const preview = isLocalPreview(import.meta.env.MODE, window.location.hostname)
+  const preview = isLanguageEnabled(import.meta.env.MODE, window.location.hostname)
   const key = preferenceKey(user?.id)
   const getSaved = useCallback(() => preview ? readPreference(key) : null, [key, preview])
   const getVisitor = useCallback(() => preview ? readPreference(preferenceKey()) : null, [preview])

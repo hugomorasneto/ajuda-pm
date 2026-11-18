@@ -10,6 +10,7 @@ const DEFAULT_TARGETS = [
   'src/content',
   'src/i18n/locales',
   'src/i18n/preview-copy',
+  'src/i18n/production-copy',
   'src/hooks/usePageMetadata.js',
   'src/layout',
   'src/pages',
@@ -366,8 +367,8 @@ export function collectVisibleCopy(language = 'pt-BR') {
   return listCopyFiles().flatMap((absolutePath) => {
     const source = fs.readFileSync(absolutePath, 'utf8')
     const relativePath = toPosix(path.relative(ROOT_DIR, absolutePath))
-    const previewCopy = relativePath.startsWith('src/i18n/preview-copy/')
-    const itemLanguage = relativePath === 'src/i18n/preview-copy/en.json' ||
+    const previewCopy = /^src\/i18n\/(?:preview|production)-copy\//.test(relativePath)
+    const itemLanguage = /^src\/i18n\/(?:preview|production)-copy\/en.json$/.test(relativePath) ||
       /^(?:en\/|src\/(?:content|i18n\/locales)\/en\/)/.test(relativePath)
       ? 'en'
       : 'pt-BR'

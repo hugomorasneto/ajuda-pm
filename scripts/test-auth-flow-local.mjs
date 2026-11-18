@@ -16,7 +16,8 @@ const containers = []
 const network = `${prefix}-net`
 const secret = randomBytes(32).toString('hex') // Only inside this disposable stack.
 const password = 'local-fictional-password'
-const release = JSON.parse(readFileSync(resolve(root, 'src/content/legalRelease.json'), 'utf8'))
+const production = process.argv.includes('--production')
+const release = JSON.parse(readFileSync(resolve(root, production ? 'src/content/legalRelease.production.json' : 'src/content/legalRelease.json'), 'utf8'))
 const output = resolve(tmpdir(), prefix)
 const docker = (...args) => execFileSync('docker', args, { encoding: 'utf8', windowsHide: true }).trim()
 const sql = (query) => execFileSync('docker', ['exec', '-i', `${prefix}-db`, 'psql', '-h', '127.0.0.1', '-X', '-qAt', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1'], { input: query, encoding: 'utf8', windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] }).trim()
@@ -75,6 +76,7 @@ try {
   for (const file of ['supabase/init.sql', 'supabase/auth-rls.sql', 'supabase/migrations/20261117190539_local_legal_acceptance.sql']) {
     sql(readFileSync(resolve(root, file), 'utf8'))
   }
+  if (production) sql(readFileSync(resolve(root, 'supabase/migrations/20261118022243_publish_legal_release.sql'), 'utf8'))
   const rest = run('rest', 'public.ecr.aws/supabase/postgrest:v16.5', [
     '-p', '127.0.0.1::3000', '-e', 'PGRST_DB_URI=postgres://postgres@db:5432/postgres',
     '-e', `PGRST_JWT_SECRET=${secret}`, '-e', 'PGRST_DB_ANON_ROLE=anon',
@@ -103,9 +105,9 @@ try {
       response.end(Buffer.from(await upstream.arrayBuffer()))
     } catch { response.writeHead(502); response.end('Local test gateway failure') }
   })
-  execFileSync(process.execPath, ['e2e/build-preview.mjs'], { cwd: root, stdio: 'pipe', windowsHide: true })
+  execFileSync(process.execPath, [production ? 'e2e/build-release.mjs' : 'e2e/build-preview.mjs'], { cwd: root, stdio: 'pipe', windowsHide: true })
   // Own the preview process; never reuse or stop another task's server.
-  preview = await startPreview({ root, mode: 'i18n-preview', preview: { host: '127.0.0.1', port: 43919, strictPort: true } })
+  preview = await startPreview({ root, mode: production ? 'i18n-production' : 'i18n-preview', preview: { host: '127.0.0.1', port: 43919, strictPort: true } })
   const site = 'http://127.0.0.1:43919'
   // Port must match allowed callbacks, which are configured only inside disposable Auth.
   await ready(site)

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build --mode i18n-production",
     "lint": "eslint .",
     "preview": "vite preview",
     "copy:spell": "node scripts/extract-visible-copy.mjs | cspell --config cspell.config.json --locale pt-BR --language-id plaintext --no-progress stdin://visible-copy.txt",
@@ -24,7 +24,10 @@
     "build:i18n": "vite build --mode i18n-preview",
     "preview:i18n": "vite preview --mode i18n-preview --host 127.0.0.1 --strictPort",
     "test:e2e:i18n": "node e2e/build-preview.mjs && playwright test",
-    "test:auth:local": "node scripts/test-auth-flow-local.mjs"
+    "test:auth:local": "node scripts/test-auth-flow-local.mjs",
+    "test:auth:release": "node scripts/test-auth-flow-local.mjs --production",
+    "preview:release": "vite preview --mode i18n-production --host 127.0.0.1 --strictPort",
+    "test:e2e:release": "node e2e/build-release.mjs && playwright test --config e2e/release.config.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.0",
@@ -32,7 +35,7 @@
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-i18next": "18.0.2",
-    "react-router-dom": "^7.14.1"
+    "react-router-dom": "7.18.5"
   },
   "devDependencies": {
     "@cspell/dict-pt-br": "^2.4.2",

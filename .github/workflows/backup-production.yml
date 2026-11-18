@@ -1,0 +1,51 @@
+name: Criar cópia protegida da produção
+
+on:
+  workflow_dispatch:
+    inputs:
+      backup_public_key_base64:
+        description: Chave pública RSA da recuperação, em base64
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-frontend-production
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.1'
+      - name: Criar e conferir a cópia
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_PORT: ${{ secrets.FTP_PORT }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_REMOTE_DIR: ${{ secrets.FTP_REMOTE_DIR }}
+        run: |
+          node --test scripts/protect-release-backup.test.mjs
+          python3 scripts/ftps-release.py snapshot "$RUNNER_TEMP/prodforge-backup"
+      - name: Proteger a cópia para recuperação local
+        env:
+          BACKUP_PUBLIC_KEY_BASE64: ${{ inputs.backup_public_key_base64 }}
+        run: |
+          tar -C "$RUNNER_TEMP/prodforge-backup" -czf "$RUNNER_TEMP/site-backup.tar.gz" .
+          node scripts/protect-release-backup.mjs encrypt "$RUNNER_TEMP/site-backup.tar.gz" "$RUNNER_TEMP/site-backup.pfgbackup"
+          sha256sum "$RUNNER_TEMP/site-backup.pfgbackup"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prodforge-backup-protegido
+          path: ${{ runner.temp }}/site-backup.pfgbackup
+          retention-days: 7
+          if-no-files-found: error

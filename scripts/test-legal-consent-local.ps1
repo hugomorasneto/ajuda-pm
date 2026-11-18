@@ -1,3 +1,4 @@
+param([switch]$Production)
 $ErrorActionPreference = 'Stop'
 $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 $repoRoot = Split-Path -Parent $PSScriptRoot
@@ -31,11 +32,15 @@ as $$ select (nullif(current_setting('request.jwt.claims', true), '')::jsonb->>'
 grant usage on schema auth to anon, authenticated, service_role;
 '@
   $migration = Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $repoRoot 'supabase/migrations/20261117190539_local_legal_acceptance.sql')
+  if ($Production) {
+    $migration += [Environment]::NewLine + (Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $repoRoot 'supabase/migrations/20261118022243_publish_legal_release.sql'))
+  }
   $schema = @('init', 'auth-rls') | ForEach-Object {
     Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $repoRoot "supabase/$_.sql")
   }
   $tests = Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $repoRoot 'supabase/tests/local-legal-acceptance.sql')
-  $manifest = Get-Content -Raw -LiteralPath (Join-Path $repoRoot 'src/content/legalRelease.json') | ConvertFrom-Json
+  $manifestPath = if ($Production) { 'src/content/legalRelease.production.json' } else { 'src/content/legalRelease.json' }
+  $manifest = Get-Content -Raw -LiteralPath (Join-Path $repoRoot $manifestPath) | ConvertFrom-Json
   @($bootstrap, ($schema -join [Environment]::NewLine), $migration, $tests) -join [Environment]::NewLine |
     & docker exec -i $container psql -X -q -U postgres -v ON_ERROR_STOP=1 -v "expected_hash=$($manifest.sha256)" -v "expected_version=$($manifest.version)"
   if ($LASTEXITCODE -ne 0) { throw 'Legal migration or SQL tests failed' }

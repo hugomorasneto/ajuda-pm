@@ -87,6 +87,18 @@ Para validar o percurso com autenticação real e e-mail capturado localmente, e
 
 O percurso cobre português e inglês em desktop e celular de 320 pixels: cadastro, reenvio, bloqueio do login antes da confirmação, confirmação pelo link de e-mail real, aceite registrado no cadastro, recarga, conta sem aceite, aceite pelo teclado, saída e novo login com o destino, parâmetros e âncora preservados. Os documentos do cadastro abrem em outra aba na prévia para preservar o formulário preenchido. As capturas ficam na pasta temporária informada pelo teste; os containers e a rede exclusivos são removidos ao terminar. A validação não cobre os modelos de e-mail, limites ou entrega do serviço remoto, nem as funcionalidades de Times após a autenticação.
 
+## Publicação bilíngue
+
+`npm run build` gera a versão de produção em `dist/`, no modo explícito `i18n-production`. Esse modo ativa os dois idiomas também no domínio público, os textos aprovados, a fonte local, o aceite e a indisponibilidade de marketing. Conserva a escolha anterior de analytics no armazenamento de produção. O modo `i18n-preview` continua restrito a endereços locais e mantém suas próprias escolhas de cookies e versão legal. O campo interno `preview` do contexto de idioma é mantido por compatibilidade e indica as funcionalidades de idiomas habilitadas, inclusive na produção.
+
+A versão legal pública `2026-11-18.1` tem manifesto próprio em `src/content/legalRelease.production.json`, textos em `src/i18n/production-copy/` e arquivo imutável na migração `20261118022243_publish_legal_release.sql`. O arquivo da prévia permanece preservado. A data em seu identificador usa UTC. A versão entra em vigor com sua publicação no serviço.
+
+Antes da troca do frontend, aplique as migrações da cota, do arquivo legal local e da versão pública, e implante a função `generate-user-story` correspondente. Os clientes anteriores não enviam o identificador obrigatório da geração; abas antigas precisam recarregar para gerar, e seus pedidos antigos são rejeitados antes de chamar a IA. As migrações preservam os dados existentes. Não desfaça o registro de consumo da cota nem os aceites para recuperar uma publicação do frontend.
+
+Valide a ativação com `npm run test:e2e:release`, `npm run test:auth:release` e `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-legal-consent-local.ps1 -Production`. O primeiro comando confere as páginas públicas, a equivalência dos idiomas e a exclusão das minutas. O segundo usa Auth e SMTP isolados, sem projeto remoto. Os comandos que recompilam o mesmo diretório devem ser executados em sequência. As minutas não fazem parte do build público e seu caminho é bloqueado na hospedagem. As páginas editoriais têm metadados alternativos e sitemap nos dois idiomas; páginas legais, de preferências e autenticação mantêm `noindex`.
+
+O arquivo público `release.json` identifica o commit do build, a ativação dos idiomas e o resumo dos documentos legais. Use-o junto com a conferência FTPS para relacionar o conteúdo servido à revisão validada. O procedimento de cópia protegida e publicação está em `docs/publicacao-ftps.md`.
+
 ## Contribuição
 
 Leia o [guia de contribuição](CONTRIBUTING.md) e as [instruções para relatar problemas de segurança](SECURITY.md).

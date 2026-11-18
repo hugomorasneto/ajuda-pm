@@ -1,5 +1,6 @@
 import portuguese from './pt-BR/about'
 import english from './en/about'
+import { isLanguageBuild } from '../i18n/routes'
 
 const anchors = [
   "o-que-e-o-prodforge",
@@ -12,7 +13,7 @@ const anchors = [
 ]
 
 export function getAboutContent(language) {
-  const content = import.meta.env.MODE === 'i18n-preview' && language === 'en' ? english : portuguese
+  const content = isLanguageBuild(import.meta.env.MODE) && language === 'en' ? english : portuguese
   return {
     ...content,
     aboutSections: content.aboutSections.map((section, index) => ({
