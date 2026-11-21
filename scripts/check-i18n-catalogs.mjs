@@ -23,6 +23,8 @@ function compare(pt, en, path) {
 
 assert.deepEqual(catalogs('pt-BR'), catalogs('en'), 'Different catalog namespaces')
 for (const name of catalogs('pt-BR')) compare(read('pt-BR', name), read('en', name), name)
+const invitations = new URL('../supabase/functions/planning-poker-invite/locales/', import.meta.url)
+compare(readJson(new URL('pt-BR.json', invitations)), readJson(new URL('en.json', invitations)), 'Roda email')
 
 const content = new URL('../src/content/', import.meta.url)
 const editorialFiles = (lang) => readdirSync(new URL(lang + '/', content))

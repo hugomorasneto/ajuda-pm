@@ -60,6 +60,9 @@ jobs:
       - name: Validar autenticação e e-mails em ambiente isolado
         run: npm run test:auth:release
 
+      - name: Validar convites da Roda em ambiente isolado
+        run: npm run test:invites:local
+
       - name: Validar e gerar o frontend
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}

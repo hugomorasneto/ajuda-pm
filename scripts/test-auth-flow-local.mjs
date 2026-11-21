@@ -11,6 +11,7 @@ import { chromium, expect, devices } from '@playwright/test'
 import { preview as startPreview } from 'vite'
 import { buildAuthEmailConfig, authEmailTypes } from './auth-email-templates.mjs'
 import { assertAuthEmail, testAuthEmailCases } from './test-auth-email-cases.mjs'
+import { prepareInviteTls, testPlanningInviteFlow } from './test-planning-invite-cases.mjs'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const prefix = `prodforge-auth-${process.pid}`
@@ -19,6 +20,7 @@ const network = `${prefix}-net`
 const secret = randomBytes(32).toString('hex') // Only inside this disposable stack.
 const password = 'local-fictional-password'
 const production = process.argv.includes('--production')
+const planningInvites = process.argv.includes('--planning-invites')
 const release = JSON.parse(readFileSync(resolve(root, production ? 'src/content/legalRelease.production.json' : 'src/content/legalRelease.json'), 'utf8'))
 const output = resolve(tmpdir(), prefix)
 const templates = buildAuthEmailConfig()
@@ -43,7 +45,7 @@ function run(name, image, args = [], command = []) {
 function endpoint(container, port) {
   return `http://${docker('port', container, `${port}/tcp`)}`
 }
-let gateway, preview, browser, ownedNetwork = false
+let gateway, preview, browser, edgeUrl, ownedNetwork = false
 try {
   // The existing test build uses this fixed loopback API. Fail rather than reuse a stack.
   gateway = createServer()
@@ -59,7 +61,8 @@ try {
     create function auth.uid() returns uuid language sql stable as $$
       select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid $$;
     grant usage on schema auth to anon, authenticated, service_role;`)
-  const mail = run('mail', 'node:24.22.1-bookworm-slim', ['-p', '127.0.0.1::8025', '--mount', `type=bind,source=${resolve(root, 'scripts/fixtures')},target=/fixtures,readonly`, '--mount', `type=bind,source=${resolve(output, 'templates')},target=/templates,readonly`], ['node', '/fixtures/auth-mail-local.mjs'])
+  if (planningInvites) prepareInviteTls(output)
+  const mail = run('mail', 'node:24.22.1-bookworm-slim', ['-p', '127.0.0.1::8025', '--mount', `type=bind,source=${resolve(root, 'scripts/fixtures')},target=/fixtures,readonly`, '--mount', `type=bind,source=${resolve(output, 'templates')},target=/templates,readonly`, ...(planningInvites ? ['-e', 'INVITE_TLS=true', '--mount', `type=bind,source=${resolve(output, 'certs')},target=/certs,readonly`] : [])], ['node', '/fixtures/auth-mail-local.mjs'])
   const mailUrl = endpoint(mail, 8025)
   await ready(`${mailUrl}/health`)
   const auth = run('auth', 'public.ecr.aws/supabase/gotrue:v2.198.0', [
@@ -86,6 +89,12 @@ try {
     sql(readFileSync(resolve(root, file), 'utf8'))
   }
   if (production) sql(readFileSync(resolve(root, 'supabase/migrations/20261118022243_publish_legal_release.sql'), 'utf8'))
+  if (planningInvites) {
+    for (const file of ['learning-progress.sql', 'analytics-admin.sql', 'admin-readonly.sql', 'admin-user-access.sql', 'projects-foundation.sql', 'teams-foundation.sql', 'project-story-history-collaboration.sql', 'planning-poker-foundation.sql', 'planning-poker-timer-hardening.sql', 'planning-poker-vote-visibility-hardening.sql']) {
+      sql(readFileSync(resolve(root, 'supabase', file), 'utf8'))
+    }
+    sql('grant usage on schema public to service_role; grant all on all tables in schema public to service_role;')
+  }
   const rest = run('rest', 'public.ecr.aws/supabase/postgrest:v16.5', [
     '-p', '127.0.0.1::3000', '-e', 'PGRST_DB_URI=postgres://postgres@db:5432/postgres',
     '-e', `PGRST_JWT_SECRET=${secret}`, '-e', 'PGRST_DB_ANON_ROLE=anon',
@@ -97,7 +106,7 @@ try {
     response.setHeader('Access-Control-Allow-Headers', '*')
     response.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
     if (request.method === 'OPTIONS') { response.writeHead(204); response.end(); return }
-    const target = request.url.startsWith('/auth/v1/') ? authUrl : request.url.startsWith('/rest/v1/') ? restUrl : null
+    const target = request.url.startsWith('/auth/v1/') ? authUrl : request.url.startsWith('/rest/v1/') ? restUrl : request.url.startsWith('/functions/v1/') ? edgeUrl : null
     if (!target) { response.writeHead(404); response.end(); return }
     try {
       const body = []
@@ -105,7 +114,7 @@ try {
       const headers = { ...request.headers }
       delete headers.host
       delete headers['content-length']
-      const upstream = await fetch(target + request.url.replace(/^\/(auth|rest)\/v1/, ''), {
+      const upstream = await fetch(target + request.url.replace(/^\/(auth|rest|functions)\/v1/, ''), {
         method: request.method, headers, redirect: 'manual',
         ...(body.length ? { body: Buffer.concat(body) } : {}),
       })
@@ -129,7 +138,11 @@ try {
   await ready(site)
   mkdirSync(output, { recursive: true })
   browser = await chromium.launch()
-  const viewports = process.argv.includes('--emails-only') ? [] : [['desktop', { viewport: { width: 1440, height: 900 } }], ['celular', { ...devices['Pixel 7'], viewport: { width: 320, height: 740 } }]]
+  const claims = [ { alg: 'HS256', typ: 'JWT' }, { role: 'service_role', exp: Math.floor(Date.now() / 1000) + 600 } ]
+    .map(value => Buffer.from(JSON.stringify(value)).toString('base64url')).join('.')
+  const serviceJwt = claims + '.' + createHmac('sha256', secret).update(claims).digest('base64url')
+  if (planningInvites) await testPlanningInviteFlow({ root, output, run, docker, sql, ready, endpoint, serviceJwt, browser, site, mailUrl, release, setEdgeUrl: value => { edgeUrl = value } })
+  const viewports = planningInvites || process.argv.includes('--emails-only') ? [] : [['desktop', { viewport: { width: 1440, height: 900 } }], ['celular', { ...devices['Pixel 7'], viewport: { width: 320, height: 740 } }]]
   for (const [device, options] of viewports) {
     for (const language of ['pt-BR', 'en']) {
       const context = await browser.newContext(options)
@@ -152,14 +165,14 @@ try {
       await expect(page).toHaveURL(/\/check-email\?/)
       assert.equal(new URL(page.url()).searchParams.get('from'), target)
       assert.equal(sql(`select count(*) from public.local_legal_acceptances a join auth.users u on u.id=a.user_id where u.email='${email}' and a.language='${language}' and a.source='signup'`), '1')
-      await sleep(1200) // Test-only SMTP cooldown; hosted configuration is never read or changed.
+      await sleep(2100) // Exceed the disposable Auth's 1s cooldown with scheduling margin; no hosted config change.
       await page.locator('button[type="submit"]').click()
       await expect(page.getByText(language === 'en' ? 'We sent a new confirmation link to your email address.' : 'Enviamos um novo link de confirmação para o seu e-mail.')).toBeVisible()
       for (const chosen of [language === 'en' ? 'pt-BR' : 'en', language]) {
         await page.getByRole('combobox').selectOption(chosen)
         // Known signup addresses are intentionally shown masked, without a field.
         await expect(page.locator('main')).toContainText(email.slice(0, 2) + '***@example.test')
-        await sleep(1200)
+        await sleep(2100)
         const sent = page.waitForResponse(response => new URL(response.url()).pathname.endsWith('/auth/v1/resend') && response.request().method() === 'POST')
         await page.locator('button[type="submit"]').click()
         const resend = await sent
@@ -221,10 +234,7 @@ try {
       console.log(`PASS ${device} ${language}: real signup, SMTP resend/confirmation, receipt, refresh, keyboard acceptance, sign-out/sign-in and original destination`)
     }
   }
-  const claims = [ { alg: 'HS256', typ: 'JWT' }, { role: 'service_role', exp: Math.floor(Date.now() / 1000) + 600 } ]
-    .map(value => Buffer.from(JSON.stringify(value)).toString('base64url')).join('.')
-  const serviceJwt = claims + '.' + createHmac('sha256', secret).update(claims).digest('base64url')
-  await testAuthEmailCases('http://127.0.0.1:54321', mailUrl, site, serviceJwt, release)
+  if (!planningInvites) await testAuthEmailCases('http://127.0.0.1:54321', mailUrl, site, serviceJwt, release)
   console.log(`Evidence: ${output}`)
 } finally {
   await browser?.close()
