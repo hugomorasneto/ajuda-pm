@@ -54,6 +54,12 @@ jobs:
         shell: pwsh
         run: ./scripts/test-heartbeat-rls-local.ps1
 
+      - name: Preparar Chromium para o teste de autenticação
+        run: npx playwright install --with-deps chromium
+
+      - name: Validar autenticação e e-mails em ambiente isolado
+        run: npm run test:auth:release
+
       - name: Validar e gerar o frontend
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}

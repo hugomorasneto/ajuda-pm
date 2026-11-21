@@ -80,6 +80,16 @@ export function buildAuthPath(path, redirectTo, language) {
   return params.size ? path + '?' + params.toString() : path
 }
 
+// Stable prefix lets Go email templates select the current request language
+// without parsing or reconstructing the opaque destination nested in "from".
+export function buildEmailConfirmationPath(redirectTo, language) {
+  const params = new URLSearchParams({
+    lang: language === 'en' ? 'en' : 'pt-BR',
+    from: normalizeAuthRedirect(redirectTo),
+  })
+  return '/check-email?' + params.toString()
+}
+
 export function persistAuthRedirect(value) {
   const redirect = normalizeAuthRedirect(value)
   if (redirect === DEFAULT_AUTH_REDIRECT_PATH) {

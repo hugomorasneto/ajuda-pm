@@ -5,6 +5,7 @@ import { useLanguage } from '../i18n/context'
 import { getExplicitLanguage } from '../i18n/routes'
 import {
   buildAuthPath,
+  buildEmailConfirmationPath,
   clearAuthRedirect,
   getAuthContinuation,
   getAuthDestinationLanguage,
@@ -23,7 +24,7 @@ export function useAuthJourney() {
     ? getExplicitLanguage(location.search) ?? getAuthDestinationLanguage(from)
     : undefined
   const redirectTo = getAuthContinuation(from, explicit)
-  const emailRedirectTo = preview ? buildAuthPath('/check-email', from, language) : from
+  const emailRedirectTo = preview ? buildEmailConfirmationPath(from, language) : from
   const context = getAuthRedirectContext(from)
   const latest = useRef(null)
 
