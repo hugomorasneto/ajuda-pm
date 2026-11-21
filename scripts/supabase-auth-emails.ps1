@@ -41,7 +41,7 @@ function Update-Templates($Patch) {
   try { Invoke-RestMethod $endpoint -Method Patch -Headers $headers -ContentType 'application/json; charset=utf-8' -Body $bytes | Out-Null }
   catch {
     $status = if ($_.Exception.Response) { [int]$_.Exception.Response.StatusCode } else { 'network error' }
-    throw "Auth template update failed ($status). Check project scope and auth_config_write permission. No SMTP or redirect setting was submitted."
+    throw "Auth template update failed ($status). Check project scope, auth_config_write and project_admin_write permissions. No SMTP or redirect setting was submitted."
   }
 }
 $current = Invoke-RestMethod $endpoint -Headers $headers
