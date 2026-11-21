@@ -2,6 +2,12 @@
 
 Base da entrega: `53f1e078ecb13acf6dcdf421e485738172e7b7cd`. O frontend já inclui `lang` no `invite_url` enviado a `planning-poker-invite`. A função usa esse link como fonte única do idioma e do destino; o contrato da API permanece igual. Os modelos de autenticação são separados, descritos em [auth-emails.md](auth-emails.md).
 
+## Estado publicado
+
+`planning-poker-invite` está ativa em produção na versão 2, com `verify_jwt=true`, publicada após a integração do [PR #12](https://github.com/hugomorasneto/ajuda-pm/pull/12) em `c3999402cf3294fc14912bb5d920fae3ff1ffa80`. Os quatro arquivos baixados do servidor corresponderam à fonte validada. O frontend existente já era compatível e permaneceu na revisão `d5b47c3`. As configurações de SMTP, Auth e das demais funções foram preservadas.
+
+O registro de recebimento e navegação dos e-mails nos dois idiomas está em [encerramento da internacionalização](i18n-validation.md). Esta função usa SMTP próprio do projeto; os limites e as restrições do remetente padrão de Supabase Auth não descrevem esse transporte.
+
 ## Comportamento
 
 - `lang=en` e `lang=pt-BR` selecionam assunto, texto simples, HTML e mensagem de sucesso. Sem idioma reconhecido, a função usa português e explicita `lang=pt-BR` no link para impedir que uma preferência salva contrária altere a chegada.
