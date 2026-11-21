@@ -1,6 +1,7 @@
 // Disposable SMTP sink: receives only fictional accounts on the test Docker network.
 import { createServer as tcpServer } from 'node:net'
 import { createServer } from 'node:http'
+import { readFileSync } from 'node:fs'
 
 const messages = []
 tcpServer((socket) => {
@@ -27,6 +28,11 @@ tcpServer((socket) => {
   })
 }).listen(1025, '0.0.0.0')
 createServer((request, response) => {
+  if (/^\/templates\/(confirmation|invite|magic_link|recovery|email_change|reauthentication)\.html$/.test(request.url)) {
+    response.setHeader('Content-Type', 'text/html; charset=utf-8')
+    response.end(readFileSync('/templates/' + request.url.split('/').at(-1)))
+    return
+  }
   response.setHeader('Content-Type', 'application/json')
   response.end(JSON.stringify(request.url === '/health' ? { ok: true } : messages))
 }).listen(8025, '0.0.0.0')

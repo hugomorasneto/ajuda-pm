@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   DEFAULT_AUTH_REDIRECT_PATH,
   buildAuthPath,
+  buildEmailConfirmationPath,
   clearAuthRedirect,
   getAuthContinuation,
   getAuthDestinationLanguage,
@@ -34,6 +35,15 @@ afterEach(() => {
 })
 
 describe('authRedirect', () => {
+  it('identifica o idioma no prefixo do link de e-mail sem alterar o destino codificado', () => {
+    const from = '/projetos/abc/roda/def?ref=a%26b%23c&tag=1&tag=2&lang=pt-BR#main-content'
+    for (const language of ['en', 'pt-BR']) {
+      const path = buildEmailConfirmationPath(from, language)
+      expect(path.startsWith('/check-email?lang=' + language + '&from=')).toBe(true)
+      expect(new URL(path, 'https://example.test').searchParams.get('from')).toBe(from)
+    }
+    expect(buildEmailConfirmationPath('//evil.example', 'fr')).toBe('/check-email?lang=pt-BR&from=%2Ftool')
+  })
   it('normaliza apenas caminhos internos seguros', () => {
     expect(normalizeAuthRedirect('/roda?codigo=ABC123')).toBe('/roda?codigo=ABC123')
     expect(normalizeAuthRedirect('https://example.com/roda')).toBe(DEFAULT_AUTH_REDIRECT_PATH)

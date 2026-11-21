@@ -69,6 +69,7 @@ function SignupPage() {
       email: normalizedEmail,
       password,
       redirectTo: emailRedirectTo,
+      language,
       ...(preview ? { legalAcceptance: localLegalAssertion(language) } : {}),
     })
 
