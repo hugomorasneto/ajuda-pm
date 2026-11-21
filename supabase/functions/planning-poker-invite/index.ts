@@ -1,3 +1,12 @@
+import {
+  buildInviteEmailHtml,
+  buildInviteEmailText,
+  inviteCopy,
+  inviteEmailSubject,
+  type InviteLanguage,
+  localizeInviteUrl,
+} from "./email.ts";
+
 const PROJECT_ORIGINS = [
   "https://prodforge.techtupa.br",
   "https://prodforge.techtupa.com.br",
@@ -41,6 +50,7 @@ type ProfileRecord = {
 };
 
 type InviteContext = {
+  language: InviteLanguage;
   recipient: ProfileRecord;
   project: ProjectRecord;
   session: SessionRecord;
@@ -119,15 +129,6 @@ function asSingleLine(value: unknown): string {
 function truncate(value: string, maxLength: number): string {
   if (value.length <= maxLength) return value;
   return `${value.slice(0, maxLength - 3).trim()}...`;
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 }
 
 function encodeBase64(value: string): string {
@@ -344,6 +345,12 @@ async function buildInviteContext(
     throw new Error("Roda não encontrada neste projeto.");
   }
 
+  const target = new URL(inviteUrl);
+  const pointsToSession = target.pathname === "/roda"
+    ? target.searchParams.get("codigo")?.toUpperCase() === session.invite_code.toUpperCase()
+    : target.pathname === `/projetos/${projectId}/roda/${sessionId}`;
+  if (!pointsToSession) throw new Error("O link não corresponde à Roda deste convite.");
+
   const projects = await serviceRoleJson<ProjectRecord[]>(
     `projects?id=eq.${projectId}&select=id,name`,
   );
@@ -379,100 +386,9 @@ async function buildInviteContext(
     project,
     session,
     storyCount: stories.length,
-    inviteUrl,
+    ...localizeInviteUrl(inviteUrl),
     sender,
   };
-}
-
-function formatTimer(seconds: number | null): string {
-  if (!seconds) return "sem timer";
-  if (seconds < 60) return `${seconds} segundos`;
-
-  const minutes = Math.round(seconds / 60);
-  return `${minutes} ${minutes === 1 ? "minuto" : "minutos"}`;
-}
-
-function getScaleLabel(scale: string): string {
-  const labels: Record<string, string> = {
-    fibonacci: "Fibonacci",
-    tshirt: "T-shirt size",
-    custom: "Personalizada",
-  };
-
-  return labels[scale] ?? scale;
-}
-
-function buildInviteEmailText(context: InviteContext): string {
-  const storyLabel = context.storyCount === 1
-    ? "1 história preparada"
-    : `${context.storyCount} histórias preparadas`;
-
-  return [
-    "Você foi convidado para participar de uma Roda da Fogueira no ProdForge.",
-    "",
-    `Projeto: ${context.project.name}`,
-    `Roda: ${context.session.name}`,
-    `Histórias: ${storyLabel}`,
-    `Escala: ${getScaleLabel(context.session.scoring_scale)}`,
-    `Timer: ${formatTimer(context.session.vote_time_limit_seconds)}`,
-    "",
-    "Acesse a Roda pelo link abaixo:",
-    context.inviteUrl,
-    "",
-    "Se você ainda não estiver autenticado, entre com a mesma conta deste e-mail. Depois da confirmação, o ProdForge deve retornar para a Roda.",
-    "",
-    "Os votos ficam ocultos até o facilitador revelar as runas.",
-  ].join("\n");
-}
-
-function buildInviteEmailHtml(context: InviteContext): string {
-  const storyLabel = context.storyCount === 1
-    ? "1 história preparada"
-    : `${context.storyCount} histórias preparadas`;
-  const fields = [
-    ["Projeto", context.project.name],
-    ["Roda", context.session.name],
-    ["Histórias", storyLabel],
-    ["Escala", getScaleLabel(context.session.scoring_scale)],
-    ["Timer", formatTimer(context.session.vote_time_limit_seconds)],
-  ];
-
-  return `
-    <div style="font-family: Arial, sans-serif; color: #171717; line-height: 1.5;">
-      <h1 style="font-size: 22px; margin: 0 0 12px;">Convite para a Roda da Fogueira</h1>
-      <p style="margin: 0 0 18px;">Você foi convidado para estimar histórias no ProdForge.</p>
-      <table style="border-collapse: collapse; width: 100%; max-width: 680px; margin-bottom: 20px;">
-        <tbody>
-          ${
-    fields
-      .map(
-        ([label, value]) => `
-                <tr>
-                  <th style="text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb; width: 140px;">${
-          escapeHtml(label)
-        }</th>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${
-          escapeHtml(value)
-        }</td>
-                </tr>
-              `,
-      )
-      .join("")
-  }
-        </tbody>
-      </table>
-      <p style="margin: 0 0 20px;">
-        <a href="${escapeHtml(context.inviteUrl)}" style="display: inline-block; padding: 12px 18px; border-radius: 8px; background: #f97316; color: #111827; font-weight: 700; text-decoration: none;">
-          Entrar na Roda
-        </a>
-      </p>
-      <p style="margin: 0 0 10px;">Se o botão não funcionar, copie este link:</p>
-      <p style="word-break: break-all; color: #2563eb;">${escapeHtml(context.inviteUrl)}</p>
-      <p style="margin-top: 18px; color: #4b5563;">
-        Entre com a mesma conta deste e-mail. Os votos ficam ocultos até o facilitador revelar as runas.
-      </p>
-    </div>
-  `;
 }
 
 async function withSmtpTimeout<T>(promise: Promise<T>, message: string): Promise<T> {
@@ -593,7 +509,7 @@ function escapeSmtpData(value: string): string {
 
 function buildSmtpMessage(context: InviteContext, config: SmtpConfig): string {
   const boundary = `prodforge-roda-${context.session.id}`;
-  const subject = `Convite para a Roda da Fogueira: ${context.session.name}`;
+  const subject = inviteEmailSubject(context);
   const recipient = context.recipient.email;
 
   return [
@@ -701,7 +617,7 @@ export async function handlePlanningPokerInviteRequest(req: Request): Promise<Re
 
     return responseJson(req, {
       success: true,
-      message: "Convite enviado por e-mail.",
+      message: inviteCopy(context.language, "sent"),
       email: context.recipient.email,
     });
   } catch (error) {

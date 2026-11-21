@@ -11,6 +11,7 @@ const DEFAULT_TARGETS = [
   'src/i18n/locales',
   'src/i18n/preview-copy',
   'src/i18n/production-copy',
+  'supabase/functions/planning-poker-invite/locales',
   'src/hooks/usePageMetadata.js',
   'src/layout',
   'src/pages',
@@ -368,13 +369,14 @@ export function collectVisibleCopy(language = 'pt-BR') {
     const source = fs.readFileSync(absolutePath, 'utf8')
     const relativePath = toPosix(path.relative(ROOT_DIR, absolutePath))
     const previewCopy = /^src\/i18n\/(?:preview|production)-copy\//.test(relativePath)
-    const itemLanguage = /^src\/i18n\/(?:preview|production)-copy\/en.json$/.test(relativePath) ||
+    const inviteCopy = relativePath.startsWith('supabase/functions/planning-poker-invite/locales/')
+    const itemLanguage = (inviteCopy && relativePath.endsWith('/en.json')) || /^src\/i18n\/(?:preview|production)-copy\/en.json$/.test(relativePath) ||
       /^(?:en\/|src\/(?:content|i18n\/locales)\/en\/)/.test(relativePath)
       ? 'en'
       : 'pt-BR'
     if (itemLanguage !== language) return []
 
-    if (previewCopy || relativePath.startsWith('src/i18n/locales/') || /(?:Metadata|learningEditorial|\.i18n)\.json$/.test(relativePath)) {
+    if (previewCopy || inviteCopy || relativePath.startsWith('src/i18n/locales/') || /(?:Metadata|learningEditorial|\.i18n)\.json$/.test(relativePath)) {
       function values(object) {
         return Object.values(object).flatMap((value) => typeof value === 'string' ? [value] : values(value))
       }

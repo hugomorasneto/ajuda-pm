@@ -1,0 +1,22 @@
+{
+  "subject": "Convite para a Roda da Fogueira",
+  "title": "Convite para a Roda da Fogueira",
+  "intro": "Você foi convidado para estimar histórias no ProdForge.",
+  "project": "Projeto",
+  "session": "Roda",
+  "stories": "Histórias",
+  "scale": "Escala",
+  "timer": "Timer",
+  "story_one": "1 história preparada",
+  "story_many": "{{count}} histórias preparadas",
+  "no_timer": "sem timer",
+  "seconds": "{{count}} segundos",
+  "minute_one": "1 minuto",
+  "minute_many": "{{count}} minutos",
+  "custom_scale": "Personalizada",
+  "action": "Entrar na Roda",
+  "fallback": "Se o botão não funcionar, copie este link:",
+  "sign_in": "Entre com a mesma conta deste e-mail. Após o login, você continuará na Roda indicada no convite.",
+  "votes": "Os votos ficam ocultos até o facilitador revelar as runas.",
+  "sent": "Convite enviado por e-mail."
+}

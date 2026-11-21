@@ -1,0 +1,22 @@
+{
+  "subject": "Planning Poker invitation",
+  "title": "Planning Poker invitation",
+  "intro": "You have been invited to estimate stories in ProdForge.",
+  "project": "Project",
+  "session": "Session",
+  "stories": "Stories",
+  "scale": "Scale",
+  "timer": "Timer",
+  "story_one": "1 story ready",
+  "story_many": "{{count}} stories ready",
+  "no_timer": "no timer",
+  "seconds": "{{count}} seconds",
+  "minute_one": "1 minute",
+  "minute_many": "{{count}} minutes",
+  "custom_scale": "Custom",
+  "action": "Join the session",
+  "fallback": "If the button does not work, copy this link:",
+  "sign_in": "Sign in with the same account as this email address. After signing in, you will continue to the session in this invitation.",
+  "votes": "Votes stay hidden until the facilitator reveals the cards.",
+  "sent": "Invitation sent by email."
+}
