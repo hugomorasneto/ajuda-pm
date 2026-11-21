@@ -62,7 +62,7 @@ try {
   const mail = run('mail', 'node:24.22.1-bookworm-slim', ['-p', '127.0.0.1::8025', '--mount', `type=bind,source=${resolve(root, 'scripts/fixtures')},target=/fixtures,readonly`, '--mount', `type=bind,source=${resolve(output, 'templates')},target=/templates,readonly`], ['node', '/fixtures/auth-mail-local.mjs'])
   const mailUrl = endpoint(mail, 8025)
   await ready(`${mailUrl}/health`)
-  const auth = run('auth', 'public.ecr.aws/supabase/gotrue:v2.197.0', [
+  const auth = run('auth', 'public.ecr.aws/supabase/gotrue:v2.198.0', [
     '-p', '127.0.0.1::9999',
     ...Object.entries({
       GOTRUE_DB_DRIVER: 'postgres', DATABASE_URL: 'postgres://postgres@db:5432/postgres?search_path=auth',
