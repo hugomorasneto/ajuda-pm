@@ -44,7 +44,7 @@ Uma conferência adicional do login publicado, nos dois idiomas em 1440 e 320 pi
 
 O teste externo de Auth usou somente o modelo de link de acesso, preservando a senha da conta existente. Os outros cinco modelos têm cobertura local, não uma comprovação de entrega externa nesta rodada. Foram usados dois envios de Auth, respeitando o intervalo do projeto, e dois de convite da Roda. Limites, SMTP, hooks, configurações de Auth, versões das funções e frontend servido foram preservados e comparados antes e depois. A conta facilitadora, o projeto e a Roda de QA foram removidos com conferência de ausência. Somente as sessões criadas pelo teste foram revogadas; a conta existente e suas outras sessões foram preservadas.
 
-O recebimento no Gmail não comprova renderização em Outlook, Apple Mail ou em todos os dispositivos. Os testes de layout usam Chromium/Playwright, pois o plugin Browser não está disponível nesta instalação. O provedor padrão de Auth tem restrições de entrega, detalhadas em [auth-emails.md](auth-emails.md).
+O recebimento no Gmail não comprova renderização em Outlook, Apple Mail ou em todos os dispositivos. Os testes de layout usam Chromium/Playwright, pois o plugin Browser não está disponível nesta instalação. O provedor padrão usado nessa rodada tinha restrições de entrega, detalhadas em [auth-emails.md](auth-emails.md). A etapa posterior de SMTP próprio, para permitir cadastros públicos, tem procedimento e validação próprios em [auth-smtp.md](auth-smtp.md); este registro conserva as evidências da rodada de 21/11/2026.
 
 ## Continuidade operacional
 

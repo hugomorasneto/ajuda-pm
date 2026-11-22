@@ -60,6 +60,11 @@ jobs:
       - name: Validar autenticação e e-mails em ambiente isolado
         run: npm run test:auth:release
 
+      - name: Validar configuração SMTP e autenticação com TLS
+        run: |
+          node --test scripts/auth-smtp.test.mjs
+          npm run test:auth:smtp
+
       - name: Validar convites da Roda em ambiente isolado
         run: npm run test:invites:local
 

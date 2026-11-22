@@ -5,11 +5,13 @@ import { readFileSync } from 'node:fs'
 import { createServer as tlsServer } from 'node:tls'
 
 const messages = []
+let tlsAuthenticatedMessages = 0
 function receive(socket) {
   socket.setEncoding('utf8')
   socket.write('220 local.test ESMTP\r\n')
   let buffer = ''
   let body = null
+  let authenticated = false
   socket.on('data', (chunk) => {
     buffer += chunk.toString()
     let end
@@ -19,11 +21,17 @@ function receive(socket) {
       if (body !== null) {
         if (line === '.') {
           messages.push(body.join('\r\n'))
+          if (socket.encrypted && authenticated) tlsAuthenticatedMessages++
           body = null
           socket.write('250 stored locally\r\n')
         } else body.push(line)
-      } else if (/^EHLO|^HELO/i.test(line)) socket.write('250 local.test\r\n')
-      else if (/^AUTH PLAIN /i.test(line)) socket.write('235 authenticated locally\r\n')
+      } else if (/^EHLO|^HELO/i.test(line)) socket.write(process.env.AUTH_SMTP_TLS === 'true' ? '250-local.test\r\n250 AUTH PLAIN\r\n' : '250 local.test\r\n')
+      else if (/^AUTH PLAIN /i.test(line)) {
+        const valid = process.env.AUTH_SMTP_TLS !== 'true' || (socket.encrypted && Buffer.from(line.slice(11), 'base64').toString() === '\0local\0fictional')
+        authenticated = valid
+        socket.write(valid ? '235 authenticated locally\r\n' : '535 invalid local credentials\r\n')
+      }
+      else if (process.env.AUTH_SMTP_TLS === 'true' && !authenticated && /^(MAIL|RCPT|DATA)\b/i.test(line)) socket.write('530 authentication required\r\n')
       else if (/^DATA$/i.test(line)) { body = []; socket.write('354 end with dot\r\n') }
       else if (/^QUIT$/i.test(line)) socket.end('221 bye\r\n')
       else socket.write('250 OK\r\n')
@@ -32,7 +40,9 @@ function receive(socket) {
 }
 tcpServer(receive).listen(1025, '0.0.0.0')
 if (process.env.INVITE_TLS === 'true') {
-  tlsServer({ key: readFileSync('/certs/key.pem'), cert: readFileSync('/certs/cert.pem') }, receive).listen(1465, '0.0.0.0')
+  const options = { key: readFileSync('/certs/key.pem'), cert: readFileSync('/certs/cert.pem') }
+  tlsServer(options, receive).listen(1465, '0.0.0.0')
+  if (process.env.AUTH_SMTP_TLS === 'true') tlsServer(options, receive).listen(465, '0.0.0.0')
 }
 createServer(async (request, response) => {
   // Only this isolated fixture proxies real local Auth/PostgREST for the Edge container.
@@ -58,5 +68,5 @@ createServer(async (request, response) => {
     return
   }
   response.setHeader('Content-Type', 'application/json')
-  response.end(JSON.stringify(request.url === '/health' ? { ok: true } : messages))
+  response.end(JSON.stringify(request.url === '/health' ? { ok: true } : request.url === '/auth-status' ? { messages: messages.length, tlsAuthenticatedMessages } : messages))
 }).listen(8025, '0.0.0.0')
