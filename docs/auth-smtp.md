@@ -4,7 +4,7 @@ Base da configuração: `b200ad9`. O Auth e a função `planning-poker-invite` t
 
 A senha é lida do item específico de SMTP no Bitwarden, dentro de um processo local. Não é a senha do site nem o token de acesso do Supabase. Nenhuma credencial vai para o Git, o frontend, argumentos de linha de comando ou registros públicos. A integração Hostinger Mail atualmente conectada gerencia outra caixa; ela não foi usada para consultar mensagens ou alterar configurações deste projeto.
 
-## Configuração proposta
+## Configuração adotada
 
 - Servidor e porta: `smtp.hostinger.com:465`, TLS com validação de certificado.
 - Conta e remetente: `contato@techtupa.com.br`; nome público: `ProdForge`.
@@ -30,9 +30,21 @@ Forneça um módulo privado, fora de qualquer checkout Git, que exporte `getSmtp
 
 `Apply` exige Windows e grava o checkpoint antes da primeira alteração, cifrado com DPAPI CurrentUser. O arquivo deve ficar em pasta privada restrita ao responsável e SYSTEM. Não é portátil para outro usuário ou computador. O checkpoint preserva os campos anteriores de SMTP e o limite de envio; falha ao gravá-lo impede a aplicação. A operação modifica somente sete campos, confere mudanças concorrentes durante a preparação e verifica que as outras configurações permaneceram iguais.
 
-`Rollback` restaura apenas os campos de SMTP e o limite anterior. Recusa checkpoints de outro projeto, campos inesperados e mudanças posteriores nos campos SMTP devolvidos pela API. Preserva alterações em campos de Auth que não pertencem à configuração SMTP. Se já houver SMTP próprio cuja senha anterior não possa ser recuperada, a substituição é recusada antes de escrever. O provedor não oferece uma atualização condicional atômica para esse fluxo; quando a senha vier omitida ou mascarada, mudanças somente nela não podem ser detectadas por essa comparação. Evite alterações concorrentes de SMTP durante a operação.
+Esta ferramenta cobre a ativação a partir do SMTP padrão e a restauração desse estado. A substituição de um SMTP próprio com configurações diferentes é recusada: exige credenciais anteriores obtidas de uma fonte independente para permitir recuperação. Não se presume que o campo de senha devolvido pela API seja reutilizável.
 
-Uma resposta da Management API pode omitir a senha; `Verify` confere os campos disponíveis, mas não comprova entrega. Sempre valide o recebimento e os links após a aplicação. Em caso de falha, use o checkpoint privado e investigue antes de repetir envios.
+`Rollback` restaura apenas os campos de SMTP e o limite anterior, a partir de um checkpoint do SMTP padrão. Recusa checkpoints de outro projeto, campos inesperados e mudanças posteriores nos campos SMTP conferíveis. Preserva alterações em campos de Auth que não pertencem à configuração SMTP. O provedor não oferece uma atualização condicional atômica para esse fluxo; alterações somente na senha não são detectadas pela comparação de configurações. Evite alterações concorrentes de SMTP durante a operação.
+
+A Management API pode omitir a senha, mascará-la ou devolver um valor opaco. `Plan`, `Apply` e `Verify` comparam as configurações sem esse campo e sempre retornam `credentialsVerified: false` e `liveDeliveryStillRequired: true`, inclusive quando não há alteração a aplicar. Não atualizam somente a senha de uma configuração existente. A entrega real deve ser comprovada separadamente. Não se interpreta um valor com formato de hash como senha recuperável ou prova de correspondência. Em caso de falha, preserve o checkpoint privado e investigue antes de repetir envios ou restaurar.
+
+## Ativação e evidência em produção — 22/11/2026
+
+A aplicação foi preparada no PR #14, validada localmente e integrada em `848d125`. O primeiro PATCH configurou os sete campos previstos e preservou os demais ajustes do Auth. Sua verificação automática falhou porque pressupunha que a resposta continha a senha original; a API devolveu um valor opaco. O verificador foi corrigido com teste de regressão, sem um segundo PATCH ou reenvio da senha.
+
+Após a conferência somente de leitura, dois cadastros novos, sem inclusão na equipe do projeto Supabase, receberam mensagens na caixa de QA autorizada: português no desktop (1440 × 900) e inglês no celular (320 × 740). Ambas chegaram à caixa de entrada com SPF, DKIM e DMARC aprovados. Os links reais foram acionados por teclado; confirmação obrigatória, recibo do aceite, idioma, destino `/times`, parâmetros repetidos, valores escapados e âncora foram preservados, inclusive após recarregar. Não houve erros de console ou de execução nas jornadas.
+
+As duas contas exclusivas de QA foram removidas após encerrar suas sessões. Uma comparação antes/depois confirmou que modelos, callbacks, políticas, funções e artefato do frontend permaneceram iguais. O checkpoint anterior está cifrado em armazenamento privado local, fora do Git. Não houve alteração de senha da caixa, das configurações da Roda, migração ou novo deploy do frontend.
+
+Os seis modelos nos dois idiomas foram exercitados no ambiente local; os dois recebimentos reais desta ativação cobriram o modelo de confirmação. Não se conclui entrega universal para outros provedores ou clientes de e-mail a partir da caixa Gmail de QA.
 
 ## Validação antes da produção
 
