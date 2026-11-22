@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
-import { apply, candidate, hash, matches, plan, rollback, smtpKeys } from './auth-smtp.mjs'
+import { apply, candidate, hash, matchesSettings, plan, rollback, smtpKeys } from './auth-smtp.mjs'
 
 const projectRef = 'bkuizdxdmnneyjsjydtm'
 const credentials = { projectRef, host: 'smtp.example.test', port: 465, username: 'local@example.test', password: 'fictional-private-password', from: 'local@example.test', sender: 'ProdForge' }
@@ -71,6 +71,12 @@ test('unexpected post-patch changes are reported and retain the recovery checkpo
   await assert.rejects(apply(f), /Protected Auth settings changed/)
   assert.ok(f.saved)
 })
+test('a changed nonsecret SMTP field still fails verification', async () => {
+  const f = fixture(), patch = f.patchConfig
+  f.patchConfig = async body => patch({ ...body, smtp_port: '587', smtp_pass: 'a'.repeat(64) })
+  await assert.rejects(apply(f), /SMTP verification failed/)
+  assert.ok(f.saved)
+})
 test('rollback restores only owned fields, including previous limit, and preserves other settings', async () => {
   const f = fixture()
   await apply(f)
@@ -89,14 +95,31 @@ test('rollback rejects foreign checkpoints and subsequent SMTP changes', async (
   await assert.rejects(rollback({ ...f, checkpoint: f.saved }), /refusing/)
   assert.equal(f.writes.length, before)
 })
+test('rollback refuses an older checkpoint containing unrecoverable custom SMTP', async () => {
+  const f = fixture()
+  await apply(f)
+  const before = f.writes.length
+  const checkpoint = { ...f.saved, previous: { ...f.saved.previous, smtp_host: 'old.example.test', smtp_pass: 'a'.repeat(64) } }
+  await assert.rejects(rollback({ ...f, checkpoint }), /original default SMTP/)
+  assert.equal(f.writes.length, before)
+})
+test('secret representation never proves delivery or provides a recoverable password', async () => {
+  const f = fixture(), patch = f.patchConfig
+  f.patchConfig = async body => patch({ ...body, smtp_pass: 'a'.repeat(64) })
+  const result = await apply(f)
+  assert.equal(result.credentialsVerified, false)
+  assert.equal(result.liveDeliveryStillRequired, true)
+  assert.equal(matchesSettings(f.config, desired), true)
+  assert.equal(plan(f.config, desired).credentialsVerified, false)
+})
 test('response omitting password still requires real delivery and config hashes are order independent', () => {
-  assert.equal(matches({ ...desired, smtp_pass: null }, desired), true)
-  assert.equal(matches({ ...desired, smtp_pass: '********' }, desired), true)
-  assert.equal(matches({ ...desired, smtp_pass: 'wrong' }, desired), false)
+  assert.equal(matchesSettings({ ...desired, smtp_pass: null }, desired), true)
+  assert.equal(matchesSettings({ ...desired, smtp_pass: '********' }, desired), true)
+  assert.equal(matchesSettings({ ...desired, smtp_pass: 'opaque-secret' }, desired), true)
   assert.equal(hash({ b: 1, a: { y: 2, x: 3 } }), hash({ a: { x: 3, y: 2 }, b: 1 }))
 })
 test('changed confirmation policy or unrecoverable previous password blocks apply', async () => {
-  for (const config of [{ ...base, mailer_autoconfirm: true }, { ...base, smtp_host: 'old.example.test' }, { ...base, smtp_host: 'old.example.test', smtp_pass: '********' }]) {
+  for (const config of [{ ...base, mailer_autoconfirm: true }, { ...base, smtp_pass: 'a'.repeat(64) }, { ...base, smtp_host: 'old.example.test' }, { ...base, smtp_host: 'old.example.test', smtp_pass: '********' }, { ...base, smtp_host: 'old.example.test', smtp_pass: 'a'.repeat(64) }, { ...base, smtp_host: 'old.example.test', smtp_pass: credentials.password }]) {
     const f = fixture()
     f.getConfig = async () => config
     await assert.rejects(apply(f))

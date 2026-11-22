@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { basename, dirname, isAbsolute, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { apply, candidate, matches, plan, rollback } from './auth-smtp.mjs'
+import { apply, candidate, matchesSettings, plan, rollback } from './auth-smtp.mjs'
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((pairs, value, index, values) => index % 2 ? pairs : [...pairs, [value.replace(/^--/, ''), values[index + 1]]], []))
 const action = args.action ?? 'Plan'
@@ -46,8 +46,8 @@ try {
     const desired = candidate(credentials, args['project-ref'], Number(args['hourly-limit'] ?? 10))
     if (action === 'Plan') result = plan(await request(), desired)
     else if (action === 'Verify') {
-      if (!matches(await request(), desired)) throw Error('SMTP configuration differs from the validated candidate')
-      result = { configured: true, liveDeliveryStillRequired: true }
+      if (!matchesSettings(await request(), desired)) throw Error('SMTP configuration differs from the validated candidate')
+      result = { configured: true, credentialsVerified: false, liveDeliveryStillRequired: true }
     } else result = await apply({ ...operations, desired, saveCheckpoint: checkpoint => {
       const path = privatePath(args.checkpoint)
       writeFileSync(path, protect(JSON.stringify(checkpoint), 'Protect'), { flag: 'wx', mode: 0o600 })
