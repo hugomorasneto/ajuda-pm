@@ -21,6 +21,7 @@ const secret = randomBytes(32).toString('hex') // Only inside this disposable st
 const password = 'local-fictional-password'
 const production = process.argv.includes('--production')
 const planningInvites = process.argv.includes('--planning-invites')
+const smtpTls = process.argv.includes('--smtp-tls')
 const release = JSON.parse(readFileSync(resolve(root, production ? 'src/content/legalRelease.production.json' : 'src/content/legalRelease.json'), 'utf8'))
 const output = resolve(tmpdir(), prefix)
 const templates = buildAuthEmailConfig()
@@ -61,12 +62,13 @@ try {
     create function auth.uid() returns uuid language sql stable as $$
       select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid $$;
     grant usage on schema auth to anon, authenticated, service_role;`)
-  if (planningInvites) prepareInviteTls(output)
-  const mail = run('mail', 'node:24.22.1-bookworm-slim', ['-p', '127.0.0.1::8025', '--mount', `type=bind,source=${resolve(root, 'scripts/fixtures')},target=/fixtures,readonly`, '--mount', `type=bind,source=${resolve(output, 'templates')},target=/templates,readonly`, ...(planningInvites ? ['-e', 'INVITE_TLS=true', '--mount', `type=bind,source=${resolve(output, 'certs')},target=/certs,readonly`] : [])], ['node', '/fixtures/auth-mail-local.mjs'])
+  if (planningInvites || smtpTls) prepareInviteTls(output)
+  const mail = run('mail', 'node:24.22.1-bookworm-slim', ['-p', '127.0.0.1::8025', '--mount', `type=bind,source=${resolve(root, 'scripts/fixtures')},target=/fixtures,readonly`, '--mount', `type=bind,source=${resolve(output, 'templates')},target=/templates,readonly`, ...(planningInvites || smtpTls ? ['-e', 'INVITE_TLS=true', '--mount', `type=bind,source=${resolve(output, 'certs')},target=/certs,readonly`] : []), ...(smtpTls ? ['-e', 'AUTH_SMTP_TLS=true'] : [])], ['node', '/fixtures/auth-mail-local.mjs'])
   const mailUrl = endpoint(mail, 8025)
   await ready(`${mailUrl}/health`)
   const auth = run('auth', 'public.ecr.aws/supabase/gotrue:v2.198.0', [
     '-p', '127.0.0.1::9999',
+    ...(smtpTls ? ['--mount', `type=bind,source=${resolve(output, 'certs')},target=/certs,readonly`] : []),
     ...Object.entries({
       GOTRUE_DB_DRIVER: 'postgres', DATABASE_URL: 'postgres://postgres@db:5432/postgres?search_path=auth',
       DB_NAMESPACE: 'auth', API_EXTERNAL_URL: 'http://127.0.0.1:54321/auth/v1',
@@ -75,7 +77,8 @@ try {
       GOTRUE_SITE_URL: 'http://127.0.0.1:43919', GOTRUE_URI_ALLOW_LIST: 'http://127.0.0.1:43919/**',
       GOTRUE_EXTERNAL_EMAIL_ENABLED: 'true', GOTRUE_MAILER_AUTOCONFIRM: 'false',
       GOTRUE_MAILER_URLPATHS_CONFIRMATION: '/auth/v1/verify',
-      GOTRUE_SMTP_HOST: 'mail', GOTRUE_SMTP_PORT: '1025', GOTRUE_SMTP_ADMIN_EMAIL: 'local@example.test',
+      GOTRUE_SMTP_HOST: 'mail', GOTRUE_SMTP_PORT: smtpTls ? '465' : '1025', GOTRUE_SMTP_ADMIN_EMAIL: 'local@example.test',
+      ...(smtpTls ? { GOTRUE_SMTP_USER: 'local', GOTRUE_SMTP_PASS: 'fictional', SSL_CERT_FILE: '/certs/ca.pem' } : {}),
       GOTRUE_SMTP_MAX_FREQUENCY: '1s', GOTRUE_RATE_LIMIT_EMAIL_SENT: '1000',
       ...Object.fromEntries(authEmailTypes.flatMap(type => [
         [`GOTRUE_MAILER_SUBJECTS_${type.toUpperCase()}`, templates[`mailer_subjects_${type}`]],
@@ -235,6 +238,12 @@ try {
     }
   }
   if (!planningInvites) await testAuthEmailCases('http://127.0.0.1:54321', mailUrl, site, serviceJwt, release)
+  if (smtpTls) {
+    const status = await (await fetch(mailUrl + '/auth-status')).json()
+    assert.ok(status.messages > 0)
+    assert.equal(status.tlsAuthenticatedMessages, status.messages, 'Every captured Auth email used TLS and SMTP authentication')
+    console.log(`PASS all ${status.messages} local Auth emails used TLS and authenticated SMTP`)
+  }
   console.log(`Evidence: ${output}`)
 } finally {
   await browser?.close()

@@ -6,7 +6,9 @@ Os seis modelos do Supabase Auth usam os catálogos `src/i18n/locales/{pt-BR,en}
 
 Os doze campos de assunto/corpo estão ativos no Supabase. O frontend correspondente foi publicado em `d5b47c314c210b0e30b876a55c0a0f39271d831e`; as instruções de permissão foram integradas em `53f1e07`. Na conferência da base `c399940`, o plano somente de leitura confirmou `already_applied=true`, com SHA-256 `2e01cf6113d8e5ef015b6d676b73724f262a56fbf18225c4bfa4a3d9cf85af52`.
 
-Em 21/11/2026, o projeto usa o remetente padrão do Supabase Auth, sem SMTP personalizado, com limite configurado de dois e-mails por hora e intervalo mínimo de 60 segundos. O serviço padrão restringe destinatários aos endereços autorizados da equipe, conforme a [documentação de SMTP do Supabase](https://supabase.com/docs/guides/auth/auth-smtp). Receber na caixa de QA autorizada não comprova entrega de Auth para qualquer usuário. Um SMTP personalizado para envio ao público geral é uma decisão operacional separada desta validação. A configuração do Auth é distinta do SMTP usado pela função de convite da Roda. Não altere provedor, limites ou credenciais para executar a regressão local.
+A conferência de 21/11/2026 encontrou o remetente padrão do Supabase Auth, sem SMTP personalizado, com dois e-mails por hora e intervalo mínimo de 60 segundos. Esse serviço restringe destinatários à equipe, conforme a [documentação de SMTP do Supabase](https://supabase.com/docs/guides/auth/auth-smtp).
+
+A etapa seguinte configura SMTP próprio para permitir o cadastro do público geral, reutilizando a caixa da Roda com configurações independentes no Auth. O procedimento, o limite inicial de 10 mensagens por hora, os testes com TLS e a recuperação cifrada estão em [auth-smtp.md](auth-smtp.md). Consulte `supabase-auth-smtp.ps1 -Action Plan` ou `Verify` com o contexto autorizado para conferir o estado vigente; a documentação histórica não substitui essa consulta. Os testes locais não alteram o provedor nem as credenciais reais.
 
 O registro da validação final separa recebimento local, caixa externa e navegação pelos links: [encerramento da internacionalização](i18n-validation.md).
 
