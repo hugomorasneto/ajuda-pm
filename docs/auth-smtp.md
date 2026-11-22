@@ -1,6 +1,6 @@
 # SMTP próprio do Supabase Auth
 
-Base da configuração: `b200ad9`. O Auth e a função `planning-poker-invite` têm configurações independentes. É possível reutilizar a caixa `contato@techtupa.com.br` no servidor `smtp.hostinger.com`, porta 465, com TLS implícito. O certificado e a autenticação foram verificados sem envio de mensagem. As mensagens anteriores da Roda recebidas na caixa de QA passaram em SPF, DKIM e DMARC.
+Ativo em produção desde 22/11/2026, com base de preparação `b200ad9` e integração até `aa09fc2`, pelos PRs [#14](https://github.com/hugomorasneto/ajuda-pm/pull/14) e [#15](https://github.com/hugomorasneto/ajuda-pm/pull/15). O Auth e a função `planning-poker-invite` têm configurações independentes e reutilizam a caixa `contato@techtupa.com.br` no servidor `smtp.hostinger.com`, porta 465, com TLS implícito. O certificado e a autenticação foram verificados antes da aplicação, sem envio de mensagem nessa sondagem; os recebimentos reais posteriores estão registrados abaixo. A internacionalização está encerrada conforme o [registro consolidado](i18n-validation.md) e o [backlog conciliado](i18n-backlog.md).
 
 A senha é lida do item específico de SMTP no Bitwarden, dentro de um processo local. Não é a senha do site nem o token de acesso do Supabase. Nenhuma credencial vai para o Git, o frontend, argumentos de linha de comando ou registros públicos. A integração Hostinger Mail atualmente conectada gerencia outra caixa; ela não foi usada para consultar mensagens ou alterar configurações deste projeto.
 
