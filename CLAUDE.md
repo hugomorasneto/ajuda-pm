@@ -2,7 +2,7 @@
 
 ## Idioma e ortografia
 
-**Todo texto visível ao usuário deve estar em português brasileiro correto, com acentuação completa.**
+**Português brasileiro é o idioma padrão e exige acentuação completa.** As páginas e mensagens localizadas também oferecem inglês na prévia local e no modo explícito de produção bilíngue. Mantenha os dois catálogos, seus parâmetros e as URLs existentes, conforme [AGENTS.md](AGENTS.md). A interface e os e-mails bilíngues estão publicados; o idioma dos resultados gerados por IA permanece separado. Consulte o [encerramento](docs/i18n-validation.md) e o [backlog conciliado](docs/i18n-backlog.md).
 
 ### Regra obrigatória
 Antes de escrever qualquer string em português — seja em arquivos de conteúdo, JSX, aria-labels, placeholders ou comentários visíveis — revise a acentuação. Nunca escreva português sem acento.

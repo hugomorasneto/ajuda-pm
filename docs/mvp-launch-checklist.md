@@ -1,4 +1,6 @@
-# ProdForge MVP - Checklist de Validacao
+# ProdForge MVP — Checklist de validação
+
+Este checklist histórico trata do lançamento geral do MVP. O escopo de internacionalização foi encerrado em 22/11/2026 e tem seu próprio [backlog conciliado](i18n-backlog.md) e [registro de evidências](i18n-validation.md), incluindo cadastro público com SMTP próprio. Os itens abaixo não foram reavaliados pelo encerramento documental e suas caixas não devem ser interpretadas como pendências da internacionalização nem como validações atuais de produção. Para retomar o lançamento geral, conferir cada item no ambiente e na revisão aplicáveis antes de atualizar seu estado.
 
 ## Acesso e navegacao
 - [ ] `https://prodforge.techtupa.com.br/` abre sem erro em aba anonima
